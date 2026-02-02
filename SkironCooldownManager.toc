@@ -14,6 +14,7 @@ Libs\AceConfig-3.0\AceConfig-3.0.xml
 Libs\LibCustomGlow-1.0\LibCustomGlow-1.0.xml
 Libs\LibSharedMedia-3.0\lib.xml
 Libs\LibEditModeOverride\LibEditModeOverride.xml
+Libs\TaintLess\TaintLess.xml
 
 Custom-Widgets\AceGUIContainer-SCMFrame.lua
 Custom-Widgets\AceGUIContainer-SCMTabGroup.lua
