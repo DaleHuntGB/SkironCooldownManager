@@ -1,0 +1,39 @@
+## Interface: 120000
+## Title: SkironCooldownManager
+## Author: Permok
+## SavedVariables: SkironCooldownManagerDB
+## OptionalDeps: Plater, Details, UnhaltedUnitFrames, CooldownViewer, SenseiClassResourceBar
+
+templates.xml
+Libs\LibStub\LibStub.lua
+Libs\CallbackHandler-1.0\CallbackHandler-1.0.xml
+Libs\AceGUI-3.0\AceGUI-3.0.xml
+Libs\AceDB-3.0\AceDB-3.0.xml
+Libs\AceDBOptions-3.0\AceDBOptions-3.0.xml
+Libs\AceConfig-3.0\AceConfig-3.0.xml
+Libs\LibCustomGlow-1.0\LibCustomGlow-1.0.xml
+Libs\LibSharedMedia-3.0\lib.xml
+Libs\LibEditModeOverride\LibEditModeOverride.xml
+
+Custom-Widgets\AceGUIContainer-SCMFrame.lua
+Custom-Widgets\AceGUIContainer-SCMTabGroup.lua
+Custom-Widgets\AceGUIContainer-SCMScrollFrame.lua
+Custom-Widgets\AceGUIContainer-SCMHorizontalScrollFrame.lua
+
+glow.lua
+skinning.lua
+core.lua
+profiles.lua
+
+Database\constants.lua
+Database\defaults.lua
+Database\sharedmedia.lua
+Database\loader.lua
+
+Options\cdm.lua
+Options\general.lua
+Options\options.lua
+Options\profiles.lua
+Options\temporary.lua
+
+api.lua

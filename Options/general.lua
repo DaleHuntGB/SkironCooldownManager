@@ -1,0 +1,427 @@
+local addonName, SCM = ...
+local AceGUI = LibStub("AceGUI-3.0")
+local LibEditModeOverride = LibStub("LibEditModeOverride-1.0")
+local LSM = LibStub("LibSharedMedia-3.0")
+
+SCM.MainTabs.General = { value = "General", text = "Global Settings", order = 1, subgroups = {} }
+
+local function GetFontList()
+	local list = {}
+	for fontName in pairs(LSM:HashTable("font")) do
+		list[fontName] = fontName
+	end
+	return list
+end
+
+local function AddInfoText(widget, text)
+	local label = AceGUI:Create("Label")
+	label:SetRelativeWidth(1.0)
+	label:SetHeight(24)
+	label:SetJustifyH("CENTER")
+	label:SetJustifyV("MIDDLE")
+	label:SetText(string.format("|TInterface\\common\\help-i:40:40:0:0|t%s.", text))
+	label:SetFontObject("Game12Font")
+	widget:AddChild(label)
+end
+
+local AddCustomGlowOptions, ReleaseCustomGlowSettings
+do
+	function AddCustomGlowOptions(dynamicGlowSettingsGroup)
+		local options = SCM.db.global.options
+		dynamicGlowSettingsGroup:ReleaseChildren()
+
+		local glowTypeOptions = options.glowTypeOptions[options.glowType]
+		if options.glowType == "Proc" then
+			local startAnim = AceGUI:Create("CheckBox")
+			startAnim:SetRelativeWidth(0.33)
+			startAnim:SetValue(glowTypeOptions.startAnim)
+			startAnim:SetLabel("Start Animation")
+			startAnim:SetCallback("OnValueChanged", function(self, event, value)
+				glowTypeOptions.startAnim = value
+			end)
+			dynamicGlowSettingsGroup:AddChild(startAnim)
+
+			local xOffset = AceGUI:Create("Slider")
+			xOffset:SetRelativeWidth(0.33)
+			xOffset:SetValue(glowTypeOptions.xOffset or 0)
+			xOffset:SetLabel("X Offset")
+			xOffset:SetSliderValues(-30, 30, 1)
+			xOffset:SetCallback("OnValueChanged", function(self, event, value)
+				glowTypeOptions.xOffset = value
+			end)
+			dynamicGlowSettingsGroup:AddChild(xOffset)
+
+			local yOffset = AceGUI:Create("Slider")
+			yOffset:SetRelativeWidth(0.33)
+			yOffset:SetValue(glowTypeOptions.yOffset or 0)
+			yOffset:SetLabel("Y Offset")
+			yOffset:SetSliderValues(-30, 30, 1)
+			xOffset:SetCallback("OnValueChanged", function(self, event, value)
+				glowTypeOptions.yOffset = value
+			end)
+			dynamicGlowSettingsGroup:AddChild(yOffset)
+
+			local glowColor = AceGUI:Create("ColorPicker")
+			glowColor:SetRelativeWidth(0.33)
+			glowColor:SetLabel("Glow Color")
+			glowColor:SetHasAlpha(true)
+			glowColor:SetColor(unpack(glowTypeOptions.glowColor))
+			glowColor:SetCallback("OnValueChanged", function(self, event, r, g, b, a)
+				glowTypeOptions.glowColor = { r, g, b, a }
+			end)
+			dynamicGlowSettingsGroup:AddChild(glowColor)
+		elseif options.glowType == "Autocast" then
+			--color,numParticles,frequency,scale,xOffset,yOffset
+
+			local numParticles = AceGUI:Create("Slider")
+			numParticles:SetRelativeWidth(0.33)
+			numParticles:SetValue(glowTypeOptions.numParticles or 4)
+			numParticles:SetLabel("Particles")
+			numParticles:SetSliderValues(1, 30, 1)
+			numParticles:SetCallback("OnValueChanged", function(self, event, value)
+				glowTypeOptions.numParticles = value
+			end)
+			dynamicGlowSettingsGroup:AddChild(numParticles)
+
+			local frequency = AceGUI:Create("Slider")
+			frequency:SetRelativeWidth(0.33)
+			frequency:SetValue(glowTypeOptions.frequency or 0.125)
+			frequency:SetLabel("Frequency")
+			frequency:SetSliderValues(-3, 3, 0.05)
+			frequency:SetCallback("OnValueChanged", function(self, event, value)
+				glowTypeOptions.frequency = value
+			end)
+			dynamicGlowSettingsGroup:AddChild(frequency)
+
+			local scale = AceGUI:Create("Slider")
+			scale:SetRelativeWidth(0.33)
+			scale:SetValue(glowTypeOptions.scale or 1)
+			scale:SetLabel("Scale")
+			scale:SetSliderValues(0.01, 5, 0.01)
+			scale:SetIsPercent(true)
+			scale:SetCallback("OnValueChanged", function(self, event, value)
+				glowTypeOptions.scale = value
+			end)
+			dynamicGlowSettingsGroup:AddChild(scale)
+
+			local xOffset = AceGUI:Create("Slider")
+			xOffset:SetRelativeWidth(0.33)
+			xOffset:SetValue(glowTypeOptions.xOffset or 0)
+			xOffset:SetLabel("X Offset")
+			xOffset:SetSliderValues(-30, 30, 1)
+			xOffset:SetCallback("OnValueChanged", function(self, event, value)
+				glowTypeOptions.xOffset = value
+			end)
+			dynamicGlowSettingsGroup:AddChild(xOffset)
+
+			local yOffset = AceGUI:Create("Slider")
+			yOffset:SetRelativeWidth(0.33)
+			yOffset:SetValue(glowTypeOptions.yOffset or 0)
+			yOffset:SetLabel("Y Offset")
+			yOffset:SetSliderValues(-30, 30, 1)
+			xOffset:SetCallback("OnValueChanged", function(self, event, value)
+				glowTypeOptions.yOffset = value
+			end)
+			dynamicGlowSettingsGroup:AddChild(yOffset)
+
+			local glowColor = AceGUI:Create("ColorPicker")
+			glowColor:SetRelativeWidth(0.33)
+			glowColor:SetLabel("Glow Color")
+			glowColor:SetHasAlpha(true)
+			glowColor:SetColor(unpack(glowTypeOptions.glowColor))
+			glowColor:SetCallback("OnValueChanged", function(self, event, r, g, b, a)
+				glowTypeOptions.glowColor = { r, g, b, a }
+			end)
+			dynamicGlowSettingsGroup:AddChild(glowColor)
+		elseif options.glowType == "Pixel" then
+			--color,numLines,frequency,length,thickness,xOffset,yOffset,border
+
+			local numLines = AceGUI:Create("Slider")
+			numLines:SetRelativeWidth(0.33)
+			numLines:SetValue(glowTypeOptions.numLines or 8)
+			numLines:SetLabel("Lines")
+			numLines:SetSliderValues(1, 30, 1)
+			numLines:SetCallback("OnValueChanged", function(self, event, value)
+				glowTypeOptions.numLines = value
+			end)
+			dynamicGlowSettingsGroup:AddChild(numLines)
+
+			local frequency = AceGUI:Create("Slider")
+			frequency:SetRelativeWidth(0.33)
+			frequency:SetValue(glowTypeOptions.frequency or 0.25)
+			frequency:SetLabel("Frequency")
+			frequency:SetSliderValues(-3, 3, 0.05)
+			frequency:SetCallback("OnValueChanged", function(self, event, value)
+				glowTypeOptions.frequency = value
+			end)
+			dynamicGlowSettingsGroup:AddChild(frequency)
+
+			local length = AceGUI:Create("Slider")
+			length:SetRelativeWidth(0.33)
+			length:SetValue(glowTypeOptions.length or 2)
+			length:SetLabel("Length")
+			length:SetSliderValues(1, 15, 0.05)
+			length:SetIsPercent(true)
+			length:SetCallback("OnValueChanged", function(self, event, value)
+				glowTypeOptions.length = value
+			end)
+			dynamicGlowSettingsGroup:AddChild(length)
+
+			local thickness = AceGUI:Create("Slider")
+			thickness:SetRelativeWidth(0.33)
+			thickness:SetValue(glowTypeOptions.thickness or 2)
+			thickness:SetLabel("Thickness")
+			thickness:SetSliderValues(1, 15, 0.05)
+			thickness:SetCallback("OnValueChanged", function(self, event, value)
+				glowTypeOptions.thickness = value
+			end)
+			dynamicGlowSettingsGroup:AddChild(thickness)
+
+			local xOffset = AceGUI:Create("Slider")
+			xOffset:SetRelativeWidth(0.33)
+			xOffset:SetValue(glowTypeOptions.xOffset or 0)
+			xOffset:SetLabel("X Offset")
+			xOffset:SetSliderValues(-30, 30, 1)
+			xOffset:SetCallback("OnValueChanged", function(self, event, value)
+				glowTypeOptions.xOffset = value
+			end)
+			dynamicGlowSettingsGroup:AddChild(xOffset)
+
+			local yOffset = AceGUI:Create("Slider")
+			yOffset:SetRelativeWidth(0.33)
+			yOffset:SetValue(glowTypeOptions.yOffset or 0)
+			yOffset:SetLabel("Y Offset")
+			yOffset:SetSliderValues(-30, 30, 1)
+			xOffset:SetCallback("OnValueChanged", function(self, event, value)
+				glowTypeOptions.yOffset = value
+			end)
+			dynamicGlowSettingsGroup:AddChild(yOffset)
+
+			local glowColor = AceGUI:Create("ColorPicker")
+			glowColor:SetRelativeWidth(0.33)
+			glowColor:SetLabel("Glow Color")
+			glowColor:SetHasAlpha(true)
+			glowColor:SetColor(unpack(glowTypeOptions.glowColor))
+			glowColor:SetCallback("OnValueChanged", function(self, event, r, g, b, a)
+				glowTypeOptions.glowColor = { r, g, b, a }
+			end)
+			dynamicGlowSettingsGroup:AddChild(glowColor)
+
+			local border = AceGUI:Create("CheckBox")
+			border:SetRelativeWidth(0.33)
+			border:SetValue(glowTypeOptions.border)
+			border:SetLabel("Border")
+			border:SetCallback("OnValueChanged", function(self, event, value)
+				glowTypeOptions.border = value
+			end)
+			dynamicGlowSettingsGroup:AddChild(border)
+		end
+	end
+end
+
+local function General(self, frame, group)
+	LibEditModeOverride:LoadLayouts()
+
+	local options = SCM.db.global.options
+
+	local generalFrame = AceGUI:Create("InlineGroup")
+	generalFrame:SetLayout("fill")
+	generalFrame:SetFullWidth(true)
+	generalFrame:SetFullHeight(true)
+	self:AddChild(generalFrame)
+
+	local scrollFrame = AceGUI:Create("ScrollFrame")
+	scrollFrame:SetLayout("flow")
+	generalFrame:AddChild(scrollFrame)
+
+	local skinningSettings = AceGUI:Create("InlineGroup")
+	skinningSettings:SetLayout("flow")
+	skinningSettings:SetFullWidth(true)
+	skinningSettings:SetTitle("Skinning")
+	scrollFrame:AddChild(skinningSettings)
+
+	local enableSkinning = AceGUI:Create("CheckBox")
+	enableSkinning:SetRelativeWidth(0.33)
+	enableSkinning:SetLabel("Enable Skinning")
+	enableSkinning:SetValue(options.enableSkinning)
+	enableSkinning:SetCallback("OnValueChanged", function(_, _, value)
+		options.enableSkinning = value
+	end)
+	skinningSettings:AddChild(enableSkinning)
+
+	local chargeFont = AceGUI:Create("Dropdown")
+	chargeFont:SetLabel("Charge Font")
+	chargeFont:SetRelativeWidth(0.33)
+	chargeFont:SetList(GetFontList())
+	chargeFont:SetValue(options.chargeFont)
+	chargeFont:SetCallback("OnValueChanged", function(self, event, value)
+		options.chargeFont = value
+		SCM:ApplyAllCDManagerConfigs()
+	end)
+	skinningSettings:AddChild(chargeFont)
+
+	local chargeFontSize = AceGUI:Create("Slider")
+	chargeFontSize:SetRelativeWidth(0.33)
+	chargeFontSize:SetLabel("Charge Font Size")
+	chargeFontSize:SetSliderValues(1, 50, 1)
+	chargeFontSize:SetValue(options.chargeFontSize)
+	chargeFontSize:SetCallback("OnValueChanged", function(self, event, value)
+		options.chargeFontSize = value
+		SCM:ApplyAllCDManagerConfigs()
+	end)
+	skinningSettings:AddChild(chargeFontSize)
+
+	local auraSettings = AceGUI:Create("InlineGroup")
+	auraSettings:SetLayout("flow")
+	auraSettings:SetFullWidth(true)
+	auraSettings:SetTitle("Auras")
+	scrollFrame:AddChild(auraSettings)
+
+	local hideBuffsWhenInactive = AceGUI:Create("CheckBox")
+	hideBuffsWhenInactive:SetRelativeWidth(0.33)
+	hideBuffsWhenInactive:SetLabel("Hide Inactive Auras")
+	hideBuffsWhenInactive:SetValue(options.hideBuffsWhenInactive)
+	hideBuffsWhenInactive:SetDisabled(not LibEditModeOverride:CanEditActiveLayout())
+	hideBuffsWhenInactive:SetCallback("OnValueChanged", function(self, _, value)
+		if InCombatLockdown() then
+			self:SetValue(options.hideBuffsWhenInactive)
+			return
+		end
+
+		SCM:SetHideWhenInactive(value)
+
+		options.hideBuffsWhenInactive = value
+		SCM:ApplyAllCDManagerConfigs()
+	end)
+	auraSettings:AddChild(hideBuffsWhenInactive)
+
+	local recolorActiveSwipe = AceGUI:Create("CheckBox")
+	recolorActiveSwipe:SetRelativeWidth(0.33)
+	recolorActiveSwipe:SetLabel("Recolor Active Swipe")
+	recolorActiveSwipe:SetValue(options.recolorActiveSwipe)
+	recolorActiveSwipe:SetCallback("OnValueChanged", function(_, _, value)
+		options.recolorActiveSwipe = value
+	end)
+	auraSettings:AddChild(recolorActiveSwipe)
+
+	local activeSwipeColor = AceGUI:Create("ColorPicker")
+	activeSwipeColor:SetRelativeWidth(0.33)
+	activeSwipeColor:SetLabel("Swipe Color")
+	activeSwipeColor:SetHasAlpha(true)
+	activeSwipeColor:SetColor(unpack(options.activeSwipeColor))
+	activeSwipeColor:SetCallback("OnValueChanged", function(self, event, r, g, b, a)
+		options.activeSwipeColor = { r, g, b, a }
+	end)
+	auraSettings:AddChild(activeSwipeColor)
+
+	if not LibEditModeOverride:CanEditActiveLayout() then
+		AddInfoText(auraSettings, "Enable a custom edit mode profile to use this feature. Reopen the opens once you did")
+	end
+
+	local glowSettings = AceGUI:Create("InlineGroup")
+	glowSettings:SetLayout("flow")
+	glowSettings:SetFullWidth(true)
+	glowSettings:SetTitle("Glow")
+	scrollFrame:AddChild(glowSettings)
+
+	local useCustomGlow = AceGUI:Create("CheckBox")
+	useCustomGlow:SetRelativeWidth(0.5)
+	useCustomGlow:SetLabel("Use Custom Glow")
+	useCustomGlow:SetValue(options.useCustomGlow)
+	useCustomGlow:SetCallback("OnValueChanged", function(_, _, value)
+		options.useCustomGlow = value
+	end)
+	glowSettings:AddChild(useCustomGlow)
+
+	local glowType = AceGUI:Create("Dropdown")
+	glowType:SetRelativeWidth(0.5)
+	glowType:SetLabel("Custom Glow Type")
+	glowType:SetList({
+		["Pixel"] = "Pixel Glow",
+		["Autocast"] = "Autocast Glow",
+		["Proc"] = "Proc Glow",
+	})
+	glowSettings:AddChild(glowType)
+
+	local dynamicGlowSettingsGroup = AceGUI:Create("InlineGroup")
+	dynamicGlowSettingsGroup:SetLayout("flow")
+	dynamicGlowSettingsGroup:SetFullWidth(true)
+	glowSettings:AddChild(dynamicGlowSettingsGroup)
+	glowType:SetCallback("OnValueChanged", function(_, _, value)
+		options.glowType = value
+		SCM:RefreshAllGlows()
+		AddCustomGlowOptions(dynamicGlowSettingsGroup)
+		glowSettings:DoLayout()
+		scrollFrame:DoLayout()
+	end)
+	glowType:SetValue(options.glowType or "Pixel")
+	AddCustomGlowOptions(dynamicGlowSettingsGroup)
+
+	local pandemicGlowOption = AceGUI:Create("Dropdown")
+	pandemicGlowOption:SetList({ keepPandemicGlow = "Keep", disablePandemicGlow = "Disable", replacePandemicGlow = "Replace" }, { "keepPandemicGlow", "disablePandemicGlow", "replacePandemicGlow" })
+	pandemicGlowOption:SetRelativeWidth(0.33)
+	pandemicGlowOption:SetLabel("Pandemic Glow")
+	pandemicGlowOption:SetValue(options.pandemicGlowOption or "keepPandemicGlow")
+	pandemicGlowOption:SetCallback("OnValueChanged", function(_, _, value)
+		options.pandemicGlowOption = value
+	end)
+	glowSettings:AddChild(pandemicGlowOption)
+
+	local borderSettings = AceGUI:Create("InlineGroup")
+	borderSettings:SetLayout("flow")
+	borderSettings:SetFullWidth(true)
+	borderSettings:SetTitle("Border")
+	scrollFrame:AddChild(borderSettings)
+
+	local borderSize = AceGUI:Create("Slider")
+	borderSize:SetRelativeWidth(0.5)
+	borderSize:SetLabel("Border Size")
+	borderSize:SetSliderValues(0, 5, 1)
+	borderSize:SetValue(options.borderSize or 1)
+	borderSize:SetCallback("OnValueChanged", function(_, _, value)
+		options.borderSize = value
+		SCM:ApplyAllCDManagerConfigs()
+	end)
+	borderSettings:AddChild(borderSize)
+
+	local borderColor = AceGUI:Create("ColorPicker")
+	borderColor:SetRelativeWidth(0.5)
+	borderColor:SetLabel("Border Color")
+	borderColor:SetHasAlpha(true)
+
+	local color = options.borderColor or { r = 0, g = 0, b = 0, a = 1 }
+	borderColor:SetColor(color.r, color.g, color.b, color.a)
+	borderColor:SetCallback("OnValueChanged", function(self, event, r, g, b, a)
+		options.borderColor = { r = r, g = g, b = b, a = a }
+		SCM:ApplyAllCDManagerConfigs()
+	end)
+	borderSettings:AddChild(borderColor)
+
+	local anchorHighlightSettings = AceGUI:Create("InlineGroup")
+	anchorHighlightSettings:SetLayout("flow")
+	anchorHighlightSettings:SetFullWidth(true)
+	anchorHighlightSettings:SetTitle("Anchor Highlight")
+	scrollFrame:AddChild(anchorHighlightSettings)
+	--
+	local showAnchorHighlight = AceGUI:Create("CheckBox")
+	showAnchorHighlight:SetValue(options.showAnchorHighlight)
+	showAnchorHighlight:SetLabel("Show Anchor Highlight")
+	showAnchorHighlight:SetCallback("OnValueChanged", function(self, event, value)
+		options.showAnchorHighlight = value
+		--
+		if value and SCM.OptionsFrame then
+			for _, anchorFrame in pairs(SCM.anchorFrames) do
+				anchorFrame.debugTexture:Show()
+				anchorFrame.debugText:Show()
+			end
+		else
+			for _, anchorFrame in pairs(SCM.anchorFrames) do
+				anchorFrame.debugTexture:Hide()
+				anchorFrame.debugText:Hide()
+			end
+		end
+	end)
+	anchorHighlightSettings:AddChild(showAnchorHighlight)
+end
+
+SCM.MainTabs.General.callback = General
