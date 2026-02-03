@@ -41,4 +41,4 @@ jobs:
         with:
           #probably not needed but whatever
           # args: -p 582886 -a 25NRoe63
-          args: -d
+          args: -S
