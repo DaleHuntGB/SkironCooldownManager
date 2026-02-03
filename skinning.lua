@@ -1,6 +1,8 @@
 local SCM = select(2, ...)
 local LSM = LibStub("LibSharedMedia-3.0")
 
+local originalCooldownFont
+
 function SCM:SkinChild(child, childConfig)
 	if C_AddOns.IsAddOnLoaded("ElvUI") and ElvUI[1].private.skins.blizzard.cooldownManager then
 		return
@@ -14,7 +16,7 @@ function SCM:SkinChild(child, childConfig)
 	local borderSize = SCM:PixelPerfect() * options.borderSize
 	local borderColor = options.borderColor
 
-	if child.SCMSkinned then
+	if child.SCMSkinned and self.OptionsFrame ~= nil and self.OptionsFrame:IsShown() then
 		if borderSize == 0 then
 			child.customBorder:Hide()
 		else
@@ -31,12 +33,22 @@ function SCM:SkinChild(child, childConfig)
 		child.Icon:SetTexCoord(0.12, 0.88, 0.12, 0.88)
 
 		local fontPath = LSM:Fetch("font", options.chargeFont)
-		if child.ChargeCount and child.ChargeCount.Current and fontPath then
-			child.ChargeCount.Current:SetFont(fontPath, options.chargeFontSize, "OUTLINE")
+		if child.ChargeCount and child.ChargeCount.Current then
+			if fontPath then
+				child.ChargeCount.Current:SetFont(fontPath, options.chargeFontSize, "OUTLINE")
+			end
+
+			child.ChargeCount.Current:ClearAllPoints()
+			child.ChargeCount.Current:SetPoint("CENTER", child.Icon, options.chargeRelativePoint, options.chargeXOffset, options.chargeYOffset)
 		end
 
-		if child.Applications and child.Applications.Applications and fontPath then
-			child.Applications.Applications:SetFont(fontPath, options.chargeFontSize, "OUTLINE")
+		if child.Applications and child.Applications.Applications then
+			if fontPath then
+				child.Applications.Applications:SetFont(fontPath, options.chargeFontSize, "OUTLINE")
+			end
+
+			child.Applications.Applications:ClearAllPoints()
+			child.Applications.Applications:SetPoint("CENTER", child.Icon, options.chargeRelativePoint, options.chargeXOffset, options.chargeYOffset)
 		end
 
 		for _, customSkin in ipairs(SCM.Skins) do
@@ -94,7 +106,6 @@ function SCM:SkinChild(child, childConfig)
 
 		if child.GetCooldownFrame then
 			local cooldownFrame = child:GetCooldownFrame()
-			cooldownFrame:SetCountdownFont("Permok_Expressway_Medium")
 			cooldownFrame:ClearAllPoints()
 			cooldownFrame:SetAllPoints(child.Icon)
 			cooldownFrame:SetSwipeTexture("Interface\\Buttons\\WHITE8x8")
@@ -117,12 +128,22 @@ function SCM:SkinChild(child, childConfig)
 		end
 
 		local fontPath = LSM:Fetch("font", options.chargeFont)
-		if child.ChargeCount and child.ChargeCount.Current and fontPath then
-			child.ChargeCount.Current:SetFont(fontPath, options.chargeFontSize, "OUTLINE")
+		if child.ChargeCount and child.ChargeCount.Current then
+			if fontPath then
+				child.ChargeCount.Current:SetFont(fontPath, options.chargeFontSize, "OUTLINE")
+			end
+
+			child.ChargeCount.Current:ClearAllPoints()
+			child.ChargeCount.Current:SetPoint("CENTER", child.Icon, options.chargeRelativePoint, options.chargeXOffset, options.chargeYOffset)
 		end
 
-		if child.Applications and child.Applications.Applications and fontPath then
-			child.Applications.Applications:SetFont(fontPath, options.chargeFontSize, "OUTLINE")
+		if child.Applications and child.Applications.Applications then
+			if fontPath then
+				child.Applications.Applications:SetFont(fontPath, options.chargeFontSize, "OUTLINE")
+			end
+
+			child.Applications.Applications:ClearAllPoints()
+			child.Applications.Applications:SetPoint("CENTER", child.Icon, options.chargeRelativePoint, options.chargeXOffset, options.chargeYOffset)
 		end
 
 		for _, customSkin in ipairs(SCM.Skins) do

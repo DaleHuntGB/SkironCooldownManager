@@ -62,6 +62,25 @@ function SCM:RemoveAnchor(anchorIndex, anchorTabsTbl, frame)
 		anchorTabsTbl[i].text = "Anchor " .. i
 	end
 
+	self.anchorFrames[#self.anchorFrames]:Hide()
+	self.anchorFrames[#self.anchorFrames] = nil
+
+	for spellID, config in pairs(self.spellConfig) do
+		for sourceIndex, anchorGroup in pairs(config.source) do
+			if anchorGroup == anchorIndex then
+				config.source[sourceIndex] = nil
+
+				if not next(config.source) then
+					self.spellConfig[spellID] = nil
+				end
+			elseif anchorGroup > anchorIndex then
+				config.source[sourceIndex] = anchorGroup - 1
+				config.anchorGroup[anchorGroup - 1] = config.anchorGroup[anchorGroup]
+				config.anchorGroup[anchorGroup] = nil
+			end
+		end
+	end
+
 	SCM:ApplyAllCDManagerConfigs()
 
 	return removedIndex
@@ -140,9 +159,12 @@ function SCM:SetHideWhenInactive(value)
 	LibEditModeOverride:LoadLayouts()
 
 	if LibEditModeOverride:CanEditActiveLayout() then
-		LibEditModeOverride:SetFrameSetting(BuffIconCooldownViewer, Enum.EditModeCooldownViewerSetting.HideWhenInactive, value and 0 or 1)
-		LibEditModeOverride:SaveOnly()
-		LibEditModeOverride:ApplyChanges()
+		local currentSetting = LibEditModeOverride:GetFrameSetting(BuffIconCooldownViewer, Enum.EditModeCooldownViewerSetting.HideWhenInactive)
+		if (value and currentSetting == 1) or (not value and currentSetting == 0) then
+			LibEditModeOverride:SetFrameSetting(BuffIconCooldownViewer, Enum.EditModeCooldownViewerSetting.HideWhenInactive, value and 0 or 1)
+			LibEditModeOverride:SaveOnly()
+			LibEditModeOverride:ApplyChanges()
+		end
 	end
 end
 
@@ -158,12 +180,16 @@ end
 
 local function OpenOptions()
 	local options = SCM.db.global.options
+	if options.simulateAuras then
+		SCM:SetHideWhenInactive(true)
+	end
 
 	local frame = AceGUI:Create("SCMFrame")
 	frame:SetTitle(addonName)
 	frame:SetLayout("flow")
 	frame:SetCallback("OnClose", function()
 		SCM.OptionsFrame = nil
+		SCM:ApplyAllCDManagerConfigs()
 	end)
 	SCM.OptionsFrame = frame
 

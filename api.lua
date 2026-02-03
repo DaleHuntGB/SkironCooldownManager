@@ -32,3 +32,7 @@ function SCMAPI.RegisterCustomAnchor(frame, options)
 		SCM.CustomAnchors[frame] = options
 	end
 end
+
+function SCMAPI.RegisterCustomEntry(customEntry)
+	tinsert(SCM.CustomEntries, customEntry)
+end

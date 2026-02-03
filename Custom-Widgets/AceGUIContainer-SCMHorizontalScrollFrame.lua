@@ -253,7 +253,9 @@ local methods = {
 			button.Icon:SetTexture(data.texture)
 			button.Icon:SetDesaturated(not data.isKnown)
 			if data.isDisabled then
-				button.Icon:SetVertexColor(1, 0, 0, 1)
+				button.Icon:SetVertexColor(0.7, 0, 0, 1)
+			else
+				button.Icon:SetVertexColor(1, 1, 1, 1)
 			end
 			button:RegisterForDrag("LeftButton")
 			button:SetMovable(true)

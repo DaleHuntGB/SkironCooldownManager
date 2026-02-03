@@ -7,6 +7,7 @@ local colorUnknown = "808080"
 local colorDisabled = "ff0000"
 
 SCM.MainTabs.CDM = { value = "CDM", text = "Cooldown Manager", order = 2, subgroups = {} }
+SCM.CustomEntries = {}
 
 local function SortByIndex(a, b)
 	return a.dataIndex < b.dataIndex
@@ -124,6 +125,10 @@ local function CreateAddSpellDropdown(owner, rootDescription, scrollFrame, ancho
 	buffButton:SetGridMode(MenuConstants.VerticalGridDirection, floor(#buffItems / 15) + 1)
 
 	ProcessAndCreateButtons(buffButton, buffItems, true)
+
+	for _, customEntry in pairs(SCM.CustomEntries) do
+		customEntry(rootDescription, scrollFrame, anchorIndex)
+	end
 end
 
 local function SelectRow(self, data, anchorIndex, rowIndex, rowTabsTbl)
@@ -135,7 +140,7 @@ local function SelectRow(self, data, anchorIndex, rowIndex, rowTabsTbl)
 
 	local iconSize = AceGUI:Create("Slider")
 	iconSize:SetRelativeWidth(0.5)
-	iconSize:SetSliderValues(10, 100, 1)
+	iconSize:SetSliderValues(10, 100, 0.1)
 	iconSize:SetLabel("Size")
 	iconSize:SetValue(data.rowConfig[rowIndex].size)
 	iconSize:SetCallback("OnValueChanged", function(self, event, value)
@@ -207,6 +212,7 @@ end
 
 local function SelectAnchor(anchorWidget, frame, anchorIndex, anchorTabsTbl)
 	anchorWidget:ReleaseChildren()
+	SCM.activeAnchorSettings = anchorIndex
 	local options = SCM.db.global.options
 
 	if options.showAnchorHighlight then
@@ -283,7 +289,7 @@ local function SelectAnchor(anchorWidget, frame, anchorIndex, anchorTabsTbl)
 	relativeTo:SetRelativeWidth(0.25)
 	relativeTo:SetLabel("Anchor Frame")
 	relativeTo:SetText(data.anchor[2])
-	relativeTo:SetCallback("OnTextChanged", function(self, event, text)
+	relativeTo:SetCallback("OnEnterPressed", function(self, event, text)
 		data.anchor[2] = text
 		SCM:ApplyAllCDManagerConfigs()
 	end)
@@ -313,7 +319,7 @@ local function SelectAnchor(anchorWidget, frame, anchorIndex, anchorTabsTbl)
 
 	local spacing = AceGUI:Create("Slider")
 	spacing:SetRelativeWidth(0.33)
-	spacing:SetSliderValues(-10, 50, 1)
+	spacing:SetSliderValues(-10, 50, 0.1)
 	spacing:SetLabel("Horizontal Spacing")
 	spacing:SetValue(data.spacing or 0)
 	spacing:SetCallback("OnValueChanged", function(self, event, value)
@@ -324,7 +330,7 @@ local function SelectAnchor(anchorWidget, frame, anchorIndex, anchorTabsTbl)
 
 	local xOffset = AceGUI:Create("Slider")
 	xOffset:SetRelativeWidth(0.33)
-	xOffset:SetSliderValues(-300, 300, 1)
+	xOffset:SetSliderValues(-300, 300, 0.1)
 	xOffset:SetLabel("X Offset")
 	xOffset:SetValue(data.anchor[4])
 	xOffset:SetCallback("OnValueChanged", function(self, event, value)
@@ -335,7 +341,7 @@ local function SelectAnchor(anchorWidget, frame, anchorIndex, anchorTabsTbl)
 
 	local yOffset = AceGUI:Create("Slider")
 	yOffset:SetRelativeWidth(0.33)
-	yOffset:SetSliderValues(-300, 300, 1)
+	yOffset:SetSliderValues(-300, 300, 0.1)
 	yOffset:SetLabel("Y Offset")
 	yOffset:SetValue(data.anchor[5])
 	yOffset:SetCallback("OnValueChanged", function(self, event, value)

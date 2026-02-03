@@ -1,12 +1,18 @@
 local SCM = select(2, ...)
 
+SCM.Defaults = {}
+
 SCM.DefaultDB = {
     global = {
         options = {
 			showAnchorHighlight = true,
             enableSkinning = true,
+			simulateAuras = true,
 			chargeFont = "Expressway",
 			chargeFontSize = 22,
+			chargeRelativePoint = "BOTTOMRIGHT",
+			chargeXOffset = -8,
+			chargeYOffset = 10,
             useCustomGlow = false,
             glowType = "Proc",
             borderSize = 1,
@@ -17,6 +23,7 @@ SCM.DefaultDB = {
 				"PrimaryResourceBar",
 				"SecondaryResourceBar"
 			},
+			pandemicGlowOption = "keepPandemicGlow",
 			recolorActiveSwipe = false,
 			activeSwipeColor = {0, 0, 0, 0.8},
 			castbarXOffset = 0,
@@ -85,4 +92,9 @@ SCM.DefaultClassConfig = {
 	spellConfig = {},
 	anchorConfig = {},
 	itemConfig = {},
+}
+
+SCM.Defaults.GlobalSettingsTabs = {
+	{ value = "General", text = "General"},
+	{ value = "Glow", text = "Glow"},
 }

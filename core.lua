@@ -124,16 +124,20 @@ local function SetupBuffIconHooks(child, options)
 end
 
 local function ProcessBuffIcon(child, childData, validChildren, group, options)
-	SetupBuffIconHooks(child, options)
+    SetupBuffIconHooks(child, options)
 
-	local shouldHide = options.hideBuffsWhenInactive and not child.Cooldown:IsShown() and not childData.alwaysShow
+    local isInactive = not child.Cooldown:IsShown()
+    local forceShow = SCM.simulateBuffs or childData.alwaysShow
 
-	if shouldHide then
-		HideChild(child)
-	else
-		ShowChild(child)
-		UpdateChildDesaturation(child, not child.Cooldown:IsShown())
-	end
+    local shouldHide = options.hideBuffsWhenInactive and isInactive and not forceShow
+
+    if shouldHide then
+        HideChild(child)
+        return
+    end
+
+    ShowChild(child)
+    UpdateChildDesaturation(child, isInactive)
 end
 
 local function ProcessRegularIcon(child, validChildren, group)
@@ -523,6 +527,7 @@ function SCM:GetAnchor(group, point, anchor, relativePoint, xOffset, yOffset, gr
 	end
 	anchorFrame:ClearAllPoints()
 	anchorFrame:SetPoint(pivot, target, relativePoint, xOffset + ((iconSize or 0) * xMod), yOffset)
+	anchorFrame:Show()
 
 	if self.OptionsFrame ~= nil and self.OptionsFrame:IsShown() and not anchorFrame.isGlowActive then
 		anchorFrame.debugText:SetTextColor(0.90, 0.62, 0, 1)
@@ -824,6 +829,9 @@ function SCM:PLAYER_REGEN_ENABLED()
 	SCM:ApplyAllCDManagerConfigs()
 end
 
+function SCM:PLAYER_REGEN_DISABLED()
+end
+
 function SCM:EDIT_MODE_LAYOUTS_UPDATED()
 	SCM:ApplyOptions()
 end
@@ -886,6 +894,7 @@ EventUtil.ContinueOnAddOnLoaded(addonName, function()
 	eventFrame:RegisterEvent("PLAYER_ENTERING_WORLD")
 	eventFrame:RegisterEvent("PLAYER_EQUIPMENT_CHANGED")
 	eventFrame:RegisterEvent("PLAYER_REGEN_ENABLED")
+	eventFrame:RegisterEvent("PLAYER_REGEN_DISABLED")
 	eventFrame:RegisterEvent("BAG_UPDATE_COOLDOWN")
 	eventFrame:RegisterEvent("TRAIT_CONFIG_UPDATED")
 	eventFrame:RegisterEvent("ACTIVE_PLAYER_SPECIALIZATION_CHANGED")
