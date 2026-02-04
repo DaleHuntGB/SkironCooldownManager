@@ -3,6 +3,8 @@
 ## Author: Permok
 ## SavedVariables: SkironCooldownManagerDB
 ## OptionalDeps: Plater, Details, UnhaltedUnitFrames, CooldownViewer, SenseiClassResourceBar
+## X-Curse-Project-ID: 1453035
+## X-Wago-ID: O67DaZK3
 
 templates.xml
 Libs\LibStub\LibStub.lua
