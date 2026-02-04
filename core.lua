@@ -124,20 +124,20 @@ local function SetupBuffIconHooks(child, options)
 end
 
 local function ProcessBuffIcon(child, childData, validChildren, group, options)
-    SetupBuffIconHooks(child, options)
+	SetupBuffIconHooks(child, options)
 
-    local isInactive = not child.Cooldown:IsShown()
-    local forceShow = SCM.simulateBuffs or childData.alwaysShow
+	local isInactive = not child.Cooldown:IsShown()
+	local forceShow = SCM.simulateBuffs or childData.alwaysShow
 
-    local shouldHide = options.hideBuffsWhenInactive and isInactive and not forceShow
+	local shouldHide = options.hideBuffsWhenInactive and isInactive and not forceShow
 
-    if shouldHide then
-        HideChild(child)
-        return
-    end
+	if shouldHide then
+		HideChild(child)
+		return
+	end
 
-    ShowChild(child)
-    UpdateChildDesaturation(child, isInactive)
+	ShowChild(child)
+	UpdateChildDesaturation(child, isInactive)
 end
 
 local function ProcessRegularIcon(child, validChildren, group)
@@ -227,29 +227,31 @@ local function ProcessItemConfig(itemConfig, validChildren)
 					frame.Icon:SetDesaturated(false)
 				end)
 			end
+			if not frame.itemID or frame.itemID ~= itemID then
+				frame.itemID = itemID
+				frame.SCMCooldownID = "i:" .. itemID
+				frame.SCMConfig = config
+				frame.Icon:SetTexture(C_Item.GetItemIconByID(itemID))
 
-			frame.itemID = itemID
-			frame.SCMCooldownID = "i:" .. itemID
-			frame.SCMConfig = config
-			frame.Icon:SetTexture(C_Item.GetItemIconByID(itemID))
+				local item = Item:CreateFromItemID(itemID)
+				item:ContinueOnItemLoad(function()
+					frame.Icon:SetTexture(item:GetItemIcon())
+				end)
 
-			local item = Item:CreateFromItemID(itemID)
-			item:ContinueOnItemLoad(function()
-				frame.Icon:SetTexture(item:GetItemIcon())
-			end)
+				frame.SCMOrder = 100 + slotID
+				SCM.itemFrames[slotID] = frame
+
+				local start, duration, enable = GetInventoryItemCooldown("player", slotID)
+				if start and start > 0 then
+					frame.Cooldown:SetCooldown(start, duration)
+					frame.Icon:SetDesaturated(true)
+				else
+					frame.Icon:SetDesaturated(false)
+				end
+				frame:Show()
+			end
 
 			tinsert(validChildren[config.anchorGroup or 1], frame)
-			frame.SCMOrder = 100 + slotID
-			SCM.itemFrames[slotID] = frame
-
-			local start, duration, enable = GetInventoryItemCooldown("player", slotID)
-			if start and start > 0 then
-				frame.Cooldown:SetCooldown(start, duration)
-				frame.Icon:SetDesaturated(true)
-			else
-				frame.Icon:SetDesaturated(false)
-			end
-			frame:Show()
 		elseif SCM.itemFrames[slotID] then
 			SCM.itemFrames[slotID]:Hide()
 		end
@@ -415,7 +417,10 @@ local function OrderCDManagerSpells_Actual()
 				else
 					SCM:UpdateResourceBarWidth(rowConfig[1].size)
 				end
-				SCM:UpdateUUFValues(SCM.db.global.options, rowConfig[1].size, rowConfig)
+
+				if not InCombatLockdown() then
+					SCM:UpdateUUFValues(SCM.db.global.options, rowConfig[1].size, rowConfig)
+				end
 			end
 		end
 	end
@@ -811,6 +816,7 @@ function SCM:BAG_UPDATE_COOLDOWN()
 				frame.Cooldown:SetCooldown(start, duration)
 				frame.Icon:SetDesaturated(true)
 			else
+				frame.Cooldown:Clear()
 				frame.Icon:SetDesaturated(false)
 			end
 		end
@@ -829,8 +835,7 @@ function SCM:PLAYER_REGEN_ENABLED()
 	SCM:ApplyAllCDManagerConfigs()
 end
 
-function SCM:PLAYER_REGEN_DISABLED()
-end
+function SCM:PLAYER_REGEN_DISABLED() end
 
 function SCM:EDIT_MODE_LAYOUTS_UPDATED()
 	SCM:ApplyOptions()
@@ -854,10 +859,6 @@ end
 
 local function OnProfileChanged(_, _, _, skipReset)
 	-- Hopefully players won't change profiles that much that we reach the frame limit :)
-	for _, anchorFrame in pairs(SCM.anchorFrames) do
-		anchorFrame:Hide()
-	end
-
 	if not skipReset then
 		SCM.DB:ResetData()
 	end
@@ -866,7 +867,7 @@ local function OnProfileChanged(_, _, _, skipReset)
 	SCM:UpdateDB()
 	SCM:ApplyAllCDManagerConfigs()
 
-	if SCM.OptionsFrame and SCM.db.global.options.showAnchorHighlight then
+	if SCM.OptionsFrame and SCM.OptionsFrame:IsShown() and SCM.db.global.options.showAnchorHighlight then
 		for _, anchorFrame in pairs(SCM.anchorFrames) do
 			anchorFrame.debugTexture:Show()
 			anchorFrame.debugText:Show()

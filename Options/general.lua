@@ -226,7 +226,7 @@ local function SelectGlobalSettingsTab(tabWidget, group, options)
 		tabWidget:AddChild(skinningSettings)
 
 		local enableSkinning = AceGUI:Create("CheckBox")
-		enableSkinning:SetRelativeWidth(0.33)
+		enableSkinning:SetRelativeWidth(0.5)
 		enableSkinning:SetLabel("Enable Skinning")
 		enableSkinning:SetValue(options.enableSkinning)
 		enableSkinning:SetCallback("OnValueChanged", function(_, _, value)
@@ -236,7 +236,7 @@ local function SelectGlobalSettingsTab(tabWidget, group, options)
 
 		local showAnchorHighlight = AceGUI:Create("CheckBox")
 		showAnchorHighlight:SetValue(options.showAnchorHighlight)
-		showAnchorHighlight:SetRelativeWidth(0.33)
+		showAnchorHighlight:SetRelativeWidth(0.5)
 		showAnchorHighlight:SetLabel("Show Anchor Highlight")
 		showAnchorHighlight:SetCallback("OnValueChanged", function(self, event, value)
 			options.showAnchorHighlight = value
