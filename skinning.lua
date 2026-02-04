@@ -54,7 +54,7 @@ function SCM:SkinChild(child, childConfig)
 		for _, customSkin in ipairs(SCM.Skins) do
 			customSkin(child)
 		end
-	else
+	elseif not child.SCMSkinned then
 		child.SCMSkinned = true
 
 		child.Icon:ClearAllPoints()
