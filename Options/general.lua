@@ -159,7 +159,6 @@ local function AddCustomGlowOptions(dynamicGlowSettingsGroup)
 		length:SetValue(glowTypeOptions.length or 2)
 		length:SetLabel("Length")
 		length:SetSliderValues(1, 15, 0.05)
-		length:SetIsPercent(true)
 		length:SetCallback("OnValueChanged", function(self, event, value)
 			glowTypeOptions.length = value
 		end)

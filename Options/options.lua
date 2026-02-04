@@ -180,9 +180,8 @@ end
 
 local function OpenOptions()
 	local options = SCM.db.global.options
-	if options.simulateAuras then
-		SCM:SetHideWhenInactive(true)
-	end
+
+	SCM:StopAllGlows()
 
 	local frame = AceGUI:Create("SCMFrame")
 	frame:SetTitle(addonName)
