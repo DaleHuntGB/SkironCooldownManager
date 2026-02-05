@@ -65,7 +65,6 @@ local function SetupBuffIconHooks(child, options)
 	if child.SCMShowHook then
 		return
 	end
-	child.SCMShowHook = true
 
 	SetupChildHooks(child)
 
