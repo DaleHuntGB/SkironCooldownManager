@@ -250,6 +250,7 @@ local function ProcessItemConfig(itemConfig, validChildren)
 				frame:Show()
 			end
 
+			validChildren[config.anchorGroup or 1] = validChildren[config.anchorGroup or 1] or {}
 			tinsert(validChildren[config.anchorGroup or 1], frame)
 		elseif SCM.itemFrames[slotID] then
 			SCM.itemFrames[slotID]:Hide()
@@ -847,6 +848,8 @@ end
 
 function SCM:TRAIT_CONFIG_UPDATED()
 	C_Timer.After(0.2, function()
+		wipe(cachedViewerChildren)
+
 		SCM:UpdateCooldownInfo(true, CooldownViewerSettings:GetDataProvider())
 		SCM:UpdateDB()
 		SCM:ApplyAllCDManagerConfigs()
@@ -855,6 +858,7 @@ end
 
 function SCM:ACTIVE_PLAYER_SPECIALIZATION_CHANGED()
 	C_Timer.After(0.2, function()
+		wipe(cachedViewerChildren)
 		SCM:UpdateCooldownInfo(true, CooldownViewerSettings:GetDataProvider())
 		SCM:UpdateDB()
 		SCM:ApplyAllCDManagerConfigs()
