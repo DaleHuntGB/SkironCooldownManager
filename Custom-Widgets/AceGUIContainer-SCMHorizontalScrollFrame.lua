@@ -3,15 +3,15 @@ ScrollFrame Container
 Plain container that scrolls its content and doesn't grow in height.
 -------------------------------------------------------------------------------]]
 
-local Type, Version = "SCMHorizontalScrollFrame", 1
+local Type, Version = "SCMHorizontalScrollFrame", 2
 local AceGUI = LibStub and LibStub("AceGUI-3.0", true)
 if not AceGUI or (AceGUI:GetWidgetVersion(Type) or 0) >= Version then
 	return
 end
 
 -- Lua APIs
-local pairs, assert, type = pairs, assert, type
-local min, max, floor = math.min, math.max, math.floor
+local pairs, ipairs = pairs, ipairs
+local min, max = math.min, math.max
 
 -- WoW APIs
 local CreateFrame, UIParent = CreateFrame, UIParent
@@ -19,6 +19,8 @@ local CreateFrame, UIParent = CreateFrame, UIParent
 --[[-----------------------------------------------------------------------------
 Support functions
 -------------------------------------------------------------------------------]]
+
+
 local function GetCursorScaled(controller)
 	local x, y = GetCursorPosition()
 	local scale = controller:GetEffectiveScale()
@@ -40,14 +42,38 @@ local function UpdateMarkerPosition(frame, cursorX, marker)
 	end
 end
 
+local function GetHorizontalDistanceToFrame(frame, cursorX)
+	local left = frame:GetLeft()
+	local right = frame:GetRight()
+
+	if cursorX < left then
+		return left - cursorX
+	end
+	if cursorX > right then
+		return cursorX - right
+	end
+
+	return 0
+end
+
 local function FindBestTarget(scrollView, cursorX, draggedFrame)
-	local best
+	local best, bestDistance
+	local snapDistance = 24
 	scrollView:ForEachFrame(function(frame)
-		if frame:IsShown() and cursorX >= frame:GetLeft() and cursorX <= frame:GetRight() and not (frame == draggedFrame) and not frame.data.isAddButton then
-			best = frame
+		if frame:IsShown() and not (frame == draggedFrame) and not frame.data.isAddButton then
+			local distance = GetHorizontalDistanceToFrame(frame, cursorX)
+			if not bestDistance or distance < bestDistance then
+				best = frame
+				bestDistance = distance
+			end
 		end
 	end)
-	return best
+
+	if bestDistance and bestDistance <= snapDistance then
+		return best
+	end
+
+	return nil
 end
 
 --[[-----------------------------------------------------------------------------
@@ -85,6 +111,8 @@ end
 local function Button_OnDragStart(self)
 	self:StartMoving()
 	self:SetAlpha(0)
+	self.obj:PauseLayout()
+	self.obj.dragInProgress = true
 
 	local controller = self.controller
 	controller.draggedFrame = self
@@ -103,6 +131,7 @@ local function Button_OnDragStop(self)
 	self:StopMovingOrSizing()
 	self:SetAlpha(1)
 
+	local obj = self.obj
 	local controller = self.controller
 	local dataProvider = self.dataProvider
 
@@ -123,10 +152,12 @@ local function Button_OnDragStop(self)
 		local targetIndex = target.data.dataIndex + offfset
 		if sourceIndex == targetIndex then
 			self.scrollBox:Layout()
+			obj.dragInProgress = nil
+			obj:ResumeLayout()
 			return
 		end
 
-		targetIndex = math.max(1, math.min(dataProvider:GetSize(), targetIndex))
+		targetIndex = max(1, min(dataProvider:GetSize(), targetIndex))
 
 		if source.data and dataProvider:FindIndex(source.data) then
 			--source.data.dataIndex = targetIndex
@@ -147,6 +178,8 @@ local function Button_OnDragStop(self)
 	end
 
 	self.scrollBox:Layout()
+	obj.dragInProgress = nil
+	obj:ResumeLayout()
 end
 
 local function Button_OnClick(self, button, down)
@@ -165,17 +198,18 @@ local methods = {
 
 	["OnRelease"] = function(self)
 		self.dataProvider:Flush()
+		self.dragInProgress = nil
+		self:ResumeLayout()
+
+		local controller = self.controller
+		controller.draggedFrame = nil
+		controller.draggedIndex = nil
+		controller.reorderTarget = nil
+		controller.reorderOffset = 0
+		controller:SetScript("OnUpdate", nil)
+		controller.marker:Hide()
+		controller:Hide()
 	end,
-
-	["SetScroll"] = function(self, value) end,
-
-	["MoveScroll"] = function(self, value) end,
-
-	["FixScroll"] = function(self) end,
-
-	["LayoutFinished"] = function(self, width, height) end,
-
-	["SetStatusTable"] = function(self, status) end,
 
 	["OnWidthSet"] = function(self, width)
 		self.frame:SetWidth(width)
@@ -276,6 +310,8 @@ local function Constructor()
 	local dataProvider = CreateDataProvider()
 	local scrollBox = CreateFrame("Frame", nil, frame, "WowScrollBoxList")
 	scrollBox:SetAllPoints(frame)
+	local content = CreateFrame("Frame", nil, scrollBox)
+	content:SetAllPoints(scrollBox)
 
 	local name = (Type .. "%dScrollBar"):format(AceGUI:GetNextWidgetNum(Type))
 	local scrollbar = CreateFrame("EventFrame", name, frame, "WowTrimHorizontalScrollBar")
@@ -314,7 +350,7 @@ local function Constructor()
 	scrollView:SetDataProvider(dataProvider)
 
 	local widget = {
-		localstatus = { scrollvalue = 0 },
+		content = content,
 		scrollbar = scrollbar,
 		scrollView = scrollView,
 		scrollBox = scrollBox,
@@ -326,10 +362,8 @@ local function Constructor()
 	for method, func in pairs(methods) do
 		widget[method] = func
 	end
-	frame.obj, scrollbar.obj = widget, widget
 
-	--- DON'T YELL AT ME I KNOW THAT IT SHOULD BE CONTAINER
-	return AceGUI:RegisterAsWidget(widget)
+	return AceGUI:RegisterAsContainer(widget)
 end
 
 AceGUI:RegisterWidgetType(Type, Constructor, Version)
