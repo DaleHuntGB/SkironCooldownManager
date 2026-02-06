@@ -39,11 +39,10 @@ function SCM.DB:RegisterClassConfig(classFileName, config)
 end
 
 function SCM.DB:RegisterClassSpecConfig(classFileName, config, specID)
-
 	self.classes[classFileName] = self.classes[classFileName] or {
 		anchorConfig = {},
 		spellConfig = {},
-		itemConfig = {}
+		itemConfig = {},
 	}
 
 	if config.anchorConfig[specID] then

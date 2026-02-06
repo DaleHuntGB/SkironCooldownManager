@@ -70,7 +70,7 @@ local function CreateAddSpellDropdown(owner, rootDescription, scrollFrame, ancho
 		local data = cooldownInfoByID[cooldownID]
 
 		if info and data then
-			if not SCM:IsSpellInData(data.spellID, data.category) then
+			if not SCM:IsSpellInData(data.spellID, data.category) and not scrollFrame.dataProvider:FindByPredicate(function(data) return data.spellID == info.spellID end) then
 				table.insert(essentialItems, { info = info, data = data, cooldownID = cooldownID, targetCategory = 0 })
 			end
 		end
@@ -86,7 +86,7 @@ local function CreateAddSpellDropdown(owner, rootDescription, scrollFrame, ancho
 		local data = cooldownInfoByID[cooldownID]
 
 		if info and data then
-			if not SCM:IsSpellInData(data.spellID, data.category) then
+			if not SCM:IsSpellInData(data.spellID, data.category) and not scrollFrame.dataProvider:FindByPredicate(function(data) return data.spellID == info.spellID end) then
 				table.insert(utilityItems, { info = info, data = data, cooldownID = cooldownID, targetCategory = 1 })
 			end
 		end
@@ -104,7 +104,7 @@ local function CreateAddSpellDropdown(owner, rootDescription, scrollFrame, ancho
 		local data = cooldownInfoByID[cooldownID]
 
 		if info and data then
-			if not SCM:IsSpellInData(data.spellID, data.category) then
+			if not SCM:IsSpellInData(data.spellID, data.category) and not scrollFrame.dataProvider:FindByPredicate(function(data) return data.spellID == info.spellID end) then
 				table.insert(buffItems, { info = info, data = data, cooldownID = cooldownID, targetCategory = 2 })
 			end
 		end
@@ -116,7 +116,7 @@ local function CreateAddSpellDropdown(owner, rootDescription, scrollFrame, ancho
 		local data = cooldownInfoByID[cooldownID]
 
 		if info and data and data.category < 3 then
-			if not SCM:IsSpellInData(data.spellID, data.category) then
+			if not SCM:IsSpellInData(data.spellID, data.category) and not scrollFrame.dataProvider:FindByPredicate(function(data) return data.spellID == info.spellID end) then
 				table.insert(buffItems, { info = info, data = data, cooldownID = cooldownID, targetCategory = 3 })
 			end
 		end
@@ -420,9 +420,18 @@ local function SelectAnchor(anchorWidget, frame, anchorIndex, anchorTabsTbl)
 				for sourceIndex, spellAnchorIndex in pairs(info.source) do
 					if anchorIndex == spellAnchorIndex then
 						local data = defaultCooldownViewerConfig[sourceIndex]
-						if data and data.spellIDs[spellID] then
-							tinsert(spells, { info = info, data = data.spellIDs[spellID], isBuffIcon = sourceIndex >= 2 })
-							break
+						if data then
+							if not data.spellIDs[spellID] then
+								local pairData = defaultCooldownViewerConfig[SCM.Constants.SourcePairs[sourceIndex]]
+								if pairData and pairData.spellIDs[spellID] then
+									data = pairData
+								end
+							end
+
+							if data.spellIDs[spellID] then
+								tinsert(spells, { info = info, data = data.spellIDs[spellID], isBuffIcon = sourceIndex >= 2 })
+								break
+							end
 						end
 					end
 				end
