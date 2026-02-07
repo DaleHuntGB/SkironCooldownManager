@@ -129,7 +129,11 @@ end
 local function ProcessBuffIcon(child, childData, validChildren, group, options)
 	SetupBuffIconHooks(child, options)
 
-	local isInactive = not child.Cooldown:IsShown()
+	local isActive = child:IsActive()
+    local isInactive = not child.Cooldown:IsShown()
+    if not issecretvalue(isActive) then
+        isInactive = not isActive
+    end
 	local forceShow = SCM.simulateBuffs or childData.alwaysShow
 
 	local shouldHide = options.hideBuffsWhenInactive and isInactive and not forceShow
