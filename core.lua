@@ -22,7 +22,7 @@ end
 local function HideChild(child)
 	if child.viewerFrame then
 		child.SCMHidden = true
-		child:SetAlpha(0)
+		UIParent.SetAlpha(child, 0)
 		child:EnableMouse(false)
 	end
 end
@@ -30,7 +30,7 @@ end
 local function ShowChild(child)
 	if child.viewerFrame then
 		child.SCMHidden = false
-		child:SetAlpha(1)
+		UIParent.SetAlpha(child, 1)
 		child:EnableMouse(true)
 	end
 end
@@ -52,7 +52,7 @@ local function SetupChildHooks(child)
 	child.SCMShowHook = true
 
 	child:HookScript("OnShow", function(self)
-		self:SetAlpha(self.SCMHidden and 0 or 1)
+		UIParent.SetAlpha(self, self.SCMHidden and 0 or 1)
 		SCM:ApplyAllCDManagerConfigs()
 	end)
 
@@ -119,6 +119,10 @@ local function SetupBuffIconHooks(child, options)
 			SCM:StopCustomGlow(self)
 			self.SCMPandemic = nil
 		end
+	end)
+
+	hooksecurefunc(child, "SetAlpha", function(self)
+		UIParent.SetAlpha(self, self.SCMHidden and 0 or 1)
 	end)
 end
 
