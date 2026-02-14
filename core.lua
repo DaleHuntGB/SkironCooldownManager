@@ -13,25 +13,92 @@ local cachedChildrenTbl = {}
 local cachedVisibleChildren = {}
 local cachedCooldownFrameTbl = {}
 local cachedViewerChildren = {}
-local cachedGroupDimensions = {}
+local delayedHideSpellIDs = {
+	[450615] = true,
+}
+local delayedHideSeconds = 0.03
+local DEFAULT_ROW_CONFIG = { { limit = 8, iconWidth = 47, iconHeight = 47 } }
+local DEFAULT_ANCHOR = { "CENTER", UIParent, "CENTER", 0, 0 }
+local PIVOT_MAP = {
+	LEFT = {
+		TOP = "TOPRIGHT",
+		TOPLEFT = "TOPRIGHT",
+		BOTTOM = "BOTTOMRIGHT",
+		BOTTOMLEFT = "BOTTOMRIGHT",
+		LEFT = "RIGHT",
+	},
+	RIGHT = {
+		TOP = "TOPLEFT",
+		TOPRIGHT = "TOPLEFT",
+		BOTTOM = "BOTTOMLEFT",
+		BOTTOMRIGHT = "BOTTOMLEFT",
+		RIGHT = "LEFT",
+	},
+}
 
 local function SortBySCMOrder(a, b)
 	return (a.SCMOrder or 0) < (b.SCMOrder or 0)
 end
 
+function SCM:Debug(...)
+	if self.db.global.options.debug then
+		print(addonName, ...)
+	end
+end
+
+local function ApplyHideChildNow(child)
+	child.SCMHidden = true
+	UIParent.SetAlpha(child, 0)
+	child:EnableMouse(false)
+	SCM:Debug("HIDE", GetTime(), child.SCMSpellID or "unknown", child.SCMCooldownID or "unknown")
+
+	if not child.SCMAlphaHook then
+		child.SCMAlphaHook = true
+		hooksecurefunc(child, "SetAlpha", function(self)
+			UIParent.SetAlpha(self, self.SCMHidden and 0 or 1)
+		end)
+	end
+end
+
 local function HideChild(child)
-	if child.viewerFrame then
-		child.SCMHidden = true
-		UIParent.SetAlpha(child, 0)
-		child:EnableMouse(false)
+	if not child.viewerFrame or child.SCMHidden then
+		return
+	end
+
+	if delayedHideSpellIDs[child.SCMSpellID] then
+		if child.SCMHideTimer then
+			return
+		end
+		SCM:Debug("Start Timer", child.SCMSpellID)
+
+		child.SCMHideTimer = C_Timer.NewTimer(delayedHideSeconds, function()
+			child.SCMHideTimer = nil
+			if child.viewerFrame and not child.SCMHidden then
+				ApplyHideChildNow(child)
+			end
+		end)
+		return
+	end
+
+	ApplyHideChildNow(child)
+end
+
+local function CancelChildHideTimer(child)
+	if child.SCMHideTimer then
+		SCM:Debug("Cancel Timer", child.SCMSpellID)
+		child.SCMHideTimer:Cancel()
+		child.SCMHideTimer = nil
 	end
 end
 
 local function ShowChild(child)
-	if child.viewerFrame then
+	CancelChildHideTimer(child)
+
+	if child.viewerFrame and child.SCMHidden then
 		child.SCMHidden = false
 		UIParent.SetAlpha(child, 1)
 		child:EnableMouse(true)
+		SCM:Debug("SHOW", GetTime(), child.SCMSpellID or "unknown", child.SCMCooldownID or "unknown")
 	end
 end
 
@@ -120,20 +187,16 @@ local function SetupBuffIconHooks(child, options)
 			self.SCMPandemic = nil
 		end
 	end)
-
-	hooksecurefunc(child, "SetAlpha", function(self)
-		UIParent.SetAlpha(self, self.SCMHidden and 0 or 1)
-	end)
 end
 
 local function ProcessBuffIcon(child, childData, validChildren, group, options)
 	SetupBuffIconHooks(child, options)
 
 	local isActive = child:IsActive()
-    local isInactive = not child.Cooldown:IsShown()
-    if not issecretvalue(isActive) then
-        isInactive = not isActive
-    end
+	local isInactive = not child.Cooldown:IsShown()
+	if not issecretvalue(isActive) then
+		isInactive = not isActive
+	end
 	local forceShow = SCM.simulateBuffs or childData.alwaysShow
 
 	local shouldHide = options.hideBuffsWhenInactive and isInactive and not forceShow
@@ -234,14 +297,13 @@ local function ProcessSingleChild(child, validChildren, spellConfig, categoryInd
 	child.SCMConfig = childData
 	child.SCMOrder = childData.anchorGroup[group].order
 	child.SCMCooldownID = cooldownID
-	child.SCMSpellID = spellID
 
 	SCM:SkinChild(child, childData)
 
 	if isBuffIcon then
 		ProcessBuffIcon(child, childData, validChildren, group, options)
 	else
-		ProcessRegularIcon(child, validChildren, group)
+		ProcessRegularIcon(child, childData)
 	end
 end
 
@@ -306,7 +368,7 @@ local function ProcessItemConfig(itemConfig, validChildren)
 end
 
 local function HideItemIcons()
-	for slotID, itemFrame in pairs(SCM.itemFrames) do
+	for _, itemFrame in pairs(SCM.itemFrames) do
 		itemFrame:Hide()
 	end
 end
@@ -316,24 +378,23 @@ local function OrderCDManagerSpells_Actual()
 
 	wipe(cachedChildrenTbl)
 	wipe(cachedCooldownFrameTbl)
-	wipe(cachedGroupDimensions)
 
 	local config = SCM.currentConfig
 	for _, cooldownViewer in ipairs({ EssentialCooldownViewer, UtilityCooldownViewer, BuffIconCooldownViewer }) do
 		ProcessChildren(cooldownViewer, cachedChildrenTbl, SCM.currentConfig, cooldownViewer == BuffIconCooldownViewer)
+	end
 
-		for group, children in pairs(cachedChildrenTbl) do
-			cachedVisibleChildren[group] = cachedVisibleChildren[group] or {}
-			local visibleChildren = cachedVisibleChildren[group]
-			wipe(visibleChildren)
-			for _, child in ipairs(children) do
-				if child:IsShown() and child:GetAlpha() > 0 then
-					table.insert(visibleChildren, child)
-				end
+	for group, children in pairs(cachedChildrenTbl) do
+		cachedVisibleChildren[group] = cachedVisibleChildren[group] or {}
+		local visibleChildren = cachedVisibleChildren[group]
+		wipe(visibleChildren)
+		for _, child in ipairs(children) do
+			if child:IsShown() and child:GetAlpha() > 0 then
+				table.insert(visibleChildren, child)
 			end
-
-			cachedCooldownFrameTbl[group] = visibleChildren
 		end
+
+		cachedCooldownFrameTbl[group] = visibleChildren
 	end
 
 	if SCM.itemConfig and next(SCM.itemConfig) then
@@ -344,14 +405,14 @@ local function OrderCDManagerSpells_Actual()
 
 	for group, visibleChildren in pairs(cachedCooldownFrameTbl) do
 		local anchorConfig = config and config.anchorConfig and config.anchorConfig[group]
-		local rowConfig = (anchorConfig and anchorConfig.rowConfig and #anchorConfig.rowConfig > 0) and anchorConfig.rowConfig or { { limit = 8, iconWidth = 47, iconHeight = 47 } }
+		local rowConfig = (anchorConfig and anchorConfig.rowConfig and #anchorConfig.rowConfig > 0) and anchorConfig.rowConfig or DEFAULT_ROW_CONFIG
 		local lastRowConfig = rowConfig[#rowConfig]
 		local growDir = anchorConfig and anchorConfig.grow or "CENTER"
 		local baseSpacing = anchorConfig and anchorConfig.spacing or 0
 
 		table.sort(visibleChildren, SortBySCMOrder)
 
-		local p, a, r, x, y = unpack(anchorConfig and anchorConfig.anchor or { "CENTER", UIParent, "CENTER", 0, 0 })
+		local p, a, r, x, y = unpack(anchorConfig and anchorConfig.anchor or DEFAULT_ANCHOR)
 		local initialWidth = rowConfig[1].iconWidth or rowConfig[1].size or 47
 		local initialHeight = rowConfig[1].iconHeight or rowConfig[1].size or 47
 		local groupAnchor = SCM:GetAnchor(group, p, a, r, x, y, growDir, initialWidth)
@@ -419,16 +480,23 @@ local function OrderCDManagerSpells_Actual()
 					child.SCMPointHook = true
 
 					hooksecurefunc(child, "SetPoint", function(s)
-						if s.SCMAnchorData then
+						local anchorData = s.SCMAnchorData
+						if anchorData then
 							groupAnchor.ClearAllPoints(s)
-							groupAnchor.SetPoint(s, unpack(s.SCMAnchorData))
+							groupAnchor.SetPoint(s, anchorData[1], anchorData[2], anchorData[3], anchorData[4], anchorData[5])
 						end
 					end)
 				end
 
-				child.SCMAnchorData = { startPoint, groupAnchor, startPoint, offsetX, offsetY }
+				local anchorData = child.SCMAnchorData or {}
+				anchorData[1] = startPoint
+				anchorData[2] = groupAnchor
+				anchorData[3] = startPoint
+				anchorData[4] = offsetX
+				anchorData[5] = offsetY
+				child.SCMAnchorData = anchorData
 				groupAnchor.ClearAllPoints(child)
-				groupAnchor.SetPoint(child, unpack(child.SCMAnchorData))
+				groupAnchor.SetPoint(child, anchorData[1], anchorData[2], anchorData[3], anchorData[4], anchorData[5])
 			end
 
 			accumulatedY = accumulatedY + rowIconHeight + baseSpacing
@@ -459,7 +527,7 @@ local function OrderCDManagerSpells_Actual()
 		if not cachedCooldownFrameTbl[group] then
 			local rowConfig = anchorConfig.rowConfig
 
-			local p, a, r, x, y = unpack(anchorConfig and anchorConfig.anchor or { "CENTER", UIParent, "CENTER", 0, 0 })
+			local p, a, r, x, y = unpack(anchorConfig and anchorConfig.anchor or DEFAULT_ANCHOR)
 			local initialIconWidth = rowConfig[1].iconWidth or rowConfig[1].size or 47
 			SCM:GetAnchor(group, p, a, r, x, y, anchorConfig.growDir, initialIconWidth, not cachedCooldownFrameTbl[group])
 
@@ -484,6 +552,7 @@ local hasPendingUpdate = false
 local function OrderCDManagerSpells(isBuffIcon, config)
 	if isBuffIcon then
 		OrderCDManagerSpells_Actual()
+		return
 	elseif isThrottled then
 		hasPendingUpdate = true
 		return
@@ -552,23 +621,7 @@ function SCM:GetAnchor(group, point, anchor, relativePoint, xOffset, yOffset, gr
 
 	target = target or UIParent
 
-	local pivotMap = {
-		LEFT = {
-			TOP = "TOPRIGHT",
-			TOPLEFT = "TOPRIGHT",
-			BOTTOM = "BOTTOMRIGHT",
-			BOTTOMLEFT = "BOTTOMRIGHT",
-			LEFT = "RIGHT",
-		},
-		RIGHT = {
-			TOP = "TOPLEFT",
-			TOPRIGHT = "TOPLEFT",
-			BOTTOM = "BOTTOMLEFT",
-			BOTTOMRIGHT = "BOTTOMLEFT",
-			RIGHT = "LEFT",
-		},
-	}
-	local pivot = (pivotMap[growDir] and pivotMap[growDir][point]) or point
+	local pivot = (PIVOT_MAP[growDir] and PIVOT_MAP[growDir][point]) or point
 
 	local xMod = 0
 	if growDir == "LEFT" then
@@ -736,7 +789,7 @@ function SCM:ApplyBuffIconCDManagerConfig()
 end
 
 function SCM:ApplyAllCDManagerConfigs()
-	if C_CVar.GetCVar("cooldownViewerEnabled") == "1" then
+	if C_CVar.GetCVar("cooldownViewerEnabled") == "1" and SCM.currentConfig then
 		OrderCDManagerSpells(false, SCM.currentConfig)
 	end
 end
