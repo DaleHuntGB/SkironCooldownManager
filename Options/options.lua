@@ -242,11 +242,15 @@ end
 
 SLASH_SCM1 = "/scm"
 local function handler(msg, editBox)
-	if not SCM.OptionsFrame or not SCM.OptionsFrame:IsShown() then
-		OpenOptions()
+	if msg == "debug" then
+		SCM.db.global.options.debug = not SCM.db.global.options.debug
 	else
-		SCM.OptionsFrame:Release()
-		SCM.OptionsFrame = nil
+		if not SCM.OptionsFrame or not SCM.OptionsFrame:IsShown() then
+			OpenOptions()
+		else
+			SCM.OptionsFrame:Release()
+			SCM.OptionsFrame = nil
+		end
 	end
 end
 SlashCmdList["SCM"] = handler

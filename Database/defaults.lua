@@ -4,8 +4,9 @@ SCM.Defaults = {}
 
 SCM.DefaultDB = {
     global = {
-        options = {
+		options = {
 			showAnchorHighlight = true,
+			debug = false,
             enableSkinning = true,
 			simulateAuras = true,
 			chargeFont = "Expressway",
