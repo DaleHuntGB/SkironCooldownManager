@@ -202,10 +202,12 @@ local function ProcessBuffIcon(child, childData, validChildren, group, options)
 	local shouldHide = options.hideBuffsWhenInactive and isInactive and not forceShow
 
 	if shouldHide then
+		child.SCMShouldBeVisible = false
 		HideChild(child)
 		return
 	end
 
+	child.SCMShouldBeVisible = true
 	ShowChild(child)
 	UpdateChildDesaturation(child, isInactive)
 end
@@ -397,9 +399,11 @@ local function OrderCDManagerSpells_Actual()
 		local visibleChildren = cachedVisibleChildren[group]
 		wipe(visibleChildren)
 		for _, child in ipairs(children) do
-			if child:IsShown() and child:GetAlpha() > 0 then
+			--if child:IsShown() and child:GetAlpha() > 0 then
+			if child.SCMShouldBeVisible then
 				table.insert(visibleChildren, child)
 			end
+			--end
 		end
 
 		cachedCooldownFrameTbl[group] = visibleChildren
@@ -494,17 +498,27 @@ local function OrderCDManagerSpells_Actual()
 							groupAnchor.SetPoint(s, anchorData[1], anchorData[2], anchorData[3], anchorData[4], anchorData[5])
 						end
 					end)
+
+					hooksecurefunc(child, "ClearAllPoints", function(s)
+						local anchorData = s.SCMAnchorData
+						if anchorData then
+							groupAnchor.ClearAllPoints(s)
+							groupAnchor.SetPoint(s, anchorData[1], anchorData[2], anchorData[3], anchorData[4], anchorData[5])
+						end
+					end)
 				end
 
 				local anchorData = child.SCMAnchorData or {}
-				anchorData[1] = startPoint
-				anchorData[2] = groupAnchor
-				anchorData[3] = startPoint
-				anchorData[4] = offsetX
-				anchorData[5] = offsetY
 				child.SCMAnchorData = anchorData
-				groupAnchor.ClearAllPoints(child)
-				groupAnchor.SetPoint(child, anchorData[1], anchorData[2], anchorData[3], anchorData[4], anchorData[5])
+				if anchorData[1] ~= startPoint or anchorData[2] ~= groupAnchor or anchorData[3] ~= startPoint or anchorData[4] ~= offsetX or anchorData[5] ~= offsetY then
+					anchorData[1] = startPoint
+					anchorData[2] = groupAnchor
+					anchorData[3] = startPoint
+					anchorData[4] = offsetX
+					anchorData[5] = offsetY
+					groupAnchor.ClearAllPoints(child)
+					groupAnchor.SetPoint(child, anchorData[1], anchorData[2], anchorData[3], anchorData[4], anchorData[5])
+				end
 			end
 
 			accumulatedY = accumulatedY + rowIconHeight + baseSpacing
