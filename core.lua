@@ -344,6 +344,7 @@ local function ProcessItemConfig(itemConfig, validChildren)
 				frame.Cooldown:SetScript("OnCooldownDone", function()
 					frame.Icon:SetDesaturated(false)
 				end)
+				SCM.itemFrames[slotID] = frame
 			end
 			if not frame.itemID or frame.itemID ~= itemID then
 				frame.itemID = itemID
@@ -355,9 +356,7 @@ local function ProcessItemConfig(itemConfig, validChildren)
 				item:ContinueOnItemLoad(function()
 					frame.Icon:SetTexture(item:GetItemIcon())
 				end)
-
 				frame.SCMOrder = 100 + slotID
-				SCM.itemFrames[slotID] = frame
 
 				local start, duration, enable = GetInventoryItemCooldown("player", slotID)
 				if start and start > 0 then
@@ -366,9 +365,9 @@ local function ProcessItemConfig(itemConfig, validChildren)
 				else
 					frame.Icon:SetDesaturated(false)
 				end
-				frame:Show()
 			end
 
+			frame:Show()
 			validChildren[config.anchorGroup or 1] = validChildren[config.anchorGroup or 1] or {}
 			tinsert(validChildren[config.anchorGroup or 1], frame)
 		elseif SCM.itemFrames[slotID] then
@@ -531,7 +530,7 @@ local function OrderCDManagerSpells_Actual()
 
 			if group == 1 then
 				if SCM.db.global.options.adjustResourceWidth then
-					if not SCM.registeredCustomFrame and SCRB and SCRB.registeredCustomFrame then
+					if not SCM.registeredCustomFrame and SCRB and SCRB.registerCustomFrame then
 						SCM.registeredCustomFrame = true
 						SCRB.registerCustomFrame(SCM:GetAnchor(1))
 					else
@@ -564,7 +563,7 @@ local function OrderCDManagerSpells_Actual()
 			SCM:GetAnchor(group, p, a, r, x, y, anchorConfig.growDir, initialIconWidth, not cachedCooldownFrameTbl[group])
 
 			if group == 1 then
-				if not SCM.registeredCustomFrame and SCRB and SCRB.registeredCustomFrame then
+				if not SCM.registeredCustomFrame and SCRB and SCRB.registerCustomFrame then
 					SCM.registeredCustomFrame = true
 					SCRB.registerCustomFrame(anchorConfig)
 				else
@@ -861,10 +860,60 @@ function SCM:ApplyCustomAnchors(maxGroupWidth, rowConfig)
 			end
 
 			frame:OriginalClearAllPoints()
-			frame:OriginalSetPoint("BOTTOM", SCM:GetAnchor(options.anchorIndex), "TOP", options.xOffset, options.yOffset)
+			local point = options.point
+			local anchorRef = options.anchorFrame
+			local relativePoint = options.relativePoint
+			local xOffset = options.xOffset
+			local yOffset = options.yOffset
+
+			if point and anchorRef and relativePoint then
+				local setPoint = frame.OriginalSetPoint
+				local anchorRefType = type(anchorRef)
+				local isAnchorList = anchorRefType == "table"
+
+				if isAnchorList then
+					for i = 1, #anchorRef do
+						local ref = anchorRef[i]
+						local anchor
+						local anchorIndex = tonumber(ref)
+						if anchorIndex then
+							anchor = SCM:GetAnchor(anchorIndex)
+						else
+							local refType = type(ref)
+							if refType == "string" then
+								anchor = _G[ref]
+							elseif refType == "table" then
+								anchor = ref
+							end
+						end
+
+						if anchor and anchor:IsVisible() then
+							setPoint(frame, point, anchor, relativePoint, xOffset, yOffset)
+							break
+						end
+					end
+				else
+					local anchor
+					local anchorIndex = tonumber(anchorRef)
+					if anchorIndex then
+						anchor = SCM:GetAnchor(anchorIndex)
+					elseif anchorRefType == "string" then
+						anchor = _G[anchorRef]
+					elseif anchorRefType == "table" then
+						anchor = anchorRef
+					end
+
+					if anchor and anchor:IsVisible() then
+						setPoint(frame, point, anchor, relativePoint, xOffset, yOffset)
+						break
+					end
+				end
+			else
+				frame:OriginalSetPoint("BOTTOM", SCM:GetAnchor(options.anchorIndex), "TOP", options.xOffset, options.yOffset)
+			end
 
 			if options.setWidth then
-				frame:OriginalSetWidth(max(200, maxGroupWidth))
+				frame:OriginalSetWidth(max(200, maxGroupWidth - 2))
 			end
 		end
 	end
