@@ -15,6 +15,10 @@ function SCMAPI.ImportProfile(profileName, importString)
 	SCM:ImportProfile(profileName, importString)
 end
 
+function SCMAPI.ImportGlobalSettings(importString)
+	SCM:ImportGlobalSettings(importString)
+end
+
 function SCMAPI.RegisterAndLoadConfig(profileName, classFileName, config, specID)
 	SCM.DB:RegisterAndLoadConfig(profileName, classFileName, config, specID)
 end

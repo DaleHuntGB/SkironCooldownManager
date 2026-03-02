@@ -1062,7 +1062,7 @@ function SCM:ApplyCustomAnchors(maxGroupWidth, rowConfig)
 			end
 
 			if options.setWidth then
-				frame:OriginalSetWidth(max(200, maxGroupWidth - 2))
+				frame:OriginalSetWidth(max(200, maxGroupWidth - (options.widthOffset or 0)))
 			end
 		end
 	end

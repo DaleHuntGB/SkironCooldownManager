@@ -107,7 +107,10 @@ function SCM:ImportProfile(profileName, importString)
 		return
 	end
 
-	SCM.db:SetProfile(profileName)
+	if typeID ~= 2 then
+		SCM.db:SetProfile(profileName)
+	end
+	
 	local db = self.db.profile
 	local defaultAnchor = self.DB.defaultAnchorConfig
 
