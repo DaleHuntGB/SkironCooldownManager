@@ -177,7 +177,7 @@ local function CreateAddSpellDropdown(owner, rootDescription, scrollFrame, ancho
 
 	ProcessAndCreateButtons(buffButton, buffItems, true)
 
-	rootDescription:CreateDivider()
+	--rootDescription:CreateDivider()
 	-- rootDescription:CreateButton("Custom Spell (SpellID)", function()
 	-- 	ShowNumericInputPopup("SCM_CUSTOM_SPELL_ID", "Enter Spell ID", function(spellID)
 	-- 		local texture = C_Spell.GetSpellTexture(spellID)
@@ -198,32 +198,32 @@ local function CreateAddSpellDropdown(owner, rootDescription, scrollFrame, ancho
 	-- 		end
 	-- 	end)
 	-- end)
-	rootDescription:CreateButton("Item", function()
-		ShowNumericInputPopup("SCM_CUSTOM_ITEM_ID", "Enter Item ID", function(itemID)
-			local texture = C_Item.GetItemIconByID(itemID)
-			if texture then
-				local uniqueID
-				if isGlobal then
-					uniqueID = SCM:AddCustomIcon(anchorIndex, "item", itemID, true)
-				else
-					uniqueID = SCM:AddCustomIcon(anchorIndex, "item", itemID)
-				end
+	-- rootDescription:CreateButton("Custom Item", function()
+	-- 	ShowNumericInputPopup("SCM_CUSTOM_ITEM_ID", "Enter Item ID", function(itemID)
+	-- 		local texture = C_Item.GetItemIconByID(itemID)
+	-- 		if texture then
+	-- 			local uniqueID
+	-- 			if isGlobal then
+	-- 				uniqueID = SCM:AddCustomIcon(anchorIndex, "item", itemID, true)
+	-- 			else
+	-- 				uniqueID = SCM:AddCustomIcon(anchorIndex, "item", itemID)
+	-- 			end
+-- 
+	-- 			scrollFrame:AddCustomIcon({
+	-- 				texture = texture,
+	-- 				id = uniqueID,
+	-- 				isCustom = true,
+	-- 				iconType = "item",
+	-- 				itemID = itemID,
+	-- 			})
+	-- 			SCM:ApplyAllCDManagerConfigs()
+	-- 		end
+	-- 	end)
+	-- end)
 
-				scrollFrame:AddCustomIcon({
-					texture = texture,
-					id = uniqueID,
-					isCustom = true,
-					iconType = "item",
-					itemID = itemID,
-				})
-				SCM:ApplyAllCDManagerConfigs()
-			end
-		end)
-	end)
-
-	for _, customEntry in pairs(SCM.CustomEntries) do
-		customEntry(rootDescription, scrollFrame, anchorIndex)
-	end
+	-- for _, customEntry in pairs(SCM.CustomEntries) do
+	-- 	customEntry(rootDescription, scrollFrame, anchorIndex)
+	-- end
 end
 
 local function SelectRow(self, data, anchorIndex, rowIndex, rowTabsTbl, isGlobal)
@@ -756,7 +756,7 @@ local function CDM(self, frame, group)
 	modeTabs:SetFullHeight(true)
 	modeTabs:SetTabs({
 		{ value = "spec", text = "Spec Anchors" },
-		{ value = "global", text = "Global Anchors" },
+		--{ value = "global", text = "Global Anchors" },
 	})
 	modeTabs:SetCallback("OnGroupSelected", function(widget, event, mode)
 		widget:ReleaseChildren()

@@ -397,6 +397,12 @@ local function HideItemIcons()
 	end
 end
 
+local function HideCustomIcons()
+	for _, customFrame in pairs(SCM.customIconFrames) do
+		customFrame:Hide()
+	end
+end
+
 local function SetCustomIconCountText(frame, iconType, id)
 	frame.ChargeCount.Current:SetText("")
 	frame.ChargeCount.Current:Hide()
@@ -512,6 +518,7 @@ local function OrderCDManagerSpells_Actual()
 	wipe(cachedCooldownFrameTbl)
 
 	local config = SCM.currentConfig
+	local options = SCM.db.global.options
 	for _, cooldownViewer in ipairs({ EssentialCooldownViewer, UtilityCooldownViewer, BuffIconCooldownViewer }) do
 		ProcessChildren(cooldownViewer, cachedChildrenTbl, SCM.currentConfig, cooldownViewer == BuffIconCooldownViewer)
 	end
@@ -537,8 +544,12 @@ local function OrderCDManagerSpells_Actual()
 		HideItemIcons()
 	end
 
-	ProcessCustomIcons(SCM.customConfig, cachedCooldownFrameTbl, false)
-	ProcessCustomIcons(SCM.globalCustomConfig, cachedCooldownFrameTbl, true)
+	if options.enableCustomIcons ~= false then
+		ProcessCustomIcons(SCM.customConfig, cachedCooldownFrameTbl, false)
+		ProcessCustomIcons(SCM.globalCustomConfig, cachedCooldownFrameTbl, true)
+	else
+		HideCustomIcons()
+	end
 
 	for group, visibleChildren in pairs(cachedCooldownFrameTbl) do
 		local anchorConfig = GetAnchorConfigForGroup(config, group)
