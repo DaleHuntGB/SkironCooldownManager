@@ -17,9 +17,20 @@ SCM.DefaultDB = {
 		},
 		globalCustomConfig = {},
 		options = {
+			anchorUUFRoles = {
+				["HEALER"] = false,
+				["DAMAGER"] = true,
+				["TANK"] = true,
+			},
+			anchorElvUIRoles = {
+				["HEALER"] = false,
+				["DAMAGER"] = true,
+				["TANK"] = true,
+			},
 			showAnchorHighlight = true,
 			debug = false,
             enableSkinning = true,
+			enableCustomIcons = false,
 			simulateAuras = true,
 			chargeFont = "Expressway",
 			chargeFontSize = 22,

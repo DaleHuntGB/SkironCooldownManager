@@ -122,3 +122,9 @@ SCM.Constants.SecondaryPower = {
 	},
 	["WARLOCK"] = Enum.PowerType.SoulShards,
 }
+
+SCM.Constants.Roles = {
+	HEALER = "Healer",
+	DAMAGER = "Dps",
+	TANK = "Tank"
+}

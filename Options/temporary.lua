@@ -37,6 +37,20 @@ local function Temporary(self, frame, group)
 	end)
 	uufSettings:AddChild(anchorUUF)
 
+	local anchorUUFRoles = AceGUI:Create("Dropdown")
+	anchorUUFRoles:SetRelativeWidth(0.5)
+	anchorUUFRoles:SetLabel("Reanchor UUF Roles")
+	anchorUUFRoles:SetList(SCM.Constants.Roles)
+	anchorUUFRoles:SetMultiselect(true)
+	anchorUUFRoles:SetCallback("OnValueChanged", function(_, _, key, value)
+		options.anchorUUFRoles[key] = value
+		SCM:ApplyAllCDManagerConfigs()
+	end)
+	for key, value in pairs(options.anchorUUFRoles) do
+		anchorUUFRoles:SetItemValue(key, value)
+	end
+	uufSettings:AddChild(anchorUUFRoles)
+
 	local anchorElvUI = AceGUI:Create("CheckBox")
 	anchorElvUI:SetRelativeWidth(0.5)
 	anchorElvUI:SetLabel("Reanchor ElvUI")
@@ -46,6 +60,20 @@ local function Temporary(self, frame, group)
 		SCM:ApplyAllCDManagerConfigs()
 	end)
 	uufSettings:AddChild(anchorElvUI)
+
+	local anchorElvUIRoles = AceGUI:Create("Dropdown")
+	anchorElvUIRoles:SetRelativeWidth(0.5)
+	anchorElvUIRoles:SetLabel("Reanchor ElvUI Roles")
+	anchorElvUIRoles:SetList(SCM.Constants.Roles)
+	anchorElvUIRoles:SetMultiselect(true)
+	anchorElvUIRoles:SetCallback("OnValueChanged", function(_, _, key, value)
+		options.anchorElvUIRoles[key] = value
+		SCM:ApplyAllCDManagerConfigs()
+	end)
+	for key, value in pairs(options.anchorElvUIRoles) do
+		anchorElvUIRoles:SetItemValue(key, value)
+	end
+	uufSettings:AddChild(anchorElvUIRoles)
 
 	local resourceBarSettings = AceGUI:Create("InlineGroup")
 	resourceBarSettings:SetLayout("flow")

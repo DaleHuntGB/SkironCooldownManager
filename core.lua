@@ -850,16 +850,24 @@ function SCM:UpdateResourceBarWidth(maxGroupWidth)
 end
 
 function SCM:UpdateUUFValues(options, maxGroupWidth, rowConfig)
-	if options.anchorUUF then
-		local offset = min((maxGroupWidth - 150), 0)
-		local mainAnchor = SCM:GetAnchor(1)
-		if UUF_Player then
+	local offset = min((maxGroupWidth - 150), 0)
+	local mainAnchor = SCM:GetAnchor(1)
+
+	if UUF_Player then
+		if options.anchorUUF and options.anchorUUFRoles[(select(5, GetSpecializationInfo(GetSpecialization())))] then
+			if not UUF_Player.SCMOriginalAnchor then
+				UUF_Player.SCMOriginalAnchor = { UUF_Player:GetPoint() }
+				UUF_Player.SCMOriginalWidth = UUF_Player:GetWidth()
+				UUF_Player.SCMOriginalHeight = UUF_Player:GetHeight()
+			end
 			UUF_Player:ClearAllPoints()
+
 			mainAnchor.SetPoint(UUF_Player, "TOPRIGHT", mainAnchor, "TOPLEFT", offset, 0)
 
 			UUF_Player.SCMOffset = offset
 			UUF_Player.SCMHeight = rowConfig[1].size
 			UUF_Player.SCMAnchor = mainAnchor
+			UUF_Player.SCMCustomAnchor = true
 
 			UUF_Player:SetHeight(rowConfig[1].size)
 			UUF_Player_HealthBar:SetHeight(rowConfig[1].size - 2)
@@ -868,7 +876,7 @@ function SCM:UpdateUUFValues(options, maxGroupWidth, rowConfig)
 			if not UUF_Player.SCMHook then
 				UUF_Player.SCMHook = true
 				hooksecurefunc(UUF_Player, "SetPoint", function(self)
-					if options.anchorUUF then
+					if options.anchorUUF and options.anchorUUFRoles[(select(5, GetSpecializationInfo(GetSpecialization())))] then
 						self.SCMAnchor.SetPoint(self, "TOPRIGHT", self.SCMAnchor, "TOPLEFT", self.SCMOffset, 0)
 						self.SCMAnchor.SetHeight(self, self.SCMHeight)
 						self.SCMAnchor.SetHeight(UUF_Player_HealthBar, self.SCMHeight - 2)
@@ -877,22 +885,44 @@ function SCM:UpdateUUFValues(options, maxGroupWidth, rowConfig)
 				end)
 
 				hooksecurefunc(UUF_Player, "SetSize", function(self)
-					if options.anchorUUF then
+					if options.anchorUUF and options.anchorUUFRoles[(select(5, GetSpecializationInfo(GetSpecialization())))] then
 						self.SCMAnchor.SetHeight(self, self.SCMHeight)
 						self.SCMAnchor.SetHeight(UUF_Player_HealthBar, self.SCMHeight - 2)
 						self.SCMAnchor.SetHeight(UUF_Player_HealthBackground, self.SCMHeight - 2)
 					end
 				end)
 			end
-		end
+		elseif UUF_Player.SCMCustomAnchor then
+			UUF_Player:ClearAllPoints()
+			UUF_Player.SCMAnchor.SetPoint(UUF_Player, unpack(UUF_Player.SCMOriginalAnchor))
+			UUF_Player.SCMAnchor.SetHeight(UUF_Player, UUF_Player.SCMOriginalHeight)
+			UUF_Player.SCMAnchor.SetHeight(UUF_Player_HealthBar, UUF_Player.SCMOriginalHeight - 2)
+			UUF_Player.SCMAnchor.SetHeight(UUF_Player_HealthBackground, UUF_Player.SCMOriginalHeight - 2)
 
-		if UUF_Target then
+			UUF_Player.SCMCustomAnchor = nil
+			UUF_Player.SCMOffset = nil
+			UUF_Player.SCMHeight = nil
+			UUF_Player.SCMAnchor = nil
+			UUF_Player.SCMOriginalHeight = nil
+			UUF_Player.SCMOriginalAnchor = nil
+		end
+	end
+
+	if UUF_Target then
+		if options.anchorUUF and options.anchorUUFRoles[(select(5, GetSpecializationInfo(GetSpecialization())))] then
+			if not UUF_Target.SCMOriginalAnchor then
+				UUF_Target.SCMOriginalAnchor = { UUF_Target:GetPoint() }
+				UUF_Target.SCMOriginalWidth = UUF_Target:GetWidth()
+				UUF_Target.SCMOriginalHeight = UUF_Target:GetHeight()
+			end
+
 			UUF_Target:ClearAllPoints()
 			mainAnchor.SetPoint(UUF_Target, "TOPLEFT", mainAnchor, "TOPRIGHT", -offset, 0)
 
 			UUF_Target.SCMOffset = -offset
 			UUF_Target.SCMHeight = rowConfig[1].size
 			UUF_Target.SCMAnchor = mainAnchor
+			UUF_Target.SCMCustomAnchor = true
 
 			UUF_Target:SetHeight(rowConfig[1].size)
 			UUF_Target_HealthBar:SetHeight(rowConfig[1].size - 2)
@@ -901,7 +931,7 @@ function SCM:UpdateUUFValues(options, maxGroupWidth, rowConfig)
 			if not UUF_Target.SCMHook then
 				UUF_Target.SCMHook = true
 				hooksecurefunc(UUF_Target, "SetPoint", function(self)
-					if options.anchorUUF then
+					if options.anchorUUF and options.anchorUUFRoles[(select(5, GetSpecializationInfo(GetSpecialization())))] then
 						self.SCMAnchor.SetPoint(self, "TOPLEFT", self.SCMAnchor, "TOPRIGHT", self.SCMOffset, 0)
 						self.SCMAnchor.SetHeight(self, self.SCMHeight)
 						self.SCMAnchor.SetHeight(UUF_Target_HealthBar, self.SCMHeight - 2)
@@ -910,20 +940,37 @@ function SCM:UpdateUUFValues(options, maxGroupWidth, rowConfig)
 				end)
 
 				hooksecurefunc(UUF_Target, "SetSize", function(self)
-					if options.anchorUUF then
+					if options.anchorUUF and options.anchorUUFRoles[(select(5, GetSpecializationInfo(GetSpecialization())))] then
 						self.SCMAnchor.SetHeight(self, self.SCMHeight)
 						self.SCMAnchor.SetHeight(UUF_Target_HealthBar, self.SCMHeight - 2)
 						self.SCMAnchor.SetHeight(UUF_Target_HealthBackground, self.SCMHeight - 2)
 					end
 				end)
 			end
+		elseif UUF_Target.SCMCustomAnchor then
+			UUF_Target:ClearAllPoints()
+			UUF_Target.SCMAnchor.SetPoint(UUF_Target, unpack(UUF_Target.SCMOriginalAnchor))
+			UUF_Target.SCMAnchor.SetHeight(UUF_Target, UUF_Target.SCMOriginalHeight)
+			UUF_Target.SCMAnchor.SetHeight(UUF_Target_HealthBar, UUF_Target.SCMOriginalHeight - 2)
+			UUF_Target.SCMAnchor.SetHeight(UUF_Target_HealthBackground, UUF_Target.SCMOriginalHeight - 2)
+
+			UUF_Target.SCMCustomAnchor = nil
+			UUF_Target.SCMOffset = nil
+			UUF_Target.SCMHeight = nil
+			UUF_Target.SCMAnchor = nil
+			UUF_Target.SCMOriginalHeight = nil
+			UUF_Target.SCMOriginalAnchor = nil
 		end
 	end
 
-	if options.anchorElvUI then
-		local offset = min((maxGroupWidth - 150), 0)
-		local mainAnchor = SCM:GetAnchor(1)
-		if ElvUF_Player then
+	if ElvUF_Player then
+		if options.anchorElVUI and options.anchorElVUIRoles[(select(5, GetSpecializationInfo(GetSpecialization())))] then
+			if not ElvUF_Player.SCMOriginalAnchor then
+				ElvUF_Player.SCMOriginalAnchor = { ElvUF_Player:GetPoint() }
+				ElvUF_Player.SCMOriginalWidth = ElvUF_Player:GetWidth()
+				ElvUF_Player.SCMOriginalHeight = ElvUF_Player:GetHeight()
+			end
+
 			ElvUF_Player:ClearAllPoints()
 			mainAnchor.SetPoint(ElvUF_Player, "TOPRIGHT", mainAnchor, "TOPLEFT", offset, 0)
 
@@ -942,7 +989,6 @@ function SCM:UpdateUUFValues(options, maxGroupWidth, rowConfig)
 						self.SCMAnchor.SetPoint(self, "TOPRIGHT", self.SCMAnchor, "TOPLEFT", self.SCMOffset, 0)
 						self.SCMAnchor.SetHeight(self, self.SCMHeight)
 						self.SCMAnchor.SetHeight(ElvUF_Player_HealthBar, self.SCMHeight - 2)
-						--self.SCMAnchor.SetHeight(ElvUF_Player_HealthBackground, self.SCMHeight - 2)
 					end
 				end)
 
@@ -950,13 +996,32 @@ function SCM:UpdateUUFValues(options, maxGroupWidth, rowConfig)
 					if options.anchorElvUF then
 						self.SCMAnchor.SetHeight(self, self.SCMHeight)
 						self.SCMAnchor.SetHeight(ElvUF_Player_HealthBar, self.SCMHeight - 2)
-						--self.SCMAnchor.SetHeight(ElvUF_Player_HealthBackground, self.SCMHeight - 2)
 					end
 				end)
 			end
-		end
+		elseif ElvUF_Player.SCMCustomAnchor then
+			ElvUF_Player:ClearAllPoints()
+			ElvUF_Player.SCMAnchor.SetPoint(ElvUF_Player, unpack(ElvUF_Player.SCMOriginalAnchor))
+			ElvUF_Player.SCMAnchor.SetHeight(ElvUF_Player, ElvUF_Player.SCMOriginalHeight)
+			ElvUF_Player.SCMAnchor.SetHeight(ElvUF_Player_HealthBar, ElvUF_Player.SCMOriginalHeight - 2)
 
-		if ElvUF_Target then
+			ElvUF_Player.SCMCustomAnchor = nil
+			ElvUF_Player.SCMOffset = nil
+			ElvUF_Player.SCMHeight = nil
+			ElvUF_Player.SCMAnchor = nil
+			ElvUF_Player.SCMOriginalHeight = nil
+			ElvUF_Player.SCMOriginalAnchor = nil
+		end
+	end
+
+	if ElvUF_Target then
+		if options.anchorElVUI and options.anchorElVUIRoles[(select(5, GetSpecializationInfo(GetSpecialization())))] then
+			if not ElvUF_Target.SCMOriginalAnchor then
+				ElvUF_Target.SCMOriginalAnchor = { ElvUF_Target:GetPoint() }
+				ElvUF_Target.SCMOriginalWidth = ElvUF_Target:GetWidth()
+				ElvUF_Target.SCMOriginalHeight = ElvUF_Target:GetHeight()
+			end
+
 			ElvUF_Target:ClearAllPoints()
 			mainAnchor.SetPoint(ElvUF_Target, "TOPLEFT", mainAnchor, "TOPRIGHT", -offset, 0)
 
@@ -975,7 +1040,6 @@ function SCM:UpdateUUFValues(options, maxGroupWidth, rowConfig)
 						self.SCMAnchor.SetPoint(self, "TOPLEFT", self.SCMAnchor, "TOPRIGHT", self.SCMOffset, 0)
 						self.SCMAnchor.SetHeight(self, self.SCMHeight)
 						self.SCMAnchor.SetHeight(ElvUF_Target_HealthBar, self.SCMHeight - 2)
-						--self.SCMAnchor.SetHeight(ElvUF_Target_HealthBackground, self.SCMHeight - 2)
 					end
 				end)
 
@@ -983,10 +1047,21 @@ function SCM:UpdateUUFValues(options, maxGroupWidth, rowConfig)
 					if options.anchorElvUF then
 						self.SCMAnchor.SetHeight(self, self.SCMHeight)
 						self.SCMAnchor.SetHeight(ElvUF_Target_HealthBar, self.SCMHeight - 2)
-						--self.SCMAnchor.SetHeight(ElvUF_Target_HealthBackground, self.SCMHeight - 2)
 					end
 				end)
 			end
+		elseif ElvUF_Target.SCMCustomAnchor then
+			ElvUF_Target:ClearAllPoints()
+			ElvUF_Target.SCMAnchor.SetPoint(ElvUF_Target, unpack(ElvUF_Target.SCMOriginalAnchor))
+			ElvUF_Target.SCMAnchor.SetHeight(ElvUF_Target, ElvUF_Target.SCMOriginalHeight)
+			ElvUF_Target.SCMAnchor.SetHeight(ElvUF_Target_HealthBar, ElvUF_Target.SCMOriginalHeight - 2)
+
+			ElvUF_Target.SCMCustomAnchor = nil
+			ElvUF_Target.SCMOffset = nil
+			ElvUF_Target.SCMHeight = nil
+			ElvUF_Target.SCMAnchor = nil
+			ElvUF_Target.SCMOriginalHeight = nil
+			ElvUF_Target.SCMOriginalAnchor = nil
 		end
 	end
 end
