@@ -34,6 +34,8 @@ skinning.lua
 utils.lua
 custom_icons.lua
 core.lua
+events.lua
+anchors.lua
 profiles.lua
 uid.lua
 
