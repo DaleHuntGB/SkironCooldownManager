@@ -24,6 +24,40 @@ local function AddInfoText(widget, text)
 	widget:AddChild(label)
 end
 
+local function AddGlowOffsetOptions(dynamicGlowSettingsGroup, glowTypeOptions)
+	local xOffset = AceGUI:Create("Slider")
+	xOffset:SetRelativeWidth(0.33)
+	xOffset:SetValue(glowTypeOptions.xOffset or 0)
+	xOffset:SetLabel("X Offset")
+	xOffset:SetSliderValues(-30, 30, 1)
+	xOffset:SetCallback("OnValueChanged", function(_, _, value)
+		glowTypeOptions.xOffset = value
+	end)
+	dynamicGlowSettingsGroup:AddChild(xOffset)
+
+	local yOffset = AceGUI:Create("Slider")
+	yOffset:SetRelativeWidth(0.33)
+	yOffset:SetValue(glowTypeOptions.yOffset or 0)
+	yOffset:SetLabel("Y Offset")
+	yOffset:SetSliderValues(-30, 30, 1)
+	yOffset:SetCallback("OnValueChanged", function(_, _, value)
+		glowTypeOptions.yOffset = value
+	end)
+	dynamicGlowSettingsGroup:AddChild(yOffset)
+end
+
+local function AddGlowColorOption(dynamicGlowSettingsGroup, glowTypeOptions)
+	local glowColor = AceGUI:Create("ColorPicker")
+	glowColor:SetRelativeWidth(0.33)
+	glowColor:SetLabel("Glow Color")
+	glowColor:SetHasAlpha(true)
+	glowColor:SetColor(unpack(glowTypeOptions.glowColor))
+	glowColor:SetCallback("OnValueChanged", function(_, _, r, g, b, a)
+		glowTypeOptions.glowColor = { r, g, b, a }
+	end)
+	dynamicGlowSettingsGroup:AddChild(glowColor)
+end
+
 local function AddCustomGlowOptions(dynamicGlowSettingsGroup)
 	local options = SCM.db.global.options
 	dynamicGlowSettingsGroup:ReleaseChildren()
@@ -39,35 +73,8 @@ local function AddCustomGlowOptions(dynamicGlowSettingsGroup)
 		end)
 		dynamicGlowSettingsGroup:AddChild(startAnim)
 
-		local xOffset = AceGUI:Create("Slider")
-		xOffset:SetRelativeWidth(0.33)
-		xOffset:SetValue(glowTypeOptions.xOffset or 0)
-		xOffset:SetLabel("X Offset")
-		xOffset:SetSliderValues(-30, 30, 1)
-		xOffset:SetCallback("OnValueChanged", function(self, event, value)
-			glowTypeOptions.xOffset = value
-		end)
-		dynamicGlowSettingsGroup:AddChild(xOffset)
-
-		local yOffset = AceGUI:Create("Slider")
-		yOffset:SetRelativeWidth(0.33)
-		yOffset:SetValue(glowTypeOptions.yOffset or 0)
-		yOffset:SetLabel("Y Offset")
-		yOffset:SetSliderValues(-30, 30, 1)
-		xOffset:SetCallback("OnValueChanged", function(self, event, value)
-			glowTypeOptions.yOffset = value
-		end)
-		dynamicGlowSettingsGroup:AddChild(yOffset)
-
-		local glowColor = AceGUI:Create("ColorPicker")
-		glowColor:SetRelativeWidth(0.33)
-		glowColor:SetLabel("Glow Color")
-		glowColor:SetHasAlpha(true)
-		glowColor:SetColor(unpack(glowTypeOptions.glowColor))
-		glowColor:SetCallback("OnValueChanged", function(self, event, r, g, b, a)
-			glowTypeOptions.glowColor = { r, g, b, a }
-		end)
-		dynamicGlowSettingsGroup:AddChild(glowColor)
+		AddGlowOffsetOptions(dynamicGlowSettingsGroup, glowTypeOptions)
+		AddGlowColorOption(dynamicGlowSettingsGroup, glowTypeOptions)
 	elseif options.glowType == "Autocast" then
 		--color,numParticles,frequency,scale,xOffset,yOffset
 
@@ -102,35 +109,8 @@ local function AddCustomGlowOptions(dynamicGlowSettingsGroup)
 		end)
 		dynamicGlowSettingsGroup:AddChild(scale)
 
-		local xOffset = AceGUI:Create("Slider")
-		xOffset:SetRelativeWidth(0.33)
-		xOffset:SetValue(glowTypeOptions.xOffset or 0)
-		xOffset:SetLabel("X Offset")
-		xOffset:SetSliderValues(-30, 30, 1)
-		xOffset:SetCallback("OnValueChanged", function(self, event, value)
-			glowTypeOptions.xOffset = value
-		end)
-		dynamicGlowSettingsGroup:AddChild(xOffset)
-
-		local yOffset = AceGUI:Create("Slider")
-		yOffset:SetRelativeWidth(0.33)
-		yOffset:SetValue(glowTypeOptions.yOffset or 0)
-		yOffset:SetLabel("Y Offset")
-		yOffset:SetSliderValues(-30, 30, 1)
-		xOffset:SetCallback("OnValueChanged", function(self, event, value)
-			glowTypeOptions.yOffset = value
-		end)
-		dynamicGlowSettingsGroup:AddChild(yOffset)
-
-		local glowColor = AceGUI:Create("ColorPicker")
-		glowColor:SetRelativeWidth(0.33)
-		glowColor:SetLabel("Glow Color")
-		glowColor:SetHasAlpha(true)
-		glowColor:SetColor(unpack(glowTypeOptions.glowColor))
-		glowColor:SetCallback("OnValueChanged", function(self, event, r, g, b, a)
-			glowTypeOptions.glowColor = { r, g, b, a }
-		end)
-		dynamicGlowSettingsGroup:AddChild(glowColor)
+		AddGlowOffsetOptions(dynamicGlowSettingsGroup, glowTypeOptions)
+		AddGlowColorOption(dynamicGlowSettingsGroup, glowTypeOptions)
 	elseif options.glowType == "Pixel" then
 		--color,numLines,frequency,length,thickness,xOffset,yOffset,border
 
@@ -174,35 +154,8 @@ local function AddCustomGlowOptions(dynamicGlowSettingsGroup)
 		end)
 		dynamicGlowSettingsGroup:AddChild(thickness)
 
-		local xOffset = AceGUI:Create("Slider")
-		xOffset:SetRelativeWidth(0.33)
-		xOffset:SetValue(glowTypeOptions.xOffset or 0)
-		xOffset:SetLabel("X Offset")
-		xOffset:SetSliderValues(-30, 30, 1)
-		xOffset:SetCallback("OnValueChanged", function(self, event, value)
-			glowTypeOptions.xOffset = value
-		end)
-		dynamicGlowSettingsGroup:AddChild(xOffset)
-
-		local yOffset = AceGUI:Create("Slider")
-		yOffset:SetRelativeWidth(0.33)
-		yOffset:SetValue(glowTypeOptions.yOffset or 0)
-		yOffset:SetLabel("Y Offset")
-		yOffset:SetSliderValues(-30, 30, 1)
-		xOffset:SetCallback("OnValueChanged", function(self, event, value)
-			glowTypeOptions.yOffset = value
-		end)
-		dynamicGlowSettingsGroup:AddChild(yOffset)
-
-		local glowColor = AceGUI:Create("ColorPicker")
-		glowColor:SetRelativeWidth(0.33)
-		glowColor:SetLabel("Glow Color")
-		glowColor:SetHasAlpha(true)
-		glowColor:SetColor(unpack(glowTypeOptions.glowColor))
-		glowColor:SetCallback("OnValueChanged", function(self, event, r, g, b, a)
-			glowTypeOptions.glowColor = { r, g, b, a }
-		end)
-		dynamicGlowSettingsGroup:AddChild(glowColor)
+		AddGlowOffsetOptions(dynamicGlowSettingsGroup, glowTypeOptions)
+		AddGlowColorOption(dynamicGlowSettingsGroup, glowTypeOptions)
 
 		local border = AceGUI:Create("CheckBox")
 		border:SetRelativeWidth(0.33)

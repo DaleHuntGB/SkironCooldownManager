@@ -263,6 +263,7 @@ local methods = {
 			texture = iconData.texture,
 			spellID = iconData.spellID,
 			itemID = iconData.itemID,
+			slotID = iconData.slotID,
 			isKnown = true,
 			isCustom = true,
 			iconType = iconData.iconType,

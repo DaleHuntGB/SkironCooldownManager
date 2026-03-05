@@ -3,6 +3,26 @@ local LSM = LibStub("LibSharedMedia-3.0")
 
 local originalCooldownFont
 
+local function ApplyChargeAndApplicationStyle(child, options, fontPath)
+	if child.ChargeCount and child.ChargeCount.Current and (not child.SCMIconType or child.SCMIconType == "spell") then
+		if fontPath then
+			child.ChargeCount.Current:SetFont(fontPath, options.chargeFontSize, "OUTLINE")
+		end
+
+		child.ChargeCount.Current:ClearAllPoints()
+		child.ChargeCount.Current:SetPoint("CENTER", child.Icon, options.chargeRelativePoint, options.chargeXOffset, options.chargeYOffset)
+	end
+
+	if child.Applications and child.Applications.Applications then
+		if fontPath then
+			child.Applications.Applications:SetFont(fontPath, options.chargeFontSize, "OUTLINE")
+		end
+
+		child.Applications.Applications:ClearAllPoints()
+		child.Applications.Applications:SetPoint("CENTER", child.Icon, options.chargeRelativePoint, options.chargeXOffset, options.chargeYOffset)
+	end
+end
+
 function SCM:SkinChild(child, childConfig)
 	if C_AddOns.IsAddOnLoaded("ElvUI") and ElvUI[1].private.skins.blizzard.cooldownManager then
 		return
@@ -33,23 +53,7 @@ function SCM:SkinChild(child, childConfig)
 		child.Icon:SetTexCoord(0.12, 0.88, 0.12, 0.88)
 
 		local fontPath = LSM:Fetch("font", options.chargeFont)
-		if child.ChargeCount and child.ChargeCount.Current and (not child.SCMIconType or child.SCMIconType == "spell") then
-			if fontPath then
-				child.ChargeCount.Current:SetFont(fontPath, options.chargeFontSize, "OUTLINE")
-			end
-
-			child.ChargeCount.Current:ClearAllPoints()
-			child.ChargeCount.Current:SetPoint("CENTER", child.Icon, options.chargeRelativePoint, options.chargeXOffset, options.chargeYOffset)
-		end
-
-		if child.Applications and child.Applications.Applications then
-			if fontPath then
-				child.Applications.Applications:SetFont(fontPath, options.chargeFontSize, "OUTLINE")
-			end
-
-			child.Applications.Applications:ClearAllPoints()
-			child.Applications.Applications:SetPoint("CENTER", child.Icon, options.chargeRelativePoint, options.chargeXOffset, options.chargeYOffset)
-		end
+		ApplyChargeAndApplicationStyle(child, options, fontPath)
 	elseif not child.SCMSkinned then
 		child.SCMSkinned = true
 
@@ -124,23 +128,7 @@ function SCM:SkinChild(child, childConfig)
 		end
 
 		local fontPath = LSM:Fetch("font", options.chargeFont)
-		if child.ChargeCount and child.ChargeCount.Current and (not child.SCMIconType or child.SCMIconType == "spell") then
-			if fontPath then
-				child.ChargeCount.Current:SetFont(fontPath, options.chargeFontSize, "OUTLINE")
-			end
-
-			child.ChargeCount.Current:ClearAllPoints()
-			child.ChargeCount.Current:SetPoint("CENTER", child.Icon, options.chargeRelativePoint, options.chargeXOffset, options.chargeYOffset)
-		end
-
-		if child.Applications and child.Applications.Applications then
-			if fontPath then
-				child.Applications.Applications:SetFont(fontPath, options.chargeFontSize, "OUTLINE")
-			end
-
-			child.Applications.Applications:ClearAllPoints()
-			child.Applications.Applications:SetPoint("CENTER", child.Icon, options.chargeRelativePoint, options.chargeXOffset, options.chargeYOffset)
-		end
+		ApplyChargeAndApplicationStyle(child, options, fontPath)
 	end
 	for _, customSkin in ipairs(SCM.Skins) do
 		pcall(customSkin, child)

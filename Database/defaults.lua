@@ -15,7 +15,9 @@ SCM.DefaultDB = {
 				},
 			},
 		},
-		globalCustomConfig = {},
+		globalSpellConfig = {},
+		globalItemConfig = {},
+		globalSlotConfig = {},
 		options = {
 			anchorUUFRoles = {
 				["HEALER"] = false,

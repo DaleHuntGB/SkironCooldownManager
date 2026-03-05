@@ -41,11 +41,13 @@ function SCM:RemoveGlobalAnchor(anchorIndex, anchorTabsTbl)
 		tremove(self.db.global.globalAnchorConfig, anchorIndex)
 	end
 
-	for id, config in pairs(self.db.global.globalCustomConfig) do
-		if config.anchorGroup == anchorIndex then
-			self.db.global.globalCustomConfig[id] = nil
-		elseif config.anchorGroup and config.anchorGroup > anchorIndex then
-			config.anchorGroup = config.anchorGroup - 1
+	for _, globalConfig in pairs({ self.db.global.globalSpellConfig, self.db.global.globalItemConfig, self.db.global.globalSlotConfig }) do
+		for id, config in pairs(globalConfig or {}) do
+			if config.anchorGroup == anchorIndex then
+				globalConfig[id] = nil
+			elseif config.anchorGroup and config.anchorGroup > anchorIndex then
+				config.anchorGroup = config.anchorGroup - 1
+			end
 		end
 	end
 	
@@ -144,17 +146,33 @@ function SCM:RemoveRow(anchorIndex, rowIndex)
 	end
 end
 
+local function GetGlobalConfigTable(self, iconType)
+	if iconType == "spell" then
+		self.db.global.globalSpellConfig = self.db.global.globalSpellConfig or {}
+		return self.db.global.globalSpellConfig
+	end
+
+	if iconType == "slot" then
+		self.db.global.globalSlotConfig = self.db.global.globalSlotConfig or {}
+		return self.db.global.globalSlotConfig
+	end
+
+	self.db.global.globalItemConfig = self.db.global.globalItemConfig or {}
+	return self.db.global.globalItemConfig
+end
+
 function SCM:AddCustomIcon(anchorGroup, iconType, idValue, isGlobal)
-	local dbTable = isGlobal and self.db.global.globalCustomConfig or self.customConfig
+	local dbTable = isGlobal and GetGlobalConfigTable(self, iconType) or self.customConfig
 	if not dbTable then
 		return
 	end
 
-	local baseID = (iconType == "item" and "item:" or "spell:") .. idValue
+	local basePrefix = iconType == "spell" and "spell:" or (iconType == "slot" and "slot:" or "item:")
+	local baseID = basePrefix .. idValue
 	local uniqueID = self:UID(baseID)
 
 	local nextOrder = 1
-	for _, entry in ipairs(dbTable) do
+	for _, entry in pairs(dbTable) do
 		if entry.anchorGroup == anchorGroup and (entry.order or 0) >= nextOrder then
 			nextOrder = (entry.order or 0) + 1
 		end
@@ -165,6 +183,7 @@ function SCM:AddCustomIcon(anchorGroup, iconType, idValue, isGlobal)
 		iconType = iconType,
 		spellID = iconType == "spell" and idValue or nil,
 		itemID = iconType == "item" and idValue or nil,
+		slotID = iconType == "slot" and idValue or nil,
 		anchorGroup = anchorGroup,
 		order = nextOrder,
 	}
@@ -172,18 +191,26 @@ function SCM:AddCustomIcon(anchorGroup, iconType, idValue, isGlobal)
 	return uniqueID
 end
 
-function SCM:RemoveCustomIcon(anchorGroup, id, isGlobal)
-	local dbTable = isGlobal and self.db.global.globalCustomConfig or self.customConfig
-	if not dbTable then
+function SCM:RemoveCustomIcon(anchorGroup, id, isGlobal, iconType)
+	if isGlobal then
+		local globalTables = iconType and { GetGlobalConfigTable(self, iconType) } or {
+			self.db.global.globalSpellConfig,
+			self.db.global.globalItemConfig,
+			self.db.global.globalSlotConfig,
+		}
+		for _, tableRef in pairs(globalTables) do
+			local entry = tableRef and tableRef[id]
+			if entry and (not anchorGroup or entry.anchorGroup == anchorGroup) then
+				tableRef[id] = nil
+				return
+			end
+		end
 		return
 	end
 
-	for i = #dbTable, 1, -1 do
-		local entry = dbTable[i]
-		if entry.anchorGroup == anchorGroup and entry.id == id then
-			tremove(dbTable, i)
-			break
-		end
+	local entry = self.customConfig and self.customConfig[id]
+	if entry and (not anchorGroup or entry.anchorGroup == anchorGroup) then
+		self.customConfig[id] = nil
 	end
 end
 

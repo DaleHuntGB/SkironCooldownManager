@@ -34,24 +34,48 @@ local function ShowNumericInputPopup(key, title, callback)
 	StaticPopup_Show(key)
 end
 
+local function GetSlotTexture(slotID)
+	return GetInventoryItemTexture("player", slotID) or 134400
+end
+
+local function GetGlobalConfigByID(id)
+	return (SCM.db.global.globalSpellConfig and SCM.db.global.globalSpellConfig[id])
+		or (SCM.db.global.globalItemConfig and SCM.db.global.globalItemConfig[id])
+		or (SCM.db.global.globalSlotConfig and SCM.db.global.globalSlotConfig[id])
+end
+
 local function CreateAddSpellDropdown(owner, rootDescription, scrollFrame, anchorIndex, isGlobal)
 	rootDescription:CreateTitle("Add Icon")
 
 	if isGlobal then
-		-- rootDescription:CreateButton("Custom Spell", function()
-		-- 	ShowNumericInputPopup("SCM_CUSTOM_SPELL_ID", "Enter Spell ID", function(spellID)
-		-- 		if C_Spell.GetSpellTexture(spellID) then
-		-- 			scrollFrame:AddCustomIcon({ texture = C_Spell.GetSpellTexture(spellID), spellID = spellID, iconType = "spell", id = "spell:" .. spellID, isCustom = true })
-		-- 			SCM:AddCustomIcon(anchorIndex, "spell", spellID, true)
-		-- 			SCM:ApplyAllCDManagerConfigs()
-		-- 		end
-		-- 	end)
-		-- end)
-		rootDescription:CreateButton("Custom Item", function()
-			ShowNumericInputPopup("SCM_CUSTOM_ITEM_ID", "Enter Item ID", function(itemID)
-				if C_Item.GetItemIconByID(itemID) then
-					local uniqueID = SCM:AddCustomIcon(anchorIndex, "item", itemID, true)
-					scrollFrame:AddCustomIcon({ texture = C_Item.GetItemIconByID(itemID), spellID = 0, itemID = itemID, iconType = "item", id = uniqueID, isCustom = true })
+		if SCM.db.global.options.enableCustomIcons then
+			rootDescription:CreateButton("Custom Spell", function()
+				ShowNumericInputPopup("SCM_GLOBAL_CUSTOM_SPELL_ID", "Enter Spell ID", function(spellID)
+					local texture = C_Spell.GetSpellTexture(spellID)
+					if texture then
+						local uniqueID = SCM:AddCustomIcon(anchorIndex, "spell", spellID, true)
+						scrollFrame:AddCustomIcon({ texture = texture, spellID = spellID, iconType = "spell", id = uniqueID, isCustom = true })
+						SCM:ApplyAllCDManagerConfigs()
+					end
+				end)
+			end)
+
+			rootDescription:CreateButton("Custom Item", function()
+				ShowNumericInputPopup("SCM_CUSTOM_ITEM_ID", "Enter Item ID", function(itemID)
+					if C_Item.GetItemIconByID(itemID) then
+						local uniqueID = SCM:AddCustomIcon(anchorIndex, "item", itemID, true)
+						scrollFrame:AddCustomIcon({ texture = C_Item.GetItemIconByID(itemID), spellID = 0, itemID = itemID, iconType = "item", id = uniqueID, isCustom = true })
+						SCM:ApplyAllCDManagerConfigs()
+					end
+				end)
+			end)
+		end
+
+		rootDescription:CreateButton("Track Slot ID", function()
+			ShowNumericInputPopup("SCM_GLOBAL_SLOT_ID", "Enter Slot ID", function(slotID)
+				if slotID >= 1 and slotID <= 19 then
+					local uniqueID = SCM:AddCustomIcon(anchorIndex, "slot", slotID, true)
+					scrollFrame:AddCustomIcon({ texture = GetSlotTexture(slotID), spellID = 0, slotID = slotID, iconType = "slot", id = uniqueID, isCustom = true })
 					SCM:ApplyAllCDManagerConfigs()
 				end
 			end)
@@ -538,20 +562,39 @@ local function SelectAnchor(anchorWidget, frame, anchorIndex, anchorTabsTbl, isG
 		end
 	end
 
-	local customCollection = isGlobal and SCM.db.global.globalCustomConfig or SCM.customConfig
-	for _, customIcon in pairs(customCollection or {}) do
-		if customIcon.anchorGroup == anchorIndex then
-			local texture = customIcon.iconType == "spell" and C_Spell.GetSpellTexture(customIcon.spellID) or C_Item.GetItemIconByID(customIcon.itemID)
-			if texture or SCM.isOptionsOpen then
-				horizontalScrollFrame:AddCustomIcon({
-					texture = texture or 134400,
-					spellID = customIcon.spellID or 0,
-					itemID = customIcon.itemID,
-					iconType = customIcon.iconType,
-					id = customIcon.id,
-				})
+	local function AddCustomCollection(collection)
+		for _, customIcon in pairs(collection or {}) do
+			if customIcon.anchorGroup == anchorIndex then
+				local iconType = customIcon.iconType or (customIcon.spellID and "spell") or "item"
+				local texture
+				if iconType == "spell" then
+					texture = C_Spell.GetSpellTexture(customIcon.spellID)
+				elseif iconType == "slot" then
+					texture = customIcon.slotID and GetSlotTexture(customIcon.slotID)
+				else
+					texture = C_Item.GetItemIconByID(customIcon.itemID)
+				end
+
+				if texture or SCM.isOptionsOpen then
+					horizontalScrollFrame:AddCustomIcon({
+						texture = texture or 134400,
+						spellID = customIcon.spellID or 0,
+						itemID = customIcon.itemID,
+						slotID = customIcon.slotID,
+						iconType = iconType,
+						id = customIcon.id,
+					})
+				end
 			end
 		end
+	end
+
+	if isGlobal then
+		AddCustomCollection(SCM.db.global.globalSpellConfig)
+		AddCustomCollection(SCM.db.global.globalItemConfig)
+		AddCustomCollection(SCM.db.global.globalSlotConfig)
+	else
+		AddCustomCollection(SCM.customConfig)
 	end
 
 	horizontalScrollFrame:AddAddButton()
@@ -587,13 +630,15 @@ local function SelectAnchor(anchorWidget, frame, anchorIndex, anchorTabsTbl, isG
 			else
 				if not lastButtonFrame or lastButtonFrame ~= buttonFrame then
 					local buttonData = buttonFrame.data
-					local buttonConfig = isGlobal and SCM.globalCustomConfig[buttonData.id] or SCM.customConfig[buttonData.id] or SCM.spellConfig[buttonData.id]
+					local buttonConfig = (isGlobal and GetGlobalConfigByID(buttonData.id)) or SCM.customConfig[buttonData.id] or SCM.spellConfig[buttonData.id]
 
 					if buttonConfig then
-						if buttonData.spellID then
+						if buttonData.spellID and buttonData.spellID > 0 then
 							iconSettings:SetTitle(C_Spell.GetSpellName(buttonData.spellID))
 						elseif buttonData.itemID then
 							iconSettings:SetTitle(C_Item.GetItemNameByID(buttonData.itemID))
+						elseif buttonData.slotID then
+							iconSettings:SetTitle("Slot ID " .. buttonData.slotID)
 						end
 
 						buttonFrame:SetBackdropBorderColor(0, 1, 0, 1)
@@ -696,7 +741,7 @@ local function SelectAnchor(anchorWidget, frame, anchorIndex, anchorTabsTbl, isG
 			local menu = MenuUtil.CreateContextMenu(nil, function(owner, rootDescription)
 				rootDescription:CreateButton("Remove", function()
 					if buttonFrame.data.isCustom then
-						SCM:RemoveCustomIcon(anchorIndex, buttonFrame.data.id, isGlobal)
+						SCM:RemoveCustomIcon(anchorIndex, buttonFrame.data.id, isGlobal, buttonFrame.data.iconType)
 					else
 						SCM:RemoveSpellFromConfig(anchorIndex, buttonFrame.data)
 					end
@@ -715,7 +760,12 @@ local function SelectAnchor(anchorWidget, frame, anchorIndex, anchorTabsTbl, isG
 
 	horizontalScrollFrame:SetCallback("OnDragStop", function(self, event, collection)
 		for i, entry in ipairs(collection) do
-			if entry.spellID then
+			if entry.isCustom and entry.id then
+				local customConfig = (isGlobal and GetGlobalConfigByID(entry.id)) or SCM.customConfig[entry.id]
+				if customConfig and customConfig.anchorGroup == anchorIndex then
+					customConfig.order = i
+				end
+			elseif entry.spellID and entry.spellID > 0 then
 				local spellConfig = SCM.spellConfig[entry.spellID]
 				if spellConfig and spellConfig.anchorGroup[anchorIndex] then
 					spellConfig.anchorGroup[anchorIndex].order = i
@@ -760,11 +810,8 @@ local function CDM(self, frame, group)
 
 	local tabs = {
 		{ value = "spec", text = "Spec Anchors" },
+		{ value = "global", text = "Global Anchors" },
 	}
-
-	if SCM.db.global.options.enableCustomIcons then
-		tinsert(tabs, { value = "global", text = "Global Anchors" })
-	end
 
 	modeTabs:SetTabs(tabs)
 	modeTabs:SetCallback("OnGroupSelected", function(widget, event, mode)
