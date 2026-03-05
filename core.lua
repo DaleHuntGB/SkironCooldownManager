@@ -555,7 +555,8 @@ local function ProcessItemConfig(itemConfig, validChildren, isGlobal, activeItem
 					end
 
 					local start, duration = GetInventoryItemCooldown("player", slotID)
-					if start and start > 0 then
+					local isOnCooldown = start and start > 0
+					if isOnCooldown then
 						frame.Cooldown:SetCooldown(start, duration)
 						frame.Icon:SetDesaturated(true)
 					else
@@ -563,7 +564,7 @@ local function ProcessItemConfig(itemConfig, validChildren, isGlobal, activeItem
 						frame.Icon:SetDesaturated(false)
 					end
 
-					SetChildVisibilityState(frame, true, true)
+					SetChildVisibilityState(frame, not (config.hideWhenNotOnCooldown and not isOnCooldown), true)
 					AddChildToScopedGroup(validChildren, anchorGroup, frame, isGlobal)
 				elseif SCM.itemFrames[frameKey] then
 					SetChildVisibilityState(SCM.itemFrames[frameKey], false, true)

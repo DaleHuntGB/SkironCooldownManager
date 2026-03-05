@@ -22,7 +22,7 @@ local iconTypeTabs = {
 }
 for iconType, options in pairs(iconTypeTabs) do
 	if iconType ~= "all" then
-		for i=#iconTypeTabs.all, 1, -1 do
+		for i = #iconTypeTabs.all, 1, -1 do
 			tinsert(options, 1, iconTypeTabs.all[i])
 		end
 	end
@@ -556,12 +556,14 @@ local function SelectAnchor(anchorWidget, frame, anchorIndex, anchorTabsTbl, isG
 
 	top:PauseLayout()
 	local horizontalScrollFrame = AceGUI:Create("SCMHorizontalScrollFrame")
-	horizontalScrollFrame:SetHeight(60)
+	horizontalScrollFrame:SetHeight(86)
 	horizontalScrollFrame:SetFullWidth(true)
-	-- horizontalScrollFrame.frame:SetParent(top.frame)
-	-- horizontalScrollFrame.frame:SetPoint("TOPLEFT", top.frame, "TOPLEFT", 7, -25)
-	-- horizontalScrollFrame.frame:SetPoint("BOTTOMRIGHT", top.frame, "BOTTOMRIGHT", -8, 35)
-	-- horizontalScrollFrame.frame:Show()
+	horizontalScrollFrame.scrollbar:ClearAllPoints()
+	horizontalScrollFrame.scrollbar:SetPoint("BOTTOMLEFT", horizontalScrollFrame.frame, "BOTTOMLEFT")
+	horizontalScrollFrame.scrollbar:SetPoint("BOTTOMRIGHT", horizontalScrollFrame.frame, "BOTTOMRIGHT")
+	horizontalScrollFrame.scrollBox:ClearAllPoints()
+	horizontalScrollFrame.scrollBox:SetPoint("TOPLEFT", horizontalScrollFrame.frame, "TOPLEFT")
+	horizontalScrollFrame.scrollBox:SetPoint("BOTTOMRIGHT", horizontalScrollFrame.scrollbar, "TOPRIGHT", 0, 2)
 
 	horizontalScrollFrame:SetSortComparator(SortByIndex)
 
@@ -640,6 +642,7 @@ local function SelectAnchor(anchorWidget, frame, anchorIndex, anchorTabsTbl, isG
 	local iconSettings = AceGUI:Create("InlineGroup")
 	iconSettings:SetLayout("flow")
 	iconSettings:SetFullWidth(true)
+	iconSettings:SetHeight(120)
 	iconSettings:SetTitle("")
 	scrollFrame:AddChild(iconSettings)
 
@@ -694,6 +697,7 @@ local function SelectAnchor(anchorWidget, frame, anchorIndex, anchorTabsTbl, isG
 									useCustomGlowColor:SetRelativeWidth(0.5)
 									useCustomGlowColor:SetValue(buttonConfig.useCustomGlowColor)
 									useCustomGlowColor:SetDisabled(not options.useCustomGlow)
+									SCM.Utils.SetDisabledTooltip(useCustomGlowColor, "Enable 'Use Custom Glow' in Global Settings > Glow first.")
 									useCustomGlowColor:SetCallback("OnValueChanged", function(self, event, value)
 										buttonConfig.useCustomGlowColor = value or nil
 										SCM:ApplyAllCDManagerConfigs()
@@ -732,6 +736,7 @@ local function SelectAnchor(anchorWidget, frame, anchorIndex, anchorTabsTbl, isG
 									alwaysShow:SetRelativeWidth(0.5)
 									alwaysShow:SetValue(buttonConfig.alwaysShow)
 									alwaysShow:SetDisabled(not options.hideBuffsWhenInactive)
+									SCM.Utils.SetDisabledTooltip(alwaysShow, "Enable 'Hide Inactive Auras' in Global Settings > General > Auras first.")
 									iconSettingsTabs:AddChild(alwaysShow)
 
 									local desaturate
@@ -741,6 +746,7 @@ local function SelectAnchor(anchorWidget, frame, anchorIndex, anchorTabsTbl, isG
 										desaturate:SetRelativeWidth(0.5)
 										desaturate:SetValue(buttonConfig.desaturate)
 										desaturate:SetDisabled(not buttonConfig.alwaysShow)
+										SCM.Utils.SetDisabledTooltip(desaturate, "Enable 'Show Always' first.")
 										desaturate:SetCallback("OnValueChanged", function(self, event, value)
 											buttonConfig.desaturate = value or nil
 											SCM:ApplyAllCDManagerConfigs()
@@ -818,9 +824,20 @@ local function SelectAnchor(anchorWidget, frame, anchorIndex, anchorTabsTbl, isG
 	top:AddChild(horizontalScrollFrame)
 	top:ResumeLayout()
 	top:DoLayout()
+
+	scrollFrame:DoLayout()
+	scrollFrame:FixScroll()
+	scrollFrame:SetScroll(0)
+
+	RunNextFrame(function()
+		horizontalScrollFrame.scrollbar:ScrollToEnd()
+		horizontalScrollFrame.scrollbar:ScrollToBegin()
+	end)
 end
 
 local function CreateAnchorTabGroup(parent, frame, isGlobal)
+	parent:ReleaseChildren()
+
 	local anchorTabs = AceGUI:Create("TabGroup")
 	anchorTabs:SetLayout("fill")
 	anchorTabs:SetFullWidth(true)
@@ -841,6 +858,8 @@ local function CreateAnchorTabGroup(parent, frame, isGlobal)
 		SelectAnchor(self, frame, anchorIndex, anchorTabsTbl, isGlobal)
 	end)
 	anchorTabs:SelectTab(1)
+	--Not sure yet why I have to call this twice
+	SelectAnchor(anchorTabs, frame, 1, anchorTabsTbl, isGlobal)
 	parent:AddChild(anchorTabs)
 end
 
@@ -852,12 +871,14 @@ local function CDM(self, frame, group)
 
 	local tabs = {
 		{ value = "spec", text = "Spec Anchors" },
-		{ value = "global", text = "Global Anchors" },
 	}
+
+	if SCM.db.global.options.enableCustomIcons then
+		tinsert(tabs, { value = "global", text = "Global Anchors" })
+	end
 
 	modeTabs:SetTabs(tabs)
 	modeTabs:SetCallback("OnGroupSelected", function(widget, event, mode)
-		widget:ReleaseChildren()
 		CreateAnchorTabGroup(widget, frame, mode == "global")
 	end)
 	modeTabs:SelectTab("spec")
