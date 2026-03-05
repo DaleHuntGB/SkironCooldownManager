@@ -10,7 +10,7 @@ local function SetCustomIconCountText(frame, iconType, id)
 	frame.ChargeCount.Current:SetText("")
 	frame.ChargeCount.Current:Hide()
 
-	if iconType == "spell" then
+	if iconType == "spell" or iconType == "slot" then
 		return
 	end
 
@@ -45,6 +45,15 @@ local function UpdateCustomIconCooldown(frame, iconType, config)
 		end
 	end
 
+	if iconType == "slot" and config.slotID then
+		local startTime, duration = GetInventoryItemCooldown("player", config.slotID)
+		if startTime and startTime > 0 then
+			frame.Cooldown:SetCooldown(startTime, duration)
+			frame.Icon:SetDesaturated(true)
+			return true
+		end
+	end
+
 	frame.Cooldown:Clear()
 	frame.Icon:SetDesaturated(false)
 	return false
@@ -58,6 +67,14 @@ local function ResolveCustomIconTexture(config, iconType)
 	if iconType == "item" and config.itemID then
 		return C_Item.GetItemIconByID(config.itemID)
 	end
+
+	if iconType == "slot" and config.slotID then
+		local itemID = GetInventoryItemID("player", config.slotID)
+		if itemID then
+			return C_Item.GetItemIconByID(itemID)
+		end
+		return GetInventoryItemTexture("player", config.slotID)
+	end
 end
 
 local function ShouldShowCustomIcon(config, iconType, hasCount, isOnCooldown)
@@ -65,7 +82,7 @@ local function ShouldShowCustomIcon(config, iconType, hasCount, isOnCooldown)
 		return true
 	end
 
-	local canShowIcon = iconType == "spell" or hasCount
+	local canShowIcon = iconType == "spell" or iconType == "slot" or hasCount
 	return canShowIcon and (not config.hideWhenNotOnCooldown or isOnCooldown)
 end
 

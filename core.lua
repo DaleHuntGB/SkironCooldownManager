@@ -14,6 +14,39 @@ local cachedChildrenTbl = {}
 local cachedVisibleChildren = {}
 local cachedCooldownFrameTbl = {}
 local cachedViewerChildren = {}
+local cachedActiveItemFrames = {}
+local cachedVisitedAnchorGroups = {}
+local reusableCustomIconContext = {}
+local UPDATE_SCOPE = {
+	ALL = "all",
+	ESSENTIAL = "essential",
+	UTILITY = "utility",
+	BUFF = "buff",
+}
+local VIEWER_UPDATE_MAPPING = {
+	[UPDATE_SCOPE.ESSENTIAL] = {
+		frameName = "EssentialCooldownViewer",
+		isBuffIcon = false,
+	},
+	[UPDATE_SCOPE.UTILITY] = {
+		frameName = "UtilityCooldownViewer",
+		isBuffIcon = false,
+	},
+	[UPDATE_SCOPE.BUFF] = {
+		frameName = "BuffIconCooldownViewer",
+		isBuffIcon = true,
+	},
+}
+local VIEWER_PROCESS_ORDER = {
+	VIEWER_UPDATE_MAPPING[UPDATE_SCOPE.ESSENTIAL],
+	VIEWER_UPDATE_MAPPING[UPDATE_SCOPE.UTILITY],
+	VIEWER_UPDATE_MAPPING[UPDATE_SCOPE.BUFF],
+}
+local cachedScopedAnchorGroups = {
+	[UPDATE_SCOPE.ESSENTIAL] = {},
+	[UPDATE_SCOPE.UTILITY] = {},
+	[UPDATE_SCOPE.BUFF] = {},
+}
 local delayedHideSpellIDs = {
 	[450615] = true,
 }
@@ -333,6 +366,53 @@ local function GetOrCacheChildren(viewer, isBuffIcon)
 	return cachedViewerChildren[viewer]
 end
 
+local function CollectScopedAnchorGroups(updateScope, config)
+	if updateScope == UPDATE_SCOPE.ALL then
+		return
+	end
+
+	local viewerData = VIEWER_UPDATE_MAPPING[updateScope]
+	local targetGroups = viewerData and cachedScopedAnchorGroups[updateScope]
+	if not targetGroups then
+		return
+	end
+
+	wipe(targetGroups)
+
+	local viewer = viewerData and _G[viewerData.frameName]
+	local spellConfig = config and config.spellConfig
+	local defaultConfig = SCM.defaultCooldownViewerConfig
+	if not (viewer and spellConfig and defaultConfig) then
+		return targetGroups
+	end
+
+	local categoryIndex = SCM.CooldownViewerNameToIndex[viewer:GetName()]
+	if not categoryIndex then
+		return targetGroups
+	end
+
+	local categoryConfig = defaultConfig[categoryIndex]
+	local pairCategory = SCM.Constants.SourcePairs[categoryIndex]
+	local allCooldownIDs = defaultConfig.cooldownIDs
+
+	for _, child in ipairs(GetOrCacheChildren(viewer, viewerData.isBuffIcon)) do
+		local cooldownID = child:GetCooldownID()
+		local info = (categoryConfig and categoryConfig[cooldownID]) or (allCooldownIDs and allCooldownIDs[cooldownID])
+		local spellID = info and info.spellID
+		local childData = spellID and spellConfig[spellID]
+		local group = childData and (childData.source[categoryIndex] or childData.source[pairCategory])
+		if group then
+			targetGroups[group] = true
+		end
+	end
+
+	return targetGroups
+end
+
+local function IsScopedGroup(scopedAnchorGroups, group)
+	return not scopedAnchorGroups or scopedAnchorGroups[group]
+end
+
 local function ProcessSingleChild(child, validChildren, spellConfig, categoryIndex, isBuffIcon, options)
 	if not child.Icon then
 		return
@@ -483,12 +563,11 @@ local function SetupCustomIconFrame(frame)
 end
 
 local function GetCustomIconContext()
-	return {
-		viewerScale = cachedViewerScale,
-		setChildVisibilityState = SetChildVisibilityState,
-		setupFrame = SetupCustomIconFrame,
-		addChildToGroup = AddChildToGroup,
-	}
+	reusableCustomIconContext.viewerScale = cachedViewerScale
+	reusableCustomIconContext.setChildVisibilityState = SetChildVisibilityState
+	reusableCustomIconContext.setupFrame = SetupCustomIconFrame
+	reusableCustomIconContext.addChildToGroup = AddChildToGroup
+	return reusableCustomIconContext
 end
 
 local function ApplyManagedAnchorPoint(child)
@@ -531,31 +610,62 @@ local function OnManagedAnchorChildClearAllPoints(child)
 	ApplyManagedAnchorPoint(child)
 end
 
-local function OrderCDManagerSpells_Actual()
+local function UpdateEmptyAnchorGroup(group, anchorConfig, scopedAnchorGroups)
+	if not IsScopedGroup(scopedAnchorGroups, group) or cachedCooldownFrameTbl[group] then
+		return
+	end
+
+	local rowConfig = (anchorConfig and anchorConfig.rowConfig and #anchorConfig.rowConfig > 0) and anchorConfig.rowConfig or DEFAULT_ROW_CONFIG
+	local p, a, r, x, y = unpack(anchorConfig and anchorConfig.anchor or DEFAULT_ANCHOR)
+	local initialIconWidth = rowConfig[1].iconWidth or rowConfig[1].size or 47
+	SCM:GetAnchor(group, p, a, r, x, y, anchorConfig.growDir, initialIconWidth, true)
+
+	if group == 1 then
+		if SCRB and SCRB.registerCustomFrame then
+			if not SCM.registeredCustomFrame then
+				SCM.registeredCustomFrame = true
+				SCRB.registerCustomFrame(anchorConfig)
+			end
+		else
+			SCM:UpdateResourceBarWidth(initialIconWidth)
+		end
+
+		if not InCombatLockdown() then
+			SCM:UpdateUUFValues(SCM.db.global.options, initialIconWidth, rowConfig)
+		end
+	end
+end
+
+local function OrderCDManagerSpells_Actual(updateScope)
 	cachedViewerScale = 1
 
 	wipe(cachedChildrenTbl)
 	wipe(cachedCooldownFrameTbl)
 
 	local config = SCM.currentConfig
+	local scopedAnchorGroups = CollectScopedAnchorGroups(updateScope, config)
 	local options = SCM.db.global.options
-	for _, cooldownViewer in ipairs({ EssentialCooldownViewer, UtilityCooldownViewer, BuffIconCooldownViewer }) do
-		ProcessChildren(cooldownViewer, cachedChildrenTbl, SCM.currentConfig, cooldownViewer == BuffIconCooldownViewer)
+	for i = 1, #VIEWER_PROCESS_ORDER do
+		local viewerData = VIEWER_PROCESS_ORDER[i]
+		ProcessChildren(_G[viewerData.frameName], cachedChildrenTbl, config, viewerData.isBuffIcon)
 	end
 
 	for group, children in pairs(cachedChildrenTbl) do
-		local visibleChildren = GetOrCreateBucket(cachedVisibleChildren, group)
-		wipe(visibleChildren)
-		for _, child in ipairs(children) do
-			if child.SCMShouldBeVisible then
-				visibleChildren[#visibleChildren + 1] = child
+		if IsScopedGroup(scopedAnchorGroups, group) then
+			local visibleChildren = GetOrCreateBucket(cachedVisibleChildren, group)
+			wipe(visibleChildren)
+			for _, child in ipairs(children) do
+				if child.SCMShouldBeVisible then
+					visibleChildren[#visibleChildren + 1] = child
+				end
 			end
-		end
 
-		cachedCooldownFrameTbl[group] = visibleChildren
+			cachedCooldownFrameTbl[group] = visibleChildren
+		end
 	end
 
-	local activeItemFrames = {}
+	wipe(cachedActiveItemFrames)
+	local activeItemFrames = cachedActiveItemFrames
 	if SCM.itemConfig and next(SCM.itemConfig) then
 		ProcessItemConfig(SCM.itemConfig, cachedCooldownFrameTbl, false, activeItemFrames)
 	end
@@ -572,7 +682,7 @@ local function OrderCDManagerSpells_Actual()
 		HideItemIcons()
 	end
 
-	if options.enableCustomIcons ~= false then
+	if options.enableCustomIcons then
 		local customIconContext = GetCustomIconContext()
 		CustomIcons.ProcessIcons(SCM.customConfig, cachedCooldownFrameTbl, false, customIconContext)
 		CustomIcons.ProcessIcons(SCM.globalSpellConfig, cachedCooldownFrameTbl, true, customIconContext)
@@ -601,6 +711,9 @@ local function OrderCDManagerSpells_Actual()
 		local maxGroupWidth = 0
 		local startPoint = (growDir == "CENTER" and "TOP") or (growDir == "LEFT" and "TOPRIGHT") or "TOPLEFT"
 
+		if group > 100 then
+			print(#visibleChildren)
+		end
 		while childIndex <= #visibleChildren do
 			local currentRowConfig = rowConfig[rowIndex] or lastRowConfig
 			local rowLimit = currentRowConfig.limit or 8
@@ -691,6 +804,9 @@ local function OrderCDManagerSpells_Actual()
 
 			SCM:ApplyCustomAnchors(maxGroupWidth, rowConfig)
 		elseif not InCombatLockdown() then
+			if group > 100 then
+				print(group, initialWidth, maxGroupWidth, max(initialWidth, maxGroupWidth, 1))
+			end
 			groupAnchor:SetSize(max(initialWidth, maxGroupWidth, 1), max(initialHeight, accumulatedY - baseSpacing, 1))
 		end
 	end
@@ -701,61 +817,62 @@ local function OrderCDManagerSpells_Actual()
 		end
 	end
 
-	local allAnchors = {}
+	wipe(cachedVisitedAnchorGroups)
 	for group, anchorConfig in pairs(config.anchorConfig) do
-		allAnchors[group] = anchorConfig
+		cachedVisitedAnchorGroups[group] = true
+		UpdateEmptyAnchorGroup(group, anchorConfig, scopedAnchorGroups)
 	end
+
 	for index, anchorConfig in pairs(SCM.globalAnchorConfig or {}) do
-		allAnchors[ToGlobalGroup(index)] = anchorConfig
-	end
-
-	for group, anchorConfig in pairs(allAnchors) do
-		if not cachedCooldownFrameTbl[group] then
-			local rowConfig = anchorConfig.rowConfig
-
-			local p, a, r, x, y = unpack(anchorConfig and anchorConfig.anchor or DEFAULT_ANCHOR)
-			local initialIconWidth = rowConfig[1].iconWidth or rowConfig[1].size or 47
-			SCM:GetAnchor(group, p, a, r, x, y, anchorConfig.growDir, initialIconWidth, not cachedCooldownFrameTbl[group])
-
-			if group == 1 then
-				if SCRB and SCRB.registerCustomFrame then
-					if not SCM.registeredCustomFrame then
-						SCM.registeredCustomFrame = true
-						SCRB.registerCustomFrame(anchorConfig)
-					end
-				else
-					SCM:UpdateResourceBarWidth(initialIconWidth)
-				end
-
-				if not InCombatLockdown() then
-					SCM:UpdateUUFValues(SCM.db.global.options, initialIconWidth, rowConfig)
-				end
-			end
+		local group = ToGlobalGroup(index)
+		if not cachedVisitedAnchorGroups[group] then
+			cachedVisitedAnchorGroups[group] = true
+			UpdateEmptyAnchorGroup(group, anchorConfig, scopedAnchorGroups)
 		end
 	end
 end
 
 local isThrottled = false
 local hasPendingUpdate = false
+local pendingUpdateScope
+
+local function MergeUpdateScope(currentScope, newScope)
+	if not currentScope then
+		return newScope
+	end
+
+	if currentScope == UPDATE_SCOPE.ALL or newScope == UPDATE_SCOPE.ALL then
+		return UPDATE_SCOPE.ALL
+	end
+
+	if currentScope ~= newScope then
+		return UPDATE_SCOPE.ALL
+	end
+
+	return currentScope
+end
 
 local function OnOrderThrottleTick()
 	isThrottled = false
 	if hasPendingUpdate then
 		hasPendingUpdate = false
-		OrderCDManagerSpells_Actual()
+		OrderCDManagerSpells_Actual(pendingUpdateScope or UPDATE_SCOPE.ALL)
+		pendingUpdateScope = nil
 	end
 end
 
-local function OrderCDManagerSpells(isBuffIcon, config)
-	if isBuffIcon then
-		OrderCDManagerSpells_Actual()
+local function OrderCDManagerSpells(updateScope, config)
+	updateScope = updateScope or UPDATE_SCOPE.ALL
+	if updateScope == UPDATE_SCOPE.BUFF then
+		OrderCDManagerSpells_Actual(updateScope)
 		return
 	elseif isThrottled then
 		hasPendingUpdate = true
+		pendingUpdateScope = MergeUpdateScope(pendingUpdateScope, updateScope)
 		return
 	end
 
-	OrderCDManagerSpells_Actual()
+	OrderCDManagerSpells_Actual(updateScope)
 	isThrottled = true
 	C_Timer.After(0, OnOrderThrottleTick)
 end
@@ -855,26 +972,26 @@ end
 function SCM:ApplyEssentialCDManagerConfig()
 	if C_CVar.GetCVar("cooldownViewerEnabled") == "1" then
 		if SCM.currentConfig then
-			OrderCDManagerSpells(false, SCM.currentConfig)
+			OrderCDManagerSpells(UPDATE_SCOPE.ESSENTIAL, SCM.currentConfig)
 		end
 	end
 end
 
 function SCM:ApplyUtilityCDManagerConfig()
 	if SCM.currentConfig then
-		OrderCDManagerSpells(false, SCM.currentConfig)
+		OrderCDManagerSpells(UPDATE_SCOPE.UTILITY, SCM.currentConfig)
 	end
 end
 
 function SCM:ApplyBuffIconCDManagerConfig()
 	if SCM.currentConfig then
-		OrderCDManagerSpells(true, SCM.currentConfig)
+		OrderCDManagerSpells(UPDATE_SCOPE.BUFF, SCM.currentConfig)
 	end
 end
 
 function SCM:ApplyAllCDManagerConfigs()
 	if C_CVar.GetCVar("cooldownViewerEnabled") == "1" and SCM.currentConfig then
-		OrderCDManagerSpells(false, SCM.currentConfig)
+		OrderCDManagerSpells(UPDATE_SCOPE.ALL, SCM.currentConfig)
 	end
 end
 
