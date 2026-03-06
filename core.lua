@@ -187,7 +187,7 @@ local function OnEventFrameEvent(_, event, ...)
 	end
 end
 
-local function OnSCMAddonLoaded()
+EventUtil.ContinueOnAddOnLoaded(addonName, function()
 	SCM.db = LibStub("AceDB-3.0"):New(addonName .. "DB", SCM.DefaultDB, true)
 	SCM.db.RegisterCallback(SCM, "OnProfileChanged", OnProfileChanged)
 	SCM.db.RegisterCallback(SCM, "OnProfileCopied", OnProfileChanged)
@@ -209,6 +209,4 @@ local function OnSCMAddonLoaded()
 	eventFrame:SetScript("OnEvent", OnEventFrameEvent)
 
 	SCM:GetAnchor(1)
-end
-
-EventUtil.ContinueOnAddOnLoaded(addonName, OnSCMAddonLoaded)
+end)
