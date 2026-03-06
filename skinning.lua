@@ -10,7 +10,7 @@ local function ApplyChargeAndApplicationStyle(child, options, fontPath)
 		end
 
 		child.ChargeCount.Current:ClearAllPoints()
-		child.ChargeCount.Current:SetPoint("CENTER", child.Icon, options.chargeRelativePoint, options.chargeXOffset, options.chargeYOffset)
+		child.ChargeCount.Current:SetPoint(options.chargePoint, child.Icon, options.chargeRelativePoint, options.chargeXOffset, options.chargeYOffset)
 	end
 
 	if child.Applications and child.Applications.Applications then
@@ -19,7 +19,7 @@ local function ApplyChargeAndApplicationStyle(child, options, fontPath)
 		end
 
 		child.Applications.Applications:ClearAllPoints()
-		child.Applications.Applications:SetPoint("CENTER", child.Icon, options.chargeRelativePoint, options.chargeXOffset, options.chargeYOffset)
+		child.Applications.Applications:SetPoint(options.chargePoint, child.Icon, options.chargeRelativePoint, options.chargeXOffset, options.chargeYOffset)
 	end
 end
 
