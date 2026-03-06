@@ -36,6 +36,7 @@ SCM.DefaultDB = {
 			simulateAuras = true,
 			chargeFont = "Expressway",
 			chargeFontSize = 22,
+			chargePoint = "CENTER",
 			chargeRelativePoint = "BOTTOMRIGHT",
 			chargeXOffset = -8,
 			chargeYOffset = 10,
