@@ -63,6 +63,10 @@ local function GetGlobalConfigByID(id)
 		or (SCM.db.global.globalSlotConfig and SCM.db.global.globalSlotConfig[id])
 end
 
+local function ApplyAnchorGroupUpdate(anchorIndex, isGlobal)
+	SCM:ApplyAnchorGroupCDManagerConfig(anchorIndex, isGlobal)
+end
+
 local function CreateAddSpellDropdown(owner, rootDescription, scrollFrame, anchorIndex, isGlobal)
 	rootDescription:CreateTitle("Add Icon")
 
@@ -74,7 +78,7 @@ local function CreateAddSpellDropdown(owner, rootDescription, scrollFrame, ancho
 					if texture then
 						local uniqueID = SCM:AddCustomIcon(anchorIndex, "spell", spellID, true)
 						scrollFrame:AddCustomIcon({ texture = texture, spellID = spellID, iconType = "spell", id = uniqueID, isCustom = true })
-						SCM:ApplyAllCDManagerConfigs()
+						ApplyAnchorGroupUpdate(anchorIndex, true)
 					end
 				end)
 			end)
@@ -84,7 +88,7 @@ local function CreateAddSpellDropdown(owner, rootDescription, scrollFrame, ancho
 					if C_Item.GetItemIconByID(itemID) then
 						local uniqueID = SCM:AddCustomIcon(anchorIndex, "item", itemID, true)
 						scrollFrame:AddCustomIcon({ texture = C_Item.GetItemIconByID(itemID), spellID = 0, itemID = itemID, iconType = "item", id = uniqueID, isCustom = true })
-						SCM:ApplyAllCDManagerConfigs()
+						ApplyAnchorGroupUpdate(anchorIndex, true)
 					end
 				end)
 			end)
@@ -95,7 +99,7 @@ local function CreateAddSpellDropdown(owner, rootDescription, scrollFrame, ancho
 				if slotID >= 1 and slotID <= 19 then
 					local uniqueID = SCM:AddCustomIcon(anchorIndex, "slot", slotID, true)
 					scrollFrame:AddCustomIcon({ texture = GetSlotTexture(slotID), spellID = 0, slotID = slotID, iconType = "slot", id = uniqueID, isCustom = true })
-					SCM:ApplyAllCDManagerConfigs()
+					ApplyAnchorGroupUpdate(anchorIndex, true)
 				end
 			end)
 		end)
@@ -238,7 +242,7 @@ local function CreateAddSpellDropdown(owner, rootDescription, scrollFrame, ancho
 					else
 						SCM:AddCustomIcon(anchorIndex, "spell", spellID)
 					end
-					SCM:ApplyAllCDManagerConfigs()
+					ApplyAnchorGroupUpdate(anchorIndex, isGlobal)
 				end
 			end)
 		end)
@@ -261,7 +265,7 @@ local function CreateAddSpellDropdown(owner, rootDescription, scrollFrame, ancho
 						iconType = "item",
 						itemID = itemID,
 					})
-					SCM:ApplyAllCDManagerConfigs()
+					ApplyAnchorGroupUpdate(anchorIndex, isGlobal)
 				end
 			end)
 		end)
@@ -278,7 +282,7 @@ local function CreateAddSpellDropdown(owner, rootDescription, scrollFrame, ancho
 						id = uniqueID,
 						isCustom = true,
 					})
-					SCM:ApplyAllCDManagerConfigs()
+					ApplyAnchorGroupUpdate(anchorIndex, isGlobal)
 				end
 			end)
 		end)
@@ -675,6 +679,14 @@ local function SelectAnchor(anchorWidget, frame, anchorIndex, anchorTabsTbl, isG
 					buttonFrame:SetBackdropBorderColor(0, 1, 0, 1)
 
 					if buttonConfig then
+						local function ApplyIconConfigUpdate()
+							if buttonFrame.data.isCustom then
+								ApplyAnchorGroupUpdate(anchorIndex, isGlobal)
+								return
+							end
+							SCM:ApplyAllCDManagerConfigs()
+						end
+
 						local iconSettingsTabs = AceGUI:Create("TabGroup")
 						iconSettingsTabs:SetLayout("flow")
 						iconSettingsTabs:SetFullWidth(true)
@@ -700,7 +712,7 @@ local function SelectAnchor(anchorWidget, frame, anchorIndex, anchorTabsTbl, isG
 									SCM.Utils.SetDisabledTooltip(useCustomGlowColor, "Enable 'Use Custom Glow' in Global Settings > Glow first.")
 									useCustomGlowColor:SetCallback("OnValueChanged", function(self, event, value)
 										buttonConfig.useCustomGlowColor = value or nil
-										SCM:ApplyAllCDManagerConfigs()
+										ApplyIconConfigUpdate()
 									end)
 									iconSettingsTabs:AddChild(useCustomGlowColor)
 
@@ -725,7 +737,7 @@ local function SelectAnchor(anchorWidget, frame, anchorIndex, anchorTabsTbl, isG
 									hideWhileReady:SetValue(buttonConfig.hideWhenNotOnCooldown)
 									hideWhileReady:SetCallback("OnValueChanged", function(self, event, value)
 										buttonConfig.hideWhenNotOnCooldown = value or nil
-										SCM:ApplyAllCDManagerConfigs()
+										ApplyIconConfigUpdate()
 									end)
 									iconSettingsTabs:AddChild(hideWhileReady)
 								end
@@ -749,13 +761,13 @@ local function SelectAnchor(anchorWidget, frame, anchorIndex, anchorTabsTbl, isG
 										SCM.Utils.SetDisabledTooltip(desaturate, "Enable 'Show Always' first.")
 										desaturate:SetCallback("OnValueChanged", function(self, event, value)
 											buttonConfig.desaturate = value or nil
-											SCM:ApplyAllCDManagerConfigs()
+											ApplyIconConfigUpdate()
 										end)
 										iconSettingsTabs:AddChild(desaturate)
 									end
 									alwaysShow:SetCallback("OnValueChanged", function(self, event, value)
 										buttonConfig.alwaysShow = value or nil
-										SCM:ApplyAllCDManagerConfigs()
+										ApplyIconConfigUpdate()
 
 										if desaturate then
 											desaturate:SetDisabled(not value)
@@ -792,6 +804,10 @@ local function SelectAnchor(anchorWidget, frame, anchorIndex, anchorTabsTbl, isG
 						SCM:RemoveSpellFromConfig(anchorIndex, buttonFrame.data)
 					end
 					horizontalScrollFrame:RemoveButton(buttonFrame.data)
+					if buttonFrame.data.isCustom then
+						ApplyAnchorGroupUpdate(anchorIndex, isGlobal)
+						return
+					end
 					SCM:ApplyAllCDManagerConfigs()
 				end)
 			end)
@@ -818,7 +834,7 @@ local function SelectAnchor(anchorWidget, frame, anchorIndex, anchorTabsTbl, isG
 				end
 			end
 		end
-		SCM:ApplyAllCDManagerConfigs()
+		ApplyAnchorGroupUpdate(anchorIndex, isGlobal)
 	end)
 
 	top:AddChild(horizontalScrollFrame)

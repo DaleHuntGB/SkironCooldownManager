@@ -161,6 +161,13 @@ local function GetGlobalConfigTable(self, iconType)
 	return self.db.global.globalItemConfig
 end
 
+local function HideRemovedCustomIconFrame(id)
+	local frame = SCM.customIconFrames and SCM.customIconFrames[id]
+	if frame and SCM.SetChildVisibilityState then
+		SCM.SetChildVisibilityState(frame, false, true)
+	end
+end
+
 function SCM:AddCustomIcon(anchorGroup, iconType, idValue, isGlobal)
 	local dbTable = isGlobal and GetGlobalConfigTable(self, iconType) or self.customConfig
 	if not dbTable then
@@ -202,6 +209,7 @@ function SCM:RemoveCustomIcon(anchorGroup, id, isGlobal, iconType)
 			local entry = tableRef and tableRef[id]
 			if entry and (not anchorGroup or entry.anchorGroup == anchorGroup) then
 				tableRef[id] = nil
+				HideRemovedCustomIconFrame(id)
 				return
 			end
 		end
@@ -211,6 +219,7 @@ function SCM:RemoveCustomIcon(anchorGroup, id, isGlobal, iconType)
 	local entry = self.customConfig and self.customConfig[id]
 	if entry and (not anchorGroup or entry.anchorGroup == anchorGroup) then
 		self.customConfig[id] = nil
+		HideRemovedCustomIconFrame(id)
 	end
 end
 
