@@ -31,11 +31,12 @@ Database\loader.lua
 
 
 glow.lua
+cache.lua
 skinning.lua
 utils.lua
 custom_icons.lua
+cdm.lua
 core.lua
-events.lua
 anchors.lua
 profiles.lua
 uid.lua
