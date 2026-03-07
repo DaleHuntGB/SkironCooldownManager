@@ -50,7 +50,7 @@ function SCM:RemoveGlobalAnchor(anchorIndex, anchorTabsTbl)
 			end
 		end
 	end
-	
+
 	for i = #anchorTabsTbl, 1, -1 do
 		if anchorTabsTbl[i].value == anchorIndex then
 			tremove(anchorTabsTbl, i)
@@ -148,16 +148,13 @@ end
 
 local function GetGlobalConfigTable(self, iconType)
 	if iconType == "spell" then
-		self.db.global.globalSpellConfig = self.db.global.globalSpellConfig or {}
 		return self.db.global.globalSpellConfig
 	end
 
 	if iconType == "slot" then
-		self.db.global.globalSlotConfig = self.db.global.globalSlotConfig or {}
 		return self.db.global.globalSlotConfig
 	end
 
-	self.db.global.globalItemConfig = self.db.global.globalItemConfig or {}
 	return self.db.global.globalItemConfig
 end
 
