@@ -935,6 +935,8 @@ local function OnAnchorDebugTextureHide(self)
 end
 
 function SCM:GetAnchor(group, point, anchor, relativePoint, xOffset, yOffset, growDir, iconSize, resetSize)
+	if group > 100 and not self.db.global.options.enableCustomIcons then return end
+
 	local anchorFrame = self.anchorFrames[group]
 	if not anchorFrame then
 		anchorFrame = CreateFrame("Frame", "SCM_GroupAnchor_" .. group, UIParent)
