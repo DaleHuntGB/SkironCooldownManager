@@ -134,6 +134,18 @@
 			</Layer>
 		</Layers>
 		<Frames>
+			<Frame parentKey="CustomText" setAllPoints="true">
+				<Layers>
+					<Layer level="OVERLAY">
+						<FontString parentKey="Text" inherits="NumberFontNormalLarge">
+							<FontHeight val="10"/>
+							<Anchors>
+								<Anchor point="BOTTOM" x="0" y="0"/>
+							</Anchors>
+						</FontString>
+					</Layer>
+				</Layers>
+			</Frame>
 		</Frames>
 		<Scripts>
 		</Scripts>

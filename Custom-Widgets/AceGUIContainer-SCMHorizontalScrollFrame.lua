@@ -305,6 +305,7 @@ local methods = {
 		button:SetScript("OnClick", Button_OnClick)
 
 		if data.isAddButton then
+			button.CustomText.Text:Hide()
 			button.Icon:SetAtlas("cdm-empty")
 			button.Icon:SetVertexColor(1, 1, 1, 1)
 			button:SetMovable(false)
@@ -314,8 +315,12 @@ local methods = {
 			end
 
 			button.Icon:SetDesaturated(not data.isKnown)
+			button.CustomText.Text:Hide()
 			if data.isDisabled then
 				button.Icon:SetVertexColor(0.7, 0, 0, 1)
+			elseif data.isCustom then
+				button.CustomText.Text:SetText(button.data.iconType:gsub("^%l", string.upper))
+				button.CustomText.Text:Show()
 			else
 				button.Icon:SetVertexColor(1, 1, 1, 1)
 			end
