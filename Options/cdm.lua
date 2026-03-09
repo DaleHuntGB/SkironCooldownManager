@@ -61,48 +61,107 @@ local function ApplyAnchorGroupUpdate(anchorIndex, isGlobal)
 	SCM:ApplyAnchorGroupCDManagerConfig(anchorIndex, isGlobal)
 end
 
+local function BuildSpellIconData(spellID)
+	local texture = C_Spell.GetSpellTexture(spellID)
+	if not texture then
+		return
+	end
+
+	return {
+		texture = texture,
+		spellID = spellID,
+	}
+end
+
+local function BuildItemIconData(itemID)
+	local texture = C_Item.GetItemIconByID(itemID)
+	if not texture then
+		return
+	end
+
+	return {
+		texture = texture,
+		spellID = 0,
+		itemID = itemID,
+	}
+end
+
+local function BuildSlotIconData(slotID)
+	if slotID < 1 or slotID > 19 then
+		return
+	end
+
+	return {
+		texture = GetSlotTexture(slotID),
+		spellID = 0,
+		slotID = slotID,
+	}
+end
+
+local customButtonConfigs = {
+	{
+		text = "Spell CD",
+		popupKey = "SCM_CUSTOM_SPELL_ID",
+		popupTitle = "Enter Spell ID",
+		iconType = "spell",
+		buildIconData = BuildSpellIconData,
+	},
+	{
+		text = "Item CD",
+		popupKey = "SCM_CUSTOM_ITEM_ID",
+		popupTitle = "Enter Item ID",
+		iconType = "item",
+		buildIconData = BuildItemIconData,
+	},
+	{
+		text = "Slot CD",
+		popupKey = "SCM_SPEC_SLOT_ID",
+		popupTitle = "Enter Slot ID",
+		iconType = "slot",
+		buildIconData = BuildSlotIconData,
+	},
+	{
+		text = "Cast",
+		popupKey = "SCM_CAST_SPELL_ID",
+		popupTitle = "Enter Spell ID",
+		iconType = "cast",
+		buildIconData = BuildSpellIconData,
+	},
+}
+
+local function CreateCustomIconButton(rootDescription, scrollFrame, anchorIndex, isGlobal, buttonConfig)
+	rootDescription:CreateButton(buttonConfig.text, function()
+		ShowNumericInputPopup(buttonConfig.popupKey, buttonConfig.popupTitle, function(configID)
+			local iconData = buttonConfig.buildIconData(configID)
+			if not iconData then
+				return
+			end
+
+			local uniqueID = SCM:GetUniqueID(configID, buttonConfig.iconType, isGlobal)
+			iconData.iconType = buttonConfig.iconType
+			iconData.id = uniqueID
+			iconData.isCustom = true
+
+			local order = scrollFrame:AddCustomIcon(iconData)
+			SCM:AddCustomIcon(anchorIndex, buttonConfig.iconType, configID, order, uniqueID, isGlobal)
+			ApplyAnchorGroupUpdate(anchorIndex, isGlobal)
+		end)
+	end)
+end
+
+local function CreateCustomIconButtons(rootDescription, scrollFrame, anchorIndex, isGlobal, buttonConfigs)
+	for _, buttonConfig in ipairs(buttonConfigs) do
+		CreateCustomIconButton(rootDescription, scrollFrame, anchorIndex, isGlobal, buttonConfig)
+	end
+end
+
 local function CreateAddSpellDropdown(owner, rootDescription, scrollFrame, anchorIndex, isGlobal)
 	rootDescription:CreateTitle("Add Icon")
 
 	if isGlobal then
 		if SCM.db.global.options.enableCustomIcons then
-			rootDescription:CreateButton("Custom Spell", function()
-				ShowNumericInputPopup("SCM_GLOBAL_CUSTOM_SPELL_ID", "Enter Spell ID", function(spellID)
-					local texture = C_Spell.GetSpellTexture(spellID)
-					if texture then
-						local uniqueID = SCM:GetUniqueID(spellID, "spell", true)
-						local order = scrollFrame:AddCustomIcon({ texture = texture, spellID = spellID, iconType = "spell", id = uniqueID, isCustom = true })
-
-						SCM:AddCustomIcon(anchorIndex, "spell", spellID, order, uniqueID, true)
-						ApplyAnchorGroupUpdate(anchorIndex, true)
-					end
-				end)
-			end)
-
-			rootDescription:CreateButton("Custom Item", function()
-				ShowNumericInputPopup("SCM_CUSTOM_ITEM_ID", "Enter Item ID", function(itemID)
-					if C_Item.GetItemIconByID(itemID) then
-						local uniqueID = SCM:GetUniqueID(itemID, "item", true)
-						local order = scrollFrame:AddCustomIcon({ texture = C_Item.GetItemIconByID(itemID), spellID = 0, itemID = itemID, iconType = "item", id = uniqueID, isCustom = true })
-
-						SCM:AddCustomIcon(anchorIndex, "item", itemID, order, uniqueID, true)
-						ApplyAnchorGroupUpdate(anchorIndex, true)
-					end
-				end)
-			end)
+			CreateCustomIconButtons(rootDescription, scrollFrame, anchorIndex, true, customButtonConfigs)
 		end
-
-		rootDescription:CreateButton("Track Slot ID", function()
-			ShowNumericInputPopup("SCM_GLOBAL_SLOT_ID", "Enter Slot ID", function(slotID)
-				if slotID >= 1 and slotID <= 19 then
-					local uniqueID = SCM:GetUniqueID(slotID, "slot", true)
-					local order = scrollFrame:AddCustomIcon({ texture = GetSlotTexture(slotID), spellID = 0, slotID = slotID, iconType = "slot", id = uniqueID, isCustom = true })
-
-					SCM:AddCustomIcon(anchorIndex, "slot", slotID, order, uniqueID, true)
-					ApplyAnchorGroupUpdate(anchorIndex, true)
-				end
-			end)
-		end)
 		return
 	end
 
@@ -226,61 +285,7 @@ local function CreateAddSpellDropdown(owner, rootDescription, scrollFrame, ancho
 
 	if SCM.db.global.options.enableCustomIcons then
 		rootDescription:CreateDivider()
-		rootDescription:CreateButton("Spell CD", function()
-			ShowNumericInputPopup("SCM_CUSTOM_SPELL_ID", "Enter Spell ID", function(spellID)
-				local texture = C_Spell.GetSpellTexture(spellID)
-				if texture then
-					local uniqueID = SCM:GetUniqueID(spellID, "spell")
-					local order = scrollFrame:AddCustomIcon({
-						spellID = spellID,
-						texture = texture,
-						isCustom = true,
-						iconType = "spell",
-						id = "spell:" .. spellID,
-					})
-
-					SCM:AddCustomIcon(anchorIndex, "spell", spellID, order, uniqueID)
-					ApplyAnchorGroupUpdate(anchorIndex, isGlobal)
-				end
-			end)
-		end)
-
-		rootDescription:CreateButton("Item CD", function()
-			ShowNumericInputPopup("SCM_CUSTOM_ITEM_ID", "Enter Item ID", function(itemID)
-				local texture = C_Item.GetItemIconByID(itemID)
-				if texture then
-					local uniqueID = SCM:GetUniqueID(itemID, "item")
-					local order = scrollFrame:AddCustomIcon({
-						texture = texture,
-						id = uniqueID,
-						isCustom = true,
-						iconType = "item",
-						itemID = itemID,
-					})
-					SCM:AddCustomIcon(anchorIndex, "item", itemID, order, uniqueID)
-					ApplyAnchorGroupUpdate(anchorIndex, isGlobal)
-				end
-			end)
-		end)
-
-		rootDescription:CreateButton("Slot CD", function()
-			ShowNumericInputPopup("SCM_SPEC_SLOT_ID", "Enter Slot ID", function(slotID)
-				if slotID >= 1 and slotID <= 19 then
-					local uniqueID = SCM:GetUniqueID(slotID, "slot")
-					local order = scrollFrame:AddCustomIcon({
-						texture = GetSlotTexture(slotID),
-						spellID = 0,
-						slotID = slotID,
-						iconType = "slot",
-						id = uniqueID,
-						isCustom = true,
-					})
-
-					SCM:AddCustomIcon(anchorIndex, "slot", slotID, order, uniqueID)
-					ApplyAnchorGroupUpdate(anchorIndex, isGlobal)
-				end
-			end)
-		end)
+		CreateCustomIconButtons(rootDescription, scrollFrame, anchorIndex, false, customButtonConfigs)
 
 		for _, customEntry in pairs(SCM.CustomEntries) do
 			customEntry(rootDescription, scrollFrame, anchorIndex)
@@ -615,7 +620,7 @@ local function SelectAnchor(anchorWidget, frame, anchorIndex, anchorTabsTbl, isG
 						slotID = config.slotID,
 						iconType = iconType,
 						id = config.id,
-						isCustom = true
+						isCustom = true,
 					})
 				end
 			end
