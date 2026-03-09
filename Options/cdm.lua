@@ -757,7 +757,7 @@ local function SelectAnchor(anchorWidget, frame, anchorIndex, anchorTabsTbl, isG
 											desaturate:SetDisabled(not value)
 										end
 									end)
-								elseif buttonData.iconType ~= "cast" then
+								elseif buttonData.iconType ~= "timer" then
 									local hideWhileReady = AceGUI:Create("CheckBox")
 									hideWhileReady:SetLabel("Hide While Ready")
 									hideWhileReady:SetRelativeWidth(0.5)
@@ -772,7 +772,7 @@ local function SelectAnchor(anchorWidget, frame, anchorIndex, anchorTabsTbl, isG
 								if not buttonData.isCustom and buttonData.iconType == "spell" then
 									local useCustomGlowColor = AceGUI:Create("CheckBox")
 									useCustomGlowColor:SetLabel("Use Custom Glow Color")
-									useCustomGlowColor:SetRelativeWidth(0.51)
+									useCustomGlowColor:SetRelativeWidth(0.5)
 									useCustomGlowColor:SetValue(buttonConfig.useCustomGlowColor)
 									useCustomGlowColor:SetDisabled(not options.useCustomGlow)
 									SCM.Utils.SetDisabledTooltip(useCustomGlowColor, "Enable 'Use Custom Glow' in Global Settings > Glow first.")
@@ -794,11 +794,11 @@ local function SelectAnchor(anchorWidget, frame, anchorIndex, anchorTabsTbl, isG
 										buttonConfig.customGlowColor = { r, g, b, a }
 									end)
 									iconSettingsTabs:AddChild(customGlowColor)
-								elseif buttonData.isCustom and (buttonData.iconType == "spell" or buttonData.iconType == "cast") then
+								elseif buttonData.isCustom and (buttonData.iconType == "spell" or buttonData.iconType == "timer") then
 									local castTimer = AceGUI:Create("Slider")
 									castTimer:SetRelativeWidth(0.5)
 									castTimer:SetSliderValues(0, 30, 0.1)
-									castTimer:SetLabel("Cast Display Duration")
+									castTimer:SetLabel("Timer Duration")
 									castTimer:SetValue(buttonConfig.duration or 0)
 									castTimer:SetCallback("OnValueChanged", function(_, _, value)
 										buttonConfig.duration = value > 0 and value or nil
@@ -810,7 +810,7 @@ local function SelectAnchor(anchorWidget, frame, anchorIndex, anchorTabsTbl, isG
 
 								local useCustomGlowColor = AceGUI:Create("CheckBox")
 								useCustomGlowColor:SetLabel("Glow While Active")
-								useCustomGlowColor:SetRelativeWidth(1)
+								useCustomGlowColor:SetRelativeWidth(0.5)
 								useCustomGlowColor:SetValue(buttonConfig.glowWhileActive)
 								useCustomGlowColor:SetDisabled(not options.useCustomGlow)
 								SCM.Utils.SetDisabledTooltip(useCustomGlowColor, "Enable 'Use Custom Glow' in Global Settings > Glow first.")
