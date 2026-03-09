@@ -66,6 +66,10 @@ local function GetAnchorConfigForGroup(config, group)
 	return Utils.GetAnchorConfigForGroup(config, group, SCM.globalAnchorConfig)
 end
 
+local function GetSpellAnchorGroupConfig(spellConfig, group)
+	return spellConfig and spellConfig.anchorGroup and spellConfig.anchorGroup[group]
+end
+
 function SCM:Debug(...)
 	if self.db.global.options.debug then
 		print(addonName, ...)
@@ -241,7 +245,6 @@ local function OnBuffCooldownEnd(self)
 		return
 	end
 
-	UpdateChildGlow(parent, true)
 	SCM:ApplyAllCDManagerConfigs()
 end
 
@@ -483,25 +486,26 @@ local function ProcessSingleChild(child, validChildren, spellConfig, categoryInd
 
 	local childData = spellConfig[spellID]
 	local group = childData.source[categoryIndex] or childData.source[SCM.Constants.SourcePairs[categoryIndex]]
+	local groupConfig = GetSpellAnchorGroupConfig(childData, group)
 
-	if not group then
+	if not group or not groupConfig then
 		SetChildVisibilityState(child, false, true)
 		return
 	end
 
 	AddChildToGroup(validChildren, group, child)
 
-	child.SCMConfig = childData
-	child.SCMOrder = childData.anchorGroup[group].order
+	child.SCMConfig = groupConfig
+	child.SCMOrder = groupConfig.order
 	child.SCMCooldownID = cooldownID
 	child.SCMGroup = group
 
-	SCM:SkinChild(child, childData)
+	SCM:SkinChild(child, groupConfig)
 
 	if isBuffIcon then
-		ProcessBuffIcon(child, childData, options)
+		ProcessBuffIcon(child, groupConfig, options)
 	else
-		ProcessRegularIcon(child, childData)
+		ProcessRegularIcon(child, groupConfig)
 	end
 end
 
@@ -1174,4 +1178,8 @@ function SCM:UpdateDB()
 	self.globalCustomConfig = self.db.global.globalCustomConfig
 
 	self.isHideWhenInactiveEnabled = self:GetHideWhenInactive() == 1
+end
+
+function SCM:GetSpellConfigForGroup(spellID, group)
+	return GetSpellAnchorGroupConfig(self.spellConfig and self.spellConfig[spellID], group)
 end
