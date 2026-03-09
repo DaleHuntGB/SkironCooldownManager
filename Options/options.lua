@@ -45,7 +45,7 @@ function SCM:RemoveGlobalAnchor(anchorIndex, anchorTabsTbl)
 		self.db.global.globalCustomConfig.spellConfig,
 		self.db.global.globalCustomConfig.itemConfig,
 		self.db.global.globalCustomConfig.slotConfig,
-		self.db.global.globalCustomConfig.castConfig,
+		self.db.global.globalCustomConfig.timerConfig,
 	}) do
 		for id, config in pairs(globalConfig) do
 			if config.anchorGroup == anchorIndex then
@@ -171,7 +171,7 @@ function SCM:AddCustomIcon(anchorGroup, iconType, configID, order, uniqueID, isG
 	configTable[uniqueID] = {
 		id = uniqueID,
 		iconType = iconType,
-		spellID = (iconType == "spell" or iconType == "cast") and configID or nil,
+		spellID = (iconType == "spell" or iconType == "timer") and configID or nil,
 		itemID = iconType == "item" and configID or nil,
 		slotID = iconType == "slot" and configID or nil,
 		anchorGroup = anchorGroup,

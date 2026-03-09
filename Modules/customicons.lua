@@ -11,7 +11,7 @@ local CustomSpellFrames = {}
 
 function CustomIcons.GetCustomIconFrames(config)
 	local iconType = GetIconType(config)
-	if iconType == "spell" or iconType == "cast" then
+	if iconType == "spell" or iconType == "timer" then
 		return CustomSpellFrames
 	end
 
@@ -22,7 +22,7 @@ local function SetCustomIconCountText(frame, iconType, id)
 	frame.ChargeCount.Current:SetText("")
 	frame.ChargeCount.Current:Hide()
 
-	if iconType == "spell" or iconType == "slot" or iconType == "cast" then
+	if iconType == "spell" or iconType == "slot" or iconType == "timer" then
 		return
 	end
 
@@ -43,7 +43,7 @@ desaturationCurve:AddPoint(0.001, 1)
 
 local function GetActiveCustomTimer(frame, iconType, config, now)
 	local duration
-	if iconType == "spell" or iconType == "cast" then
+	if iconType == "spell" or iconType == "timer" then
 		duration = config.duration
 	end
 
@@ -129,7 +129,7 @@ end
 
 local function DoesItemOrSpellExists(config)
 	local iconType = GetIconType(config)
-	if iconType == "spell" or iconType == "cast" then
+	if iconType == "spell" or iconType == "timer" then
 		return config.spellID and C_Spell.DoesSpellExist(config.spellID)
 	end
 
@@ -148,7 +148,7 @@ local function DoesItemOrSpellExists(config)
 end
 
 local function ResolveCustomIconTexture(config, iconType)
-	if (iconType == "spell" or iconType == "cast") and config.spellID then
+	if (iconType == "spell" or iconType == "timer") and config.spellID then
 		return C_Spell.GetSpellTexture(config.spellID)
 	end
 
@@ -170,7 +170,7 @@ local function ShouldShowCustomIcon(config, iconType, hasCount, isOnCooldown)
 		return true
 	end
 
-	if iconType == "cast" then
+	if iconType == "timer" then
 		return isOnCooldown and true or false
 	end
 

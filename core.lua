@@ -219,8 +219,8 @@ function SCM:GetConfigTable(iconType, isGlobal)
 		return isGlobal and self.globalCustomConfig.slotConfig or self.customConfig.slotConfig
 	end
 
-	if iconType == "cast" then
-		return isGlobal and self.globalCustomConfig.castConfig or self.customConfig.castConfig
+	if iconType == "timer" then
+		return isGlobal and self.globalCustomConfig.timerConfig or self.customConfig.timerConfig
 	end
 
 	return isGlobal and self.globalCustomConfig.itemConfig or self.customConfig.itemConfig

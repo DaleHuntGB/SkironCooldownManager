@@ -17,7 +17,7 @@ local iconTypeTabs = {
 	},
 	spell = {},
 	item = {},
-	cast = {},
+	timer = {},
 	slot = {
 		-- { value = "filter", text = "Filter" },
 	},
@@ -102,37 +102,42 @@ end
 
 local customButtonConfigs = {
 	{
-		text = "Spell CD",
+		text = "Spell",
 		popupKey = "SCM_CUSTOM_SPELL_ID",
 		popupTitle = "Enter Spell ID",
 		iconType = "spell",
 		buildIconData = BuildSpellIconData,
 	},
 	{
-		text = "Item CD",
+		text = "Item",
 		popupKey = "SCM_CUSTOM_ITEM_ID",
 		popupTitle = "Enter Item ID",
 		iconType = "item",
 		buildIconData = BuildItemIconData,
 	},
 	{
-		text = "Slot CD",
+		text = "Slot",
 		popupKey = "SCM_SPEC_SLOT_ID",
 		popupTitle = "Enter Slot ID",
 		iconType = "slot",
 		buildIconData = BuildSlotIconData,
 	},
 	{
-		text = "Cast",
-		popupKey = "SCM_CAST_SPELL_ID",
+		text = "Timer",
+		popupKey = "SCM_BUFF_SPELL_ID",
 		popupTitle = "Enter Spell ID",
-		iconType = "cast",
+		iconType = "timer",
 		buildIconData = BuildSpellIconData,
+		tooltip = function(tooltip, elementDescription)
+			GameTooltip_SetTitle(tooltip, MenuUtil.GetElementText(elementDescription))
+			GameTooltip_AddInstructionLine(tooltip, "Timers can only be created based on successful casts.")
+			--GameTooltip_AddNormalLine(tooltip, "Casting Tiger's Lust, can display a custom timer for Tiger's Lust.")
+		end
 	},
 }
 
 local function CreateCustomIconButton(rootDescription, scrollFrame, anchorIndex, isGlobal, buttonConfig)
-	rootDescription:CreateButton(buttonConfig.text, function()
+	local button = rootDescription:CreateButton(buttonConfig.text, function()
 		ShowNumericInputPopup(buttonConfig.popupKey, buttonConfig.popupTitle, function(configID)
 			local iconData = buttonConfig.buildIconData(configID)
 			if not iconData then
@@ -149,6 +154,10 @@ local function CreateCustomIconButton(rootDescription, scrollFrame, anchorIndex,
 			ApplyAnchorGroupUpdate(anchorIndex, isGlobal)
 		end)
 	end)
+
+	if buttonConfig.tooltip then
+		button:SetTooltip(buttonConfig.tooltip)
+	end
 end
 
 local function CreateCustomIconButtons(rootDescription, scrollFrame, anchorIndex, isGlobal, buttonConfigs)
@@ -605,7 +614,7 @@ local function SelectAnchor(anchorWidget, frame, anchorIndex, anchorTabsTbl, isG
 			if config.anchorGroup == anchorIndex then
 				local iconType = config.iconType or (config.spellID and "spell") or "item"
 				local texture
-				if iconType == "spell" or iconType == "cast" then
+				if iconType == "spell" or iconType == "timer" then
 					texture = config.spellID and C_Spell.GetSpellTexture(config.spellID)
 				elseif iconType == "slot" then
 					texture = config.slotID and GetSlotTexture(config.slotID)

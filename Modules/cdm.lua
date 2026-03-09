@@ -1081,8 +1081,8 @@ function SCM:ApplySuccessfulCastBySpellID(spellID)
 	local now = GetTime()
 	local scopedGroups = {}
 
-	scopedGroups = ApplySuccessfulCastToConfigTable(self:GetConfigTable("cast"), spellID, scopedGroups, false, now)
-	scopedGroups = ApplySuccessfulCastToConfigTable(self:GetConfigTable("cast", true), spellID, scopedGroups, true, now)
+	scopedGroups = ApplySuccessfulCastToConfigTable(self:GetConfigTable("timer"), spellID, scopedGroups, false, now)
+	scopedGroups = ApplySuccessfulCastToConfigTable(self:GetConfigTable("timer", true), spellID, scopedGroups, true, now)
 	scopedGroups = ApplySuccessfulCastToConfigTable(self:GetConfigTable("spell"), spellID, scopedGroups, false, now)
 	scopedGroups = ApplySuccessfulCastToConfigTable(self:GetConfigTable("spell", true), spellID, scopedGroups, true, now)
 
@@ -1138,7 +1138,7 @@ local function EnsureCustomConfigTables(customConfig)
 	customConfig.spellConfig = GetOrCreateTableEntry(customConfig, "spellConfig")
 	customConfig.itemConfig = GetOrCreateTableEntry(customConfig, "itemConfig")
 	customConfig.slotConfig = GetOrCreateTableEntry(customConfig, "slotConfig")
-	customConfig.castConfig = GetOrCreateTableEntry(customConfig, "castConfig")
+	customConfig.timerConfig = GetOrCreateTableEntry(customConfig, "timerConfig")
 
 	return customConfig
 end
