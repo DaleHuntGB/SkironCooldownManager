@@ -828,9 +828,14 @@ local function SelectAnchor(anchorWidget, frame, anchorIndex, anchorTabsTbl, isG
 	horizontalScrollFrame:SetCallback("OnDragStop", function(self, event, collection)
 		for i, entry in ipairs(collection) do
 			if entry.isCustom and entry.id then
-				local customConfig = (isGlobal and GetGlobalConfigByID(entry.id)) or SCM.customConfig[entry.id]
+				local customConfig = SCM:GetConfigTableByID(entry.id, entry.iconType, isGlobal)
 				if customConfig and customConfig.anchorGroup == anchorIndex then
 					customConfig.order = i
+
+					local customFrames = SCM.CustomIcons.GetCustomIconFrames(customConfig)
+					if customFrames and customFrames[entry.id] then
+						customFrames[entry.id].SCMOrder = i
+					end
 				end
 			elseif entry.spellID and entry.spellID > 0 then
 				local spellConfig = SCM.spellConfig[entry.spellID]
@@ -839,7 +844,7 @@ local function SelectAnchor(anchorWidget, frame, anchorIndex, anchorTabsTbl, isG
 				end
 			end
 		end
-		ApplyAnchorGroupUpdate(anchorIndex, isGlobal)
+		SCM:ApplyAnchorGroupCDManagerConfig(anchorIndex, isGlobal)
 	end)
 
 	top:AddChild(horizontalScrollFrame)

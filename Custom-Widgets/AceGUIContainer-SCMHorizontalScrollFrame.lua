@@ -171,8 +171,8 @@ local function Button_OnDragStop(self)
 				end
 			end
 
-			dataProvider:SetSortComparator(sortComparator)
 			self.obj:Fire("OnDragStop", dataProvider:GetCollection())
+			dataProvider:SetSortComparator(sortComparator)
 		end
 	end
 
