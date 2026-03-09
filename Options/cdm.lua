@@ -171,7 +171,8 @@ local function CreateAddSpellDropdown(owner, rootDescription, scrollFrame, ancho
 
 	if isGlobal then
 		if SCM.db.global.options.enableCustomIcons then
-			CreateCustomIconButtons(rootDescription, scrollFrame, anchorIndex, true, customButtonConfigs)
+			local customButton = rootDescription:CreateButton("Custom")
+			CreateCustomIconButtons(customButton, scrollFrame, anchorIndex, true, customButtonConfigs)
 		end
 		return
 	end
@@ -296,7 +297,9 @@ local function CreateAddSpellDropdown(owner, rootDescription, scrollFrame, ancho
 
 	if SCM.db.global.options.enableCustomIcons then
 		rootDescription:CreateDivider()
-		CreateCustomIconButtons(rootDescription, scrollFrame, anchorIndex, false, customButtonConfigs)
+
+		local customButton = rootDescription:CreateButton("Custom")
+		CreateCustomIconButtons(customButton, scrollFrame, anchorIndex, false, customButtonConfigs)
 
 		for _, customEntry in pairs(SCM.CustomEntries) do
 			customEntry(rootDescription, scrollFrame, anchorIndex)
