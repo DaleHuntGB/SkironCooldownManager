@@ -41,8 +41,13 @@ function SCM:RemoveGlobalAnchor(anchorIndex, anchorTabsTbl)
 		tremove(self.db.global.globalAnchorConfig, anchorIndex)
 	end
 
-	for _, globalConfig in pairs({ self.db.global.globalSpellConfig, self.db.global.globalItemConfig, self.db.global.globalSlotConfig }) do
-		for id, config in pairs(globalConfig or {}) do
+	for _, globalConfig in pairs({
+		self.db.global.globalCustomConfig.spellConfig,
+		self.db.global.globalCustomConfig.itemConfig,
+		self.db.global.globalCustomConfig.slotConfig,
+		self.db.global.globalCustomConfig.castConfig,
+	}) do
+		for id, config in pairs(globalConfig) do
 			if config.anchorGroup == anchorIndex then
 				globalConfig[id] = nil
 			elseif config.anchorGroup and config.anchorGroup > anchorIndex then
@@ -166,7 +171,7 @@ function SCM:AddCustomIcon(anchorGroup, iconType, configID, order, uniqueID, isG
 	configTable[uniqueID] = {
 		id = uniqueID,
 		iconType = iconType,
-		spellID = iconType == "spell" and configID or nil,
+		spellID = (iconType == "spell" or iconType == "cast") and configID or nil,
 		itemID = iconType == "item" and configID or nil,
 		slotID = iconType == "slot" and configID or nil,
 		anchorGroup = anchorGroup,
@@ -181,9 +186,10 @@ end
 function SCM:RemoveCustomIcon(id, isGlobal, iconType)
 	local configTable = SCM:GetConfigTable(iconType, isGlobal)
 	if configTable and configTable[id] then
+		local config = configTable[id]
 		configTable[id] = nil
-		
-		local customFrames = SCM.CustomIcons.GetCustomIconFrames(configTable)
+
+		local customFrames = SCM.CustomIcons.GetCustomIconFrames(config)
 		if customFrames and customFrames[id] then
 			SCM.SetChildVisibilityState(customFrames[id], false, true)
 		end

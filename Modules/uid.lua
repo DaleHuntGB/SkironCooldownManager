@@ -18,7 +18,7 @@ end
 
 function SCM:GetUniqueID(configID, iconType, isGlobal)
 	local configTable = self:GetConfigTable(iconType, isGlobal)
-	local basePrefix = iconType == "spell" and "spell:" or (iconType == "slot" and "slot:" or "item:")
+	local basePrefix = iconType .. ":"
 	local baseID = basePrefix .. configID
 	local uniqueID = self:UID(baseID)
 

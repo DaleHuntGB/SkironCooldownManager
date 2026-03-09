@@ -526,6 +526,10 @@ local function OnIconCooldownDone(self)
 	if parent.UpdateCharges then
 		parent.UpdateCharges(parent, parent.spellID)
 	end
+
+	if parent and parent.SCMGroup then
+		SCM:ApplyAnchorGroupCDManagerConfig(parent.SCMGroup, parent.SCMGlobal)
+	end
 end
 
 local function SetupCustomIconFrame(frame)
@@ -759,7 +763,7 @@ local function OrderCDManagerSpells_Actual(updateScope, scopedAnchorGroupsOverri
 		UpdateEmptyAnchorGroup(group, anchorConfig, scopedAnchorGroups)
 	end
 
-	for index, anchorConfig in pairs(SCM.globalAnchorConfig or {}) do
+	for index, anchorConfig in pairs(SCM.globalAnchorConfig) do
 		local group = ToGlobalGroup(index)
 		if not Cache.cachedVisitedAnchorGroups[group] then
 			Cache.cachedVisitedAnchorGroups[group] = true
@@ -967,13 +971,14 @@ function SCM:ApplyAnchorGroupCDManagerConfig(group, isGlobal)
 	OrderCDManagerSpells_Actual(UPDATE_SCOPE.ALL, { [scopedGroup] = true })
 end
 
-local function GetScopeGroupsForConfig(customConfig, scopedGroups)
+local function GetScopeGroupsForConfig(customConfig, scopedGroups, isGlobal)
 	if not customConfig then return scopedGroups end
 
 	local scopedGroups = scopedGroups or {}
 
 	for _, config in pairs(customConfig) do
-		scopedGroups[config.anchorGroup] = true
+		local group = isGlobal and ToGlobalGroup(config.anchorGroup) or config.anchorGroup
+		scopedGroups[group] = true
 	end
 
 	return scopedGroups
@@ -995,7 +1000,7 @@ function SCM:ApplyAnchorGroupByIconType(iconType, skipGlobal)
 		local globalConfigTable = self:GetConfigTable(iconType, true)
 
 		if globalConfigTable then
-			scopedGroups = GetScopeGroupsForConfig(globalConfigTable, scopedGroups)
+			scopedGroups = GetScopeGroupsForConfig(globalConfigTable, scopedGroups, true)
 		end
 	end
 
@@ -1009,7 +1014,9 @@ function SCM:ApplyAnchorGroupByIconTypes(skipGlobal, ...)
 
 	for _, iconType in ipairs({...}) do
 		scopedGroups = GetScopeGroupsForConfig(self:GetConfigTable(iconType), scopedGroups)
-		scopedGroups = GetScopeGroupsForConfig(self:GetConfigTable(iconType, true), scopedGroups)
+		if not skipGlobal then
+			scopedGroups = GetScopeGroupsForConfig(self:GetConfigTable(iconType, true), scopedGroups, true)
+		end
 	end
 
 	if next(scopedGroups) then
@@ -1023,28 +1030,49 @@ function SCM:ApplyAnchorGroupBySpellID(spellID, iconType)
 	for id, config in pairs(self:GetConfigTable(iconType)) do
 		if config.spellID == spellID then
 			scopedGroups[config.anchorGroup] = true
-
-			if iconType == "cast" then
-				local customFrames = SCM.CustomIcons.GetCustomIconFrames(config)
-				if customFrames and customFrames[id] then
-					customFrames[id].lastCastStartTime = GetTime()
-				end
-			end
 		end
 	end
 
 	for id, config in pairs(self:GetConfigTable(iconType, true)) do
 		if config.spellID == spellID then
-			scopedGroups[config.anchorGroup] = true
+			scopedGroups[ToGlobalGroup(config.anchorGroup)] = true
+		end
+	end
 
-			if iconType == "cast" then
-				local customFrames = SCM.CustomIcons.GetCustomIconFrames(config)
-				if customFrames and customFrames[id] then
-					customFrames[id].lastCastStartTime = GetTime()
-				end
+	if next(scopedGroups) then
+		OrderCDManagerSpells_Actual(UPDATE_SCOPE.ALL, scopedGroups)
+	end
+end
+
+local function ApplySuccessfulCastToConfigTable(configTable, spellID, scopedGroups, isGlobal, now)
+	if not configTable then
+		return scopedGroups
+	end
+
+	for id, config in pairs(configTable) do
+		local duration = config.duration
+		if config.spellID == spellID and duration and duration > 0 then
+			local group = isGlobal and ToGlobalGroup(config.anchorGroup) or config.anchorGroup
+			scopedGroups[group] = true
+
+			local customFrames = SCM.CustomIcons.GetCustomIconFrames(config)
+			if customFrames and customFrames[id] then
+				customFrames[id].lastCastStartTime = now
 			end
 		end
 	end
+
+	return scopedGroups
+end
+
+function SCM:ApplySuccessfulCastBySpellID(spellID)
+	local now = GetTime()
+	local scopedGroups = {}
+
+	scopedGroups = ApplySuccessfulCastToConfigTable(self:GetConfigTable("cast"), spellID, scopedGroups, false, now)
+	scopedGroups = ApplySuccessfulCastToConfigTable(self:GetConfigTable("cast", true), spellID, scopedGroups, true, now)
+	scopedGroups = ApplySuccessfulCastToConfigTable(self:GetConfigTable("spell"), spellID, scopedGroups, false, now)
+	scopedGroups = ApplySuccessfulCastToConfigTable(self:GetConfigTable("spell", true), spellID, scopedGroups, true, now)
 
 	if next(scopedGroups) then
 		OrderCDManagerSpells_Actual(UPDATE_SCOPE.ALL, scopedGroups)
@@ -1093,13 +1121,14 @@ function SCM:UpdateCooldownInfo(isFirstLoad, dataProvider)
 	end
 end
 
-local function GetOrCreateCustomConfig()
-	SCM.currentConfig.customConfig = GetOrCreateTableEntry(SCM.currentConfig, "customConfig", {spellConfig = {},itemConfig = {},slotConfig = {}})
-	SCM.currentConfig.customConfig.spellConfig = GetOrCreateTableEntry(SCM.currentConfig.customConfig, "spellConfig")
-	SCM.currentConfig.customConfig.itemConfig = GetOrCreateTableEntry(SCM.currentConfig.customConfig, "itemConfig")
-	SCM.currentConfig.customConfig.slotConfig = GetOrCreateTableEntry(SCM.currentConfig.customConfig, "slotConfig")
+local function EnsureCustomConfigTables(customConfig)
+	customConfig = customConfig or {}
+	customConfig.spellConfig = GetOrCreateTableEntry(customConfig, "spellConfig")
+	customConfig.itemConfig = GetOrCreateTableEntry(customConfig, "itemConfig")
+	customConfig.slotConfig = GetOrCreateTableEntry(customConfig, "slotConfig")
+	customConfig.castConfig = GetOrCreateTableEntry(customConfig, "castConfig")
 
-	return SCM.currentConfig.customConfig
+	return customConfig
 end
 
 function SCM:UpdateDB()
@@ -1123,13 +1152,13 @@ function SCM:UpdateDB()
 	self.anchorConfig = self.currentConfig.anchorConfig
 	self.spellConfig = self.currentConfig.spellConfig
 	self.itemConfig = self.currentConfig.itemConfig
-	self.customConfig = GetOrCreateCustomConfig()
+
+	self.currentConfig.customConfig = self.currentConfig.customConfig or {}
+	self.customConfig = EnsureCustomConfigTables(self.currentConfig.customConfig)
 
 	self.globalAnchorConfig = self.db.global.globalAnchorConfig or {}
-	self.globalCustomConfig = self.db.global.globalCustomConfig
+	self.globalCustomConfig = EnsureCustomConfigTables(self.db.global.globalCustomConfig)
+	self.db.global.globalCustomConfig = self.globalCustomConfig
 
 	self.isHideWhenInactiveEnabled = self:GetHideWhenInactive() == 1
-	-- self.globalSpellConfig = self.db.global.globalCustomConfig.spellConfig
-	-- self.globalItemConfig = self.db.global.globalCustomConfig.itemConfig
-	-- self.globalSlotConfig = self.db.global.globalCustomConfig.slotConfig
 end

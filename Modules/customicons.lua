@@ -11,7 +11,7 @@ local CustomSpellFrames = {}
 
 function CustomIcons.GetCustomIconFrames(config)
 	local iconType = GetIconType(config)
-	if iconType == "spell" then
+	if iconType == "spell" or iconType == "cast" then
 		return CustomSpellFrames
 	end
 
@@ -22,7 +22,7 @@ local function SetCustomIconCountText(frame, iconType, id)
 	frame.ChargeCount.Current:SetText("")
 	frame.ChargeCount.Current:Hide()
 
-	if iconType == "spell" or iconType == "slot" then
+	if iconType == "spell" or iconType == "slot" or iconType == "cast" then
 		return
 	end
 
@@ -41,7 +41,37 @@ desaturationCurve:SetType(Enum.LuaCurveType.Step)
 desaturationCurve:AddPoint(0, 0)
 desaturationCurve:AddPoint(0.001, 1)
 
+local function GetActiveCustomTimer(frame, iconType, config, now)
+	local duration
+	if iconType == "spell" or iconType == "cast" then
+		duration = config.duration
+	end
+
+	if not duration or duration <= 0 then
+		return
+	end
+
+	local startTime = frame.lastCastStartTime
+	if not startTime then
+		return
+	end
+
+	if startTime + duration > now then
+		return startTime, duration
+	end
+
+	frame.lastCastStartTime = nil
+end
+
 local function UpdateCustomIconCooldown(frame, iconType, config)
+	local now = GetTime()
+	local customTimerStart, customTimerDuration = GetActiveCustomTimer(frame, iconType, config, now)
+	if customTimerStart then
+		frame.Cooldown:SetCooldown(customTimerStart, customTimerDuration)
+		frame.Icon:SetDesaturated(false)
+		return true
+	end
+
 	if iconType == "spell" then
 		local durationObject = C_Spell.GetSpellChargeDuration(config.spellID)
 		if durationObject then
@@ -78,16 +108,6 @@ local function UpdateCustomIconCooldown(frame, iconType, config)
 		end
 	end
 
-	if iconType == "cast" and config.spellID then
-		if frame.lastCastStartTime and config.duration > 0 and frame.lastCastStartTime + config.duration < GetTime() then
-			frame.Cooldown:SetCooldown(frame.lastCastStartTime, config.duration)
-			return true
-		elseif not frame.SCMHidden then
-			SCM:SetChildVisibilityState(frame, false, true)
-			return
-		end
-	end
-
 	frame.Cooldown:Clear()
 	frame.Icon:SetDesaturated(false)
 end
@@ -109,7 +129,7 @@ end
 
 local function DoesItemOrSpellExists(config)
 	local iconType = GetIconType(config)
-	if iconType == "spell" then
+	if iconType == "spell" or iconType == "cast" then
 		return config.spellID and C_Spell.DoesSpellExist(config.spellID)
 	end
 
@@ -128,7 +148,7 @@ local function DoesItemOrSpellExists(config)
 end
 
 local function ResolveCustomIconTexture(config, iconType)
-	if iconType == "spell" and config.spellID then
+	if (iconType == "spell" or iconType == "cast") and config.spellID then
 		return C_Spell.GetSpellTexture(config.spellID)
 	end
 
@@ -150,11 +170,15 @@ local function ShouldShowCustomIcon(config, iconType, hasCount, isOnCooldown)
 		return true
 	end
 
+	if iconType == "cast" then
+		return isOnCooldown and true or false
+	end
+
 	local canShowIcon = iconType == "spell" or iconType == "slot" or hasCount
 	return canShowIcon and (not config.hideWhenNotOnCooldown or isOnCooldown)
 end
 
-local function ConfigureCustomIconFrame(frame, id, config, viewerScale, anchorGroup)
+local function ConfigureCustomIconFrame(frame, id, config, viewerScale, anchorGroup, isGlobal)
 	frame:SetScale(viewerScale)
 
 	frame.spellID = config.spellID
@@ -167,6 +191,7 @@ local function ConfigureCustomIconFrame(frame, id, config, viewerScale, anchorGr
 	frame.SCMSpellID = config.spellID
 	frame.SCMIconType = GetIconType(config)
 	frame.SCMGroup = anchorGroup
+	frame.SCMGlobal = isGlobal and true or nil
 end
 
 function CustomIcons.HideIcons()
@@ -184,7 +209,8 @@ function CustomIcons.CreateIcons(customConfig, isGlobal)
 			local frameName = (isGlobal and "SCM_Custom_Icon_Global_" or "SCM_Custom_Icon_") .. tostring(id)
 			local frame = CreateFrame("Frame", frameName, UIParent, "SCMItemIconTemplate")
 			customFrames[id] = frame
-			ConfigureCustomIconFrame(frame, id, config, viewerScale, config.anchorGroup or 1)
+			SCM.customIconFrames[id] = frame
+			ConfigureCustomIconFrame(frame, id, config, viewerScale, config.anchorGroup or 1, isGlobal)
 
 			local iconType = frame.SCMIconType
 			local iconTexture = ResolveCustomIconTexture(config, iconType)
@@ -192,6 +218,7 @@ function CustomIcons.CreateIcons(customConfig, isGlobal)
 				iconTexture = 134400
 			end
 
+			frame.SCMIconTexture = iconTexture
 			frame.Icon:SetTexture(iconTexture)
 			SCM.SetupCustomIconFrame(frame)
 			SCM.SetChildVisibilityState(frame, false, true)
@@ -200,9 +227,10 @@ function CustomIcons.CreateIcons(customConfig, isGlobal)
 			frame.UpdateCooldown = UpdateCustomIconCooldown
 
 			if iconType == "spell" then
+				local chargeInfo = C_Spell.GetSpellCharges(config.spellID)
 				UpdateCustomIconCharges(frame, config.spellID)
 
-				if C_Spell.GetSpellCharges(config.spellID) then
+				if chargeInfo then
 					frame.UpdateCharges = UpdateCustomIconCharges
 				end
 			end
@@ -225,7 +253,10 @@ function CustomIcons.ProcessIcons(customConfig, validChildren, isGlobal)
 			end
 
 			if iconTexture then
-				frame.Icon:SetTexture(iconTexture)
+				if frame.SCMIconTexture ~= iconTexture then
+					frame.SCMIconTexture = iconTexture
+					frame.Icon:SetTexture(iconTexture)
+				end
 				local hasCount = SetCustomIconCountText(frame, iconType, config.spellID or config.itemID)
 				local isOnCooldown = UpdateCustomIconCooldown(frame, iconType, config)
 				local shouldShow = ShouldShowCustomIcon(config, iconType, hasCount, isOnCooldown)

@@ -19,6 +19,7 @@ SCM.DefaultDB = {
 			spellConfig = {},
 			itemConfig = {},
 			slotConfig = {},
+			castConfig = {},
 		},
 		options = {
 			anchorUUFRoles = {

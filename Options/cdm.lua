@@ -17,6 +17,7 @@ local iconTypeTabs = {
 	},
 	spell = {},
 	item = {},
+	cast = {},
 	slot = {
 		-- { value = "filter", text = "Filter" },
 	},
@@ -604,12 +605,12 @@ local function SelectAnchor(anchorWidget, frame, anchorIndex, anchorTabsTbl, isG
 			if config.anchorGroup == anchorIndex then
 				local iconType = config.iconType or (config.spellID and "spell") or "item"
 				local texture
-				if iconType == "spell" then
-					texture = C_Spell.GetSpellTexture(config.spellID)
+				if iconType == "spell" or iconType == "cast" then
+					texture = config.spellID and C_Spell.GetSpellTexture(config.spellID)
 				elseif iconType == "slot" then
 					texture = config.slotID and GetSlotTexture(config.slotID)
-				else
-					texture = C_Item.GetItemIconByID(config.itemID)
+				elseif iconType == "item" then
+					texture = config.itemID and C_Item.GetItemIconByID(config.itemID)
 				end
 
 				if texture or SCM.isOptionsOpen then
@@ -740,7 +741,21 @@ local function SelectAnchor(anchorWidget, frame, anchorIndex, anchorTabsTbl, isG
 									iconSettingsTabs:AddChild(customGlowColor)
 								end
 
-								if not buttonFrame.data.isBuffIcon then
+								if buttonData.isCustom and (buttonData.iconType == "spell" or buttonData.iconType == "cast") then
+									local castTimer = AceGUI:Create("Slider")
+									castTimer:SetRelativeWidth(0.5)
+									castTimer:SetSliderValues(0, 30, 0.1)
+									castTimer:SetLabel("Cast Display Duration")
+									castTimer:SetValue(buttonConfig.duration or 0)
+									castTimer:SetCallback("OnValueChanged", function(_, _, value)
+										buttonConfig.duration = value > 0 and value or nil
+										ApplyIconConfigUpdate()
+									end)
+
+									iconSettingsTabs:AddChild(castTimer)
+								end
+
+								if not buttonFrame.data.isBuffIcon and buttonData.iconType ~= "cast" then
 									local hideWhileReady = AceGUI:Create("CheckBox")
 									hideWhileReady:SetLabel("Hide While Ready")
 									hideWhileReady:SetRelativeWidth(0.5)

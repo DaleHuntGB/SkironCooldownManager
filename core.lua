@@ -92,7 +92,7 @@ function SCM:BAG_UPDATE_DELAYED()
 end
 
 function SCM:UNIT_SPELLCAST_SUCCEEDED(_, _, spellID)
-	SCM:ApplyAnchorGroupBySpellID(spellID, "cast")
+	SCM:ApplySuccessfulCastBySpellID(spellID)
 end
 
 function SCM:BAG_UPDATE_COOLDOWN()
@@ -217,6 +217,10 @@ function SCM:GetConfigTable(iconType, isGlobal)
 
 	if iconType == "slot" then
 		return isGlobal and self.globalCustomConfig.slotConfig or self.customConfig.slotConfig
+	end
+
+	if iconType == "cast" then
+		return isGlobal and self.globalCustomConfig.castConfig or self.customConfig.castConfig
 	end
 
 	return isGlobal and self.globalCustomConfig.itemConfig or self.customConfig.itemConfig
