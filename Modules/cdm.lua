@@ -193,14 +193,14 @@ end
 
 local function OnManagedChildShow(child)
 	UIParent.SetAlpha(child, child.SCMHidden and 0 or 1)
-	if child and child.SCMGroup then
+	if child and child.SCMGroup and child.SCMChanged then
 		SCM:ApplyAnchorGroupCDManagerConfig(child.SCMGroup)
 	end
 end
 
 local function OnManagedChildHide(child)
 	--SCM:ApplyAllCDManagerConfigs()
-	if child and child.SCMGroup then
+	if child and child.SCMGroup and child.SCMChanged then
 		SCM:ApplyAnchorGroupCDManagerConfig(child.SCMGroup)
 	end
 end
@@ -475,11 +475,12 @@ local function ProcessSingleChild(child, validChildren, spellConfig, categoryInd
 	local info = categoryConfig and (categoryConfig[cooldownID] or SCM.defaultCooldownViewerConfig.cooldownIDs[cooldownID])
 	local spellID = info and info.spellID
 	child.SCMSpellID = spellID
-	child.SCMConfig = nil
-	child.SCMOrder = nil
-	child.SCMCooldownID = nil
 
 	if not (cooldownID and spellID and spellConfig[spellID]) then
+		child.SCMConfig = nil
+		child.SCMOrder = nil
+		child.SCMCooldownID = nil
+
 		SetChildVisibilityState(child, false, true)
 		return
 	end
@@ -495,6 +496,7 @@ local function ProcessSingleChild(child, validChildren, spellConfig, categoryInd
 
 	AddChildToGroup(validChildren, group, child)
 
+	child.SCMChanged = not child.SCMConfig or child.SCMConfig ~= groupConfig
 	child.SCMConfig = groupConfig
 	child.SCMOrder = groupConfig.order
 	child.SCMCooldownID = cooldownID
