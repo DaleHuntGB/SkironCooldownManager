@@ -77,14 +77,20 @@ local function UpdateCustomIconCooldown(frame, iconType, config)
 	end
 
 	if iconType == "spell" then
+		local spellCooldown = C_Spell.GetSpellCooldown(config.spellID)
 		local durationObject = C_Spell.GetSpellChargeDuration(config.spellID)
 		if durationObject then
 			frame.Cooldown:SetCooldownFromDurationObject(durationObject)
-			frame.Icon:SetDesaturation(durationObject:EvaluateRemainingPercent(desaturationCurve))
+
+			if not spellCooldown or not spellCooldown.isOnGCD then
+				frame.Icon:SetDesaturation(durationObject:EvaluateRemainingPercent(desaturationCurve))
+			end
 		else
 			durationObject = C_Spell.GetSpellCooldownDuration(config.spellID)
 			frame.Cooldown:SetCooldownFromDurationObject(durationObject)
-			frame.Icon:SetDesaturation(C_CurveUtil.EvaluateColorValueFromBoolean(durationObject:IsZero(), 0, 1))
+			if not spellCooldown or not spellCooldown.isOnGCD then
+				frame.Icon:SetDesaturation(C_CurveUtil.EvaluateColorValueFromBoolean(durationObject:IsZero(), 0, 1))
+			end
 		end
 
 		return frame.Cooldown:IsShown()
