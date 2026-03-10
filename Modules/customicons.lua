@@ -1,13 +1,13 @@
 local SCM = select(2, ...)
 
 SCM.CustomIcons = SCM.CustomIcons or {}
-SCM.customIconFrames = SCM.customIconFrames or {}
 
 local CustomIcons = SCM.CustomIcons
 local GetIconType = SCM.Utils.GetIconType
 
 local CustomItemFrames = {}
 local CustomSpellFrames = {}
+local CustomIconFramePool
 
 function CustomIcons.GetCustomIconFrames(config)
 	local iconType = GetIconType(config)
@@ -20,6 +20,91 @@ function CustomIcons.GetCustomIconFrames(config)
 	end
 
 	return CustomItemFrames
+end
+
+local function ResetCustomIconFrame(_, frame)
+	SCM:StopCustomGlow(frame)
+
+	local customFrames = frame.SCMFrameRegistry
+	local frameID = frame.SCMFrameID
+	if customFrames and frameID and customFrames[frameID] == frame then
+		customFrames[frameID] = nil
+	end
+
+	frame.SCMReleased = true
+	frame.SCMFrameRegistry = nil
+	frame.SCMFrameID = nil
+	frame.SCMAnchorFrame = nil
+	frame.SCMAnchorData = nil
+	frame.SCMConfig = nil
+	frame.SCMOrder = nil
+	frame.SCMCooldownID = nil
+	frame.SCMSpellID = nil
+	frame.SCMIconType = nil
+	frame.SCMGroup = nil
+	frame.SCMGlobal = nil
+	frame.SCMShouldBeVisible = nil
+	frame.SCMChanged = nil
+	frame.SCMHidden = nil
+	frame.SCMCustom = nil
+	frame.SCMIconTexture = nil
+	frame.SCMActiveGlow = nil
+	frame.SCMPandemic = nil
+	frame.spellID = nil
+	frame.itemID = nil
+	frame.slotID = nil
+	frame.lastCastStartTime = nil
+	frame.UpdateCooldown = nil
+	frame.UpdateCharges = nil
+	frame.width = nil
+	frame.height = nil
+
+	frame:EnableMouse(false)
+	frame:SetAlpha(1)
+	frame:Hide()
+	frame:ClearAllPoints()
+	frame.Icon:SetDesaturated(false)
+	frame.Icon:SetTexture(nil)
+	frame.Cooldown:Clear()
+	frame.ChargeCount.Current:SetText("")
+	frame.ChargeCount.Current:Hide()
+end
+
+local function GetCustomIconFramePool()
+	if not CustomIconFramePool then
+		CustomIconFramePool = CreateFramePool("Frame", UIParent, "SCMItemIconTemplate", ResetCustomIconFrame)
+	end
+
+	return CustomIconFramePool
+end
+
+local function AcquireCustomIconFrame(customFrames, id)
+	local frame = customFrames[id]
+	if frame and not frame.SCMReleased then
+		return frame
+	end
+
+	frame = GetCustomIconFramePool():Acquire()
+	frame.SCMReleased = nil
+	frame.SCMFrameRegistry = customFrames
+	frame.SCMFrameID = id
+	customFrames[id] = frame
+
+	if not frame.SCMCustomIconInitialized then
+		SCM.SetupCustomIconFrame(frame)
+		frame.SCMCustomIconInitialized = true
+	end
+
+	return frame
+end
+
+local function ReleaseCustomIconFrame(frame)
+	if not frame or frame.SCMReleased then
+		return
+	end
+
+	SCM.SetChildVisibilityState(frame, false, true)
+	GetCustomIconFramePool():Release(frame)
 end
 
 local function SetCustomIconCountText(frame, iconType, id)
@@ -205,9 +290,55 @@ local function ConfigureCustomIconFrame(frame, id, config, viewerScale, anchorGr
 	frame.SCMCustom = true
 end
 
+local function UpdateCustomIconFrameState(frame, config)
+	local iconType = frame.SCMIconType
+	local iconTexture = ResolveCustomIconTexture(config, iconType)
+	if not iconTexture then
+		iconTexture = 134400
+	end
+
+	frame.SCMIconTexture = iconTexture
+	frame.Icon:SetTexture(iconTexture)
+	frame.UpdateCooldown = UpdateCustomIconCooldown
+	frame.UpdateCharges = nil
+
+	if iconType == "spell" then
+		local chargeInfo = C_Spell.GetSpellCharges(config.spellID)
+		UpdateCustomIconCharges(frame, config.spellID)
+
+		if chargeInfo then
+			frame.UpdateCharges = UpdateCustomIconCharges
+		end
+	else
+		frame.ChargeCount.Current:SetText("")
+		frame.ChargeCount.Current:Hide()
+	end
+end
+
 function CustomIcons.HideIcons()
-	for _, customFrame in pairs(SCM.customIconFrames) do
+	for _, customFrame in pairs(CustomItemFrames) do
 		SCM.SetChildVisibilityState(customFrame, false, true)
+	end
+
+	for _, customFrame in pairs(CustomSpellFrames) do
+		SCM.SetChildVisibilityState(customFrame, false, true)
+	end
+end
+
+function CustomIcons.ReleaseIcon(id, config)
+	local customFrames = CustomIcons.GetCustomIconFrames(config)
+	if customFrames and customFrames[id] then
+		ReleaseCustomIconFrame(customFrames[id])
+	end
+end
+
+function CustomIcons.ReleaseAllIcons()
+	for _, customFrame in pairs(CustomItemFrames) do
+		ReleaseCustomIconFrame(customFrame)
+	end
+
+	for _, customFrame in pairs(CustomSpellFrames) do
+		ReleaseCustomIconFrame(customFrame)
 	end
 end
 
@@ -217,37 +348,14 @@ function CustomIcons.CreateIcons(customConfig, isGlobal)
 	for id, config in pairs(customConfig) do
 		local customFrames = CustomIcons.GetCustomIconFrames(config)
 		if customFrames then
-			if not customFrames[id] and DoesItemOrSpellExists(config) then
-				local frameName = (isGlobal and "SCM_Custom_Icon_Global_" or "SCM_Custom_Icon_") .. tostring(id)
-				local frame = CreateFrame("Frame", frameName, UIParent, "SCMItemIconTemplate")
-				customFrames[id] = frame
-				SCM.customIconFrames[id] = frame
+			if DoesItemOrSpellExists(config) then
+				local frame = AcquireCustomIconFrame(customFrames, id)
 				ConfigureCustomIconFrame(frame, id, config, viewerScale, config.anchorGroup or 1, isGlobal)
-
-				local iconType = frame.SCMIconType
-				local iconTexture = ResolveCustomIconTexture(config, iconType)
-				if not iconTexture then
-					iconTexture = 134400
-				end
-
-				frame.SCMIconTexture = iconTexture
-				frame.Icon:SetTexture(iconTexture)
-				SCM.SetupCustomIconFrame(frame)
+				UpdateCustomIconFrameState(frame, config)
 				SCM.SetChildVisibilityState(frame, false, true)
 				SCM:SkinChild(frame, config)
-
-				frame.UpdateCooldown = UpdateCustomIconCooldown
-
-				if iconType == "spell" then
-					local chargeInfo = C_Spell.GetSpellCharges(config.spellID)
-					UpdateCustomIconCharges(frame, config.spellID)
-
-					if chargeInfo then
-						frame.UpdateCharges = UpdateCustomIconCharges
-					end
-				end
 			elseif customFrames[id] then
-				SCM.SetChildVisibilityState(customFrames[id], false, true)
+				ReleaseCustomIconFrame(customFrames[id])
 			end
 		end
 	end
@@ -293,5 +401,15 @@ function CustomIcons.ProcessIcons(customConfig, validChildren, isGlobal)
 				SCM.SetChildVisibilityState(customFrames[id], false, true)
 			end
 		end
+	end
+end
+
+function SCM:CreateAllCustomIcons()
+	for _, config in pairs(self.customConfig) do
+		CustomIcons.CreateIcons(config)
+	end
+
+	for _, config in pairs(self.globalCustomConfig) do
+		CustomIcons.CreateIcons(config, true)
 	end
 end

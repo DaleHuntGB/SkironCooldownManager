@@ -189,10 +189,7 @@ function SCM:RemoveCustomIcon(id, isGlobal, iconType)
 		local config = configTable[id]
 		configTable[id] = nil
 
-		local customFrames = SCM.CustomIcons.GetCustomIconFrames(config)
-		if customFrames and customFrames[id] then
-			SCM.SetChildVisibilityState(customFrames[id], false, true)
-		end
+		SCM.CustomIcons.ReleaseIcon(id, config)
 	end
 end
 

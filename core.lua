@@ -61,16 +61,6 @@ function SCM:SetHooks()
 	end
 end
 
-function SCM:CreateAllCustomIcons()
-	for _, config in pairs(self.customConfig) do
-		SCM.CustomIcons.CreateIcons(config)
-	end
-
-	for _, config in pairs(self.globalCustomConfig) do
-		SCM.CustomIcons.CreateIcons(config, true)
-	end
-end
-
 function SCM:PLAYER_ENTERING_WORLD(isInitialLogin, isReload)
 	if isInitialLogin or isReload then
 		SCM:UpdateCooldownInfo(true, CooldownViewerSettings:GetDataProvider())
@@ -122,10 +112,16 @@ function SCM:EDIT_MODE_LAYOUTS_UPDATED()
 	SCM:ApplyOptions()
 end
 
-local function RefreshCooldownViewerData()
+local function RefreshCooldownViewerData(releaseCustomIcons)
 	SCM:ClearViewerChildrenCache()
 	SCM:UpdateCooldownInfo(true, CooldownViewerSettings:GetDataProvider())
 	SCM:UpdateDB()
+
+	--SCM.CustomIcons.HideIcons()
+	if releaseCustomIcons then
+		SCM.CustomIcons.ReleaseAllIcons()
+	end
+	SCM:CreateAllCustomIcons()
 	SCM:ApplyAllCDManagerConfigs()
 end
 
@@ -139,7 +135,9 @@ function SCM:TRAIT_CONFIG_UPDATED()
 end
 
 function SCM:ACTIVE_PLAYER_SPECIALIZATION_CHANGED()
-	C_Timer.After(0.2, RefreshCooldownViewerData)
+	C_Timer.After(0.2, function()
+		RefreshCooldownViewerData(true)
+	end)
 end
 
 function SCM:UI_SCALE_CHANGED()

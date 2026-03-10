@@ -1,7 +1,6 @@
 ﻿local addonName, SCM = ...
 SCM.anchorFrames = {}
 SCM.itemFrames = {}
-SCM.customIconFrames = SCM.customIconFrames or {}
 SCM.MainTabs = {}
 SCM.OptionsCallbacks = {}
 SCM.Skins = {}
@@ -529,7 +528,11 @@ end
 
 local function OnIconCooldownDone(self)
 	local parent = self:GetParent()
-	if parent and parent.Icon then
+	if not parent or parent.SCMReleased or not parent.SCMConfig then
+		return
+	end
+
+	if parent.Icon then
 		parent.Icon:SetDesaturated(false)
 	end
 
@@ -596,10 +599,7 @@ local function UpdateEmptyAnchorGroup(group, anchorConfig, scopedAnchorGroups)
 
 	if group == 1 then
 		if SCRB and SCRB.registerCustomFrame then
-			if not SCM.registeredCustomFrame then
-				SCM.registeredCustomFrame = true
-				SCRB.registerCustomFrame(anchorConfig)
-			end
+			SCRB.registerCustomFrame(anchorConfig)
 		else
 			SCM:UpdateResourceBarWidth(initialIconWidth)
 		end
@@ -712,14 +712,14 @@ local function OrderCDManagerSpells_Actual(updateScope, scopedAnchorGroupsOverri
 
 				local offsetY = -accumulatedY
 
-				if not child.SCMSizeHook then
+				if not child.SCMSizeHook and not child.SCMCustom then
 					child.SCMSizeHook = true
 					hooksecurefunc(child, "SetSize", OnManagedAnchorChildSetSize)
 					hooksecurefunc(child, "SetWidth", OnManagedAnchorChildSetWidth)
 					hooksecurefunc(child, "SetHeight", OnManagedAnchorChildSetHeight)
 				end
 
-				if not child.SCMPointHook then
+				if not child.SCMPointHook and not child.SCMCustom then
 					child.SCMPointHook = true
 					hooksecurefunc(child, "SetPoint", ApplyManagedAnchorPoint)
 					hooksecurefunc(child, "ClearAllPoints", ApplyManagedAnchorPoint)
@@ -747,10 +747,7 @@ local function OrderCDManagerSpells_Actual(updateScope, scopedAnchorGroupsOverri
 
 				if SCM.db.global.options.adjustResourceWidth then
 					if SCRB and SCRB.registerCustomFrame then
-						if not SCM.registeredCustomFrame then
-							SCM.registeredCustomFrame = true
-							SCRB.registerCustomFrame(SCM:GetAnchor(1))
-						end
+						SCRB.registerCustomFrame(SCM:GetAnchor(1))
 					else
 						SCM:UpdateResourceBarWidth(maxGroupWidth)
 					end
