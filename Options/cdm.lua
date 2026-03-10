@@ -459,7 +459,7 @@ local function SelectAnchor(anchorWidget, frame, anchorIndex, anchorTabsTbl, isG
 	addAnchorButton:SetRelativeWidth(0.5)
 	addAnchorButton:SetDisabled(#anchorTabsTbl >= 15)
 	addAnchorButton:SetCallback("OnClick", function()
-		local nextIndex = isGlobal and SCM:AddGlobalAnchor(anchorTabsTbl) or SCM:AddAnchor(anchorTabsTbl, frame)
+		local nextIndex = isGlobal and SCM:AddGlobalAnchor(anchorTabsTbl) or SCM:AddAnchor(anchorTabsTbl)
 		anchorWidget:SetTabs(anchorTabsTbl)
 		anchorWidget:SelectTab(nextIndex)
 	end)
@@ -481,7 +481,7 @@ local function SelectAnchor(anchorWidget, frame, anchorIndex, anchorTabsTbl, isG
 	buttonGroup:AddChild(deleteAnchorButton)
 
 	local point = AceGUI:Create("Dropdown")
-	point:SetRelativeWidth(0.25)
+	point:SetRelativeWidth(0.33)
 	point:SetLabel("Point")
 	point:SetList(SCM.Constants.AnchorPoints)
 	point:SetValue(data.anchor[1])
@@ -492,7 +492,7 @@ local function SelectAnchor(anchorWidget, frame, anchorIndex, anchorTabsTbl, isG
 	anchorOptions:AddChild(point)
 
 	local relativeTo = AceGUI:Create("EditBox")
-	relativeTo:SetRelativeWidth(0.25)
+	relativeTo:SetRelativeWidth(0.33)
 	relativeTo:SetLabel("Anchor Frame")
 	relativeTo:SetText(data.anchor[2])
 	relativeTo:SetCallback("OnEnterPressed", function(self, event, text)
@@ -502,7 +502,7 @@ local function SelectAnchor(anchorWidget, frame, anchorIndex, anchorTabsTbl, isG
 	anchorOptions:AddChild(relativeTo)
 
 	local relativePoint = AceGUI:Create("Dropdown")
-	relativePoint:SetRelativeWidth(0.25)
+	relativePoint:SetRelativeWidth(0.33)
 	relativePoint:SetLabel("Relative Point")
 	relativePoint:SetList(SCM.Constants.AnchorPoints)
 	relativePoint:SetValue(data.anchor[3])
@@ -513,7 +513,7 @@ local function SelectAnchor(anchorWidget, frame, anchorIndex, anchorTabsTbl, isG
 	anchorOptions:AddChild(relativePoint)
 
 	local grow = AceGUI:Create("Dropdown")
-	grow:SetRelativeWidth(0.25)
+	grow:SetRelativeWidth(0.5)
 	grow:SetList(SCM.Constants.GrowthDirections)
 	grow:SetLabel("Growth Direction")
 	grow:SetValue(data.grow or "CENTERED")
@@ -524,7 +524,7 @@ local function SelectAnchor(anchorWidget, frame, anchorIndex, anchorTabsTbl, isG
 	anchorOptions:AddChild(grow)
 
 	local spacing = AceGUI:Create("Slider")
-	spacing:SetRelativeWidth(0.33)
+	spacing:SetRelativeWidth(0.5)
 	spacing:SetSliderValues(-10, 50, 0.1)
 	spacing:SetLabel("Horizontal Spacing")
 	spacing:SetValue(data.spacing or 0)
@@ -535,7 +535,7 @@ local function SelectAnchor(anchorWidget, frame, anchorIndex, anchorTabsTbl, isG
 	anchorOptions:AddChild(spacing)
 
 	local xOffset = AceGUI:Create("Slider")
-	xOffset:SetRelativeWidth(0.33)
+	xOffset:SetRelativeWidth(0.5)
 	xOffset:SetSliderValues(-1000, 1000, 0.1)
 	xOffset:SetLabel("X Offset")
 	xOffset:SetValue(data.anchor[4])
@@ -546,7 +546,7 @@ local function SelectAnchor(anchorWidget, frame, anchorIndex, anchorTabsTbl, isG
 	anchorOptions:AddChild(xOffset)
 
 	local yOffset = AceGUI:Create("Slider")
-	yOffset:SetRelativeWidth(0.33)
+	yOffset:SetRelativeWidth(0.5)
 	yOffset:SetSliderValues(-1000, 1000, 0.1)
 	yOffset:SetLabel("Y Offset")
 	yOffset:SetValue(data.anchor[5])
@@ -710,6 +710,7 @@ local function SelectAnchor(anchorWidget, frame, anchorIndex, anchorTabsTbl, isG
 					if buttonConfig then
 						local function ApplyIconConfigUpdate()
 							if buttonFrame.data.isCustom then
+								SCM.CustomIcons.CreateIcons(SCM:GetConfigTable(buttonData.iconType, isGlobal), isGlobal)
 								ApplyAnchorGroupUpdate(anchorIndex, isGlobal)
 								return
 							end

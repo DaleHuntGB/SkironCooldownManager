@@ -241,7 +241,7 @@ local function UpdateCustomIconCharges(frame, spellID)
 		return
 	end
 
-	frame.ChargeCount.Current:SetText(chargeInfo.currentCharges)
+	frame.ChargeCount.Current:SetText(C_Spell.GetSpellDisplayCount(spellID))
 	frame.ChargeCount.Current:Show()
 end
 
@@ -384,7 +384,7 @@ function CustomIcons.CreateIcons(customConfig, isGlobal)
 	for id, config in pairs(customConfig) do
 		local customFrames = CustomIcons.GetCustomIconFrames(config)
 		if customFrames then
-			if DoesItemOrSpellExists(config) then
+			if DoesItemOrSpellExists(config) and ShouldLoadCustomIconForRole(config) then
 				local frame = AcquireCustomIconFrame(customFrames, id)
 				ConfigureCustomIconFrame(frame, id, config, viewerScale, config.anchorGroup or 1, isGlobal)
 				UpdateCustomIconFrameState(frame, config)
@@ -402,7 +402,7 @@ function CustomIcons.ProcessIcons(customConfig, validChildren, isGlobal)
 		local anchorGroup = config.anchorGroup or 1
 		local customFrames = CustomIcons.GetCustomIconFrames(config)
 		if customFrames then
-			if customFrames[id] and DoesItemOrSpellExists(config) then
+			if customFrames[id] and DoesItemOrSpellExists(config) and ShouldLoadCustomIconForRole(config) then
 				if SCM.IsScopedAnchorGroupAllowed(anchorGroup, isGlobal) then
 					local frame = customFrames[id]
 					local iconType = frame.SCMIconType
@@ -447,5 +447,48 @@ function SCM:CreateAllCustomIcons()
 
 	for _, config in pairs(self.globalCustomConfig) do
 		CustomIcons.CreateIcons(config, true)
+	end
+end
+
+function SCM:AddCustomIcon(anchorGroup, iconType, configID, order, uniqueID, isGlobal)
+	local configTable = SCM:GetConfigTable(iconType, isGlobal)
+	if not configTable then
+		return
+	end
+
+	uniqueID = uniqueID or SCM:GetUniqueID(configID, iconType, isGlobal)
+
+	if not order then
+		order = 1
+		for _, entry in pairs(configTable) do
+			if entry.anchorGroup == anchorGroup and (entry.order or 0) >= order then
+				order = (entry.order or 0) + 1
+			end
+		end
+	end
+
+	configTable[uniqueID] = {
+		id = uniqueID,
+		iconType = iconType,
+		spellID = (iconType == "spell" or iconType == "timer") and configID or nil,
+		itemID = iconType == "item" and configID or nil,
+		slotID = iconType == "slot" and configID or nil,
+		anchorGroup = anchorGroup,
+		order = order,
+		loadRoles = {["TANK"] = true, ["HEALER"] = true, ["DAMAGER"] = true}
+	}
+
+	self.CustomIcons.CreateIcons(configTable, isGlobal)
+
+	return uniqueID
+end
+
+function SCM:RemoveCustomIcon(id, isGlobal, iconType)
+	local configTable = SCM:GetConfigTable(iconType, isGlobal)
+	if configTable and configTable[id] then
+		local config = configTable[id]
+		configTable[id] = nil
+
+		SCM.CustomIcons.ReleaseIcon(id, config)
 	end
 end

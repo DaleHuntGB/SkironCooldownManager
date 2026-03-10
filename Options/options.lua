@@ -3,6 +3,8 @@ local addonName, SCM = ...
 local AceGUI = LibStub("AceGUI-3.0")
 local LibEditModeOverride = LibStub("LibEditModeOverride-1.0")
 local LibCustomGlow = LibStub("LibCustomGlow-1.0")
+local Utils = SCM.Utils
+local ToGlobalGroup = Utils.ToGlobalGroup
 
 function SCM.Encode(table)
 	local serialized = C_EncodingUtil.SerializeCBOR(table)
@@ -41,6 +43,10 @@ function SCM:RemoveGlobalAnchor(anchorIndex, anchorTabsTbl)
 		tremove(self.db.global.globalAnchorConfig, anchorIndex)
 	end
 
+	local globalAnchorIndex = ToGlobalGroup(#anchorTabsTbl)
+	self.anchorFrames[globalAnchorIndex]:Hide()
+	self.anchorFrames[globalAnchorIndex] = nil
+
 	for _, globalConfig in pairs({
 		self.db.global.globalCustomConfig.spellConfig,
 		self.db.global.globalCustomConfig.itemConfig,
@@ -65,10 +71,11 @@ function SCM:RemoveGlobalAnchor(anchorIndex, anchorTabsTbl)
 		tab.value = i
 		tab.text = "Anchor " .. i
 	end
+
 	SCM:ApplyAllCDManagerConfigs()
 end
 
-function SCM:AddAnchor(anchorTabsTbl, frame)
+function SCM:AddAnchor(anchorTabsTbl)
 	local nextIndex = #SCM.anchorConfig + 1
 	self.anchorConfig[nextIndex] = {
 		anchor = { "CENTER", "UIParent", "CENTER", 0, 0 },
@@ -87,12 +94,10 @@ function SCM:AddAnchor(anchorTabsTbl, frame)
 
 	SCM:ApplyAllCDManagerConfigs()
 
-	SCM:ApplyAllCDManagerConfigs()
-
 	return nextIndex
 end
 
-function SCM:RemoveAnchor(anchorIndex, anchorTabsTbl, frame)
+function SCM:RemoveAnchor(anchorIndex, anchorTabsTbl)
 	if self.anchorConfig[anchorIndex] then
 		tremove(self.anchorConfig, anchorIndex)
 	end
@@ -148,48 +153,6 @@ end
 function SCM:RemoveRow(anchorIndex, rowIndex)
 	if self.anchorConfig[anchorIndex].rowConfig[rowIndex] then
 		tremove(self.anchorConfig[anchorIndex].rowConfig, rowIndex)
-	end
-end
-
-function SCM:AddCustomIcon(anchorGroup, iconType, configID, order, uniqueID, isGlobal)
-	local configTable = SCM:GetConfigTable(iconType, isGlobal)
-	if not configTable then
-		return
-	end
-
-	uniqueID = uniqueID or SCM:GetUniqueID(configID, iconType, isGlobal)
-
-	if not order then
-		order = 1
-		for _, entry in pairs(configTable) do
-			if entry.anchorGroup == anchorGroup and (entry.order or 0) >= order then
-				order = (entry.order or 0) + 1
-			end
-		end
-	end
-
-	configTable[uniqueID] = {
-		id = uniqueID,
-		iconType = iconType,
-		spellID = (iconType == "spell" or iconType == "timer") and configID or nil,
-		itemID = iconType == "item" and configID or nil,
-		slotID = iconType == "slot" and configID or nil,
-		anchorGroup = anchorGroup,
-		order = order,
-	}
-
-	self.CustomIcons.CreateIcons(configTable, isGlobal)
-
-	return uniqueID
-end
-
-function SCM:RemoveCustomIcon(id, isGlobal, iconType)
-	local configTable = SCM:GetConfigTable(iconType, isGlobal)
-	if configTable and configTable[id] then
-		local config = configTable[id]
-		configTable[id] = nil
-
-		SCM.CustomIcons.ReleaseIcon(id, config)
 	end
 end
 
@@ -285,6 +248,9 @@ local function OpenOptions()
 	frame:SetLayout("flow")
 	SCM.OptionsFrame = frame
 
+	frame:SetHeight(1000)
+	frame:SetWidth(800)
+
 	local tabsTbl = {}
 	for _, tab in pairs(SCM.MainTabs) do
 		tinsert(tabsTbl, tab)
@@ -332,8 +298,6 @@ local function OpenOptions()
 			anchorFrame.debugText:Show()
 		end
 	end
-
-	frame:SetHeight(800)
 end
 
 SLASH_SCM1 = "/scm"
