@@ -12,6 +12,7 @@ SCM.CustomEntries = {}
 local iconTypeTabs = {
 	all = {
 		{ value = "general", text = "General" },
+		{ value = "glow", text = "Glow" },
 		{ value = "load", text = "Load Conditions" },
 		--{ value = "load", text = "Load Conditions"},
 	},
