@@ -1150,7 +1150,7 @@ end
 
 function SCM:UpdateDB()
 	local class = UnitClassBase("player")
-	local specID = GetSpecializationInfo(GetSpecialization())
+	local specID, _, _, _, role = GetSpecializationInfo(GetSpecialization())
 
 	local currentConfig = self.DB:LoadData()
 	local specAnchorConfig = currentConfig and currentConfig.anchorConfig[specID]
@@ -1177,6 +1177,8 @@ function SCM:UpdateDB()
 	self.globalCustomConfig = EnsureCustomConfigTables(self.db.global.globalCustomConfig)
 
 	self.isHideWhenInactiveEnabled = self:GetHideWhenInactive() == 1
+	self.currentSpecID = specID
+	self.currentRole = role
 end
 
 function SCM:GetSpellConfigForGroup(spellID, group)

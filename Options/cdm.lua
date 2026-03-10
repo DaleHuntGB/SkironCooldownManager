@@ -774,32 +774,7 @@ local function SelectAnchor(anchorWidget, frame, anchorIndex, anchorTabsTbl, isG
 									iconSettingsTabs:AddChild(hideWhileReady)
 								end
 
-								if not buttonData.isCustom and buttonData.iconType == "spell" then
-									local useCustomGlowColor = AceGUI:Create("CheckBox")
-									useCustomGlowColor:SetLabel("Use Custom Glow Color")
-									useCustomGlowColor:SetRelativeWidth(0.5)
-									useCustomGlowColor:SetValue(buttonConfig.useCustomGlowColor)
-									useCustomGlowColor:SetDisabled(not options.useCustomGlow)
-									SCM.Utils.SetDisabledTooltip(useCustomGlowColor, "Enable 'Use Custom Glow' in Global Settings > Glow first.")
-									useCustomGlowColor:SetCallback("OnValueChanged", function(self, event, value)
-										buttonConfig.useCustomGlowColor = value or nil
-										ApplyIconConfigUpdate()
-									end)
-									iconSettingsTabs:AddChild(useCustomGlowColor)
-
-									local customGlowColor = AceGUI:Create("ColorPicker")
-									customGlowColor:SetRelativeWidth(0.33)
-									customGlowColor:SetLabel("Glow Color")
-									customGlowColor:SetHasAlpha(true)
-									customGlowColor:SetDisabled(not options.useCustomGlow)
-									if buttonConfig.customGlowColor then
-										customGlowColor:SetColor(unpack(buttonConfig.customGlowColor))
-									end
-									customGlowColor:SetCallback("OnValueChanged", function(self, event, r, g, b, a)
-										buttonConfig.customGlowColor = { r, g, b, a }
-									end)
-									iconSettingsTabs:AddChild(customGlowColor)
-								elseif buttonData.isCustom and (buttonData.iconType == "spell" or buttonData.iconType == "timer") then
+								if buttonData.isCustom and (buttonData.iconType == "spell" or buttonData.iconType == "timer") then
 									local castTimer = AceGUI:Create("Slider")
 									castTimer:SetRelativeWidth(0.5)
 									castTimer:SetSliderValues(0, 30, 0.1)
@@ -812,29 +787,79 @@ local function SelectAnchor(anchorWidget, frame, anchorIndex, anchorTabsTbl, isG
 
 									iconSettingsTabs:AddChild(castTimer)
 								end
-
-								if buttonData.iconType == "spell" or buttonData.iconType == "timer" then
-									local glowWhileActive = AceGUI:Create("CheckBox")
-									glowWhileActive:SetLabel("Glow While Active")
-									glowWhileActive:SetRelativeWidth(0.5)
-									glowWhileActive:SetValue(buttonConfig.glowWhileActive)
-									glowWhileActive:SetDisabled(not options.useCustomGlow)
-									SCM.Utils.SetDisabledTooltip(glowWhileActive, "Enable 'Use Custom Glow' in Global Settings > Glow first.")
-									glowWhileActive:SetCallback("OnValueChanged", function(self, event, value)
-										buttonConfig.glowWhileActive = value or nil
+							elseif group == "load" then
+								if buttonData.isCustom then
+									local loadRole = AceGUI:Create("Dropdown")
+									loadRole:SetRelativeWidth(0.5)
+									loadRole:SetLabel("Roles")
+									loadRole:SetList(SCM.Constants.Roles)
+									loadRole:SetMultiselect(true)
+									loadRole:SetCallback("OnValueChanged", function(_, _, key, value)
+										buttonConfig.loadRoles = buttonConfig.loadRoles or {}
+										buttonConfig.loadRoles[key] = value
 										ApplyIconConfigUpdate()
 									end)
-									iconSettingsTabs:AddChild(glowWhileActive)
+
+									if not buttonConfig.loadRoles then
+										buttonConfig.loadRoles = { ["TANK"] = true, ["HEALER"] = true, ["DAMAGER"] = true }
+									end
+
+									for key, value in pairs(buttonConfig.loadRoles) do
+										loadRole:SetItemValue(key, value)
+									end
+
+									iconSettingsTabs:AddChild(loadRole)
+								elseif group == "glow" then
+									if not buttonData.isCustom and buttonData.iconType == "spell" then
+										local useCustomGlowColor = AceGUI:Create("CheckBox")
+										useCustomGlowColor:SetLabel("Use Custom Glow Color")
+										useCustomGlowColor:SetRelativeWidth(0.5)
+										useCustomGlowColor:SetValue(buttonConfig.useCustomGlowColor)
+										useCustomGlowColor:SetDisabled(not options.useCustomGlow)
+										SCM.Utils.SetDisabledTooltip(useCustomGlowColor, "Enable 'Use Custom Glow' in Global Settings > Glow first.")
+										useCustomGlowColor:SetCallback("OnValueChanged", function(self, event, value)
+											buttonConfig.useCustomGlowColor = value or nil
+											ApplyIconConfigUpdate()
+										end)
+										iconSettingsTabs:AddChild(useCustomGlowColor)
+
+										local customGlowColor = AceGUI:Create("ColorPicker")
+										customGlowColor:SetRelativeWidth(0.33)
+										customGlowColor:SetLabel("Glow Color")
+										customGlowColor:SetHasAlpha(true)
+										customGlowColor:SetDisabled(not options.useCustomGlow)
+										if buttonConfig.customGlowColor then
+											customGlowColor:SetColor(unpack(buttonConfig.customGlowColor))
+										end
+										customGlowColor:SetCallback("OnValueChanged", function(self, event, r, g, b, a)
+											buttonConfig.customGlowColor = { r, g, b, a }
+										end)
+										iconSettingsTabs:AddChild(customGlowColor)
+									end
+
+									if buttonData.iconType == "spell" or buttonData.iconType == "timer" then
+										local glowWhileActive = AceGUI:Create("CheckBox")
+										glowWhileActive:SetLabel("Glow While Active")
+										glowWhileActive:SetRelativeWidth(0.5)
+										glowWhileActive:SetValue(buttonConfig.glowWhileActive)
+										glowWhileActive:SetDisabled(not options.useCustomGlow)
+										SCM.Utils.SetDisabledTooltip(glowWhileActive, "Enable 'Use Custom Glow' in Global Settings > Glow first.")
+										glowWhileActive:SetCallback("OnValueChanged", function(self, event, value)
+											buttonConfig.glowWhileActive = value or nil
+											ApplyIconConfigUpdate()
+										end)
+										iconSettingsTabs:AddChild(glowWhileActive)
+									end
+								else
+									local label = AceGUI:Create("Label")
+									label:SetRelativeWidth(1.0)
+									label:SetHeight(24)
+									label:SetJustifyH("CENTER")
+									label:SetJustifyV("MIDDLE")
+									label:SetText("|TInterface\\common\\help-i:40:40:0:0|tLoad conditions are available for custom icons only (for now).")
+									label:SetFontObject("Game12Font")
+									iconSettingsTabs:AddChild(label)
 								end
-							elseif group == "load" then
-								local label = AceGUI:Create("Label")
-								label:SetRelativeWidth(1.0)
-								label:SetHeight(24)
-								label:SetJustifyH("CENTER")
-								label:SetJustifyV("MIDDLE")
-								label:SetText("|TInterface\\common\\help-i:40:40:0:0|tNot yet implemented. Will come soon tm.")
-								label:SetFontObject("Game12Font")
-								iconSettingsTabs:AddChild(label)
 							end
 
 							iconSettings:DoLayout()

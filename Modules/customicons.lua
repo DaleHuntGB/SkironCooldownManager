@@ -265,6 +265,19 @@ local function DoesItemOrSpellExists(config)
 	end
 end
 
+local function ShouldLoadCustomIconForRole(config)
+	local loadRoles = config.loadRoles
+	if loadRoles then
+		if not next(loadRoles) then
+			return true
+		end
+
+		return loadRoles[SCM.currentRole]
+	end
+
+	return true
+end
+
 local function ResolveCustomIconTexture(config, iconType)
 	if (iconType == "spell" or iconType == "timer") and config.spellID then
 		return C_Spell.GetSpellTexture(config.spellID)
