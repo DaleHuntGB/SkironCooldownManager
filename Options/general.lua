@@ -324,7 +324,7 @@ local function SelectGlobalSettingsTab(tabWidget, group, options)
 		enableCooldownFont:SetLabel("Custom Cooldown Font")
 		enableCooldownFont:SetValue(options.changeCooldownFont)
 		enableCooldownFont:SetCallback("OnValueChanged", function(_, _, value)
-			options.enableCustomCooldownFont = value
+			options.changeCooldownFont = value
 			SCM:ApplyAllCDManagerConfigs()
 		end)
 		cooldownTextSettings:AddChild(enableCooldownFont)
@@ -335,7 +335,8 @@ local function SelectGlobalSettingsTab(tabWidget, group, options)
 		cooldownFont:SetList(LSM:HashTable("font"))
 		cooldownFont:SetValue(options.cooldownFont)
 		cooldownFont:SetCallback("OnValueChanged", function(self, event, value)
-			options.changeCooldownFont = value
+			options.cooldownFont = value
+			self:SetValue(value)
 			SCM:ApplyAllCDManagerConfigs()
 		end)
 		cooldownTextSettings:AddChild(cooldownFont)

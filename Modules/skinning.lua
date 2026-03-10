@@ -23,27 +23,38 @@ local function ApplyChargeAndApplicationStyle(child, options, fontPath)
 	end
 end
 
+local function ApplyCooldownFont(cooldownFrame, options)
+	options = options or SCM.db.global.options
+	if not options.changeCooldownFont then
+		return
+	end
+
+	local fontPath = LSM:Fetch("font", options.cooldownFont)
+	local cooldownFontString = cooldownFrame:GetRegions()
+	if cooldownFontString and cooldownFontString.SetFont then
+		if not originalCooldownFont then
+			originalCooldownFont = { cooldownFontString:GetFont() }
+		end
+		if options.changeCooldownFont then
+			cooldownFontString:SetFont(fontPath, options.cooldownFontSize, "OUTLINE")
+		elseif originalCooldownFont then
+			cooldownFontString:SetFont(unpack(originalCooldownFont))
+		end
+	end
+end
+
 local function ApplyCooldownStyle(child, options)
-	if child.GetCooldownFrame then
-		local cooldownFrame = child:GetCooldownFrame()
+	local cooldownFrame = child.GetCooldownFrame and child:GetCooldownFrame() or child.Cooldown
+	if cooldownFrame then
+		if child.SCMCooldownSkinHook then
+			return
+		end
+
+		child.SCMCooldownSkinHook = true
+
 		cooldownFrame:ClearAllPoints()
 		cooldownFrame:SetAllPoints(child.Icon)
 		cooldownFrame:SetSwipeTexture("Interface\\Buttons\\WHITE8x8")
-
-		if options.changeCooldownFont then
-			local fontPath = LSM:Fetch("font", options.cooldownFont)
-			local cooldownFontString = cooldownFrame:GetRegions()
-			if cooldownFontString and cooldownFontString.SetFont then
-				if not originalCooldownFont then
-					originalCooldownFont = { cooldownFontString:GetFont() }
-				end
-				if options.enableCustomCooldownFont then
-					cooldownFontString:SetFont(fontPath, options.cooldownFontSize, "OUTLINE")
-				elseif originalCooldownFont then
-					cooldownFontString:SetFont(unpack(originalCooldownFont))
-				end
-			end
-		end
 
 		hooksecurefunc(cooldownFrame, "SetCooldown", function(self)
 			if options.recolorActiveSwipe then
@@ -53,6 +64,8 @@ local function ApplyCooldownStyle(child, options)
 					self:SetSwipeColor(unpack(options.activeSwipeColor))
 				end
 			end
+
+			ApplyCooldownFont(self, options)
 		end)
 
 		hooksecurefunc(cooldownFrame, "Clear", function(self)
@@ -60,6 +73,8 @@ local function ApplyCooldownStyle(child, options)
 				self:SetSwipeColor(0, 0, 0, 0.8)
 			end
 		end)
+
+		ApplyCooldownFont(cooldownFrame, options)
 	end
 end
 
@@ -94,6 +109,7 @@ function SCM:SkinChild(child, childConfig)
 
 		local fontPath = LSM:Fetch("font", options.chargeFont)
 		ApplyChargeAndApplicationStyle(child, options, fontPath)
+		ApplyCooldownStyle(child, options)
 	elseif not child.SCMSkinned then
 		child.SCMSkinned = true
 
@@ -148,6 +164,7 @@ function SCM:SkinChild(child, childConfig)
 		ApplyChargeAndApplicationStyle(child, options, fontPath)
 		ApplyCooldownStyle(child, options)
 	end
+
 	for _, customSkin in ipairs(SCM.Skins) do
 		pcall(customSkin, child)
 	end
