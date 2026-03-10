@@ -43,12 +43,17 @@ local function ShowNumericInputPopup(key, title, callback)
 			hasEditBox = true,
 			timeout = 0,
 			whileDead = true,
-			hideOnEscape = true,
 			preferredIndex = 3,
 			OnAccept = function(self)
 				local id = tonumber(self.EditBox:GetText() or "")
 				if id and id > 0 then
 					callback(id)
+				end
+			end,
+			hideOnEscape = true,
+			EditBoxOnEnterPressed = function(self)
+				if self:GetParent():GetButton1():IsEnabled() then
+					self:GetParent():GetButton1():Click()
 				end
 			end,
 		}
