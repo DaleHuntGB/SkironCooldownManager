@@ -57,15 +57,14 @@ local function ApplyCooldownStyle(child, options)
 		cooldownFrame:SetSwipeTexture("Interface\\Buttons\\WHITE8x8")
 
 		hooksecurefunc(cooldownFrame, "SetCooldown", function(self)
-			if options.recolorActiveSwipe then
-				self:SetSwipeColor(0, 0, 0, 0.8)
-
-				if self:GetUseAuraDisplayTime() then
-					self:SetSwipeColor(unpack(options.activeSwipeColor))
-				end
+			if options.recolorActiveSwipe and self:GetUseAuraDisplayTime() then
+				self:SetSwipeColor(unpack(options.activeSwipeColor))
+				self:SetReverse(options.reverseActiveSwipe)
+			elseif options.recolorNormalSwipe then
+				self:SetReverse(false)
+				self:SetSwipeColor(unpack(options.normalSwipeColor))
 			end
 
-			self:SetReverse(options.reverseActiveSwipe)
 			ApplyCooldownFont(self, options)
 		end)
 

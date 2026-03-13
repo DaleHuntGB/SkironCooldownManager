@@ -380,20 +380,45 @@ local function SelectGlobalSettingsTab(tabWidget, group, options)
 			AddInfoText(auraSettings, "Enable a custom edit mode profile to use this feature. Reopen the opens once you did")
 		end
 
-		local swipeSettings = AceGUI:Create("InlineGroup")
-		swipeSettings:SetLayout("flow")
-		swipeSettings:SetFullWidth(true)
-		swipeSettings:SetTitle("Active Swipe")
-		tabWidget:AddChild(swipeSettings)
+		local normalSwipeSettings = AceGUI:Create("InlineGroup")
+		normalSwipeSettings:SetLayout("flow")
+		normalSwipeSettings:SetFullWidth(true)
+		normalSwipeSettings:SetTitle("Normal Swipe")
+		tabWidget:AddChild(normalSwipeSettings)
+
+		local recolorNormalSwipe = AceGUI:Create("CheckBox")
+		recolorNormalSwipe:SetRelativeWidth(0.33)
+		recolorNormalSwipe:SetLabel("Recolor Swipe")
+		recolorNormalSwipe:SetValue(options.recolorNormalSwipe)
+		recolorNormalSwipe:SetCallback("OnValueChanged", function(_, _, value)
+			options.recolorNormalSwipe = value
+		end)
+		normalSwipeSettings:AddChild(recolorNormalSwipe)
+
+		local normalSwipeColor = AceGUI:Create("ColorPicker")
+		normalSwipeColor:SetRelativeWidth(0.33)
+		normalSwipeColor:SetLabel("Swipe Color")
+		normalSwipeColor:SetHasAlpha(true)
+		normalSwipeColor:SetColor(unpack(options.normalSwipeColor))
+		normalSwipeColor:SetCallback("OnValueChanged", function(self, event, r, g, b, a)
+			options.normalSwipeColor = { r, g, b, a }
+		end)
+		normalSwipeSettings:AddChild(normalSwipeColor)
+
+		local activeSwipeSettings = AceGUI:Create("InlineGroup")
+		activeSwipeSettings:SetLayout("flow")
+		activeSwipeSettings:SetFullWidth(true)
+		activeSwipeSettings:SetTitle("Active Swipe")
+		tabWidget:AddChild(activeSwipeSettings)
 
 		local recolorActiveSwipe = AceGUI:Create("CheckBox")
 		recolorActiveSwipe:SetRelativeWidth(0.33)
-		recolorActiveSwipe:SetLabel("Recolor Active Swipe")
+		recolorActiveSwipe:SetLabel("Recolor Swipe")
 		recolorActiveSwipe:SetValue(options.recolorActiveSwipe)
 		recolorActiveSwipe:SetCallback("OnValueChanged", function(_, _, value)
 			options.recolorActiveSwipe = value
 		end)
-		swipeSettings:AddChild(recolorActiveSwipe)
+		activeSwipeSettings:AddChild(recolorActiveSwipe)
 
 		local activeSwipeColor = AceGUI:Create("ColorPicker")
 		activeSwipeColor:SetRelativeWidth(0.33)
@@ -403,7 +428,7 @@ local function SelectGlobalSettingsTab(tabWidget, group, options)
 		activeSwipeColor:SetCallback("OnValueChanged", function(self, event, r, g, b, a)
 			options.activeSwipeColor = { r, g, b, a }
 		end)
-		swipeSettings:AddChild(activeSwipeColor)
+		activeSwipeSettings:AddChild(activeSwipeColor)
 
 		local reverseActiveSwipe = AceGUI:Create("CheckBox")
 		reverseActiveSwipe:SetRelativeWidth(0.33)
@@ -412,7 +437,7 @@ local function SelectGlobalSettingsTab(tabWidget, group, options)
 		reverseActiveSwipe:SetCallback("OnValueChanged", function(_, _, value)
 			options.reverseActiveSwipe = value
 		end)
-		swipeSettings:AddChild(reverseActiveSwipe)
+		activeSwipeSettings:AddChild(reverseActiveSwipe)
 	elseif group == "Glow" then
 		local glowSettings = AceGUI:Create("InlineGroup")
 		glowSettings:SetLayout("flow")
