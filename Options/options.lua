@@ -157,8 +157,10 @@ function SCM:RemoveRow(anchorIndex, rowIndex)
 end
 
 function SCM:AddSpellToConfig(anchorGroup, order, info, displayData, sourceIndex)
-	if not self.spellConfig[displayData.spellID] then
-		self.spellConfig[displayData.spellID] = {
+	local spellID = displayData.linkedSpellIDs and displayData.linkedSpellIDs[1] or displayData.spellID
+
+	if not self.spellConfig[spellID] then
+		self.spellConfig[spellID] = {
 			source = {
 				[sourceIndex] = anchorGroup,
 			},
@@ -169,8 +171,8 @@ function SCM:AddSpellToConfig(anchorGroup, order, info, displayData, sourceIndex
 			},
 		}
 	else
-		self.spellConfig[displayData.spellID].source[sourceIndex] = anchorGroup
-		self.spellConfig[displayData.spellID].anchorGroup[anchorGroup] = {
+		self.spellConfig[spellID].source[sourceIndex] = anchorGroup
+		self.spellConfig[spellID].anchorGroup[anchorGroup] = {
 			order = order,
 		}
 	end

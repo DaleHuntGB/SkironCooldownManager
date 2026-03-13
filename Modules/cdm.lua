@@ -1118,17 +1118,20 @@ function SCM:UpdateCooldownInfo(isFirstLoad, dataProvider)
 			if info then
 				local data = displayData[cooldownID]
 				if data then
+					local spellID = data.linkedSpellIDs and data.linkedSpellIDs[1] or data.spellID
+					data.spellID = spellID
+
 					self.defaultCooldownViewerConfig[cooldownCategory][data.cooldownID] = data
-					self.defaultCooldownViewerConfig[cooldownCategory].spellIDs[data.spellID] = data
+					self.defaultCooldownViewerConfig[cooldownCategory].spellIDs[spellID] = data
 					self.defaultCooldownViewerConfig[cooldownCategory].cooldownIDs[data.cooldownID] = data
 					self.defaultCooldownViewerConfig.cooldownIDs[data.cooldownID] = data
-					self.defaultCooldownViewerConfig.spellIDs[data.spellID] = data
 
+					self.defaultCooldownViewerConfig.spellIDs[spellID] = data
 					if data and data.category >= 0 and data.category <= 2 then
 						order = order + 1
-						self.currentCooldownViewerConfig[data.spellID] = self.currentCooldownViewerConfig[data.spellID] or { source = {}, anchorGroup = {} }
-						self.currentCooldownViewerConfig[data.spellID].source[data.category] = data.category + 1
-						self.currentCooldownViewerConfig[data.spellID].anchorGroup[data.category + 1] = {
+						self.currentCooldownViewerConfig[spellID] = self.currentCooldownViewerConfig[spellID] or { source = {}, anchorGroup = {} }
+						self.currentCooldownViewerConfig[spellID].source[data.category] = data.category + 1
+						self.currentCooldownViewerConfig[spellID].anchorGroup[data.category + 1] = {
 							order = order,
 						}
 					end
@@ -1136,6 +1139,8 @@ function SCM:UpdateCooldownInfo(isFirstLoad, dataProvider)
 			end
 		end
 	end
+
+
 end
 
 local function EnsureCustomConfigTables(customConfig)

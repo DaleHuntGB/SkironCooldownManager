@@ -172,6 +172,16 @@ local function CreateCustomIconButtons(rootDescription, scrollFrame, anchorIndex
 	end
 end
 
+local function GetSpellIDForCooldownInfo(cooldownInfo)
+	if cooldownInfo then
+		if cooldownInfo.linkedSpellIDs and cooldownInfo.linkedSpellIDs[1] then
+			return cooldownInfo.linkedSpellIDs[1]
+		end
+
+		return cooldownInfo.spellID
+	end
+end
+
 local function CreateAddSpellDropdown(owner, rootDescription, scrollFrame, anchorIndex, isGlobal)
 	rootDescription:CreateTitle("Add Icon")
 
@@ -237,8 +247,11 @@ local function CreateAddSpellDropdown(owner, rootDescription, scrollFrame, ancho
 		local data = cooldownInfoByID[cooldownID]
 
 		if info and data then
-			if not SCM:IsSpellInData(data.spellID, data.category) and not scrollFrame.dataProvider:FindByPredicate(function(data)
-				return data.spellID == info.spellID
+			local spellID = GetSpellIDForCooldownInfo(info)
+			info.spellID = spellID
+
+			if not SCM:IsSpellInData(spellID, data.category) and not scrollFrame.dataProvider:FindByPredicate(function(data)
+				return data.spellID == spellID
 			end) then
 				table.insert(essentialItems, { info = info, data = data, cooldownID = cooldownID, targetCategory = 0 })
 			end
@@ -255,8 +268,11 @@ local function CreateAddSpellDropdown(owner, rootDescription, scrollFrame, ancho
 		local data = cooldownInfoByID[cooldownID]
 
 		if info and data then
-			if not SCM:IsSpellInData(data.spellID, data.category) and not scrollFrame.dataProvider:FindByPredicate(function(data)
-				return data.spellID == info.spellID
+			local spellID = GetSpellIDForCooldownInfo(info)
+			info.spellID = spellID
+
+			if not SCM:IsSpellInData(spellID, data.category) and not scrollFrame.dataProvider:FindByPredicate(function(data)
+				return data.spellID == spellID
 			end) then
 				table.insert(utilityItems, { info = info, data = data, cooldownID = cooldownID, targetCategory = 1 })
 			end
@@ -275,8 +291,11 @@ local function CreateAddSpellDropdown(owner, rootDescription, scrollFrame, ancho
 		local data = cooldownInfoByID[cooldownID]
 
 		if info and data then
-			if not SCM:IsSpellInData(data.spellID, data.category) and not scrollFrame.dataProvider:FindByPredicate(function(data)
-				return data.spellID == info.spellID
+			local spellID = GetSpellIDForCooldownInfo(info)
+			info.spellID = spellID
+
+			if not SCM:IsSpellInData(spellID, data.category) and not scrollFrame.dataProvider:FindByPredicate(function(data)
+				return data.spellID == spellID
 			end) then
 				table.insert(buffItems, { info = info, data = data, cooldownID = cooldownID, targetCategory = 2 })
 			end
@@ -289,8 +308,11 @@ local function CreateAddSpellDropdown(owner, rootDescription, scrollFrame, ancho
 		local data = cooldownInfoByID[cooldownID]
 
 		if info and data and data.category < 3 then
-			if not SCM:IsSpellInData(data.spellID, data.category) and not scrollFrame.dataProvider:FindByPredicate(function(data)
-				return data.spellID == info.spellID
+			local spellID = GetSpellIDForCooldownInfo(info)
+			info.spellID = spellID
+
+			if not SCM:IsSpellInData(spellID, data.category) and not scrollFrame.dataProvider:FindByPredicate(function(data)
+				return data.spellID == spellID
 			end) then
 				table.insert(buffItems, { info = info, data = data, cooldownID = cooldownID, targetCategory = 3 })
 			end
