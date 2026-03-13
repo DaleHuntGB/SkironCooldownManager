@@ -564,11 +564,11 @@ local function UpdateEmptyAnchorGroup(group, anchorConfig, scopedAnchorGroups)
 	local rowConfig = (anchorConfig and anchorConfig.rowConfig and #anchorConfig.rowConfig > 0) and anchorConfig.rowConfig or DEFAULT_ROW_CONFIG
 	local p, a, r, x, y = unpack(anchorConfig and anchorConfig.anchor or DEFAULT_ANCHOR)
 	local initialIconWidth = rowConfig[1].iconWidth or rowConfig[1].size or 47
-	SCM:GetAnchor(group, p, a, r, x, y, anchorConfig.growDir, initialIconWidth, true)
+	local groupAnchor = SCM:GetAnchor(group, p, a, r, x, y, anchorConfig.growDir, initialIconWidth, true)
 
 	if group == 1 then
 		if SCRB and SCRB.registerCustomFrame then
-			SCRB.registerCustomFrame(anchorConfig)
+			SCRB.registerCustomFrame(groupAnchor)
 		else
 			SCM:UpdateResourceBarWidth(initialIconWidth)
 		end
