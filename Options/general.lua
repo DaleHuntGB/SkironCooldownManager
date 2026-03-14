@@ -420,6 +420,15 @@ local function SelectGlobalSettingsTab(tabWidget, group, options)
 		end)
 		activeSwipeSettings:AddChild(recolorActiveSwipe)
 
+		local disableRegularIconActiveSwipe = AceGUI:Create("CheckBox")
+		disableRegularIconActiveSwipe:SetRelativeWidth(0.33)
+		disableRegularIconActiveSwipe:SetLabel("Disable On Regular Icons")
+		disableRegularIconActiveSwipe:SetValue(options.disableRegularIconActiveSwipe)
+		disableRegularIconActiveSwipe:SetCallback("OnValueChanged", function(_, _, value)
+			options.disableRegularIconActiveSwipe = value
+		end)
+		activeSwipeSettings:AddChild(disableRegularIconActiveSwipe)
+
 		local activeSwipeColor = AceGUI:Create("ColorPicker")
 		activeSwipeColor:SetRelativeWidth(0.33)
 		activeSwipeColor:SetLabel("Swipe Color")

@@ -59,6 +59,7 @@ SCM.DefaultDB = {
 			},
 			pandemicGlowOption = "keepPandemicGlow",
 			recolorActiveSwipe = false,
+			disableRegularIconActiveSwipe = false,
 			activeSwipeColor = {0, 0, 0, 0.8},
 			normalSwipeColor = {0.1, 0.1, 0.1, 0.8},
 			castbarXOffset = 0,
