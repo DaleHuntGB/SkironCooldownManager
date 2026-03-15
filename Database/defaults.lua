@@ -97,6 +97,13 @@ SCM.DefaultDB = {
 				interruptColor = {r = 1, g = 0.25, b = 0.25, a = 1},
 				borderColor = {r = 0, g = 0, b = 0, a = 1},
 				anchors = { "BOTTOM", "ANCHOR:1", "TOP", 0, 1 },
+				icon = {
+					enable = true,
+					matchBarHeight = true,
+					size = 24,
+					zoom = 0.08,
+					position = "LEFT",
+				},
 				spellName = {
 					enable = true,
 					anchors = { "LEFT", "LEFT", 3, 0 },

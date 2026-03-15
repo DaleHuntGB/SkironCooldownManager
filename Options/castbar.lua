@@ -11,9 +11,38 @@ local FONT_OUTLINES = {
 	MONOCHROME = "Monochrome",
 }
 
-local function RefreshCastBar()
-	SCM:CreateCastBar()
-	SCM:UpdateCastBar()
+local ICON_POSITIONS = {
+	LEFT = "Left",
+	RIGHT = "Right",
+}
+
+local function EnsureIconOptions(options)
+	if type(options.icon) ~= "table" then
+		options.icon = {}
+	end
+
+	local iconOptions = options.icon
+	if iconOptions.enable == nil then
+		iconOptions.enable = true
+	end
+
+	if iconOptions.matchBarHeight == nil then
+		iconOptions.matchBarHeight = true
+	end
+
+	if iconOptions.size == nil then
+		iconOptions.size = options.height or 24
+	end
+
+	if iconOptions.zoom == nil then
+		iconOptions.zoom = 0.08
+	end
+
+	if iconOptions.position ~= "LEFT" and iconOptions.position ~= "RIGHT" then
+		iconOptions.position = "LEFT"
+	end
+
+	return iconOptions
 end
 
 local function AddHeader(widget, text)
@@ -154,6 +183,11 @@ local function CastBar(self)
 	self:ReleaseChildren()
 
 	local options = SCM.db.global.options.castBar
+	local iconOptions = EnsureIconOptions(options)
+	local function RefreshCastBar()
+		SCM:CreateCastBar()
+		SCM:UpdateCastBar()
+	end
 
 	local rootGroup = AceGUI:Create("InlineGroup")
 	rootGroup:SetLayout("fill")
@@ -163,14 +197,9 @@ local function CastBar(self)
 
 	local scrollFrame = AceGUI:Create("ScrollFrame")
 	scrollFrame:SetLayout("flow")
+	scrollFrame:SetFullWidth(true)
+	scrollFrame:SetFullHeight(true)
 	rootGroup:AddChild(scrollFrame)
-
-	local help = AceGUI:Create("Label")
-	help:SetRelativeWidth(1.0)
-	help:SetHeight(24)
-	help:SetJustifyH("CENTER")
-	help:SetText("|TInterface\\common\\help-i:40:40:0:0|tPress Enter in text fields to apply frame names.")
-	scrollFrame:AddChild(help)
 
 	local generalGroup = AceGUI:Create("InlineGroup")
 	generalGroup:SetTitle("General")
@@ -266,6 +295,77 @@ local function CastBar(self)
 	end)
 	generalGroup:AddChild(fontOutline)
 
+	local iconGroup = AceGUI:Create("InlineGroup")
+	iconGroup:SetTitle("Icon")
+	iconGroup:SetFullWidth(true)
+	iconGroup:SetLayout("flow")
+	scrollFrame:AddChild(iconGroup)
+
+	local iconEnable = AceGUI:Create("CheckBox")
+	iconEnable:SetRelativeWidth(0.5)
+	iconEnable:SetLabel("Show Icon")
+	iconEnable:SetValue(iconOptions.enable)
+	iconGroup:AddChild(iconEnable)
+
+	local matchBarHeight = AceGUI:Create("CheckBox")
+	matchBarHeight:SetRelativeWidth(0.5)
+	matchBarHeight:SetLabel("Match Cast Bar Height")
+	matchBarHeight:SetValue(iconOptions.matchBarHeight)
+	iconGroup:AddChild(matchBarHeight)
+
+	local iconPosition = AceGUI:Create("Dropdown")
+	iconPosition:SetRelativeWidth(0.33)
+	iconPosition:SetLabel("Placement")
+	iconPosition:SetList(ICON_POSITIONS)
+	iconPosition:SetValue(iconOptions.position or "LEFT")
+	iconPosition:SetCallback("OnValueChanged", function(_, _, value)
+		iconOptions.position = value
+		RefreshCastBar()
+	end)
+	iconGroup:AddChild(iconPosition)
+
+	local iconSize = AceGUI:Create("Slider")
+	iconSize:SetRelativeWidth(0.33)
+	iconSize:SetLabel("Icon Size")
+	iconSize:SetSliderValues(8, 80, 1)
+	iconSize:SetValue(iconOptions.size or options.height or 24)
+	iconSize:SetCallback("OnValueChanged", function(_, _, value)
+		iconOptions.size = value
+		RefreshCastBar()
+	end)
+	iconGroup:AddChild(iconSize)
+
+	local iconZoom = AceGUI:Create("Slider")
+	iconZoom:SetRelativeWidth(0.33)
+	iconZoom:SetLabel("Icon Zoom")
+	iconZoom:SetSliderValues(0, 0.49, 0.01)
+	iconZoom:SetValue(iconOptions.zoom or 0.08)
+	iconZoom:SetCallback("OnValueChanged", function(_, _, value)
+		iconOptions.zoom = value
+		RefreshCastBar()
+	end)
+	iconGroup:AddChild(iconZoom)
+
+	local function UpdateIconControlStates()
+		local iconEnabled = not not iconOptions.enable
+		iconPosition:SetDisabled(not iconEnabled)
+		matchBarHeight:SetDisabled(not iconEnabled)
+		iconZoom:SetDisabled(not iconEnabled)
+		iconSize:SetDisabled((not iconEnabled) or iconOptions.matchBarHeight)
+	end
+
+	iconEnable:SetCallback("OnValueChanged", function(_, _, value)
+		iconOptions.enable = value
+		UpdateIconControlStates()
+		RefreshCastBar()
+	end)
+
+	matchBarHeight:SetCallback("OnValueChanged", function(_, _, value)
+		iconOptions.matchBarHeight = value
+		UpdateIconControlStates()
+		RefreshCastBar()
+	end)
+
 	local colorGroup = AceGUI:Create("InlineGroup")
 	colorGroup:SetTitle("Colors")
 	colorGroup:SetFullWidth(true)
@@ -322,11 +422,22 @@ local function CastBar(self)
 	anchorsGroup:SetLayout("flow")
 	scrollFrame:AddChild(anchorsGroup)
 
-	AddHeader(anchorsGroup, "Supports frame names like `UIParent` and addon anchors like `ANCHOR:1`.")
 	AddAnchorControls(anchorsGroup, "Cast Bar Anchor", options.anchors, RefreshCastBar)
-	AddHeader(anchorsGroup, "Spell name and duration are always anchored to the cast bar.")
+	AddHeader(anchorsGroup, "Spell name and duration are anchored to the bar area inside the container.")
 	AddCastBarTextAnchorControls(anchorsGroup, "Spell Name Anchor", options.spellName, RefreshCastBar)
 	AddCastBarTextAnchorControls(anchorsGroup, "Cast Duration Anchor", options.castDuration, RefreshCastBar)
+
+	UpdateIconControlStates()
+	scrollFrame:DoLayout()
+	scrollFrame:FixScroll()
+	scrollFrame:SetScroll(0)
+
+	RunNextFrame(function()
+		if scrollFrame and scrollFrame.scrollframe and scrollFrame.frame and scrollFrame.frame:IsShown() then
+			scrollFrame:DoLayout()
+			scrollFrame:FixScroll()
+		end
+	end)
 end
 
 SCM.MainTabs.CastBar.callback = CastBar

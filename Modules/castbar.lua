@@ -18,26 +18,52 @@ local CAST_STOP_EVENTS = {
 	UNIT_SPELLCAST_EMPOWER_STOP = true,
 }
 
+local DEFAULT_ICON_POSITION = "LEFT"
+local ICON_SPACING = 1
+
 local function GetCastBarOptions()
 	return SCM.db and SCM.db.global and SCM.db.global.options and SCM.db.global.options.castBar
 end
 
-local function GetFillColor()
+local function GetCastBarColor(optionKey, fallback)
 	local options = GetCastBarOptions()
-	local color = options and options.fgColor
-	return color or { r = 0.5, g = 0.5, b = 1, a = 1 }
+	local color = options and options[optionKey]
+	return color or fallback
 end
 
-local function GetBackgroundColor()
+local function GetIconOptions()
 	local options = GetCastBarOptions()
-	local color = options and options.bgColor
-	return color or { r = 0, g = 0, b = 0, a = 0.8 }
-end
+	if not options then
+		return
+	end
 
-local function GetInterruptColor()
-	local options = GetCastBarOptions()
-	local color = options and options.interruptColor
-	return color or { r = 1, g = 0.25, b = 0.25, a = 1 }
+	local iconOptions = options.icon
+	if type(iconOptions) ~= "table" then
+		iconOptions = {}
+		options.icon = iconOptions
+	end
+
+	if iconOptions.enable == nil then
+		iconOptions.enable = true
+	end
+
+	if iconOptions.matchBarHeight == nil then
+		iconOptions.matchBarHeight = true
+	end
+
+	if iconOptions.size == nil then
+		iconOptions.size = options.height or 24
+	end
+
+	if iconOptions.zoom == nil then
+		iconOptions.zoom = 0.08
+	end
+
+	if iconOptions.position ~= "LEFT" and iconOptions.position ~= "RIGHT" then
+		iconOptions.position = DEFAULT_ICON_POSITION
+	end
+
+	return iconOptions
 end
 
 local function ResolveFrameReference(reference)
@@ -72,13 +98,54 @@ local function ApplyAnchors(frame, anchors, defaultRelativeFrame)
 	frame:SetPoint(point, relativeFrame or UIParent, anchors[3] or point, anchors[4] or 0, anchors[5] or 0)
 end
 
-local function ApplyCastBarTextAnchor(frame, anchors, relativeFrame)
+local function ApplyRelativeAnchor(frame, anchors, relativeFrame)
 	if not frame or type(anchors) ~= "table" or not relativeFrame then
 		return
 	end
 
 	frame:ClearAllPoints()
 	frame:SetPoint(anchors[1] or "CENTER", relativeFrame, anchors[2] or anchors[1] or "CENTER", anchors[3] or 0, anchors[4] or 0)
+end
+
+local function GetIconSize()
+	local options = GetCastBarOptions()
+	local iconOptions = GetIconOptions()
+	if not options or not iconOptions then
+		return 0
+	end
+
+	if iconOptions.matchBarHeight then
+		return max(options.height or 24, 1)
+	end
+
+	return max(iconOptions.size or options.height or 24, 1)
+end
+
+local function GetIconZoom()
+	local iconOptions = GetIconOptions()
+	if not iconOptions then
+		return 0
+	end
+
+	local zoom = iconOptions.zoom or 0
+	if zoom < 0 then
+		return 0
+	end
+
+	if zoom > 0.49 then
+		return 0.49
+	end
+
+	return zoom
+end
+
+local function GetIconPosition()
+	local iconOptions = GetIconOptions()
+	if not iconOptions then
+		return DEFAULT_ICON_POSITION
+	end
+
+	return iconOptions.position == "RIGHT" and "RIGHT" or DEFAULT_ICON_POSITION
 end
 
 local function GetTexturePath(textureName)
@@ -148,7 +215,7 @@ local function UpdateTextLayout()
 	castBar.SpellNameText:SetWidth(max(statusWidth - 54, 1))
 	castBar.SpellNameText:SetShadowColor(0, 0, 0, 1)
 	castBar.SpellNameText:SetShadowOffset(1, -1)
-	ApplyCastBarTextAnchor(castBar.SpellNameText, options.spellName and options.spellName.anchors, castBar.Status)
+	ApplyRelativeAnchor(castBar.SpellNameText, options.spellName and options.spellName.anchors, castBar.Status)
 	castBar.SpellNameText:SetShown(not not (options.spellName and options.spellName.enable))
 
 	castBar.CastDurationText:SetFont(fontPath, fontSize, fontOutline)
@@ -157,7 +224,7 @@ local function UpdateTextLayout()
 	castBar.CastDurationText:SetWidth(min(statusWidth, 54))
 	castBar.CastDurationText:SetShadowColor(0, 0, 0, 1)
 	castBar.CastDurationText:SetShadowOffset(1, -1)
-	ApplyCastBarTextAnchor(castBar.CastDurationText, options.castDuration and options.castDuration.anchors, castBar.Status)
+	ApplyRelativeAnchor(castBar.CastDurationText, options.castDuration and options.castDuration.anchors, castBar.Status)
 	castBar.CastDurationText:SetShown(not not (options.castDuration and options.castDuration.enable))
 end
 
@@ -178,6 +245,66 @@ local function GetMatchedCastBarWidth()
 	end
 end
 
+local function UpdateIconTexture(spellTexture)
+	local castBar = SCM.CastBar
+	local iconOptions = GetIconOptions()
+	if not castBar or not castBar.IconFrame or not iconOptions then
+		return
+	end
+
+	castBar.CurrentSpellTexture = spellTexture
+	if iconOptions.enable and spellTexture then
+		castBar.IconFrame.Icon:SetTexture(spellTexture)
+		castBar.IconFrame:Show()
+		return
+	end
+
+	castBar.IconFrame.Icon:SetTexture(nil)
+	castBar.IconFrame:Hide()
+end
+
+local function LayoutCastBarContents(borderSize)
+	local castBar = SCM.CastBar
+	local iconOptions = GetIconOptions()
+	if not castBar or not castBar.IconFrame or not iconOptions then
+		return
+	end
+
+	local totalInnerWidth = max(castBar:GetWidth() - (borderSize * 2), 1)
+	local totalInnerHeight = max(castBar:GetHeight() - (borderSize * 2), 1)
+	local spacing = iconOptions.enable and min(SCM:PixelPerfect(ICON_SPACING), max(totalInnerWidth - 1, 0)) or 0
+	local iconSize = 0
+	local iconZoom = GetIconZoom()
+
+	if iconOptions.enable then
+		iconSize = min(SCM:PixelPerfect(GetIconSize()), totalInnerHeight, max(totalInnerWidth - spacing - 1, 0))
+	end
+
+	castBar.Status:ClearAllPoints()
+	castBar.IconFrame:ClearAllPoints()
+	castBar.IconFrame.Icon:ClearAllPoints()
+	castBar.IconFrame.Icon:SetAllPoints(castBar.IconFrame)
+	castBar.IconFrame.Icon:SetTexCoord(iconZoom, 1 - iconZoom, iconZoom, 1 - iconZoom)
+
+	if iconOptions.enable and iconSize > 0 then
+		castBar.IconFrame:SetSize(iconSize, iconSize)
+		if GetIconPosition() == "RIGHT" then
+			castBar.IconFrame:SetPoint("RIGHT", castBar, "RIGHT", -borderSize, 0)
+			castBar.Status:SetPoint("TOPLEFT", castBar, "TOPLEFT", borderSize, -borderSize)
+			castBar.Status:SetPoint("BOTTOMRIGHT", castBar, "BOTTOMRIGHT", -(borderSize + iconSize + spacing), borderSize)
+		else
+			castBar.IconFrame:SetPoint("LEFT", castBar, "LEFT", borderSize, 0)
+			castBar.Status:SetPoint("TOPLEFT", castBar, "TOPLEFT", borderSize + iconSize + spacing, -borderSize)
+			castBar.Status:SetPoint("BOTTOMRIGHT", castBar, "BOTTOMRIGHT", -borderSize, borderSize)
+		end
+	else
+		castBar.Status:SetPoint("TOPLEFT", castBar, "TOPLEFT", borderSize, -borderSize)
+		castBar.Status:SetPoint("BOTTOMRIGHT", castBar, "BOTTOMRIGHT", -borderSize, borderSize)
+	end
+
+	UpdateIconTexture(castBar.CurrentSpellTexture)
+end
+
 local function UpdateStatusBarLook(fillColor, bgColor)
 	local castBar = SCM.CastBar
 	local options = GetCastBarOptions()
@@ -189,10 +316,11 @@ local function UpdateStatusBarLook(fillColor, bgColor)
 	local borderSize = max((SCM:PixelPerfect() or 1) * (globalOptions.borderSize or 0), 0)
 	local texturePath = GetTexturePath(options.texture)
 	local borderColor = options.borderColor or { r = 0, g = 0, b = 0, a = 1 }
-	local backgroundColor = bgColor or GetBackgroundColor()
-	local activeFillColor = fillColor or GetFillColor()
+	local backgroundColor = bgColor or GetCastBarColor("bgColor", { r = 0, g = 0, b = 0, a = 0.8 })
+	local activeFillColor = fillColor or castBar.CurrentFillColor or GetCastBarColor("fgColor", { r = 0.5, g = 0.5, b = 1, a = 1 })
 	local width = GetMatchedCastBarWidth() or options.width or 270
 
+	castBar.CurrentFillColor = activeFillColor
 	castBar:SetSize(SCM:PixelPerfect(width), SCM:PixelPerfect(options.height or 24))
 	ApplyAnchors(castBar, options.anchors)
 
@@ -207,9 +335,7 @@ local function UpdateStatusBarLook(fillColor, bgColor)
 	castBar.Background:SetPoint("BOTTOMRIGHT", castBar, "BOTTOMRIGHT", -borderSize, borderSize)
 	castBar.Background:SetColorTexture(backgroundColor.r or 0, backgroundColor.g or 0, backgroundColor.b or 0, backgroundColor.a or 0.8)
 
-	castBar.Status:ClearAllPoints()
-	castBar.Status:SetPoint("TOPLEFT", castBar, "TOPLEFT", borderSize, -borderSize)
-	castBar.Status:SetPoint("BOTTOMRIGHT", castBar, "BOTTOMRIGHT", -borderSize, borderSize)
+	LayoutCastBarContents(borderSize)
 	castBar.Status:SetStatusBarTexture(texturePath)
 	castBar.Status:SetStatusBarColor(activeFillColor.r or 1, activeFillColor.g or 1, activeFillColor.b or 1, activeFillColor.a or 1)
 
@@ -227,6 +353,8 @@ local function HideCastBar()
 	castBar.Status:SetValue(0)
 	castBar.SpellNameText:SetText("")
 	castBar.CastDurationText:SetText("")
+	castBar.CurrentFillColor = nil
+	UpdateIconTexture(nil)
 	castBar:Hide()
 end
 
@@ -238,7 +366,7 @@ local function FormatDurationText(remainingDuration)
 	return string.format("%.0f", remainingDuration)
 end
 
-local function StartCast(durationInfo, spellName, fillColor, isChannel, empoweredStages)
+local function StartCast(durationInfo, spellName, fillColor, isChannel, empoweredStages, spellTexture)
 	local castBar = SCM.CastBar
 	if not castBar or not durationInfo then
 		return
@@ -249,7 +377,9 @@ local function StartCast(durationInfo, spellName, fillColor, isChannel, empowere
 		return
 	end
 
+	castBar.CurrentFillColor = fillColor
 	UpdateStatusBarLook(fillColor)
+	UpdateIconTexture(spellTexture)
 
 	if empoweredStages then
 		CreatePips(empoweredStages)
@@ -258,6 +388,7 @@ local function StartCast(durationInfo, spellName, fillColor, isChannel, empowere
 	end
 
 	castBar.Status:SetMinMaxValues(0, totalDuration)
+	castBar.Status:SetValue(isChannel and totalDuration or 0)
 	castBar.SpellNameText:SetText(spellName or "")
 	castBar.CastDurationText:SetText(FormatDurationText(totalDuration))
 	castBar:SetScript("OnUpdate", function()
@@ -287,41 +418,65 @@ local function UpdateCastBarValues(_, event)
 
 	if CAST_START_EVENTS[event] then
 		local durationInfo = UnitCastingDuration("player")
-		local spellName, _, _, _, _, _, _, notInterruptible = UnitCastingInfo("player")
+		local spellName, _, spellTexture, _, _, _, _, notInterruptible = UnitCastingInfo("player")
 		if not durationInfo or not spellName then
 			return
 		end
 
-		StartCast(durationInfo, spellName, notInterruptible and GetInterruptColor() or GetFillColor(), false)
+		StartCast(durationInfo, spellName, notInterruptible and GetCastBarColor("interruptColor", { r = 1, g = 0.25, b = 0.25, a = 1 }) or GetCastBarColor("fgColor", { r = 0.5, g = 0.5, b = 1, a = 1 }), false, nil, spellTexture)
 		return
 	end
 
 	if event == "UNIT_SPELLCAST_CHANNEL_START" then
 		local durationInfo = UnitChannelDuration("player")
-		local spellName = UnitChannelInfo("player")
+		local spellName, _, spellTexture = UnitChannelInfo("player")
 		if not durationInfo or not spellName then
 			return
 		end
 
-		StartCast(durationInfo, spellName, GetFillColor(), true)
+		StartCast(durationInfo, spellName, GetCastBarColor("fgColor", { r = 0.5, g = 0.5, b = 1, a = 1 }), true, nil, spellTexture)
 		return
 	end
 
 	if event == "UNIT_SPELLCAST_EMPOWER_START" then
 		local durationInfo = UnitEmpoweredChannelDuration("player")
-		local spellName = UnitChannelInfo("player")
+		local spellName, _, spellTexture = UnitChannelInfo("player")
 		local empoweredStages = UnitEmpoweredStagePercentages("player")
 		if not durationInfo or not spellName then
 			return
 		end
 
-		StartCast(durationInfo, spellName, GetFillColor(), true, empoweredStages)
+		StartCast(durationInfo, spellName, GetCastBarColor("fgColor", { r = 0.5, g = 0.5, b = 1, a = 1 }), true, empoweredStages, spellTexture)
 		return
 	end
 
 	if CAST_STOP_EVENTS[event] then
 		HideCastBar()
 	end
+end
+
+local function ResumeCurrentCast()
+	local durationInfo = UnitCastingDuration("player")
+	local spellName, _, spellTexture, _, _, _, _, notInterruptible = UnitCastingInfo("player")
+	if durationInfo and spellName then
+		StartCast(durationInfo, spellName, notInterruptible and GetCastBarColor("interruptColor", { r = 1, g = 0.25, b = 0.25, a = 1 }) or GetCastBarColor("fgColor", { r = 0.5, g = 0.5, b = 1, a = 1 }), false, nil, spellTexture)
+		return true
+	end
+
+	local empoweredDuration = UnitEmpoweredChannelDuration("player")
+	local channelName, _, channelTexture = UnitChannelInfo("player")
+	if empoweredDuration and channelName then
+		StartCast(empoweredDuration, channelName, GetCastBarColor("fgColor", { r = 0.5, g = 0.5, b = 1, a = 1 }), true, UnitEmpoweredStagePercentages("player"), channelTexture)
+		return true
+	end
+
+	local channelDuration = UnitChannelDuration("player")
+	if channelDuration and channelName then
+		StartCast(channelDuration, channelName, GetCastBarColor("fgColor", { r = 0.5, g = 0.5, b = 1, a = 1 }), true, nil, channelTexture)
+		return true
+	end
+
+	return false
 end
 
 function SCM:RefreshCastBarWidth(delay)
@@ -334,8 +489,7 @@ function SCM:RefreshCastBarWidth(delay)
 	C_Timer.After(delay or 0.05, function()
 		local anchorWidth = GetMatchedCastBarWidth()
 		if anchorWidth and anchorWidth > 0 then
-			castBar:SetWidth(self:PixelPerfect(anchorWidth))
-			UpdateTextLayout()
+			UpdateStatusBarLook(castBar.CurrentFillColor)
 			if castBar:IsShown() and castBar.Status:GetStatusBarTexture() then
 				CreatePips(UnitEmpoweredStagePercentages("player"))
 			end
@@ -383,6 +537,10 @@ function SCM:CreateCastBar()
 	castBar.Status:SetMinMaxValues(0, 1)
 	castBar.Status:SetValue(0)
 
+	castBar.IconFrame = CreateFrame("Frame", nil, castBar)
+	castBar.IconFrame:SetFrameLevel(castBar:GetFrameLevel() + 2)
+	castBar.IconFrame.Icon = castBar.IconFrame:CreateTexture(nil, "ARTWORK")
+
 	castBar.SpellNameText = castBar.Status:CreateFontString(nil, "OVERLAY")
 	castBar.CastDurationText = castBar.Status:CreateFontString(nil, "OVERLAY")
 
@@ -398,14 +556,13 @@ function SCM:UpdateCastBar()
 		return
 	end
 
-	UpdateStatusBarLook(GetFillColor())
+	UpdateStatusBarLook(GetCastBarColor("fgColor", { r = 0.5, g = 0.5, b = 1, a = 1 }))
 
 	if options.enable then
 		castBar:UnregisterAllEvents()
 		HideCastBar()
 		castBar:RegisterUnitEvent("UNIT_SPELLCAST_START", "player")
 		castBar:RegisterUnitEvent("UNIT_SPELLCAST_STOP", "player")
-		castBar:RegisterUnitEvent("UNIT_SPELLCAST_FAILED", "player")
 		castBar:RegisterUnitEvent("UNIT_SPELLCAST_INTERRUPTED", "player")
 		castBar:RegisterUnitEvent("UNIT_SPELLCAST_INTERRUPTIBLE", "player")
 		castBar:RegisterUnitEvent("UNIT_SPELLCAST_NOT_INTERRUPTIBLE", "player")
@@ -415,7 +572,9 @@ function SCM:UpdateCastBar()
 		castBar:RegisterUnitEvent("UNIT_SPELLCAST_EMPOWER_START", "player")
 		castBar:RegisterUnitEvent("UNIT_SPELLCAST_EMPOWER_STOP", "player")
 		castBar:SetScript("OnEvent", UpdateCastBarValues)
-		castBar:Hide()
+		if not ResumeCurrentCast() then
+			castBar:Hide()
+		end
 		self:RefreshCastBarWidth(0.1)
 	else
 		castBar:SetScript("OnEvent", nil)
