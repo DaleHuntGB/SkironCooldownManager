@@ -58,7 +58,8 @@ local function ResetCustomIconFrame(_, frame)
 	frame.lastCastStartTime = nil
 	frame.UpdateCooldown = nil
 	frame.UpdateCharges = nil
-	frame.width = nil
+	frame.SCMWidth = nil
+	frame.SCMHeight = nil
 	frame.height = nil
 
 	frame:EnableMouse(false)

@@ -41,14 +41,14 @@ end
 local function OnManagedAnchorChildSetSize(child)
 	local anchorFrame = child.SCMAnchorFrame
 	if anchorFrame then
-		anchorFrame.SetSize(child, SCM:PixelPerfect(child.width), SCM:PixelPerfect(child.height))
+		anchorFrame.SetSize(child, SCM:PixelPerfect(child.SCMWidth), SCM:PixelPerfect(child.SCMHeight))
 	end
 end
 
 local function OnManagedAnchorChildSetWidth(child)
 	local anchorFrame = child.SCMAnchorFrame
 	if anchorFrame then
-		anchorFrame.SetWidth(child, SCM:PixelPerfect(child.width))
+		anchorFrame.SetWidth(child, SCM:PixelPerfect(child.SCMWidth))
 	end
 end
 
@@ -60,8 +60,8 @@ local function OnManagedAnchorChildSetHeight(child)
 end
 
 function SCM:UpdateManagedAnchorChild(child, groupAnchor, startPoint, offsetX, offsetY, width, height)
-	child.width = width
-	child.height = height
+	child.SCMWidth = width
+	child.SCMHeight = height
 	child.SCMAnchorFrame = groupAnchor
 	child:SetScale(Cache.cachedViewerScale or 1)
 	child:SetSize(self:PixelPerfect(width), self:PixelPerfect(height))

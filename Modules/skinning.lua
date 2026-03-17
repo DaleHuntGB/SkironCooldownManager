@@ -43,18 +43,13 @@ local function ApplyCooldownFont(cooldownFrame, options)
 				originalCooldownFont = { cooldownFontString:GetFont() }
 			end
 
-			local width, height = cooldownFrame:GetSize()
-			local iconSize = min(width or 0, height or 0)
-			if iconSize <= 0 then
-				local parent = cooldownFrame:GetParent()
-				local icon = parent and parent.Icon
-				if icon then
-					iconSize = min(icon:GetWidth() or 0, icon:GetHeight() or 0)
-				end
+			local parent = cooldownFrame:GetParent()
+			if parent.SCMWidth and parent.SCMHeight then
+				local width, height = parent.SCMWidth, parent.SCMHeight
+				local iconSize = min(width, height)
+				local fontSize = max(1, floor(iconSize * GetCooldownFontScale(options) + 0.5))
+				cooldownFontString:SetFont(fontPath, fontSize, "OUTLINE")
 			end
-
-			local fontSize = max(1, floor(iconSize * GetCooldownFontScale(options) + 0.5))
-			cooldownFontString:SetFont(fontPath, fontSize, "OUTLINE")
 		end
 	elseif originalCooldownFont then
 		local cooldownFontString = cooldownFrame:GetRegions()
@@ -92,11 +87,11 @@ local function ApplyCooldownStyle(child, options)
 			ApplyCooldownFont(self, options)
 		end)
 
-		hooksecurefunc(cooldownFrame, "Clear", function(self)
-			if options.recolorActiveSwipe then
-				--self:SetSwipeColor(0, 0, 0, 0.7)
-			end
-		end)
+		-- hooksecurefunc(cooldownFrame, "Clear", function(self)
+		-- 	if options.recolorActiveSwipe then
+		-- 		self:SetSwipeColor(0, 0, 0, 0.7)
+		-- 	end
+		-- end)
 
 		ApplyCooldownFont(cooldownFrame, options)
 	end
