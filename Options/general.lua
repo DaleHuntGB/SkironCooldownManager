@@ -346,10 +346,17 @@ local function SelectGlobalSettingsTab(tabWidget, group, options)
 		cooldownTextSettings:AddChild(cooldownFont)
 
 		local cooldownFontSize = AceGUI:Create("Slider")
+		local cooldownFontSizeValue = options.cooldownFontSize or 0.6
+		if cooldownFontSizeValue > 1 then
+			cooldownFontSizeValue = cooldownFontSizeValue / 40
+			options.cooldownFontSize = cooldownFontSizeValue
+		end
+
 		cooldownFontSize:SetRelativeWidth(0.33)
 		cooldownFontSize:SetLabel("Font Size")
-		cooldownFontSize:SetSliderValues(1, 50, 1)
-		cooldownFontSize:SetValue(options.cooldownFontSize)
+		cooldownFontSize:SetSliderValues(0.1, 1, 0.01)
+		cooldownFontSize:SetIsPercent(true)
+		cooldownFontSize:SetValue(cooldownFontSizeValue)
 		cooldownFontSize:SetCallback("OnValueChanged", function(self, event, value)
 			options.cooldownFontSize = value
 			SCM:ApplyAllCDManagerConfigs()

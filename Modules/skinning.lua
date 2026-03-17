@@ -2,6 +2,15 @@ local SCM = select(2, ...)
 local LSM = LibStub("LibSharedMedia-3.0")
 
 local originalCooldownFont
+local function GetCooldownFontScale(options)
+	local cooldownFontScale = options.cooldownFontSize or 0.6
+	if cooldownFontScale > 1 then
+		cooldownFontScale = cooldownFontScale / 40
+		options.cooldownFontSize = cooldownFontScale
+	end
+
+	return cooldownFontScale
+end
 
 local function ApplyChargeAndApplicationStyle(child, options, fontPath)
 	if child.ChargeCount and child.ChargeCount.Current and (not child.SCMIconType or child.SCMIconType == "spell") then
@@ -33,7 +42,19 @@ local function ApplyCooldownFont(cooldownFrame, options)
 			if not originalCooldownFont then
 				originalCooldownFont = { cooldownFontString:GetFont() }
 			end
-			cooldownFontString:SetFont(fontPath, options.cooldownFontSize, "OUTLINE")
+
+			local width, height = cooldownFrame:GetSize()
+			local iconSize = min(width or 0, height or 0)
+			if iconSize <= 0 then
+				local parent = cooldownFrame:GetParent()
+				local icon = parent and parent.Icon
+				if icon then
+					iconSize = min(icon:GetWidth() or 0, icon:GetHeight() or 0)
+				end
+			end
+
+			local fontSize = max(1, floor(iconSize * GetCooldownFontScale(options) + 0.5))
+			cooldownFontString:SetFont(fontPath, fontSize, "OUTLINE")
 		end
 	elseif originalCooldownFont then
 		local cooldownFontString = cooldownFrame:GetRegions()

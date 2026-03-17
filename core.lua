@@ -84,7 +84,9 @@ function SCM:SetHooks()
 		hooksecurefunc(ActionButtonSpellAlertManager, "HideAlert", OnSpellAlertManagerHideAlert)
 	end
 
-	hooksecurefunc(UIParent, "SetScale", function() RefreshCooldownViewerData(true) end)
+	hooksecurefunc(UIParent, "SetScale", function()
+		RefreshCooldownViewerData(true)
+	end)
 end
 
 function SCM:PLAYER_ENTERING_WORLD(isInitialLogin, isReload)
