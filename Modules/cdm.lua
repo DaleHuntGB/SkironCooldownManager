@@ -73,7 +73,7 @@ local function UpdateEmptyAnchorGroup(group, anchorConfig, scopedAnchorGroups)
 	local rowConfig = (anchorConfig and anchorConfig.rowConfig and #anchorConfig.rowConfig > 0) and anchorConfig.rowConfig or DEFAULT_ROW_CONFIG
 	local p, a, r, x, y = unpack(anchorConfig and anchorConfig.anchor or DEFAULT_ANCHOR)
 	local initialIconWidth = rowConfig[1].iconWidth or rowConfig[1].size or 47
-	local growDir = anchorConfig and anchorConfig.grow or "CENTER"
+	local growDir = anchorConfig and anchorConfig.grow or "CENTERED"
 	local groupAnchor = SCM:GetAnchor(group, p, a, r, x, y, growDir, initialIconWidth, true)
 
 	if group == 1 then
@@ -94,7 +94,9 @@ end
 local function LayoutAnchorGroup(group, visibleChildren, anchorConfig, options)
 	local rowConfig = (anchorConfig and anchorConfig.rowConfig and #anchorConfig.rowConfig > 0) and anchorConfig.rowConfig or DEFAULT_ROW_CONFIG
 	local lastRowConfig = rowConfig[#rowConfig]
-	local growDir = anchorConfig and anchorConfig.grow or "CENTER"
+	local growDir = anchorConfig and anchorConfig.grow or "CENTERED"
+	local isCentered = growDir == "CENTER" or growDir == "CENTERED"
+	local isFixed = growDir == "FIXED"
 	local baseSpacing = anchorConfig and anchorConfig.spacing or 0
 
 	table.sort(visibleChildren, SortBySCMOrder)
@@ -104,13 +106,19 @@ local function LayoutAnchorGroup(group, visibleChildren, anchorConfig, options)
 	local initialHeight = rowConfig[1].iconHeight or rowConfig[1].size or 47
 	local groupAnchor = SCM:GetAnchor(group, p, a, r, x, y, growDir, initialWidth)
 
+	local layoutChildren = visibleChildren
+	if isFixed then
+		layoutChildren = Cache.cachedChildrenTbl[group] or visibleChildren
+		table.sort(layoutChildren, SortBySCMOrder)
+	end
+
 	local childIndex = 1
 	local rowIndex = 1
 	local accumulatedY = 0
 	local maxGroupWidth = 0
-	local startPoint = (growDir == "CENTER" and "TOP") or (growDir == "LEFT" and "TOPRIGHT") or "TOPLEFT"
+	local startPoint = (isCentered or isFixed) and "TOP" or (growDir == "LEFT" and "TOPRIGHT") or "TOPLEFT"
 
-	local totalChildren = #visibleChildren
+	local totalChildren = #layoutChildren
 	while childIndex <= totalChildren do
 		local currentRowConfig = rowConfig[rowIndex] or lastRowConfig
 		totalChildren = (currentRowConfig.hardLimit and (childIndex + currentRowConfig.limit - 1)) or totalChildren
@@ -129,16 +137,16 @@ local function LayoutAnchorGroup(group, visibleChildren, anchorConfig, options)
 			end
 		end
 
-		local endIndex = math.min(childIndex + rowLimit - 1, #visibleChildren)
+		local endIndex = math.min(childIndex + rowLimit - 1, #layoutChildren)
 		local numInRow = endIndex - childIndex + 1
 
 		local rowWidth = (numInRow * rowIconWidth) + ((numInRow - 1) * baseSpacing)
 		maxGroupWidth = math.max(maxGroupWidth, (currentRowConfig.useFixedWidth and currentRowConfig.fixedWidth) or rowWidth)
 
 		for i = 0, numInRow - 1 do
-			local child = visibleChildren[childIndex + i]
+			local child = layoutChildren[childIndex + i]
 			local offsetX = 0
-			if growDir == "CENTER" then
+			if isCentered or isFixed then
 				offsetX = (i * (rowIconWidth + baseSpacing)) - (rowWidth / 2) + (rowIconWidth / 2)
 			elseif growDir == "LEFT" then
 				offsetX = -(i * (rowIconWidth + baseSpacing))
@@ -146,7 +154,9 @@ local function LayoutAnchorGroup(group, visibleChildren, anchorConfig, options)
 				offsetX = i * (rowIconWidth + baseSpacing)
 			end
 
-			SCM:UpdateManagedAnchorChild(child, groupAnchor, startPoint, offsetX, -accumulatedY, rowIconWidth, rowIconHeight)
+			if child.SCMShouldBeVisible then
+				SCM:UpdateManagedAnchorChild(child, groupAnchor, startPoint, offsetX, -accumulatedY, rowIconWidth, rowIconHeight)
+			end
 		end
 
 		accumulatedY = accumulatedY + rowIconHeight + baseSpacing

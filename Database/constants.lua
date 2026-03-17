@@ -31,6 +31,7 @@ Constants.GrowthDirections = {
 	CENTERED = "Centered Horizontal",
 	LEFT = "Left",
 	RIGHT = "Right",
+	FIXED = "Fixed",
 }
 
 Constants.TextOutline = {
