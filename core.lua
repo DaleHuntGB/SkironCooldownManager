@@ -35,7 +35,7 @@ end
 
 local pendingCustomGlowChildren = {}
 local function OnSpellAlertManagerShowAlert(_, child)
-	local options = SCM.db.global.options
+	local options = SCM.db.profile.options
 	if not child.SCMConfig or not options.useCustomGlow or child.SCMActiveGlow then
 		return
 	end
@@ -193,7 +193,8 @@ local function OnProfileChanged(_, _, _, skipReset)
 
 	RefreshCooldownViewerData(true)
 
-	if SCM.OptionsFrame and SCM.OptionsFrame:IsShown() and SCM.db.global.options.showAnchorHighlight then
+	local options = SCM.db.profile.options
+	if SCM.OptionsFrame and SCM.OptionsFrame:IsShown() and options and options.showAnchorHighlight then
 		for _, anchorFrame in pairs(SCM.anchorFrames) do
 			anchorFrame.debugTexture:Show()
 			anchorFrame.debugText:Show()
@@ -213,6 +214,7 @@ end
 
 EventUtil.ContinueOnAddOnLoaded(addonName, function()
 	SCM.db = LibStub("AceDB-3.0"):New(addonName .. "DB", SCM.DefaultDB, true)
+	SCM:MigrateLegacyProfileOptions()
 	SCM.db.RegisterCallback(SCM, "OnProfileChanged", OnProfileChanged)
 	SCM.db.RegisterCallback(SCM, "OnProfileCopied", OnProfileChanged)
 	SCM.db.RegisterCallback(SCM, "OnProfileReset", OnProfileChanged)

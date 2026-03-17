@@ -22,7 +22,7 @@ local DEFAULT_ICON_POSITION = "LEFT"
 local ICON_SPACING = 1
 
 local function GetCastBarOptions()
-	return SCM.db.global.options.castBar
+	return SCM.db.profile.options.castBar
 end
 
 local function GetCastBarColor(key, fallback)
@@ -294,12 +294,12 @@ end
 local function UpdateStatusBarLook(fillColor, bgColor)
 	local castBar = SCM.CastBar
 	local options = GetCastBarOptions()
-	local globalOpts = SCM.db and SCM.db.global and SCM.db.global.options
-	if not castBar or not options or not globalOpts then
+	local profileOptions = SCM.db.profile.options
+	if not castBar or not options or not profileOptions then
 		return
 	end
 
-	local borderSize = max((SCM:PixelPerfect() or 1) * (globalOpts.borderSize or 0), 0)
+	local borderSize = max((SCM:PixelPerfect() or 1) * (profileOptions.borderSize or 0), 0)
 	local texturePath = GetTexturePath(options.texture)
 	local borderColor = options.borderColor or { r = 0, g = 0, b = 0, a = 1 }
 	local backgroundColor = bgColor or GetCastBarColor("bgColor", { r = 0, g = 0, b = 0, a = 0.8 })

@@ -9,7 +9,7 @@ end
 
 function SCM:UpdateResourceBarWidth(maxGroupWidth)
 	maxGroupWidth = self:PixelPerfect(maxGroupWidth)
-	for _, resourceBarName in ipairs(SCM.db.global.options.resourceBars) do
+	for _, resourceBarName in ipairs(SCM.db.profile.options.resourceBars) do
 		local resourceBar = _G[resourceBarName]
 		if resourceBar and resourceBar:IsShown() then
 			resourceBar.SCMWidth = max(200, maxGroupWidth)

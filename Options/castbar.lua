@@ -195,7 +195,7 @@ end
 local function CastBar(self)
 	self:ReleaseChildren()
 
-	local options = SCM.db.global.options.castBar
+	local options = SCM.db.profile.options.castBar
 	local iconOptions = EnsureIconOptions(options)
 
 	local rootGroup = AceGUI:Create("InlineGroup")

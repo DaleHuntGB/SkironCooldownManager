@@ -22,8 +22,6 @@ local function RefreshResourceBars()
 end
 
 local function AddLayoutSettings(parent, settings)
-	local options = SCM.db.global.options
-
 	local generalSettings = AceGUI:Create("InlineGroup")
 	generalSettings:SetLayout("flow")
 	generalSettings:SetTitle("General")
@@ -486,7 +484,7 @@ local function SelectResourceBarTab(tabGroup, group, settings)
 end
 
 local function ResourceBar(self)
-	local settings = SCM.db.global.options.resourceBar
+	local settings = SCM.db.profile.options.resourceBar
 
 	local resourceBarFrame = AceGUI:Create("InlineGroup")
 	resourceBarFrame:SetLayout("flow")

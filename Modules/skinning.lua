@@ -13,13 +13,14 @@ local function GetCooldownFontScale(options)
 end
 
 local function ApplyChargeAndApplicationStyle(child, options, fontPath)
-	if child.ChargeCount and child.ChargeCount.Current and (not child.SCMIconType or child.SCMIconType == "spell") then
+	local rowConfig = child.SCMRowConfig or {}
+	if child.ChargeCount and child.ChargeCount.Current then
 		if fontPath then
-			child.ChargeCount.Current:SetFont(fontPath, options.chargeFontSize, "OUTLINE")
+			child.ChargeCount.Current:SetFont(fontPath, rowConfig.chargeFontSize or options.chargeFontSize, "OUTLINE")
 		end
 
 		child.ChargeCount.Current:ClearAllPoints()
-		child.ChargeCount.Current:SetPoint(options.chargePoint, child.Icon, options.chargeRelativePoint, options.chargeXOffset, options.chargeYOffset)
+		child.ChargeCount.Current:SetPoint(rowConfig.chargePoint or options.chargePoint, child.Icon, rowConfig.chargeRelativePoint or options.chargeRelativePoint, rowConfig.chargeXOffset or options.chargeXOffset, rowConfig.chargeYOffset or options.chargeYOffset)
 	end
 
 	if child.Applications and child.Applications.Applications then
@@ -33,7 +34,7 @@ local function ApplyChargeAndApplicationStyle(child, options, fontPath)
 end
 
 local function ApplyCooldownFont(cooldownFrame, options)
-	options = options or SCM.db.global.options
+	options = options or SCM.db.profile.options
 
 	if options.changeCooldownFont then
 		local fontPath = LSM:Fetch("font", options.cooldownFont)
@@ -102,7 +103,7 @@ function SCM:SkinChild(child, childConfig)
 		return
 	end
 
-	local options = self.db.global.options
+	local options = self.db.profile.options
 	if not options.enableSkinning then
 		return
 	end

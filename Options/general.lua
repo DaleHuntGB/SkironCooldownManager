@@ -51,7 +51,7 @@ local function AddGlowColorOption(dynamicGlowSettingsGroup, glowTypeOptions)
 end
 
 local function AddCustomGlowOptions(dynamicGlowSettingsGroup)
-	local options = SCM.db.global.options
+	local options = SCM.db.profile.options
 	dynamicGlowSettingsGroup:ReleaseChildren()
 
 	local glowTypeOptions = options.glowTypeOptions[options.glowType]
@@ -522,7 +522,7 @@ end
 local function General(self, frame, group)
 	LibEditModeOverride:LoadLayouts()
 
-	local options = SCM.db.global.options
+	local options = SCM.db.profile.options
 
 	local generalFrame = AceGUI:Create("InlineGroup")
 	generalFrame:SetLayout("fill")

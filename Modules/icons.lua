@@ -247,6 +247,7 @@ local function ProcessSingleChild(child, validChildren, categoryIndex, isBuffIco
 		child.SCMOrder = nil
 		child.SCMCooldownID = nil
 		child.SCMConfigID = nil
+		child.SCMRowConfig = nil
 
 		Icons.SetChildVisibilityState(child, false, true)
 		return
@@ -256,6 +257,7 @@ local function ProcessSingleChild(child, validChildren, categoryIndex, isBuffIco
 	local groupConfig = childData.anchorGroup and childData.anchorGroup[group]
 	if not (group and groupConfig) then
 		child.SCMConfigID = nil
+		child.SCMRowConfig = nil
 		Icons.SetChildVisibilityState(child, false, true)
 		return
 	end
@@ -268,8 +270,6 @@ local function ProcessSingleChild(child, validChildren, categoryIndex, isBuffIco
 	child.SCMCooldownID = cooldownID
 	child.SCMConfigID = configID
 	child.SCMGroup = group
-
-	SCM:SkinChild(child, groupConfig)
 
 	if isBuffIcon then
 		ProcessBuffIcon(child, groupConfig, options)
@@ -293,7 +293,7 @@ function Icons.ProcessChildren(viewer, validChildren, isBuffIcon)
 
 	local children = GetOrCacheChildren(viewer, isBuffIcon)
 	local categoryIndex = SCM.CooldownViewerNameToIndex[viewer:GetName()]
-	local options = SCM.db.global.options
+	local options = SCM.db.profile.options
 
 	for _, child in ipairs(children) do
 		ProcessSingleChild(child, validChildren, categoryIndex, isBuffIcon, options)

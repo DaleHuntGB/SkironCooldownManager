@@ -4,7 +4,7 @@ local LibCustomGlow = LibStub("LibCustomGlow-1.0")
 local activeGlows = {}
 
 function SCM:StartCustomGlow(child)
-	local options = self.db.global.options
+	local options = self.db.profile.options
 	if child.SCMGlow and options.glowType == child.SCMGlow then
 		return
 	end
@@ -83,7 +83,7 @@ local function RestoreSpellAlertGlow(self, child, options)
 end
 
 function SCM:RestoreBlizzardGlows()
-	local options = self.db.global.options
+	local options = self.db.profile.options
 	for _, viewerName in ipairs({"EssentialCooldownViewer", "UtilityCooldownViewer", "BuffIconCooldownViewer"}) do
 		local viewer = _G[viewerName]
 		if viewer then

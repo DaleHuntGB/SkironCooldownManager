@@ -33,7 +33,8 @@ local function GetPowerColorByInfo(powerToken, powerType)
 end
 
 local function GetPowerColor(powerToken, powerType, altR, altG, altB)
-	local powerTypeColorOverride = powerToken and SCM.db.global.options.resourceBar.powerTypeColorOverrides[powerToken]
+	local barOptions = SCM.db.profile.options.resourceBar
+	local powerTypeColorOverride = powerToken and barOptions and barOptions.powerTypeColorOverrides[powerToken]
 	if powerTypeColorOverride then
 		local color = powerTypeColorOverride.color
 		return color.r, color.g, color.b
@@ -539,7 +540,7 @@ local function UpdateSegments(bar, maxValue, currentValue, resourceSegmentValues
 	local r, g, b = GetPowerColor(bar.powerToken, bar.powerType)
 	local overflowR, overflowG, overflowB = CHARGED_COMBO_POINT_COLOR.r, CHARGED_COMBO_POINT_COLOR.g, CHARGED_COMBO_POINT_COLOR.b
 	if bar.resourceKind == "maelstromWeapon" then
-		local overflowColor = SCM.db.global.options.resourceBar.maelstromOverflowColor
+		local overflowColor = SCM.db.profile.options.resourceBar.maelstromOverflowColor
 		if overflowColor and overflowColor.r and overflowColor.g and overflowColor.b then
 			overflowR, overflowG, overflowB = overflowColor.r, overflowColor.g, overflowColor.b
 		end
@@ -640,7 +641,7 @@ local function InitializeBarSkin(bar)
 	PixelUtil.SetPoint(bar.BorderFrame, "TOPLEFT", bar, "TOPLEFT", 0, 0)
 	PixelUtil.SetPoint(bar.BorderFrame, "BOTTOMRIGHT", bar, "BOTTOMRIGHT", 0, 0)
 
-	local barOptions = bar.barOptions or SCM.db.global.options.resourceBar
+	local barOptions = bar.barOptions or SCM.db.profile.options.resourceBar
 	UpdateResourceBarBorder(bar, barOptions)
 	bar.SCMStyled = true
 end
@@ -720,7 +721,7 @@ function SCM:ApplyResourceBarHideWhileMountedSettings(value)
 end
 
 function SCMResourceBarControllerMixin:ApplyResourceBarOptions()
-	local barOptions = SCM.db.global.options.resourceBar
+	local barOptions = SCM.db.profile.options.resourceBar
 	self.barOptions = barOptions
 	self.primaryBarOptions = barOptions.primaryBar
 	self.secondaryBarOptions = barOptions.secondaryBar
@@ -910,7 +911,7 @@ function SCMResourceBarControllerMixin:RefreshBarDisplay(bar)
 	local overrideColor = bar.SCMIsPrimaryResourceBar and SCM.primaryResourceBarColorOverride
 	if overrideColor then
 		bar:SetStatusBarColor(overrideColor.r, overrideColor.g, overrideColor.b)
-	elseif bar.resourceKind == "stagger" and not SCM.db.global.options.resourceBar.powerTypeColorOverrides[bar.powerToken] then
+	elseif bar.resourceKind == "stagger" and not SCM.db.profile.options.resourceBar.powerTypeColorOverrides[bar.powerToken] then
 		UpdateStaggerBarColor(bar, currentValue, maxValue)
 	end
 
@@ -974,7 +975,7 @@ function SCMResourceBarControllerMixin:UpdateContainerShownState()
 		return
 	end
 
-	if SCM.db.global.options.hideWhileMounted and self:GetAttribute("statehidden") then
+	if SCM.db.profile.options.hideWhileMounted and self:GetAttribute("statehidden") then
 		return
 	end
 
@@ -1018,7 +1019,7 @@ end
 
 function SCM:InitializeResourceBars()
 	local container = _G[RESOURCE_BAR_FRAME_NAME]
-	local barOptions = self.db.global.options.resourceBar
+	local barOptions = self.db.profile.options.resourceBar
 	if not container or container.SCMResourceBarInitialized or not barOptions.enabled then
 		return
 	end

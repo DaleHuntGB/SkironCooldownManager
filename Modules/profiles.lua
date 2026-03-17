@@ -5,12 +5,82 @@ local EXPORT_TYPE_ALL = 0
 local EXPORT_TYPE_CLASS = 1
 local EXPORT_TYPE_GLOBAL_SETTINGS = 2
 local EXPORT_TYPE_GLOBAL_ANCHORS = 3
+local EXPORT_TYPE_EVERYTHING = 4
 local GLOBAL_CUSTOM_CONFIG_KEYS = {
 	"spellConfig",
 	"itemConfig",
 	"slotConfig",
 	"timerConfig",
 }
+local PROFILE_OPTION_SECTION_KEYS = {
+	resourceBars = true,
+	resourceBar = true,
+	castBar = true,
+}
+
+local function CopyValue(value)
+	if type(value) == "table" then
+		return CopyTable(value)
+	end
+
+	return value
+end
+
+local function BuildGeneralSettingsExport(options)
+	local exportData = {}
+	for key, value in pairs(options) do
+		if not PROFILE_OPTION_SECTION_KEYS[key] then
+			exportData[key] = CopyValue(value)
+		end
+	end
+
+	return exportData
+end
+
+local function BuildResourceBarSettingsExport(options)
+	local exportData = {}
+	if options.resourceBars ~= nil then
+		exportData.resourceBars = CopyValue(options.resourceBars)
+	end
+
+	if options.resourceBar ~= nil then
+		exportData.resourceBar = CopyValue(options.resourceBar)
+	end
+
+	return exportData
+end
+
+local function BuildCastBarSettingsExport(options)
+	return options.castBar and CopyValue(options.castBar) or {}
+end
+
+local function ApplyOptionsData(options, data)
+	if type(data) ~= "table" then
+		return
+	end
+
+	for key, value in pairs(data) do
+		options[key] = CopyValue(value)
+	end
+end
+
+local function ApplyResourceBarSettings(options, data)
+	if type(data) ~= "table" then
+		return
+	end
+
+	if data.resourceBar ~= nil then
+		options.resourceBar = CopyValue(data.resourceBar)
+	end
+end
+
+local function ApplyCastBarSettings(options, data)
+	if type(data) ~= "table" then
+		return
+	end
+
+	options.castBar = CopyValue(data)
+end
 
 local function MergeConfig(destDB, sourceData, defaultAnchor)
 	if not destDB or not sourceData then
@@ -29,7 +99,54 @@ local function MergeConfig(destDB, sourceData, defaultAnchor)
 	end
 end
 
-local function GetExportString(classFileName, specID)
+local function GetProfileExportData(db, exportType, classFileName, specID)
+	if exportType == EXPORT_TYPE_ALL then
+		local profileData = {}
+		for key, value in pairs(db) do
+			if key ~= "options" then
+				profileData[key] = CopyValue(value)
+			end
+		end
+
+		return profileData
+	end
+
+	local classData = db[classFileName]
+	if type(classData) ~= "table" then
+		return {}
+	end
+
+	if specID then
+		return type(classData[specID]) == "table" and CopyValue(classData[specID]) or {}
+	end
+
+	return CopyValue(classData)
+end
+
+local function BuildProfileExportPayload(self, exportType, classFileName, specID, exportOptions)
+	exportOptions = exportOptions or {}
+
+	local payload = {
+		profileData = GetProfileExportData(self.db.profile, exportType, classFileName, specID),
+	}
+	local options = self.db.profile.options
+
+	if exportOptions.includeResourceBar then
+		payload.resourceBarSettings = BuildResourceBarSettingsExport(options)
+	end
+
+	if exportOptions.includeCastBar then
+		payload.castBarSettings = BuildCastBarSettingsExport(options)
+	end
+
+	if exportOptions.includeGlobalSettings then
+		payload.globalSettings = BuildGeneralSettingsExport(options)
+	end
+
+	return payload
+end
+
+local function GetExportString(self, classFileName, specID, exportOptions)
 	local exportType = specID
 	if classFileName == "ALL" or (not classFileName and not specID) then
 		exportType = EXPORT_TYPE_ALL
@@ -38,34 +155,17 @@ local function GetExportString(classFileName, specID)
 	end
 
 	local prefix = string.format("!SCM:%d:%d!", dataVersion, exportType)
-	local db = SCM.db.profile
-
-	if exportType == 0 then
-		return prefix .. SCM.Encode(db)
-	end
-
-	local classData = db[classFileName]
-	if not classData then
-		return
-	end
-
-	if specID then
-		if classData[specID] then
-			return prefix .. SCM.Encode(classData[specID])
-		end
-	else
-		return prefix .. SCM.Encode(classData)
-	end
+	return prefix .. SCM.Encode(BuildProfileExportPayload(self, exportType, classFileName, specID, exportOptions))
 end
 
-function SCM:ExportProfile(widget, classFileName, specID)
-	return GetExportString(classFileName, specID)
+function SCM:ExportProfile(widget, classFileName, specID, exportOptions)
+	return GetExportString(self, classFileName, specID, exportOptions)
 end
 
 function SCM:ExportGlobalSettings()
 	local exportType = EXPORT_TYPE_GLOBAL_SETTINGS
 	local prefix = string.format("!SCM:%d:%d!", dataVersion, exportType)
-	return prefix .. SCM.Encode(self.db.global.options)
+	return prefix .. SCM.Encode(BuildGeneralSettingsExport(self.db.profile.options))
 end
 
 function SCM:ExportGlobalAnchors()
@@ -73,6 +173,17 @@ function SCM:ExportGlobalAnchors()
 	return prefix .. SCM.Encode({
 		globalAnchorConfig = self.db.global.globalAnchorConfig,
 		globalCustomConfig = self.db.global.globalCustomConfig,
+	})
+end
+
+function SCM:ExportEverything()
+	local prefix = string.format("!SCM:%d:%d!", dataVersion, EXPORT_TYPE_EVERYTHING)
+	local options = self.db.profile.options
+	return prefix .. SCM.Encode({
+		profileData = GetProfileExportData(self.db.profile, EXPORT_TYPE_ALL),
+		resourceBarSettings = BuildResourceBarSettingsExport(options),
+		castBarSettings = BuildCastBarSettingsExport(options),
+		globalSettings = BuildGeneralSettingsExport(options),
 	})
 end
 
@@ -97,6 +208,24 @@ local function DecodeImportString(importString)
 	end
 
 	return typeID, data
+end
+
+local function GetImportedProfilePayload(typeID, data)
+	if type(data) ~= "table" then
+		return data, nil
+	end
+
+	if data.profileData or data.resourceBarSettings or data.castBarSettings or data.globalSettings then
+		local profileData = type(data.profileData) == "table" and data.profileData or {}
+		return profileData, data
+	end
+
+	if typeID == EXPORT_TYPE_EVERYTHING then
+		local profileData = type(data.profileData) == "table" and data.profileData or {}
+		return profileData, data
+	end
+
+	return data, nil
 end
 
 local function NormalizeAnchorEntry(anchorConfig)
@@ -206,18 +335,25 @@ function SCM:ImportProfile(profileName, importString)
 		return
 	end
 
-	if not profileName or profileName == "" then
-		profileName = SCM.db:GetCurrentProfile()
-	end
-
 	if typeID == EXPORT_TYPE_GLOBAL_SETTINGS then
-		SCM:ImportGlobalSettingsFromData(data)
+		self:ImportGlobalSettingsFromData(data)
 		return
 	end
 
 	if typeID == EXPORT_TYPE_GLOBAL_ANCHORS then
-		SCM:ImportGlobalAnchorsFromData(data)
+		self:ImportGlobalAnchorsFromData(data)
 		return
+	end
+
+	local importedSections
+	data, importedSections = GetImportedProfilePayload(typeID, data)
+
+	if typeID == EXPORT_TYPE_EVERYTHING then
+		typeID = EXPORT_TYPE_ALL
+	end
+
+	if not profileName or profileName == "" then
+		profileName = SCM.db:GetCurrentProfile()
 	end
 
 	SCM.db:SetProfile(profileName)
@@ -254,46 +390,24 @@ function SCM:ImportProfile(profileName, importString)
 		end
 	end
 
+	local options = self.db.profile.options
+	if importedSections then
+		ApplyResourceBarSettings(options, importedSections.resourceBarSettings)
+		ApplyCastBarSettings(options, importedSections.castBarSettings)
+		ApplyOptionsData(options, importedSections.globalSettings)
+	end
+
+	self.db.profile.options = options
+
 	SCM.RefreshCooldownViewerData(true)
 end
 
 function SCM:ImportGlobalSettings(importString)
-	local typeID, data = DecodeImportString(importString)
-	if not typeID then
-		return
-	end
-
-	if typeID ~= EXPORT_TYPE_GLOBAL_SETTINGS then
-		self:ImportProfile(nil, importString)
-		return
-	end
-
-	if data then
-		local options = self.db.global.options
-		for key in pairs(self.db.global.options) do
-			if data[key] ~= nil then
-				if type(options[key]) == "table" then
-					self.db.global.options[key] = data[key]
-				end
-			end
-		end
-
-		SCM.RefreshCooldownViewerData(true)
-	end
+	self:ImportProfile(nil, importString)
 end
 
 function SCM:ImportGlobalAnchors(importString)
-	local typeID, data = DecodeImportString(importString)
-	if not typeID then
-		return
-	end
-
-	if typeID ~= EXPORT_TYPE_GLOBAL_ANCHORS then
-		self:ImportProfile(nil, importString)
-		return
-	end
-
-	self:ImportGlobalAnchorsFromData(data)
+	self:ImportProfile(nil, importString)
 end
 
 function SCM:ImportGlobalAnchorsFromData(data)
@@ -307,11 +421,9 @@ function SCM:ImportGlobalAnchorsFromData(data)
 end
 
 function SCM:ImportGlobalSettingsFromData(data)
-	for key in pairs(self.db.global.options) do
-		if data[key] ~= nil then
-			self.db.global.options[key] = data[key]
-		end
-	end
+	local options = self.db.profile.options
+	ApplyOptionsData(options, data)
+	self.db.profile.options = options
 
 	SCM.RefreshCooldownViewerData(true)
 end

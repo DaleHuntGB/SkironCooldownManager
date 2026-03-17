@@ -511,7 +511,7 @@ local function UpdateCustomIconFrameState(frame, config)
 end
 
 local function ApplyGlobalSettings(frame)
-	local options = SCM.db.global.options
+	local options = SCM.db.profile.options
 
 	if not InCombatLockdown() then
 		if options.hideWhileMounted then
@@ -561,7 +561,6 @@ function CustomIcons.CreateIcons(customConfig, isGlobal)
 				UpdateCustomIconFrameState(frame, config)
 				ApplyGlobalSettings(frame)
 				Icons.SetChildVisibilityState(frame, false, true)
-				SCM:SkinChild(frame, config)
 			elseif customFrames[id] then
 				ReleaseCustomIconFrame(customFrames[id])
 			end

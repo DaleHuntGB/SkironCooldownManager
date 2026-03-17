@@ -4,7 +4,7 @@ local AceGUI = LibStub("AceGUI-3.0")
 SCM.MainTabs.Temporary = { value = "Temporary", text = "Temporary", order = 4, subgroups = {} }
 
 local function Temporary(self, frame, group)
-	local options = SCM.db.global.options
+	local options = SCM.db.profile.options
 
 	local generalFrame = AceGUI:Create("InlineGroup")
 	generalFrame:SetLayout("flow")

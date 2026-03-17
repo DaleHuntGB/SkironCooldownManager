@@ -143,7 +143,7 @@ local function OnRegularCooldownChanged(self)
 			return
 		end
 
-		local options = SCM.db.global.options
+		local options = SCM.db.profile.options
 		if options.disableRegularIconActiveSwipe and not parent.SCMConfig.forceActiveSwipe then
 			Cooldowns.OverrideRegularAuraCooldown(self, parent)
 		end

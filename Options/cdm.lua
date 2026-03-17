@@ -1,6 +1,7 @@
 local addonName, SCM = ...
 local AceGUI = LibStub("AceGUI-3.0")
 local LibCustomGlow = LibStub("LibCustomGlow-1.0")
+local LSM = LibStub("LibSharedMedia-3.0")
 
 local colorKnown = "ffffff"
 local colorUnknown = "808080"
@@ -161,15 +162,15 @@ local function CreateCustomIconButton(rootDescription, scrollFrame, anchorIndex,
 			if not iconData then
 				return
 			end
-			
+
 			iconData.iconType = buttonConfig.iconType
 			iconData.isCustom = true
-			
+
 			local uniqueID = SCM:AddCustomIcon(anchorIndex, buttonConfig.iconType, configID, nil, nil, isGlobal)
 			if not uniqueID then
 				return
 			end
-			
+
 			iconData.id = uniqueID
 			scrollFrame:AddCustomIcon(iconData)
 			SCM:ApplyAnchorGroupCDManagerConfig(anchorIndex, isGlobal)
@@ -387,6 +388,118 @@ local function CreateAddSpellDropdown(owner, rootDescription, scrollFrame, ancho
 	end
 end
 
+local function SelectAdvancedRowSettings(self, tabGroup, rowConfig, rowIndex)
+	self:ReleaseChildren()
+
+	if tabGroup == "general" then
+		local keepAspectRatio = AceGUI:Create("CheckBox")
+		keepAspectRatio:SetLabel("Lock Aspect Ratio")
+		keepAspectRatio:SetRelativeWidth(0.5)
+		keepAspectRatio:SetValue(rowConfig.keepAspectRatio)
+		keepAspectRatio:SetCallback("OnValueChanged", function(_, _, value)
+			rowConfig.keepAspectRatio = value
+		end)
+		self:AddChild(keepAspectRatio)
+
+		local hardLimit = AceGUI:Create("CheckBox")
+		hardLimit:SetLabel("Hard Limit")
+		hardLimit:SetRelativeWidth(0.5)
+		hardLimit:SetValue(rowConfig.hardLimit)
+		hardLimit:SetCallback("OnValueChanged", function(_, _, value)
+			rowConfig.hardLimit = value
+			SCM:ApplyAllCDManagerConfigs()
+		end)
+		self:AddChild(hardLimit)
+
+		if rowIndex == 1 then
+			local fixedWidth
+			local useFixedWidth = AceGUI:Create("CheckBox")
+			useFixedWidth:SetLabel("Use Fixed Width")
+			useFixedWidth:SetRelativeWidth(0.5)
+			useFixedWidth:SetValue(rowConfig.useFixedWidth)
+			useFixedWidth:SetCallback("OnValueChanged", function(_, _, value)
+				rowConfig.useFixedWidth = value
+				SCM:ApplyAllCDManagerConfigs()
+
+				if fixedWidth then
+					rowConfig.fixedWidth = rowConfig.fixedWidth or 200
+					fixedWidth:SetDisabled(not value)
+				end
+			end)
+			self:AddChild(useFixedWidth)
+
+			fixedWidth = AceGUI:Create("Slider")
+			fixedWidth:SetRelativeWidth(0.5)
+			fixedWidth:SetSliderValues(100, 1000, 0.1)
+			fixedWidth:SetLabel("Fixed Width")
+			fixedWidth:SetValue(rowConfig.fixedWidth or 200)
+			fixedWidth:SetDisabled(not rowConfig.useFixedWidth)
+			fixedWidth:SetCallback("OnValueChanged", function(_, _, value)
+				rowConfig.fixedWidth = value
+				SCM:ApplyAllCDManagerConfigs()
+			end)
+			self:AddChild(fixedWidth)
+		end
+	elseif tabGroup == "charges" then
+		local chargeRelativePoint = AceGUI:Create("Dropdown")
+		chargeRelativePoint:SetRelativeWidth(0.5)
+		chargeRelativePoint:SetLabel("Point")
+		chargeRelativePoint:SetList(SCM.Constants.AnchorPoints)
+		chargeRelativePoint:SetValue(rowConfig.chargePoint)
+		chargeRelativePoint:SetCallback("OnValueChanged", function(_, _, value)
+			rowConfig.chargePoint = value
+			SCM:ApplyAllCDManagerConfigs()
+		end)
+		self:AddChild(chargeRelativePoint)
+
+		local chargeRelativePoint = AceGUI:Create("Dropdown")
+		chargeRelativePoint:SetRelativeWidth(0.5)
+		chargeRelativePoint:SetLabel("Relative Point")
+		chargeRelativePoint:SetList(SCM.Constants.AnchorPoints)
+		chargeRelativePoint:SetValue(rowConfig.chargeRelativePoint)
+		chargeRelativePoint:SetCallback("OnValueChanged", function(_, _, value)
+			rowConfig.chargeRelativePoint = value
+			SCM:ApplyAllCDManagerConfigs()
+		end)
+		self:AddChild(chargeRelativePoint)
+
+		local xOffset = AceGUI:Create("Slider")
+		xOffset:SetRelativeWidth(0.33)
+		xOffset:SetSliderValues(-50, 50, 0.1)
+		xOffset:SetLabel("X Offset")
+		xOffset:SetValue(rowConfig.chargeXOffset or 0)
+		xOffset:SetCallback("OnValueChanged", function(self, event, value)
+			rowConfig.chargeXOffset = value
+			SCM:ApplyAllCDManagerConfigs()
+		end)
+		self:AddChild(xOffset)
+
+		local yOffset = AceGUI:Create("Slider")
+		yOffset:SetRelativeWidth(0.33)
+		yOffset:SetSliderValues(-50, 50, 0.1)
+		yOffset:SetLabel("Y Offset")
+		yOffset:SetValue(rowConfig.chargeYOffset or 0)
+		yOffset:SetCallback("OnValueChanged", function(self, event, value)
+			rowConfig.chargeYOffset = value
+			SCM:ApplyAllCDManagerConfigs()
+		end)
+		self:AddChild(yOffset)
+
+		local chargeFontSize = AceGUI:Create("Slider")
+		chargeFontSize:SetRelativeWidth(0.33)
+		chargeFontSize:SetLabel("Font Size")
+		chargeFontSize:SetSliderValues(1, 50, 1)
+		chargeFontSize:SetValue(rowConfig.chargeFontSize or 24)
+		chargeFontSize:SetCallback("OnValueChanged", function(self, event, value)
+			rowConfig.chargeFontSize = value
+			SCM:ApplyAllCDManagerConfigs()
+		end)
+		self:AddChild(chargeFontSize)
+	end
+
+	self:DoLayout()
+end
+
 local function SelectRow(self, data, anchorIndex, rowIndex, rowTabsTbl, isGlobal)
 	self:ReleaseChildren()
 
@@ -455,59 +568,15 @@ local function SelectRow(self, data, anchorIndex, rowIndex, rowTabsTbl, isGlobal
 	end)
 	self:AddChild(limit)
 
-	local advancedRowSettings = AceGUI:Create("InlineGroup")
-	advancedRowSettings:SetFullWidth(true)
+	local advancedRowSettings = AceGUI:Create("TabGroup")
 	advancedRowSettings:SetLayout("flow")
+	advancedRowSettings:SetFullWidth(true)
+	advancedRowSettings:SetTabs({ { value = "general", text = "General" }, { value = "charges", text = "Charges/Stacks" } })
+	advancedRowSettings:SetCallback("OnGroupSelected", function(self, event, tabGroup)
+		SelectAdvancedRowSettings(self, tabGroup, rowConfig, rowIndex)
+	end)
+	advancedRowSettings:SelectTab("general")
 	self:AddChild(advancedRowSettings)
-
-	local keepAspectRatio = AceGUI:Create("CheckBox")
-	keepAspectRatio:SetLabel("Lock Aspect Ratio")
-	keepAspectRatio:SetRelativeWidth(0.5)
-	keepAspectRatio:SetValue(rowConfig.keepAspectRatio)
-	keepAspectRatio:SetCallback("OnValueChanged", function(_, _, value)
-		rowConfig.keepAspectRatio = value
-	end)
-	advancedRowSettings:AddChild(keepAspectRatio)
-
-	local hardLimit = AceGUI:Create("CheckBox")
-	hardLimit:SetLabel("Hard Limit")
-	hardLimit:SetRelativeWidth(0.5)
-	hardLimit:SetValue(rowConfig.hardLimit)
-	hardLimit:SetCallback("OnValueChanged", function(_, _, value)
-		rowConfig.hardLimit = value
-		SCM:ApplyAllCDManagerConfigs()
-	end)
-	advancedRowSettings:AddChild(hardLimit)
-
-	if rowIndex == 1 then
-		local fixedWidth
-		local useFixedWidth = AceGUI:Create("CheckBox")
-		useFixedWidth:SetLabel("Use Fixed Width")
-		useFixedWidth:SetRelativeWidth(0.5)
-		useFixedWidth:SetValue(rowConfig.useFixedWidth)
-		useFixedWidth:SetCallback("OnValueChanged", function(_, _, value)
-			rowConfig.useFixedWidth = value
-			SCM:ApplyAllCDManagerConfigs()
-
-			if fixedWidth then
-				rowConfig.fixedWidth = rowConfig.fixedWidth or 200
-				fixedWidth:SetDisabled(not value)
-			end
-		end)
-		advancedRowSettings:AddChild(useFixedWidth)
-
-		fixedWidth = AceGUI:Create("Slider")
-		fixedWidth:SetRelativeWidth(0.5)
-		fixedWidth:SetSliderValues(100, 1000, 0.1)
-		fixedWidth:SetLabel("Fixed Width")
-		fixedWidth:SetValue(rowConfig.fixedWidth or 200)
-		fixedWidth:SetDisabled(not rowConfig.useFixedWidth)
-		fixedWidth:SetCallback("OnValueChanged", function(_, _, value)
-			rowConfig.fixedWidth = value
-			SCM:ApplyAllCDManagerConfigs()
-		end)
-		advancedRowSettings:AddChild(fixedWidth)
-	end
 
 	local buttonGroup = AceGUI:Create("SimpleGroup")
 	buttonGroup:SetFullWidth(true)
@@ -571,7 +640,7 @@ local function SelectAnchor(anchorWidget, frame, anchorIndex, anchorTabsTbl, isG
 	anchorWidget:ReleaseChildren()
 
 	SCM.activeAnchorSettings = anchorIndex
-	local options = SCM.db.global.options
+	local options = SCM.db.profile.options
 
 	if options.showAnchorHighlight then
 		for group, anchorFrame in pairs(SCM.anchorFrames) do
@@ -912,19 +981,17 @@ local function SelectAnchor(anchorWidget, frame, anchorIndex, anchorTabsTbl, isG
 									end)
 									iconSettingsTabs:AddChild(hideWhileMounted)
 
-									if not options.testSetting[buttonFrame.data.spellID] then
-										desaturate = AceGUI:Create("CheckBox")
-										desaturate:SetLabel("Desaturate While Inactive")
-										desaturate:SetRelativeWidth(0.5)
-										desaturate:SetValue(buttonConfig.desaturate)
-										desaturate:SetDisabled(not buttonConfig.alwaysShow)
-										SCM.Utils.SetDisabledTooltip(desaturate, "Enable 'Show Always' first.")
-										desaturate:SetCallback("OnValueChanged", function(self, event, value)
-											buttonConfig.desaturate = value or nil
-											ApplyIconConfigUpdate()
-										end)
-										iconSettingsTabs:AddChild(desaturate)
-									end
+									desaturate = AceGUI:Create("CheckBox")
+									desaturate:SetLabel("Desaturate While Inactive")
+									desaturate:SetRelativeWidth(0.5)
+									desaturate:SetValue(buttonConfig.desaturate)
+									desaturate:SetDisabled(not buttonConfig.alwaysShow)
+									SCM.Utils.SetDisabledTooltip(desaturate, "Enable 'Show Always' first.")
+									desaturate:SetCallback("OnValueChanged", function(self, event, value)
+										buttonConfig.desaturate = value or nil
+										ApplyIconConfigUpdate()
+									end)
+									iconSettingsTabs:AddChild(desaturate)
 								elseif buttonData.iconType ~= "timer" then
 									local hideWhileReady = AceGUI:Create("CheckBox")
 									hideWhileReady:SetLabel("Hide While Ready")
@@ -1169,6 +1236,10 @@ local function SelectAnchor(anchorWidget, frame, anchorIndex, anchorTabsTbl, isG
 		horizontalScrollFrame.scrollbar:ScrollToEnd()
 		horizontalScrollFrame.scrollbar:ScrollToBegin()
 	end)
+end
+
+canaccesssecrets = function()
+   return true
 end
 
 local function CreateAnchorTabGroup(parent, frame, isGlobal)

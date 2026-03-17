@@ -264,13 +264,13 @@ function SCM:ApplyOptions()
 	end
 	self.appliedOptions = true
 
-	local options = self.db.global.options
+	local options = self.db.profile.options
 	self:SetHideWhenInactive(options.hideBuffsWhenInactive)
 	self:ApplyHideWhileMountedSettings(options.hideWhileMounted)
 end
 
 local function OpenOptions()
-	local options = SCM.db.global.options
+	local options = SCM.db.profile.options
 	SCM.isOptionsOpen = true
 
 	SCM:StopAllGlows()
@@ -328,7 +328,7 @@ local function OpenOptions()
 		end)
 	end)
 
-	if SCM.db.global.options.showAnchorHighlight then
+	if SCM.db.profile.options.showAnchorHighlight then
 		for _, anchorFrame in pairs(SCM.anchorFrames) do
 			anchorFrame.debugTexture:Show()
 			anchorFrame.debugText:Show()
@@ -339,7 +339,8 @@ end
 SLASH_SCM1 = "/scm"
 local function handler(msg, editBox)
 	if msg == "debug" then
-		SCM.db.global.options.debug = not SCM.db.global.options.debug
+		local options = SCM.db.profile.options
+		options.debug = not options.debug
 	else
 		if not SCM.OptionsFrame or not SCM.OptionsFrame:IsShown() then
 			OpenOptions()

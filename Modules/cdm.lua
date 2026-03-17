@@ -43,7 +43,7 @@ local DEFAULT_ROW_CONFIG = { { limit = 8, iconWidth = 47, iconHeight = 47 } }
 local DEFAULT_ANCHOR = { "CENTER", UIParent, "CENTER", 0, 0 }
 
 function SCM:Debug(...)
-	if self.db.global.options.debug then
+	if self.db.profile.options.debug then
 		print(addonName, ...)
 	end
 end
@@ -86,7 +86,7 @@ local function UpdateEmptyAnchorGroup(group, anchorConfig, scopedAnchorGroups)
 		end
 
 		if not InCombatLockdown() then
-			SCM:UpdateUUFValues(SCM.db.global.options, initialIconWidth, rowConfig)
+			SCM:UpdateUUFValues(SCM.db.profile.options, initialIconWidth, rowConfig)
 		end
 	end
 end
@@ -145,6 +145,7 @@ local function LayoutAnchorGroup(group, visibleChildren, anchorConfig, options)
 
 		for i = 0, numInRow - 1 do
 			local child = layoutChildren[childIndex + i]
+			child.SCMRowConfig = currentRowConfig
 			local offsetX = 0
 			if isCentered or isFixed then
 				offsetX = (i * (rowIconWidth + baseSpacing)) - (rowWidth / 2) + (rowIconWidth / 2)
@@ -157,6 +158,8 @@ local function LayoutAnchorGroup(group, visibleChildren, anchorConfig, options)
 			if child.SCMShouldBeVisible then
 				SCM:UpdateManagedAnchorChild(child, groupAnchor, startPoint, offsetX, -accumulatedY, rowIconWidth, rowIconHeight)
 			end
+
+			SCM:SkinChild(child, child.SCMConfig)
 		end
 
 		accumulatedY = accumulatedY + rowIconHeight + baseSpacing
@@ -199,7 +202,7 @@ local function OrderCDManagerSpells_Actual(updateScope, scopedAnchorGroupsOverri
 
 	local config = SCM.currentConfig
 	local scopedAnchorGroups = scopedAnchorGroupsOverride or Icons.CollectScopedAnchorGroups(updateScope, config, VIEWER_UPDATE_MAPPING)
-	local options = SCM.db.global.options
+	local options = SCM.db.profile.options
 	Cache.activeScopedAnchorGroups = scopedAnchorGroups
 
 	for i = 1, #VIEWER_PROCESS_ORDER do

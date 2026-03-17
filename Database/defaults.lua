@@ -21,6 +21,8 @@ SCM.DefaultDB = {
 			slotConfig = {},
 			timerConfig = {},
 		},
+	},
+	profile = {
 		options = {
 			anchorUUFRoles = {
 				["HEALER"] = false,
@@ -178,10 +180,10 @@ SCM.DefaultDB = {
 				fontSize = 12,
 				fontOutline = "OUTLINE",
 				matchParentWidth = true,
-				fgColor = {r = 0.5, g = 0.5, b = 1, a = 1},
-				bgColor = {r = 0, g = 0, b = 0, a = 0.8},
-				interruptColor = {r = 1, g = 0.25, b = 0.25, a = 1},
-				borderColor = {r = 0, g = 0, b = 0, a = 1},
+				fgColor = { r = 0.5, g = 0.5, b = 1, a = 1 },
+				bgColor = { r = 0, g = 0, b = 0, a = 0.8 },
+				interruptColor = { r = 1, g = 0.25, b = 0.25, a = 1 },
+				borderColor = { r = 0, g = 0, b = 0, a = 1 },
 				anchors = { "BOTTOM", "SCM_SecondaryResourceBar,SCM_PrimaryResourceBar,ANCHOR:1", "TOP", 0, 0 },
 				icon = {
 					enable = true,
@@ -197,10 +199,10 @@ SCM.DefaultDB = {
 				castDuration = {
 					enable = true,
 					anchors = { "RIGHT", "RIGHT", -3, 0 },
-				}
+				},
 			},
 			testSetting = {
-				[193063] = true,
+				[193063] = false,
 			},
 		},
 	},
