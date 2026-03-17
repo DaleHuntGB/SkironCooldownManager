@@ -71,6 +71,8 @@ local function RefreshCooldownViewerData(releaseCustomIcons)
 	end
 	SCM:CreateAllCustomIcons()
 	SCM:ApplyAllCDManagerConfigs()
+	SCM:RefreshResourceBarConfig()
+	SCM:UpdateCastBar()
 end
 
 function SCM:SetHooks()
@@ -99,6 +101,7 @@ function SCM:PLAYER_ENTERING_WORLD(isInitialLogin, isReload)
 		SCM:ApplyAllCDManagerConfigs()
 		SCM:SetHooks()
 		SCM:InitializeResourceBars()
+		SCM:CreateCastBar()
 	elseif self.isInInstance ~= IsInInstance() then
 		RefreshCooldownViewerData(true)
 		SCM:RefreshResourceBarConfig()
@@ -154,7 +157,7 @@ local function RefreshPixelPerfectLayout()
 end
 
 function SCM:TRAIT_CONFIG_UPDATED()
-	C_Timer.After(0.2, function() 
+	C_Timer.After(0.2, function()
 		RefreshCooldownViewerData()
 		SCM:RefreshResourceBarConfig()
 	end)
@@ -162,7 +165,6 @@ end
 
 function SCM:ACTIVE_PLAYER_SPECIALIZATION_CHANGED()
 	C_Timer.After(0.2, function()
-
 		RefreshCooldownViewerData(true)
 		SCM:RefreshResourceBarConfig()
 	end)

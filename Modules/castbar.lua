@@ -569,21 +569,3 @@ function SCM:UpdateCastBar()
 		HideCastBar()
 	end
 end
-
-local function OnProfileChanged()
-	if SCM.CastBar then
-		SCM:UpdateCastBar()
-	end
-end
-
-EventUtil.ContinueOnAddOnLoaded(addonName, function()
-	if not SCM.db then
-		return
-	end
-
-	SCM.db.RegisterCallback(SCM, "OnProfileChanged", OnProfileChanged)
-	SCM.db.RegisterCallback(SCM, "OnProfileCopied", OnProfileChanged)
-	SCM.db.RegisterCallback(SCM, "OnProfileReset", OnProfileChanged)
-
-	SCM:CreateCastBar()
-end)
