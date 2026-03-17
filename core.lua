@@ -74,6 +74,7 @@ local function RefreshCooldownViewerData(releaseCustomIcons)
 	SCM:RefreshResourceBarConfig()
 	SCM:UpdateCastBar()
 end
+SCM.RefreshCooldownViewerData = RefreshCooldownViewerData
 
 function SCM:SetHooks()
 	hooksecurefunc(EssentialCooldownViewer, "RefreshLayout", OnEssentialCooldownViewerLayout)

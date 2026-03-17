@@ -1,8 +1,6 @@
 local SCM = select(2, ...)
 
 local dataVersion = 1
-local pairs, tonumber, select = pairs, tonumber, select
-local GetSpecializationInfoByID = GetSpecializationInfoByID
 local EXPORT_TYPE_ALL = 0
 local EXPORT_TYPE_CLASS = 1
 local EXPORT_TYPE_GLOBAL_SETTINGS = 2
@@ -176,10 +174,7 @@ local function RefreshImportedGlobalAnchors(self, previousAnchorCount)
 		end
 	end
 
-	self.CustomIcons.ReleaseAllIcons()
-	self:UpdateDB()
-	self:CreateAllCustomIcons()
-	self:ApplyAllCDManagerConfigs()
+	SCM.RefreshCooldownViewerData(true)
 end
 
 function SCM:GetFreeProfileName(profileName)
@@ -259,9 +254,7 @@ function SCM:ImportProfile(profileName, importString)
 		end
 	end
 
-	SCM:UpdateDB()
-	SCM:ApplyAllCDManagerConfigs()
-	SCM:RefreshResourceBarConfig()
+	SCM.RefreshCooldownViewerData(true)
 end
 
 function SCM:ImportGlobalSettings(importString)
@@ -275,16 +268,18 @@ function SCM:ImportGlobalSettings(importString)
 		return
 	end
 
-	local options = self.db.global.options
-	for key in pairs(self.db.global.options) do
-		if data[key] ~= nil then
-			if type(options[key]) == "table" then
-				self.db.global.options[key] = data[key]
+	if data then
+		local options = self.db.global.options
+		for key in pairs(self.db.global.options) do
+			if data[key] ~= nil then
+				if type(options[key]) == "table" then
+					self.db.global.options[key] = data[key]
+				end
 			end
 		end
-	end
 
-	SCM:ApplyAllCDManagerConfigs()
+		SCM.RefreshCooldownViewerData(true)
+	end
 end
 
 function SCM:ImportGlobalAnchors(importString)
@@ -318,5 +313,5 @@ function SCM:ImportGlobalSettingsFromData(data)
 		end
 	end
 
-	SCM:ApplyAllCDManagerConfigs()
+	SCM.RefreshCooldownViewerData(true)
 end

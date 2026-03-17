@@ -747,7 +747,7 @@ function SCMResourceBarControllerMixin:ApplyFrameWidthOptions(bar)
 	if anchor then
 		local desiredWidth = max(MIN_BAR_WIDTH, specificBarOptions.matchAnchorWidth and (anchor and anchor:GetWidth() or 0) or specificBarOptions.width)
 		local previousWidth = bar:GetWidth() or 0
-		bar:SetWidth(desiredWidth + 0.1)
+		bar:SetWidth(desiredWidth)
 
 		if not bar.SCMResourceBarHook then
 			bar.SCMResourceBarHook = true
@@ -762,7 +762,7 @@ function SCMResourceBarControllerMixin:ApplyFrameWidthOptions(bar)
 			bar.SCMTicksDirty = true
 		end
 
-		local offset = SCM:PixelPerfect()
+		local offset = 0
 		if bar.segmentCount then
 			if bar.segmentCount == 5 then
 				offset = SCM:PixelPerfect()

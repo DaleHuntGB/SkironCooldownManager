@@ -383,7 +383,7 @@ local function SelectGlobalSettingsTab(tabWidget, group, options)
 			options.hideBuffsWhenInactive = value
 
 			SCM:SetHideWhenInactive(value)
-			SCM:ApplyAllCDManagerConfigs()
+			SCM.RefreshCooldownViewerData(true)
 		end)
 		auraSettings:AddChild(hideBuffsWhenInactive)
 
