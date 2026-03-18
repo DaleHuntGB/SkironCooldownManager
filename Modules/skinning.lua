@@ -20,7 +20,13 @@ local function ApplyChargeAndApplicationStyle(child, options, fontPath)
 		end
 
 		child.ChargeCount.Current:ClearAllPoints()
-		child.ChargeCount.Current:SetPoint(rowConfig.chargePoint or options.chargePoint, child.Icon, rowConfig.chargeRelativePoint or options.chargeRelativePoint, rowConfig.chargeXOffset or options.chargeXOffset, rowConfig.chargeYOffset or options.chargeYOffset)
+		child.ChargeCount.Current:SetPoint(
+			rowConfig.chargePoint or options.chargePoint,
+			child.Icon,
+			rowConfig.chargeRelativePoint or options.chargeRelativePoint,
+			rowConfig.chargeXOffset or options.chargeXOffset,
+			rowConfig.chargeYOffset or options.chargeYOffset
+		)
 	end
 
 	if child.Applications and child.Applications.Applications then
@@ -75,9 +81,11 @@ local function ApplyCooldownStyle(child, options)
 
 		hooksecurefunc(cooldownFrame, "SetCooldown", function(self)
 			local parent = self:GetParent()
-			if options.recolorActiveSwipe and self:GetUseAuraDisplayTime() and (not options.disableRegularIconActiveSwipe or (parent.SCMConfig and parent.SCMConfig.forceActiveSwipe)) then
-				self:SetSwipeColor(unpack(options.activeSwipeColor))
-				self:SetReverse(options.reverseActiveSwipe)
+			if options.recolorActiveSwipe and self:GetUseAuraDisplayTime() then
+				if not options.disableRegularIconActiveSwipe or (parent.SCMConfig and parent.SCMConfig.forceActiveSwipe) then
+					self:SetSwipeColor(unpack(options.activeSwipeColor))
+					self:SetReverse(options.reverseActiveSwipe)
+				end
 			elseif options.recolorNormalSwipe then
 				self:SetReverse(false)
 				self:SetSwipeColor(unpack(options.normalSwipeColor))

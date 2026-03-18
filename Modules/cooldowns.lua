@@ -111,8 +111,8 @@ function Cooldowns.IsChildOnCooldown(child)
 	end
 end
 
-function Cooldowns.OverrideRegularAuraCooldown(self, parent)
-	if not parent.SCMSpellID or not self:GetUseAuraDisplayTime() or parent.SCMConfig.forceActiveSwipe then
+function Cooldowns.OverrideRegularAuraCooldown(self, parent, options)
+	if not options.disableRegularIconActiveSwipe or not parent.SCMSpellID or not self:GetUseAuraDisplayTime() or parent.SCMConfig.forceActiveSwipe then
 		return
 	end
 
@@ -145,7 +145,7 @@ local function OnRegularCooldownChanged(self)
 
 		local options = SCM.db.profile.options
 		if options.disableRegularIconActiveSwipe and not parent.SCMConfig.forceActiveSwipe then
-			Cooldowns.OverrideRegularAuraCooldown(self, parent)
+			Cooldowns.OverrideRegularAuraCooldown(self, parent, options)
 		end
 
 		local config = parent.SCMConfig

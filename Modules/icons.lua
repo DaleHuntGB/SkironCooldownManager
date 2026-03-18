@@ -219,11 +219,11 @@ local function ProcessBuffIcon(child, childData, options)
 	Icons.UpdateChildDesaturation(child, isInactive)
 end
 
-local function ProcessRegularIcon(child, childData)
+local function ProcessRegularIcon(child, childData, options)
 	Icons.SetupRegularIconHooks(child)
 	Icons.SetChildVisibilityState(child, not (childData.hideWhenNotOnCooldown and not Cooldowns.IsChildOnCooldown(child)), false)
 
-	Cooldowns.OverrideRegularAuraCooldown(child.Cooldown, child)
+	Cooldowns.OverrideRegularAuraCooldown(child.Cooldown, child, options)
 end
 
 local function ProcessSingleChild(child, validChildren, categoryIndex, isBuffIcon, options)
@@ -274,7 +274,7 @@ local function ProcessSingleChild(child, validChildren, categoryIndex, isBuffIco
 	if isBuffIcon then
 		ProcessBuffIcon(child, groupConfig, options)
 	else
-		ProcessRegularIcon(child, groupConfig)
+		ProcessRegularIcon(child, groupConfig, options)
 	end
 
 	if not InCombatLockdown() then
