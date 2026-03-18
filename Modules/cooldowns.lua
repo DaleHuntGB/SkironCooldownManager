@@ -36,7 +36,7 @@ local function OnBuffCooldownEnd(self)
 		return
 	end
 
-	if options.hideBuffsWhenInactive and not parent.SCMHidden then
+	if not parent.SCMHidden then
 		SCM:ApplyAnchorGroupCDManagerConfig(parent.SCMGroup)
 	end
 end
