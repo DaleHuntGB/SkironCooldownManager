@@ -563,6 +563,7 @@ function SCM:UpdateCastBar()
 			castBar:Hide()
 		end
 		self:RefreshCastBarWidth(0.1)
+		PlayerCastingBarFrame:UnregisterAllEvents()
 	else
 		castBar:SetScript("OnEvent", nil)
 		castBar:UnregisterAllEvents()

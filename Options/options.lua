@@ -6,6 +6,29 @@ local LibCustomGlow = LibStub("LibCustomGlow-1.0")
 local Utils = SCM.Utils
 local ToGlobalGroup = Utils.ToGlobalGroup
 
+StaticPopupDialogs["SCM_FORCE_RELOAD_POPUP"] = {
+	text = "This requires a UI reload. Reload now?",
+	button1 = RELOADUI,
+	button2 = CANCEL,
+	timeout = 0,
+	whileDead = true,
+	hideOnEscape = true,
+	preferredIndex = 3,
+	OnAccept = function(_, popupData)
+		popupData.options[popupData.key] = popupData.value
+		C_UI.ReloadUI()
+	end,
+	OnCancel = function(_, popupData)
+		if popupData.checkbox and popupData.key then
+			popupData.checkbox:SetValue(popupData.options[popupData.key])
+		end
+	end,
+}
+
+function SCM.ShowReloadPopup(data)
+	StaticPopup_Show("SCM_FORCE_RELOAD_POPUP", nil, nil, data)
+end
+
 function SCM.Encode(table)
 	local serialized = C_EncodingUtil.SerializeCBOR(table)
 	local compressed = C_EncodingUtil.CompressString(serialized, Enum.CompressionMethod.Deflate, Enum.CompressionLevel.OptimizeForSize)

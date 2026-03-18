@@ -230,8 +230,18 @@ local function CastBar(self)
 	enable:SetLabel("Enable Cast Bar")
 	enable:SetValue(options.enable)
 	enable:SetCallback("OnValueChanged", function(_, _, value)
-		options.enable = value
-		RefreshCastBar()
+		if value then
+			options.enable = true
+			RefreshCastBar()
+			return
+		end
+
+		SCM.ShowReloadPopup({
+			checkbox = enable,
+			options = options,
+			key = "enable",
+			value = false,
+		})
 	end)
 	generalGroup:AddChild(enable)
 
