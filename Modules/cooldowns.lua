@@ -14,7 +14,7 @@ local function OnBuffCooldownSet(self)
 		Icons.UpdateChildGlow(parent, false)
 	elseif parent.SCMHidden == nil or parent.SCMHidden then
 		Icons.ShowChild(parent)
-		SCM:ApplyAllCDManagerConfigs()
+		SCM:ApplyAnchorGroupCDManagerConfig(parent.SCMGroup)
 	end
 end
 
@@ -37,7 +37,7 @@ local function OnBuffCooldownEnd(self)
 	end
 
 	if options.hideBuffsWhenInactive and not parent.SCMHidden then
-		SCM:ApplyAllCDManagerConfigs()
+		SCM:ApplyAnchorGroupCDManagerConfig(parent.SCMGroup)
 	end
 end
 

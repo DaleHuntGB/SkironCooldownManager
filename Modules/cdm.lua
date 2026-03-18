@@ -295,14 +295,12 @@ local function OrderCDManagerSpells(updateScope)
 		OrderCDManagerSpells_Actual(updateScope)
 		return
 	end
-
 	if isThrottled then
 		hasPendingUpdate = true
 		pendingUpdateScope = MergeUpdateScope(pendingUpdateScope, updateScope)
 		return
 	end
 
-	OrderCDManagerSpells_Actual(updateScope)
 	isThrottled = true
 	C_Timer.After(0.1, OnOrderThrottleTick)
 end
