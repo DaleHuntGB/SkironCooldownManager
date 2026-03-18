@@ -352,6 +352,9 @@ local function ConfigureBarForResource(bar, resource, altR, altG, altB)
 	bar.powerType = resource.powerType
 	bar.powerToken = resource.powerToken
 	bar.segmentCount = resource.segmentCount
+	if bar.SCMUseSegmentedSecondaryDisplay and bar.powerType == Enum.PowerType.Mana then
+		bar.segmentCount = nil
+	end
 	bar.SCMRegisterUnitAura = resource.registerUnitAura
 	bar.SCMTicksDirty = true
 
@@ -874,9 +877,18 @@ function SCMResourceBarControllerMixin:ConfigureSecondaryBar()
 		if secondaryResource and secondaryResource.showWhenPrimaryPowerType and primaryPowerType ~= secondaryResource.showWhenPrimaryPowerType then
 			secondaryResource = nil
 		end
+
+		if not secondaryResource then
+			local classManaSecondaryPower = SCMConstants.ClassManaSecondaryPower[className]
+			secondaryResource = classManaSecondaryPower and classManaSecondaryPower[primaryPowerType]
+		end
 	end
 
 	if secondaryResource and secondaryResource.powerType == primaryPowerType then
+		secondaryResource = nil
+	end
+
+	if secondaryResource and secondaryResource.powerType == Enum.PowerType.Mana and ShouldHideManaForCurrentRole(self.secondaryBarOptions) then
 		secondaryResource = nil
 	end
 
@@ -923,7 +935,11 @@ function SCMResourceBarControllerMixin:RefreshBarDisplay(bar)
 		end
 	elseif displayValue then
 		if text then
-			text.Value:SetText(AbbreviateLargeNumbers(displayValue))
+			if bar.powerType == Enum.PowerType.Mana then
+				text.Value:SetText(string.format("%d%%", (UnitPowerPercent("player", bar.powerType, false, CurveConstants.ScaleTo100))))
+			else
+				text.Value:SetText(AbbreviateLargeNumbers(displayValue))
+			end
 		end
 	elseif text then
 		text.Value:SetText("")

@@ -176,6 +176,27 @@ Constants.SpecSecondaryPower = {
 	},
 }
 
+Constants.ClassManaSecondaryPower = {
+	["DRUID"] = {
+		[Enum.PowerType.LunarPower] = {
+			powerType = Enum.PowerType.Mana,
+			powerToken = "MANA",
+		},
+	},
+	["PRIEST"] = {
+		[Enum.PowerType.Insanity] = {
+			powerType = Enum.PowerType.Mana,
+			powerToken = "MANA",
+		},
+	},
+	["SHAMAN"] = {
+		[Enum.PowerType.Maelstrom] = {
+			powerType = Enum.PowerType.Mana,
+			powerToken = "MANA",
+		},
+	},
+}
+
 Constants.ChargedComboPointColor = {
 	r = 0.25,
 	g = 0.70,

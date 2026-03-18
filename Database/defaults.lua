@@ -152,6 +152,11 @@ SCM.DefaultDB = {
 					enabled = true,
 					matchAnchorWidth = true,
 					width = 200,
+					hideManaRoles = {
+						["TANK"] = true,
+						["DAMAGER"] = true,
+						["HEALER"] = true,
+					},
 					font = "Expressway",
 					fontSize = 27,
 					textXOffset = 0,

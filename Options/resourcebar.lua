@@ -247,22 +247,21 @@ local function AddBarSettings(parent, title, settings, includeManaRoleSettings)
 	end)
 	generalSettings:AddChild(widthSlider)
 
-	if includeManaRoleSettings then
-		local hideManaRoles = AceGUI:Create("Dropdown")
-		hideManaRoles:SetRelativeWidth(0.5)
-		hideManaRoles:SetLabel("Hide Mana For Roles")
-		hideManaRoles:SetList(SCM.Constants.Roles)
-		hideManaRoles:SetMultiselect(true)
-		hideManaRoles:SetCallback("OnValueChanged", function(_, _, key, value)
-			settings.hideManaRoles = settings.hideManaRoles or {}
-			settings.hideManaRoles[key] = value
-			RefreshResourceBars()
-		end)
-		for key, value in pairs(settings.hideManaRoles) do
-			hideManaRoles:SetItemValue(key, value)
-		end
-		generalSettings:AddChild(hideManaRoles)
+	local hideManaRoles = AceGUI:Create("Dropdown")
+	hideManaRoles:SetRelativeWidth(0.5)
+	hideManaRoles:SetLabel("Hide Mana For Roles")
+	hideManaRoles:SetList(SCM.Constants.Roles)
+	hideManaRoles:SetMultiselect(true)
+	hideManaRoles:SetCallback("OnValueChanged", function(_, _, key, value)
+		settings.hideManaRoles = settings.hideManaRoles or {}
+		settings.hideManaRoles[key] = value
+		RefreshResourceBars()
+	end)
+	settings.hideManaRoles = settings.hideManaRoles or {}
+	for key, value in pairs(settings.hideManaRoles) do
+		hideManaRoles:SetItemValue(key, value)
 	end
+	generalSettings:AddChild(hideManaRoles)
 
 	local barSettings = AceGUI:Create("InlineGroup")
 	barSettings:SetLayout("flow")
