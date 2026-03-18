@@ -14,13 +14,13 @@ StaticPopupDialogs["SCM_FORCE_RELOAD_POPUP"] = {
 	whileDead = true,
 	hideOnEscape = true,
 	preferredIndex = 3,
-	OnAccept = function(_, popupData)
-		popupData.options[popupData.key] = popupData.value
-		C_UI.ReloadUI()
+	OnAccept = function(_, data)
+		data.options[data.key] = data.value
+		C_UI.Reload()
 	end,
-	OnCancel = function(_, popupData)
-		if popupData.checkbox and popupData.key then
-			popupData.checkbox:SetValue(popupData.options[popupData.key])
+	OnCancel = function(_, data)
+		if data.checkbox and data.key then
+			data.checkbox:SetValue(data.options[data.key])
 		end
 	end,
 }
