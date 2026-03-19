@@ -121,7 +121,7 @@ end
 
 function SCM:SPELL_UPDATE_COOLDOWN(spellID)
 	local predicate = function(config)
-		return config.spellID == spellID
+		return config.spellID == spellID or config.iconType == "item"
 	end
 
 	SCM.CustomIcons.UpdateItemCountText(spellID)
