@@ -805,6 +805,7 @@ end
 function SCMResourceBarControllerMixin:RefreshResourceBars()
 	local barOptions = self:ApplyResourceBarOptions()
 	if not barOptions.enabled then
+		SCM:ApplyResourceBarHideWhileMountedSettings(false)
 		self:UnregisterAllEvents()
 		self.SCMResourceBarEventsRegistered = false
 		self.PrimaryBar:UnregisterAllEvents()
@@ -817,7 +818,6 @@ function SCMResourceBarControllerMixin:RefreshResourceBars()
 		return
 	end
 
-	SCM:ApplyResourceBarHideWhileMountedSettings(barOptions.hideWhileMounted)
 	if barOptions.primaryBar.enabled then
 		self:ConfigurePrimaryBar()
 		RegisterBarEvents(self.PrimaryBar, barOptions)
@@ -844,6 +844,8 @@ function SCMResourceBarControllerMixin:RefreshResourceBars()
 		self:UpdateContainerShownState()
 		self:UpdateRefreshState()
 	end
+
+	SCM:ApplyResourceBarHideWhileMountedSettings(barOptions.hideWhileMounted)
 end
 
 function SCMResourceBarControllerMixin:ConfigurePrimaryBar()
@@ -991,11 +993,19 @@ function SCMResourceBarControllerMixin:UpdateContainerShownState()
 		return
 	end
 
-	if SCM.db.profile.options.hideWhileMounted and self:GetAttribute("statehidden") then
+	if barOptions.hideWhileMounted and self:GetAttribute("statehidden") then
 		return
 	end
 
 	self:SetShown(self.PrimaryBar:IsShown() or self.SecondaryBar:IsShown())
+end
+
+function SCMResourceBarControllerMixin:OnAttributeChanged(name, value)
+	if name ~= "statehidden" or value then
+		return
+	end
+
+	self:UpdateContainerShownState()
 end
 
 function SCMResourceBarControllerMixin:OnEvent(event)
@@ -1027,6 +1037,7 @@ function SCMResourceBarControllerMixin:Initialize()
 	self.PrimaryBar:SetScript("OnEvent", OnResourceBarEvent)
 	self.SecondaryBar:SetScript("OnEvent", OnResourceBarEvent)
 
+	self:SetScript("OnAttributeChanged", self.OnAttributeChanged)
 	self:SetScript("OnEvent", self.OnEvent)
 	self:RegisterResourceBarEvents()
 
