@@ -294,6 +294,7 @@ local function CreateAddSpellDropdown(owner, rootDescription, scrollFrame, ancho
 					local dataIndex = scrollFrame:AddSpellBySpellID(info)
 					SCM:AddSpellToConfig(anchorIndex, dataIndex, info, data, item.targetCategory, isBuffIcon)
 					SCM:ApplyAllCDManagerConfigs()
+					return MenuResponse.Open
 				end, info)
 			end
 		end
