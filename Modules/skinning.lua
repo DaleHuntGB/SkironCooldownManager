@@ -89,6 +89,9 @@ local function ApplyCooldownStyle(child, options)
 		end
 
 		child.SCMCooldownSkinHook = true
+		if child.CooldownFlash then
+			child.CooldownFlash:SetAlpha(0)
+		end
 
 		cooldownFrame:ClearAllPoints()
 		cooldownFrame:SetAllPoints(child.Icon)
