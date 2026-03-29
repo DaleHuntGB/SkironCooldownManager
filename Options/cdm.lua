@@ -288,12 +288,15 @@ local function CreateAddSpellDropdown(owner, rootDescription, scrollFrame, ancho
 				info.cooldownID = item.cooldownID
 				info.configID = configID
 				info.isDisabled = data.category < 0
+				info.category = data.category
 
 				local activeColor = (data.category < 0 and colorDisabled) or (info.isKnown and colorKnown) or colorUnknown
 				parentButton:CreateButton(string.format("|T%d:0|t |cff%s%s (%d)|r", C_Spell.GetSpellTexture(info.spellID), activeColor, C_Spell.GetSpellName(info.spellID), cooldownID), function(info)
-					local dataIndex = scrollFrame:AddSpellBySpellID(info)
-					SCM:AddSpellToConfig(anchorIndex, dataIndex, info, data, item.targetCategory, isBuffIcon)
-					SCM:ApplyAllCDManagerConfigs()
+					if not SCM:IsSpellInData(info.cooldownID, info.category) and not DoesScrollFrameContainSpellConfig(scrollFrame, info.configID, info.cooldownID) then
+						local dataIndex = scrollFrame:AddSpellBySpellID(info)
+						SCM:AddSpellToConfig(anchorIndex, dataIndex, info, data, item.targetCategory, isBuffIcon)
+						SCM:ApplyAllCDManagerConfigs()
+					end
 					return MenuResponse.Open
 				end, info)
 			end
