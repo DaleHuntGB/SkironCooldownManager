@@ -357,7 +357,7 @@ local function StartCast(durationInfo, spellName, fillColor, isChannel, empowere
 	end
 
 	castBar.CurrentFillColor = fillColor
-	UpdateStatusBarLook(fillColor)
+	--UpdateStatusBarLook(fillColor)
 	UpdateIconTexture(spellTexture)
 
 	if empoweredStages then
@@ -507,7 +507,7 @@ function SCM:CreateCastBar()
 	castBar:SetFrameStrata("BACKGROUND")
 	castBar.Pips = {}
 	castBar:HookScript("OnShow", function()
-		UpdateStatusBarLook(castBar.CurrentFillColor)
+		--UpdateStatusBarLook(castBar.CurrentFillColor)
 	end)
 
 	castBar.Background = castBar:CreateTexture(nil, "BACKGROUND")
