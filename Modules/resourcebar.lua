@@ -21,6 +21,7 @@ local RESOURCE_BAR_RECONFIGURE_EVENTS = {
 	PLAYER_LOSES_VEHICLE_DATA = true,
 	UNIT_DISPLAYPOWER = true,
 	UPDATE_SHAPESHIFT_FORM = true,
+	UNIT_MAXPOWER = true
 }
 
 local function GetPowerColorByInfo(powerToken, powerType)
@@ -1019,6 +1020,7 @@ function SCMResourceBarControllerMixin:RegisterResourceBarEvents()
 		self:RegisterEvent("UPDATE_SHAPESHIFT_FORM")
 		self:RegisterEvent("PLAYER_ENTERING_WORLD")
 		self:RegisterUnitEvent("UNIT_DISPLAYPOWER", "player")
+		self:RegisterUnitEvent("UNIT_MAXPOWER", "player")
 		self:RegisterEvent("PLAYER_GAINS_VEHICLE_DATA")
 		self:RegisterEvent("PLAYER_LOSES_VEHICLE_DATA")
 		self.SCMResourceBarEventsRegistered = true
