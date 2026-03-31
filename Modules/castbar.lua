@@ -564,6 +564,10 @@ function SCM:UpdateCastBar()
 		end
 		self:RefreshCastBarWidth(0.1)
 		PlayerCastingBarFrame:UnregisterAllEvents()
+
+		EventRegistry:RegisterCallback("SkironCooldownManager.ResourceBar.LayoutUpdated", function()
+			UpdateStatusBarLook()
+		end, castBar)
 	else
 		castBar:SetScript("OnEvent", nil)
 		castBar:UnregisterAllEvents()

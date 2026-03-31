@@ -21,7 +21,7 @@ local RESOURCE_BAR_RECONFIGURE_EVENTS = {
 	PLAYER_LOSES_VEHICLE_DATA = true,
 	UNIT_DISPLAYPOWER = true,
 	UPDATE_SHAPESHIFT_FORM = true,
-	UNIT_MAXPOWER = true
+	UNIT_MAXPOWER = true,
 }
 
 local function GetPowerColorByInfo(powerToken, powerType)
@@ -844,6 +844,8 @@ function SCMResourceBarControllerMixin:RefreshResourceBars()
 		self:UpdateBarLayout()
 		self:UpdateContainerShownState()
 		self:UpdateRefreshState()
+
+		EventRegistry:TriggerEvent("SkironCooldownManager.ResourceBar.LayoutUpdated")
 	end
 
 	SCM:ApplyResourceBarHideWhileMountedSettings(barOptions.hideWhileMounted)
