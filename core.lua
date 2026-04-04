@@ -104,8 +104,7 @@ function SCM:PLAYER_ENTERING_WORLD(isInitialLogin, isReload)
 		SCM:InitializeResourceBars()
 		SCM:CreateCastBar()
 	elseif self.isInInstance ~= IsInInstance() then
-		RefreshCooldownViewerData(true)
-		SCM:RefreshResourceBarConfig()
+		RefreshCooldownViewerData()
 	end
 
 	self.isInInstance = IsInInstance()
