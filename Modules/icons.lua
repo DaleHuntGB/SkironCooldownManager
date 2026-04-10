@@ -248,6 +248,7 @@ local function ProcessSingleChild(child, validChildren, categoryIndex, isBuffIco
 		child.SCMCooldownID = nil
 		child.SCMConfigID = nil
 		child.SCMRowConfig = nil
+		child.SCMGroup = nil
 
 		Icons.SetChildVisibilityState(child, false, true)
 		return
@@ -256,8 +257,13 @@ local function ProcessSingleChild(child, validChildren, categoryIndex, isBuffIco
 	local group = childData.source[categoryIndex] or childData.source[SCM.Constants.SourcePairs[categoryIndex]]
 	local groupConfig = childData.anchorGroup and childData.anchorGroup[group]
 	if not (group and groupConfig) then
+		child.SCMConfig = nil
+		child.SCMOrder = nil
+		child.SCMCooldownID = nil
 		child.SCMConfigID = nil
 		child.SCMRowConfig = nil
+		child.SCMGroup = nil
+		
 		Icons.SetChildVisibilityState(child, false, true)
 		return
 	end
