@@ -1,4 +1,5 @@
 local addonName, SCM = ...
+local eventFrame = CreateFrame("Frame")
 
 SCM.CDM = {}
 SCM.Cache = {}
@@ -37,11 +38,13 @@ local pendingCustomGlowChildren = {}
 local function OnSpellAlertManagerShowAlert(_, child)
 	local options = SCM.db.profile.options
 	if not child.SCMConfig or not options.useCustomGlow or child.SCMActiveGlow then
-		if child.SpellActivationAlert and child.SCMWidth and child.SCMHeight then
+		if child.SCMWidth and child.SCMHeight then
 			local width = SCM:PixelPerfect(child.SCMWidth)
 			local height = SCM:PixelPerfect(child.SCMHeight)
+
 			local alert = child.SpellActivationAlert
 			alert:SetSize(width * 1.4, height * 1.4)
+
 			if alert.ProcStartFlipbook then
 				alert.ProcStartFlipbook:SetSize((width / 42) * 150, (height / 42) * 150)
 			end

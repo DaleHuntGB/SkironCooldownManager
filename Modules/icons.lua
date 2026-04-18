@@ -206,7 +206,8 @@ local function ProcessBuffIcon(child, childData, options)
 	Cooldowns.SetupBuffIconHooks(child, options)
 	child.SCMBuffOptions = options
 
-	local isInactive = not child.Cooldown:IsShown() and not child.auraInstanceID
+	--local isInactive = not child.Cooldown:IsShown() and not child.auraInstanceID
+	local isInactive = not child.auraInstanceID
 	local forceShow = SCM.simulateBuffs or (not SCM.isHideWhenInactiveEnabled and childData.alwaysShow)
 	local shouldHide = isInactive and not forceShow
 
