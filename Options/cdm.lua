@@ -499,6 +499,61 @@ local function SelectAdvancedRowSettings(self, tabGroup, rowConfig, rowIndex, op
 			SCM:ApplyAllCDManagerConfigs()
 		end)
 		self:AddChild(chargeFontSize)
+	elseif tabGroup == "applications" then
+		local applicationsPoint = AceGUI:Create("Dropdown")
+		applicationsPoint:SetRelativeWidth(0.5)
+		applicationsPoint:SetLabel("Point")
+		applicationsPoint:SetList(SCM.Constants.AnchorPoints)
+		applicationsPoint:SetValue(rowConfig.applicationsPoint or options.chargePoint)
+		applicationsPoint:SetCallback("OnValueChanged", function(_, _, value)
+			rowConfig.applicationsPoint = value
+			SCM:ApplyAllCDManagerConfigs()
+		end)
+		self:AddChild(applicationsPoint)
+
+		local applicationsRelativePoint = AceGUI:Create("Dropdown")
+		applicationsRelativePoint:SetRelativeWidth(0.5)
+		applicationsRelativePoint:SetLabel("Relative Point")
+		applicationsRelativePoint:SetList(SCM.Constants.AnchorPoints)
+		applicationsRelativePoint:SetValue(rowConfig.applicationsRelativePoint or options.chargeRelativePoint)
+		applicationsRelativePoint:SetCallback("OnValueChanged", function(_, _, value)
+			rowConfig.applicationsRelativePoint = value
+			SCM:ApplyAllCDManagerConfigs()
+		end)
+		self:AddChild(applicationsRelativePoint)
+
+		local xOffset = AceGUI:Create("Slider")
+		xOffset:SetRelativeWidth(0.33)
+		xOffset:SetSliderValues(-50, 50, 0.1)
+		xOffset:SetLabel("X Offset")
+		xOffset:SetValue(rowConfig.applicationsXOffset or options.chargeXOffset)
+		xOffset:SetCallback("OnValueChanged", function(self, event, value)
+			rowConfig.applicationsXOffset = value
+			SCM:ApplyAllCDManagerConfigs()
+		end)
+		self:AddChild(xOffset)
+
+		local yOffset = AceGUI:Create("Slider")
+		yOffset:SetRelativeWidth(0.33)
+		yOffset:SetSliderValues(-50, 50, 0.1)
+		yOffset:SetLabel("Y Offset")
+		yOffset:SetValue(rowConfig.applicationsYOffset or options.chargeYOffset)
+		yOffset:SetCallback("OnValueChanged", function(self, event, value)
+			rowConfig.applicationsYOffset = value
+			SCM:ApplyAllCDManagerConfigs()
+		end)
+		self:AddChild(yOffset)
+
+		local fontSize = AceGUI:Create("Slider")
+		fontSize:SetRelativeWidth(0.33)
+		fontSize:SetLabel("Font Size")
+		fontSize:SetSliderValues(1, 50, 1)
+		fontSize:SetValue(rowConfig.applicationsFontSize or options.chargeFontSize)
+		fontSize:SetCallback("OnValueChanged", function(self, event, value)
+			rowConfig.applicationsFontSize = value
+			SCM:ApplyAllCDManagerConfigs()
+		end)
+		self:AddChild(fontSize)
 	end
 
 	self:DoLayout()
@@ -575,7 +630,7 @@ local function SelectRow(self, data, anchorIndex, rowIndex, rowTabsTbl, isGlobal
 	local advancedRowSettings = AceGUI:Create("TabGroup")
 	advancedRowSettings:SetLayout("flow")
 	advancedRowSettings:SetFullWidth(true)
-	advancedRowSettings:SetTabs({ { value = "general", text = "General" }, { value = "charges", text = "Charges/Stacks" } })
+	advancedRowSettings:SetTabs({ { value = "general", text = "General" }, { value = "charges", text = "Charges" }, { value = "applications", text = "Stacks" } })
 	advancedRowSettings:SetCallback("OnGroupSelected", function(self, event, tabGroup)
 		SelectAdvancedRowSettings(self, tabGroup, rowConfig, rowIndex, options)
 	end)

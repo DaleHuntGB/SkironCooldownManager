@@ -723,3 +723,4 @@ function SCM:RemoveCustomIcon(id, isGlobal, iconType)
 
 		CustomIcons.ReleaseIcon(id, config)
 	end
+end

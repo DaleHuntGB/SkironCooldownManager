@@ -37,18 +37,18 @@ local function ApplyChargeAndApplicationStyle(child, options, fontPath)
 	end
 
 	if child.Applications and child.Applications.Applications then
-		local size = rowConfig.chargeFontSize or options.chargeFontSize
+		local size = rowConfig.applicationsFontSize or options.chargeFontSize
 		if fontPath then
 			child.Applications.Applications:SetFont(fontPath, size, "OUTLINE")
 		end
 
 		child.Applications.Applications:ClearAllPoints()
 		child.Applications.Applications:SetPoint(
-			rowConfig.chargePoint or options.chargePoint,
+			rowConfig.applicationsPoint or options.chargePoint,
 			child.Icon,
-			rowConfig.chargeRelativePoint or options.chargeRelativePoint,
-			rowConfig.chargeXOffset or options.chargeXOffset,
-			rowConfig.chargeYOffset or options.chargeYOffset
+			rowConfig.applicationsRelativePoint or options.chargeRelativePoint,
+			rowConfig.applicationsXOffset or options.chargeXOffset,
+			rowConfig.applicationsYOffset or options.chargeYOffset
 		)
 	end
 end
