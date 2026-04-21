@@ -101,10 +101,14 @@ local function ApplyCooldownStyle(child, options)
 
 		hooksecurefunc(cooldownFrame, "SetCooldown", function(self)
 			local parent = self:GetParent()
+
 			if options.recolorActiveSwipe and self:GetUseAuraDisplayTime() then
 				if not options.disableRegularIconActiveSwipe or (parent.SCMConfig and parent.SCMConfig.forceActiveSwipe) then
 					self:SetSwipeColor(unpack(options.activeSwipeColor))
 					self:SetReverse(options.reverseActiveSwipe)
+				elseif options.recolorNormalSwipe then
+					self:SetReverse(false)
+					self:SetSwipeColor(unpack(options.normalSwipeColor))
 				end
 			elseif options.recolorNormalSwipe then
 				self:SetReverse(false)
