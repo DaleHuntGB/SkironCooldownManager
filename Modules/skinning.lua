@@ -93,7 +93,8 @@ local function ApplyCooldownStyle(child, options)
 		end
 
 		cooldownFrame:ClearAllPoints()
-		cooldownFrame:SetAllPoints(child.Icon)
+		cooldownFrame:SetPoint("TOPLEFT", child, "TOPLEFT", 0, -0)
+		cooldownFrame:SetPoint("BOTTOMRIGHT", child, "BOTTOMRIGHT", -0, 0)
 		cooldownFrame:SetSwipeTexture("Interface\\Buttons\\WHITE8x8")
 
 		hooksecurefunc(cooldownFrame, "SetCooldown", function(self)
