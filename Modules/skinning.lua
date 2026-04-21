@@ -70,6 +70,8 @@ local function ApplyCooldownFont(cooldownFrame, options)
 				local iconSize = min(width, height)
 				local fontSize = max(1, floor(iconSize * GetCooldownFontScale(options) + 0.5))
 				cooldownFontString:SetFont(fontPath, fontSize, "OUTLINE")
+				cooldownFontString:SetShadowColor(0, 0, 0, 0)
+				cooldownFontString:SetShadowOffset(0, 0)
 			end
 		end
 	elseif originalCooldownFont then
