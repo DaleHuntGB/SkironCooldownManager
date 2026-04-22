@@ -436,6 +436,8 @@ local function ResolveCustomIconTexture(config, iconType)
 end
 
 function ShouldShowCustomIcon(config, iconType, hasCount, isOnCooldown, frame)
+	if not config then return end
+
 	if SCM.isOptionsOpen or config.alwaysShow then
 		return true
 	end
