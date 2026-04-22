@@ -15,8 +15,11 @@ Cache.cachedAnchorLinks = {}
 Cache.cachedAnchorLinksDirty = true
 Cache.cachedAnchorQueue = {}
 Cache.cachedAnchorOffsetVisited = {}
-Cache.reusableCustomIconContext = {}
-Cache.reusableScopedGroupTables = {}
+Cache.cachedCustomSpellEntriesBySpellID = {}
+Cache.cachedCustomItemEntriesByItemID = {}
+Cache.cachedCustomSlotEntriesByItemID = {}
+Cache.customIconRequests = {}
+Cache.scopedGroupTables = {}
 Cache.cachedScopedAnchorGroups = {
 	essential = {},
 	utility = {},
@@ -50,10 +53,10 @@ function SCM:InvalidateAnchorLinks()
 end
 
 function SCM:AcquireScopedGroupCache()
-	local reusableScopedGroupTables = Cache.reusableScopedGroupTables
-	local scopedGroups = reusableScopedGroupTables[#reusableScopedGroupTables]
+	local scopedGroupTables = Cache.scopedGroupTables
+	local scopedGroups = scopedGroupTables[#scopedGroupTables]
 	if scopedGroups then
-		reusableScopedGroupTables[#reusableScopedGroupTables] = nil
+		scopedGroupTables[#scopedGroupTables] = nil
 		return scopedGroups
 	end
 
@@ -66,8 +69,8 @@ function SCM:ReleaseScopedGroupCache(scopedGroups)
 	end
 
 	wipe(scopedGroups)
-	local reusableScopedGroupTables = Cache.reusableScopedGroupTables
-	reusableScopedGroupTables[#reusableScopedGroupTables + 1] = scopedGroups
+	local scopedGroupTables = Cache.scopedGroupTables
+	scopedGroupTables[#scopedGroupTables + 1] = scopedGroups
 end
 
 function SCM:GetPixelPerfectMultiplier()

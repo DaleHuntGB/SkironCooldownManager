@@ -1155,7 +1155,7 @@ local function SelectAnchor(anchorWidget, frame, anchorIndex, anchorTabsTbl, mod
 					if buttonConfig then
 						local function ApplyIconConfigUpdate()
 							if buttonFrame.data.isCustom then
-								SCM.CustomIcons.CreateIcons(SCM:GetConfigTable(buttonData.iconType, isGlobal), isGlobal)
+								SCM:CreateAllCustomIcons(buttonData.iconType)
 								SCM:ApplyAnchorGroupCDManagerConfig(anchorIndex, isGlobal)
 								return
 							end

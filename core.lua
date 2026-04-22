@@ -216,6 +216,18 @@ function SCM:CVAR_UPDATE(cvarName)
 	end
 end
 
+function SCM:SPELL_DATA_LOAD_RESULT(spellID, success)
+	if success then
+		SCM.CustomIcons.CreateSpellIcon(spellID)
+	end
+end
+
+function SCM:ITEM_DATA_LOAD_RESULT(itemID, success)
+	if success then
+		SCM.CustomIcons.CreateItemIcon(itemID)
+	end
+end
+
 local function OnProfileChanged(_, _, _, skipReset)
 	-- Hopefully players won't change profiles that much that we reach the frame limit :)
 	if not skipReset then
@@ -266,6 +278,8 @@ EventUtil.ContinueOnAddOnLoaded(addonName, function()
 	eventFrame:RegisterEvent("UI_SCALE_CHANGED")
 	eventFrame:RegisterEvent("DISPLAY_SIZE_CHANGED")
 	eventFrame:RegisterEvent("CVAR_UPDATE")
+	eventFrame:RegisterEvent("SPELL_DATA_LOAD_RESULT")
+	eventFrame:RegisterEvent("ITEM_DATA_LOAD_RESULT")
 	eventFrame:RegisterUnitEvent("UNIT_SPELLCAST_SUCCEEDED", "player")
 	eventFrame:SetScript("OnEvent", OnEventFrameEvent)
 

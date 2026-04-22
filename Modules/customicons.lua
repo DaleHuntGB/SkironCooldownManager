@@ -2,6 +2,7 @@ local SCM = select(2, ...)
 
 local CustomIcons = SCM.CustomIcons
 local CDM = SCM.CDM
+local Cache = SCM.Cache
 local Icons = SCM.Icons
 local GetIconType = SCM.Utils.GetIconType
 local ResetChildSCMState = SCM.Utils.ResetChildSCMState
@@ -436,7 +437,9 @@ local function ResolveCustomIconTexture(config, iconType)
 end
 
 function ShouldShowCustomIcon(config, iconType, hasCount, isOnCooldown, frame)
-	if not config then return end
+	if not config then
+		return
+	end
 
 	if SCM.isOptionsOpen or config.alwaysShow then
 		return true
@@ -537,21 +540,169 @@ function CustomIcons.ReleaseAllIcons()
 	end
 end
 
-function CustomIcons.CreateIcons(customConfig, isGlobal, iconType)
-	local viewerScale = 1
+local function CacheCustomIconEntry(id, config, isGlobal, slotItemID)
+	local iconType = GetIconType(config)
+	if (iconType == "spell" or iconType == "timer") and config.spellID then
+		local entries = Cache.cachedCustomSpellEntriesBySpellID[config.spellID]
+		if not entries then
+			entries = {}
+			Cache.cachedCustomSpellEntriesBySpellID[config.spellID] = entries
+		end
 
-	for id, config in pairs(customConfig) do
-		local customFrames = CustomIcons.GetCustomIconFrames(config)
-		if customFrames then
-			if DoesItemOrSpellExists(config) and ShouldLoadCustomIcon(config) and (not iconType or GetIconType(config) == iconType) then
-				local frame = AcquireCustomIconFrame(customFrames, id)
-				ConfigureCustomIconFrame(frame, id, config, viewerScale, config.anchorGroup or 1, isGlobal)
-				UpdateCustomIconFrameState(frame, config)
-				ApplyGlobalSettings(frame)
-				Icons.SetChildVisibilityState(frame, false, true)
-			elseif customFrames[id] then
-				ReleaseCustomIconFrame(customFrames[id])
+		tinsert(entries, {
+			id = id,
+			config = config,
+			isGlobal = isGlobal and true or nil,
+		})
+		return
+	end
+
+	if iconType == "item" and config.itemID then
+		local entries = Cache.cachedCustomItemEntriesByItemID[config.itemID]
+		if not entries then
+			entries = {}
+			Cache.cachedCustomItemEntriesByItemID[config.itemID] = entries
+		end
+
+		tinsert(entries, {
+			id = id,
+			config = config,
+			isGlobal = isGlobal and true or nil,
+		})
+		return
+	end
+
+	if iconType == "slot" and config.slotID then
+		if not slotItemID then
+			return
+		end
+
+		local entries = Cache.cachedCustomSlotEntriesByItemID[slotItemID]
+		if not entries then
+			entries = {}
+			Cache.cachedCustomSlotEntriesByItemID[slotItemID] = entries
+		end
+
+		tinsert(entries, {
+			id = id,
+			config = config,
+			isGlobal = isGlobal and true or nil,
+		})
+	end
+end
+
+local function RequestCustomIconDataLoad(config, requestedSpellIDs, requestedItemIDs, slotItemID)
+	local iconType = GetIconType(config)
+	if (iconType == "spell" or iconType == "timer") and config.spellID then
+		if not requestedSpellIDs[config.spellID] then
+			requestedSpellIDs[config.spellID] = true
+			C_Spell.RequestLoadSpellData(config.spellID)
+		end
+		return
+	end
+
+	local itemID
+	if iconType == "item" then
+		itemID = config.itemID
+	elseif iconType == "slot" then
+		itemID = slotItemID
+	end
+
+	if itemID and not requestedItemIDs[itemID] then
+		requestedItemIDs[itemID] = true
+		C_Item.RequestLoadItemDataByID(itemID)
+	end
+end
+
+local function RebuildCustomIconLoadCache()
+	local customIconRequests = Cache.customIconRequests
+	customIconRequests.requestedSpellIDs = customIconRequests.requestedSpellIDs or {}
+	customIconRequests.requestedItemIDs = customIconRequests.requestedItemIDs or {}
+	local requestedSpellIDs = customIconRequests.requestedSpellIDs
+	local requestedItemIDs = customIconRequests.requestedItemIDs
+	wipe(requestedSpellIDs)
+	wipe(requestedItemIDs)
+
+	wipe(Cache.cachedCustomSpellEntriesBySpellID)
+	wipe(Cache.cachedCustomItemEntriesByItemID)
+	wipe(Cache.cachedCustomSlotEntriesByItemID)
+
+	local function CacheCustomConfig(customConfig, isGlobal)
+		if not customConfig then
+			return
+		end
+
+		for id, config in pairs(customConfig) do
+			local slotItemID = config.slotID and GetInventoryItemID("player", config.slotID) or nil
+			CacheCustomIconEntry(id, config, isGlobal, slotItemID)
+			RequestCustomIconDataLoad(config, requestedSpellIDs, requestedItemIDs, slotItemID)
+		end
+	end
+
+	for _, customConfig in pairs(SCM.customConfig) do
+		CacheCustomConfig(customConfig, false)
+	end
+
+	for _, customConfig in pairs(SCM.globalCustomConfig) do
+		CacheCustomConfig(customConfig, true)
+	end
+end
+
+local function CreateCustomIcon(id, config, isGlobal)
+	local customFrames = CustomIcons.GetCustomIconFrames(config)
+	if customFrames then
+		if DoesItemOrSpellExists(config) and ShouldLoadCustomIcon(config) then
+			local frame = AcquireCustomIconFrame(customFrames, id)
+			ConfigureCustomIconFrame(frame, id, config, 1, config.anchorGroup or 1, isGlobal)
+			UpdateCustomIconFrameState(frame, config)
+			ApplyGlobalSettings(frame)
+			Icons.SetChildVisibilityState(frame, false, true)
+		elseif customFrames[id] then
+			ReleaseCustomIconFrame(customFrames[id])
+		end
+	end
+end
+
+function CustomIcons.CreateSpellIcon(spellID)
+	local entries = Cache.cachedCustomSpellEntriesBySpellID[spellID]
+	if not entries then
+		return
+	end
+
+	for _, entry in ipairs(entries) do
+		if entry.config then
+			CreateCustomIcon(entry.id, entry.config, entry.isGlobal)
+		end
+	end
+end
+
+function CustomIcons.CreateItemIcon(itemID)
+	local entries = Cache.cachedCustomItemEntriesByItemID[itemID]
+	if entries then
+		for _, entry in ipairs(entries) do
+			if entry.config then
+				CreateCustomIcon(entry.id, entry.config, entry.isGlobal)
 			end
+		end
+	end
+
+	entries = Cache.cachedCustomSlotEntriesByItemID[itemID]
+	if not entries then
+		return
+	end
+
+	for _, entry in ipairs(entries) do
+		local config = entry.config
+		if config and config.slotID and GetInventoryItemID("player", config.slotID) == itemID then
+			CreateCustomIcon(entry.id, config, entry.isGlobal)
+		end
+	end
+end
+
+function CustomIcons.CreateIcons(customConfig, isGlobal, iconType)
+	for id, config in pairs(customConfig) do
+		if not iconType or GetIconType(config) == iconType then
+			CreateCustomIcon(id, config, isGlobal)
 		end
 	end
 end
@@ -639,12 +790,14 @@ function CustomIcons.UpdateItemCountText(spellID)
 end
 
 function SCM:CreateAllCustomIcons(iconType)
-	for _, config in pairs(self.customConfig) do
-		CustomIcons.CreateIcons(config, false, iconType)
+	RebuildCustomIconLoadCache()
+
+	for _, customConfig in pairs(self.customConfig) do
+		CustomIcons.CreateIcons(customConfig, false, iconType)
 	end
 
-	for _, config in pairs(self.globalCustomConfig) do
-		CustomIcons.CreateIcons(config, true, iconType)
+	for _, customConfig in pairs(self.globalCustomConfig) do
+		CustomIcons.CreateIcons(customConfig, true, iconType)
 	end
 end
 
@@ -694,7 +847,7 @@ function SCM:AddCustomIcon(anchorGroup, iconType, configID, order, uniqueID, isG
 		loadRoles = { ["TANK"] = true, ["HEALER"] = true, ["DAMAGER"] = true },
 	}
 
-	CustomIcons.CreateIcons(configTable, isGlobal)
+	self:CreateAllCustomIcons(iconType)
 
 	return uniqueID
 end
@@ -706,5 +859,6 @@ function SCM:RemoveCustomIcon(id, isGlobal, iconType)
 		configTable[id] = nil
 
 		CustomIcons.ReleaseIcon(id, config)
+		self:CreateAllCustomIcons(iconType)
 	end
 end
