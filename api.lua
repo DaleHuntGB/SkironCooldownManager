@@ -19,6 +19,10 @@ function SCMAPI.ImportGlobalSettings(importString)
 	SCM:ImportGlobalSettings(importString)
 end
 
+function SCMAPI.ImportGlobalAnchors(importString)
+	SCM:ImportGlobalAnchors(importString)
+end
+
 function SCMAPI.AddCustomIcon(anchorGroup, iconType, configID, order, uniqueID, isGlobal)
 	local uniqueID = SCM:AddCustomIcon(anchorGroup, iconType, configID, order, uniqueID, isGlobal)
 	if not uniqueID then
