@@ -129,9 +129,9 @@ local function Profiles(widget, frame, group)
 	local exportState = {
 		useSpecificClass = false,
 		useSpecificSpec = false,
-		includeResourceBar = true,
-		includeCastBar = true,
-		includeGlobalSettings = true,
+		includeResourceBar = false,
+		includeCastBar = false,
+		includeGlobalSettings = false,
 		includeGlobalAnchors = false,
 	}
 
