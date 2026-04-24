@@ -183,16 +183,7 @@ function Cooldowns.SetupCooldownHooks(child)
 	hooksecurefunc(child.Cooldown, "Clear", OnRegularCooldownChanged)
 	child.Cooldown:HookScript("OnCooldownDone", function(self, ...)
 		local parent = self:GetParent()
-		-- if parent then
-		-- 	RunNextFrame(function()
-		-- 		if parent.SCMSpellID == 586 then
-		-- 			print(Cooldowns.IsChildOnCooldown(parent))
-		-- 		end
-		-- 		--parent.Icon.SCMDesaturated = Cooldowns.IsChildOnCooldown(parent)
-		-- 		--parent.Icon:SetDesaturated(parent.Icon.SCMDesaturated)
-		-- 	end)
-		-- end
-		parent.Icon.SCMDesaturated = false
+		parent.Icon.SCMDesaturated = nil
 		OnRegularCooldownChanged(self)
 	end)
 	child.SCMRegularCooldownHook = true
