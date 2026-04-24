@@ -114,13 +114,7 @@ function SCM:RemoveGlobalAnchor(anchorIndex, anchorTabsTbl)
 		self.db.global.globalCustomConfig.slotConfig,
 		self.db.global.globalCustomConfig.timerConfig,
 	}) do
-		for id, config in pairs(globalConfig) do
-			if config.anchorGroup == anchorIndex then
-				globalConfig[id] = nil
-			elseif config.anchorGroup and config.anchorGroup > anchorIndex then
-				config.anchorGroup = config.anchorGroup - 1
-			end
-		end
+		RemoveDeletedAnchorCustomConfig(globalConfig, anchorIndex)
 	end
 
 	for i = #anchorTabsTbl, 1, -1 do
@@ -330,7 +324,6 @@ function SCM:RemoveSpellFromConfig(anchorIndex, data)
 	local configID = data.id or GetCooldownConfigKey(data.cooldownID)
 	local spellConfig = configID and self.spellConfig[configID]
 	if spellConfig then
-
 		for category, anchorGroup in pairs(spellConfig.source) do
 			if anchorGroup == anchorIndex then
 				spellConfig.source[category] = nil

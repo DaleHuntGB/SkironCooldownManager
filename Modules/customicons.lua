@@ -648,9 +648,13 @@ local function RebuildCustomIconLoadCache()
 	end
 end
 
-local function CreateCustomIcon(id, config, isGlobal)
+local function CreateCustomIcon(id, config, isGlobal, skipExisting)
 	local customFrames = CustomIcons.GetCustomIconFrames(config)
 	if customFrames then
+		if skipExisting and customFrames[id] and not customFrames[id].SCMReleased then
+			return
+		end
+
 		if DoesItemOrSpellExists(config) and ShouldLoadCustomIcon(config) then
 			local frame = AcquireCustomIconFrame(customFrames, id)
 			ConfigureCustomIconFrame(frame, id, config, 1, config.anchorGroup or 1, isGlobal)
@@ -671,7 +675,7 @@ function CustomIcons.CreateSpellIcon(spellID)
 
 	for _, entry in ipairs(entries) do
 		if entry.config then
-			CreateCustomIcon(entry.id, entry.config, entry.isGlobal)
+			CreateCustomIcon(entry.id, entry.config, entry.isGlobal, true)
 		end
 	end
 end
@@ -681,7 +685,7 @@ function CustomIcons.CreateItemIcon(itemID)
 	if entries then
 		for _, entry in ipairs(entries) do
 			if entry.config then
-				CreateCustomIcon(entry.id, entry.config, entry.isGlobal)
+				CreateCustomIcon(entry.id, entry.config, entry.isGlobal, true)
 			end
 		end
 	end
@@ -694,7 +698,7 @@ function CustomIcons.CreateItemIcon(itemID)
 	for _, entry in ipairs(entries) do
 		local config = entry.config
 		if config and config.slotID and GetInventoryItemID("player", config.slotID) == itemID then
-			CreateCustomIcon(entry.id, config, entry.isGlobal)
+			CreateCustomIcon(entry.id, config, entry.isGlobal, true)
 		end
 	end
 end
