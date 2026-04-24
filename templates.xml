@@ -70,7 +70,7 @@
 			</Layer>
 		</Layers>
 		<Frames>
-			<Cooldown parentKey="Cooldown" drawEdge="true" drawBling="true">
+			<Cooldown parentKey="Cooldown" drawEdge="false" drawBling="true">
 				<Anchors>
 					<Anchor point="TOPLEFT" x="-1" y="1"/>
 					<Anchor point="BOTTOMRIGHT" x="1" y="-1"/>
