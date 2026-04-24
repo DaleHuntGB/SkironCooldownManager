@@ -1,6 +1,7 @@
 local _, SCM = ...
 
 local Utils = SCM.Utils
+local COOLDOWN_CONFIG_KEY_PREFIX = "cooldown:"
 local GLOBAL_GROUP_OFFSET = 100
 local GLOBAL_BUFF_BAR_OFFSET = 200
 local FIRST_GLOBAL_GROUP = GLOBAL_GROUP_OFFSET + 1
@@ -171,6 +172,23 @@ end
 
 function Utils.IsBuffBarGroup(group)
 	return type(group) == "number" and group >= FIRST_BUFF_BAR_GROUP
+end
+
+function Utils.GetCooldownConfigKey(cooldownID)
+	if not cooldownID then
+		return
+	end
+
+	return COOLDOWN_CONFIG_KEY_PREFIX .. tostring(cooldownID)
+end
+
+function Utils.GetSpellConfigByCooldownID(spellConfig, cooldownID)
+	if not cooldownID then
+		return
+	end
+
+	local configID = COOLDOWN_CONFIG_KEY_PREFIX .. tostring(cooldownID)
+	return configID, configID and spellConfig and spellConfig[configID]
 end
 
 function Utils.ParseAnchorString(anchorRef)

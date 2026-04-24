@@ -1,35 +1,88 @@
 local _, SCM = ...
 
-local COOLDOWN_CONFIG_KEY_PREFIX = "cooldown:"
+local Utils = SCM.Utils
+local GetCooldownConfigKey = Utils.GetCooldownConfigKey
+local ToBuffBarGroup = Utils.ToBuffBarGroup
+local IsBuffBarGroup = Utils.IsBuffBarGroup
 
-local function GetCooldownConfigKey(cooldownID)
-	if not cooldownID then
+local function HasAnchorConfig(anchorGroup, anchorConfig, buffBarsAnchorConfig)
+	anchorGroup = tonumber(anchorGroup)
+	if not anchorGroup then
 		return
 	end
 
-	return COOLDOWN_CONFIG_KEY_PREFIX .. tostring(cooldownID)
+	if IsBuffBarGroup(anchorGroup) then
+		return buffBarsAnchorConfig and buffBarsAnchorConfig[anchorGroup - ToBuffBarGroup(0)]
+	end
+
+	return anchorConfig and anchorConfig[anchorGroup]
 end
 
-local function GetSpellConfigByCooldownID(spellConfig, cooldownID)
-	local configID = GetCooldownConfigKey(cooldownID)
-	return configID, configID and spellConfig and spellConfig[configID]
-end
-
-local function MigrateLegacyGlobalOptionsToProfiles(db)
-	if not db or not db.global then
+local function RemoveOldSpellConfigAnchors(config, anchorConfig, buffBarsAnchorConfig)
+	local source = type(config) == "table" and config.source
+	local anchorGroups = type(config) == "table" and config.anchorGroup
+	if type(anchorGroups) ~= "table" then
 		return
 	end
 
-	local legacyOptions = db.global.options
-	if type(legacyOptions) ~= "table" then
-		return
-	end
-
-	for _, profile in pairs(db.profiles) do
-		if type(profile) == "table" and type(profile.options) ~= "table" then
-			profile.options = CopyTable(legacyOptions)
+	if type(source) == "table" then
+		for sourceIndex, anchorGroup in pairs(source) do
+			if not HasAnchorConfig(anchorGroup, anchorConfig, buffBarsAnchorConfig) then
+				source[sourceIndex] = nil
+			end
 		end
 	end
+
+	for anchorGroup in pairs(anchorGroups) do
+		if not HasAnchorConfig(anchorGroup, anchorConfig, buffBarsAnchorConfig) then
+			anchorGroups[anchorGroup] = nil
+		end
+	end
+
+	return next(anchorGroups)
+end
+
+local function HasCustomAnchorConfig(config, anchorConfig)
+	local anchorGroup = type(config) == "table" and config.anchorGroup
+	return type(anchorGroup) == "number" and HasAnchorConfig(anchorGroup, anchorConfig)
+end
+
+local function RemoveOldSpellConfigAnchorsFromTable(spellConfig, anchorConfig, buffBarsAnchorConfig)
+	if type(spellConfig) ~= "table" then
+		return
+	end
+
+	for configID, config in pairs(spellConfig) do
+		if not RemoveOldSpellConfigAnchors(config, anchorConfig, buffBarsAnchorConfig) then
+			spellConfig[configID] = nil
+		end
+	end
+end
+
+local function RemoveOldCustomConfigAnchors(customConfig, anchorConfig)
+	if type(customConfig) ~= "table" then
+		return
+	end
+
+	for _, configKey in ipairs({ "spellConfig", "itemConfig", "slotConfig", "timerConfig" }) do
+		local configTable = customConfig[configKey]
+		if type(configTable) == "table" then
+			for id, config in pairs(configTable) do
+				if not HasCustomAnchorConfig(config, anchorConfig) then
+					configTable[id] = nil
+				end
+			end
+		end
+	end
+end
+
+function SCM:RemoveOldAnchorConfigs(currentConfig, globalAnchorConfig, globalCustomConfig)
+	if type(currentConfig) == "table" then
+		RemoveOldSpellConfigAnchorsFromTable(currentConfig.spellConfig, currentConfig.anchorConfig, currentConfig.buffBarsAnchorConfig)
+		RemoveOldCustomConfigAnchors(currentConfig.customConfig, currentConfig.anchorConfig)
+	end
+
+	RemoveOldCustomConfigAnchors(globalCustomConfig, globalAnchorConfig)
 end
 
 local function GetCooldownDataForLegacySpellConfig(defaultCooldownViewerConfig, configID, config)
@@ -52,22 +105,6 @@ local function GetCooldownDataForLegacySpellConfig(defaultCooldownViewerConfig, 
 	end
 
 	return defaultCooldownViewerConfig.spellIDs and defaultCooldownViewerConfig.spellIDs[spellID]
-end
-
-function SCM:GetCooldownConfigKey(cooldownID)
-	return GetCooldownConfigKey(cooldownID)
-end
-
-function SCM:GetSpellConfigByCooldownID(cooldownID)
-	return GetSpellConfigByCooldownID(self.spellConfig, cooldownID)
-end
-
-function SCM:MigrateLegacyProfileOptions()
-	if not self.db then
-		return
-	end
-
-	MigrateLegacyGlobalOptionsToProfiles(self.db)
 end
 
 function SCM:MigrateLegacySpellConfigKeys(spellConfig, defaultCooldownViewerConfig)
@@ -93,6 +130,19 @@ function SCM:MigrateLegacySpellConfigKeys(spellConfig, defaultCooldownViewerConf
 			end
 		else
 			spellConfig[legacyID] = nil
+		end
+	end
+end
+
+function SCM:MigrateLegacyProfileOptions()
+	local legacyOptions = self.db.global.options
+	if type(legacyOptions) ~= "table" then
+		return
+	end
+
+	for _, profile in pairs(self.db.profiles) do
+		if type(profile) == "table" and type(profile.options) ~= "table" then
+			profile.options = CopyTable(legacyOptions)
 		end
 	end
 end

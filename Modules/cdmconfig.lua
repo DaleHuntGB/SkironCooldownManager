@@ -110,6 +110,7 @@ function SCM:UpdateDB()
 
 	self.globalAnchorConfig = self.db.global.globalAnchorConfig
 	self.globalCustomConfig = CreateCustomConfigTables(self.db.global.globalCustomConfig)
+	self:RemoveOldAnchorConfigs(self.currentConfig, self.globalAnchorConfig, self.globalCustomConfig)
 
 	self.isHideWhenInactiveEnabled = self:GetHideWhenInactive() == 1
 	self.currentClass = class
