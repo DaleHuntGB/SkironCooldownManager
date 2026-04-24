@@ -73,8 +73,9 @@ local function ShowNumericInputPopup(key, title, callback)
 			preferredIndex = 3,
 			OnAccept = function(self)
 				local id = tonumber(self.EditBox:GetText() or "")
-				if id and id > 0 then
-					callback(id)
+				local acceptCallback = self.data
+				if id and id > 0 and type(acceptCallback) == "function" then
+					acceptCallback(id)
 				end
 			end,
 			hideOnEscape = true,
@@ -84,7 +85,7 @@ local function ShowNumericInputPopup(key, title, callback)
 				end
 			end,
 		}
-	StaticPopup_Show(key)
+	StaticPopup_Show(key, nil, nil, callback)
 end
 
 local function BuildSpellIconData(spellID)
