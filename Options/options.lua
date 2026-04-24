@@ -7,6 +7,7 @@ local Utils = SCM.Utils
 local ToGlobalGroup = Utils.ToGlobalGroup
 local ToBuffBarGroup = Utils.ToBuffBarGroup
 local NormalizeBuffBarGroup = Utils.NormalizeBuffBarGroup
+local GetCooldownConfigKey = Utils.GetCooldownConfigKey
 
 StaticPopupDialogs["SCM_FORCE_RELOAD_POPUP"] = {
 	text = "This requires a UI reload. Reload now?",
@@ -83,6 +84,21 @@ function SCM:AddBuffBarAnchor(anchorTabsTbl)
 	return nextIndex
 end
 
+local function RemoveDeletedAnchorCustomConfig(configTable, anchorIndex)
+	if type(configTable) ~= "table" then
+		return
+	end
+
+	for id, config in pairs(configTable) do
+		if config.anchorGroup == anchorIndex then
+			SCM.CustomIcons.ReleaseIcon(id, config)
+			configTable[id] = nil
+		elseif config.anchorGroup and config.anchorGroup > anchorIndex then
+			config.anchorGroup = config.anchorGroup - 1
+		end
+	end
+end
+
 function SCM:RemoveGlobalAnchor(anchorIndex, anchorTabsTbl)
 	if self.db.global.globalAnchorConfig[anchorIndex] then
 		tremove(self.db.global.globalAnchorConfig, anchorIndex)
@@ -122,6 +138,7 @@ function SCM:RemoveGlobalAnchor(anchorIndex, anchorTabsTbl)
 end
 
 function SCM:RemoveBuffBarAnchor(anchorIndex, anchorTabsTbl)
+	local oldAnchorCount = #self.buffBarsAnchorConfig
 	if self.buffBarsAnchorConfig[anchorIndex] then
 		tremove(self.buffBarsAnchorConfig, anchorIndex)
 	end
@@ -142,11 +159,18 @@ function SCM:RemoveBuffBarAnchor(anchorIndex, anchorTabsTbl)
 			if not next(config.anchorGroup) then
 				self.spellConfig[configID] = nil
 			end
-		elseif trackedBarGroup and Utils.IsBuffBarGroup(trackedBarGroup) and trackedBarGroup > removedGroup then
+		elseif trackedBarGroup and Utils.IsBuffBarGroup(trackedBarGroup) and trackedBarGroup > removedGroup and trackedBarGroup <= ToBuffBarGroup(oldAnchorCount) then
 			local newGroup = trackedBarGroup - 1
 			config.source[Enum.CooldownViewerCategory.TrackedBar] = newGroup
 			config.anchorGroup[newGroup] = config.anchorGroup[trackedBarGroup]
 			config.anchorGroup[trackedBarGroup] = nil
+		elseif trackedBarGroup and Utils.IsBuffBarGroup(trackedBarGroup) and not self.buffBarsAnchorConfig[trackedBarGroup - 200] then
+			config.source[Enum.CooldownViewerCategory.TrackedBar] = nil
+			config.anchorGroup[trackedBarGroup] = nil
+
+			if not next(config.anchorGroup) then
+				self.spellConfig[configID] = nil
+			end
 		end
 	end
 
@@ -211,18 +235,30 @@ function SCM:RemoveAnchor(anchorIndex, anchorTabsTbl)
 
 	for spellID, config in pairs(self.spellConfig) do
 		for sourceIndex, anchorGroup in pairs(config.source) do
-			if anchorGroup == anchorIndex then
+			if not Utils.IsBuffBarGroup(anchorGroup) and anchorGroup == anchorIndex then
 				config.source[sourceIndex] = nil
+				config.anchorGroup[anchorGroup] = nil
 
 				if not next(config.source) then
 					self.spellConfig[spellID] = nil
 				end
-			elseif anchorGroup > anchorIndex then
+			elseif not Utils.IsBuffBarGroup(anchorGroup) and anchorGroup > anchorIndex then
 				config.source[sourceIndex] = anchorGroup - 1
-				config.anchorGroup[anchorGroup - 1] = config.anchorGroup[anchorGroup]
-				config.anchorGroup[anchorGroup] = nil
+				if config.anchorGroup[anchorGroup] then
+					config.anchorGroup[anchorGroup - 1] = config.anchorGroup[anchorGroup]
+					config.anchorGroup[anchorGroup] = nil
+				end
 			end
 		end
+	end
+
+	for _, customConfig in pairs({
+		self.customConfig.spellConfig,
+		self.customConfig.itemConfig,
+		self.customConfig.slotConfig,
+		self.customConfig.timerConfig,
+	}) do
+		RemoveDeletedAnchorCustomConfig(customConfig, anchorIndex)
 	end
 
 	self:InvalidateAnchorLinks()
@@ -262,7 +298,7 @@ function SCM:AddSpellToConfig(anchorGroup, order, info, displayData, sourceIndex
 	end
 
 	local cooldownID = displayData.cooldownID or info.cooldownID
-	local configID = self:GetCooldownConfigKey(cooldownID)
+	local configID = GetCooldownConfigKey(cooldownID)
 	if not configID then
 		return
 	end
@@ -291,7 +327,7 @@ function SCM:AddSpellToConfig(anchorGroup, order, info, displayData, sourceIndex
 end
 
 function SCM:RemoveSpellFromConfig(anchorIndex, data)
-	local configID = data.id or self:GetCooldownConfigKey(data.cooldownID)
+	local configID = data.id or GetCooldownConfigKey(data.cooldownID)
 	local spellConfig = configID and self.spellConfig[configID]
 	if spellConfig then
 
@@ -310,7 +346,7 @@ function SCM:RemoveSpellFromConfig(anchorIndex, data)
 end
 
 function SCM:IsSpellInData(cooldownID, source)
-	local configID = self:GetCooldownConfigKey(cooldownID)
+	local configID = GetCooldownConfigKey(cooldownID)
 	local spellConfig = configID and self.spellConfig[configID]
 	local pairedSource = Utils.GetPairedSource(source)
 	return spellConfig and (spellConfig.source[source] or (pairedSource and spellConfig.source[pairedSource]))
