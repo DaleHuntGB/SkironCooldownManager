@@ -223,7 +223,8 @@ local function Profiles(widget, frame, group)
 		end
 		specDropdown:SetDisabled(not exportState.useSpecificSpec or not hasSpecs)
 
-		exportButton:SetDisabled((exportState.useSpecificClass and not selectedClass) or (exportState.useSpecificSpec and not specDropdown:GetValue()))
+		local hasOptions = exportState.includeResourceBar or exportState.includeCastBar or exportState.includeGlobalSettings or exportState.includeGlobalAnchors
+		exportButton:SetDisabled((exportState.useSpecificClass and not selectedClass) or (exportState.useSpecificSpec and not specDropdown:GetValue()) or (not hasSpecificClass and not hasOptions))
 	end
 
 	specificClassCheckbox:SetCallback("OnValueChanged", function(_, _, value)
@@ -259,18 +260,22 @@ local function Profiles(widget, frame, group)
 
 	resourceBarCheckbox:SetCallback("OnValueChanged", function(_, _, value)
 		exportState.includeResourceBar = value
+		RefreshExportControls()
 	end)
 
 	castBarCheckbox:SetCallback("OnValueChanged", function(_, _, value)
 		exportState.includeCastBar = value
+		RefreshExportControls()
 	end)
 
 	globalSettingsCheckbox:SetCallback("OnValueChanged", function(_, _, value)
 		exportState.includeGlobalSettings = value
+		RefreshExportControls()
 	end)
 
 	globalAnchorsCheckbox:SetCallback("OnValueChanged", function(_, _, value)
 		exportState.includeGlobalAnchors = value
+		RefreshExportControls()
 	end)
 
 	RefreshExportControls()

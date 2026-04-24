@@ -159,6 +159,11 @@ local function BuildProfileExportPayload(self, exportType, classFileName, specID
 end
 
 local function GetExportString(self, classFileName, specID, exportOptions)
+	exportOptions = exportOptions or {}
+	if specID and (exportOptions.includeResourceBar or exportOptions.includeCastBar or exportOptions.includeGlobalSettings or exportOptions.includeGlobalAnchors) then
+		specID = nil
+	end
+
 	local exportType = specID or EXPORT_TYPE_ALL
 	if classFileName == "ALL" then
 		exportType = EXPORT_TYPE_ALL
