@@ -70,3 +70,7 @@ end
 function SCMAPI.ClearPrimaryResourceBarTextOverride()
 	return SCM:ClearPrimaryResourceBarTextOverride()
 end
+
+function SCMAPI.FetchAnchors()
+	return SCM.anchorFrames
+end

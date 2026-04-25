@@ -700,7 +700,7 @@ local function SelectRow(self, data, anchorIndex, rowIndex, rowTabsTbl, mode, op
 	local heightLabel = isBuffBar and "Bar Height" or "Icon Height"
 	local iconWidth = AceGUI:Create("Slider")
 	iconWidth:SetRelativeWidth(0.33)
-	iconWidth:SetSliderValues(10, 200, 0.1)
+	iconWidth:SetSliderValues(10, isBuffBar and 500 or 200, 0.1)
 	iconWidth:SetLabel(widthLabel)
 	iconWidth:SetValue(rowConfig.iconWidth or rowConfig.size)
 
@@ -1521,9 +1521,9 @@ local function CDM(self, frame, group)
 	modeTabs:SetFullHeight(true)
 
 	local tabs = {
-		{ value = "spec", text = "Spec Icon Anchors" },
-		{ value = "buffbars", text = "Spec Bar Anchors" },
-		{ value = "global", text = "Global Icon Anchors" },
+		{ value = "spec", text = "|cFFFFFFFFSpecialization|r: Icons" },
+		{ value = "buffbars", text = "|cFFFFFFFFSpecialization|r: Bars" },
+		{ value = "global", text = "|cFFFFFFFFGlobal|r: Icons" },
 	}
 
 	modeTabs:SetTabs(tabs)

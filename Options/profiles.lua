@@ -4,7 +4,7 @@ local AceConfig = LibStub("AceConfig-3.0")
 local AceConfigDialog = LibStub("AceConfigDialog-3.0")
 local AceDBOptions = LibStub("AceDBOptions-3.0")
 
-SCM.MainTabs.Profiles = { value = "Profiles", text = "Profiles", order = 3, subgroups = {} }
+SCM.MainTabs.Profiles = { value = "Profiles", text = "Profiles", order = 9, subgroups = {} }
 
 local classFileNameToID = {}
 local function GetSpecList(classFileName)
