@@ -1521,9 +1521,9 @@ local function CDM(self, frame, group)
 	modeTabs:SetFullHeight(true)
 
 	local tabs = {
-		{ value = "spec", text = "Spec Icon Anchors" },
-		{ value = "buffbars", text = "Spec Bar Anchors" },
-		{ value = "global", text = "Global Icon Anchors" },
+		{ value = "spec", text = "|cFFFFFFFFSpecialization|r: Icons" },
+		{ value = "buffbars", text = "|cFFFFFFFFSpecialization|r: Bars" },
+		{ value = "global", text = "|cFFFFFFFFGlobal|r: Icons" },
 	}
 
 	modeTabs:SetTabs(tabs)
