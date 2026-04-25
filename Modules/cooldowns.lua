@@ -108,6 +108,7 @@ end
 
 function Cooldowns.OverrideRegularAuraCooldown(self, parent, options)
 	if not options.disableRegularIconActiveSwipe or not parent.SCMSpellID or not self:GetUseAuraDisplayTime() or parent.SCMConfig.forceActiveSwipe then
+		parent.Icon.SCMDesaturated = nil
 		return
 	end
 
@@ -182,16 +183,7 @@ function Cooldowns.SetupCooldownHooks(child)
 	hooksecurefunc(child.Cooldown, "Clear", OnRegularCooldownChanged)
 	child.Cooldown:HookScript("OnCooldownDone", function(self, ...)
 		local parent = self:GetParent()
-		-- if parent then
-		-- 	RunNextFrame(function()
-		-- 		if parent.SCMSpellID == 586 then
-		-- 			print(Cooldowns.IsChildOnCooldown(parent))
-		-- 		end
-		-- 		--parent.Icon.SCMDesaturated = Cooldowns.IsChildOnCooldown(parent)
-		-- 		--parent.Icon:SetDesaturated(parent.Icon.SCMDesaturated)
-		-- 	end)
-		-- end
-		parent.Icon.SCMDesaturated = false
+		parent.Icon.SCMDesaturated = nil
 		OnRegularCooldownChanged(self)
 	end)
 	child.SCMRegularCooldownHook = true

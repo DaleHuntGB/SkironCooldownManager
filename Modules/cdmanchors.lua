@@ -114,7 +114,8 @@ local function GetAnchorOffset(group, visited)
 	end
 
 	if not state.parentGroup then
-		return 0, anchorOffsetY
+		local pivotShiftX = GetPointShift(state, state.pivot)
+		return -pivotShiftX, anchorOffsetY
 	end
 
 	visited[group] = true
