@@ -235,6 +235,19 @@ local function AddBarSettings(parent, title, settings, includeManaRoleSettings)
 	end)
 	generalSettings:AddChild(barHeight)
 
+	if title == "Primary" or title == "Secondary" then
+		local barHeightAlternative = AceGUI:Create("Slider")
+		barHeightAlternative:SetRelativeWidth(0.5)
+		barHeightAlternative:SetLabel(title == "Primary" and "Bar Height (with Secondary)" or "Bar Height (with Primary)")
+		barHeightAlternative:SetSliderValues(3, 40, 0.1)
+		barHeightAlternative:SetValue(settings.heightAlternative)
+		barHeightAlternative:SetCallback("OnValueChanged", function(_, _, value)
+			settings.heightAlternative = value
+			RefreshResourceBars()
+		end)
+		generalSettings:AddChild(barHeightAlternative)
+	end
+
 	widthSlider = AceGUI:Create("Slider")
 	widthSlider:SetRelativeWidth(0.5)
 	widthSlider:SetLabel("Fixed Width")

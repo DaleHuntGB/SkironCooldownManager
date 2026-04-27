@@ -956,8 +956,9 @@ function SCMResourceBarControllerMixin:UpdateBarLayout()
 	local barOptions = self.barOptions
 	local primaryShown = self.PrimaryBar:IsShown()
 	local secondaryShown = self.SecondaryBar:IsShown()
-	local primaryHeight = (self.primaryBarOptions and self.primaryBarOptions.height) or 0
-	local secondaryHeight = (self.secondaryBarOptions and self.secondaryBarOptions.height) or 0
+	local bothShown = primaryShown and secondaryShown
+	local primaryHeight = (self.primaryBarOptions and (bothShown and self.primaryBarOptions.heightAlternative or self.primaryBarOptions.height)) or 0
+	local secondaryHeight = (self.secondaryBarOptions and (bothShown and self.secondaryBarOptions.heightAlternative or self.secondaryBarOptions.height)) or 0
 	local spacing = barOptions.spacing
 	local growsUp = barOptions.growDirection == "UP"
 
@@ -965,10 +966,12 @@ function SCMResourceBarControllerMixin:UpdateBarLayout()
 	self.PrimaryBar:ClearAllPoints()
 
 	if primaryShown then
+		PixelUtil.SetHeight(self.PrimaryBar, primaryHeight, primaryHeight)
 		self.PrimaryBar:SetPoint("BOTTOM", self, "BOTTOM")
 	end
 
 	if secondaryShown then
+		PixelUtil.SetHeight(self.SecondaryBar, secondaryHeight, secondaryHeight)
 		if primaryShown then
 			if growsUp then
 				self.SecondaryBar:SetPoint("BOTTOM", self.PrimaryBar, "TOP", 0, spacing)

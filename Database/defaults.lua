@@ -156,6 +156,7 @@ SCM.DefaultDB = {
 					backdropSize = 2,
 					backdropColor = { r = 0, g = 0, b = 0, a = 1 },
 					height = 20,
+					heightAlternative = 10,
 					showValues = true,
 				},
 				secondaryBar = {
@@ -183,6 +184,7 @@ SCM.DefaultDB = {
 					backdropSize = 2,
 					backdropColor = { r = 0, g = 0, b = 0, a = 1 },
 					height = 20,
+					heightAlternative = 20,
 					showValues = true,
 				},
 			},
