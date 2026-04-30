@@ -269,7 +269,7 @@ local methods = {
 			end
 		end
 		local dataIndex = highestIndex + 1
-		self.dataProvider:Insert({
+		local data = {
 			dataIndex = dataIndex,
 			texture = iconData.texture,
 			spellID = iconData.spellID,
@@ -279,8 +279,9 @@ local methods = {
 			isCustom = true,
 			iconType = iconData.iconType,
 			id = iconData.id,
-		})
-		return dataIndex
+		}
+		self.dataProvider:Insert(data)
+		return dataIndex, data
 	end,
 
 	["AddAddButton"] = function(self)
