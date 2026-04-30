@@ -556,6 +556,13 @@ local function SelectAdvancedRowSettings(self, tabGroup, rowConfig, rowIndex, an
 		keepAspectRatio:SetCallback("OnValueChanged", function(_, _, value)
 			rowConfig.keepAspectRatio = value
 		end)
+		keepAspectRatio:SetCallback("OnEnter", function()
+			GameTooltip:SetOwner(self.frame, "ANCHOR_CURSOR")
+			GameTooltip:SetText("Lock Aspect Ratio", nil, nil, nil, nil, true)
+			GameTooltip:AddLine("This will lock both Icon Width & Icon Height to be the same value.", 1, 1, 1, true)
+			GameTooltip:Show()
+		end)
+		keepAspectRatio:SetCallback("OnLeave", function() GameTooltip:Hide() end)
 		self:AddChild(keepAspectRatio)
 
 		local hardLimit = AceGUI:Create("CheckBox")
@@ -566,6 +573,13 @@ local function SelectAdvancedRowSettings(self, tabGroup, rowConfig, rowIndex, an
 			rowConfig.hardLimit = value
 			ApplyModeConfigUpdate(anchorIndex, mode)
 		end)
+		hardLimit:SetCallback("OnEnter", function()
+			GameTooltip:SetOwner(self.frame, "ANCHOR_CURSOR")
+			GameTooltip:SetText("Hard Limit", nil, nil, nil, nil, true)
+			GameTooltip:AddLine("This option will ensure that only the set number of icons are displayed.", 1, 1, 1, true)
+			GameTooltip:Show()
+		end)
+		hardLimit:SetCallback("OnLeave", function() GameTooltip:Hide() end)
 		self:AddChild(hardLimit)
 
 		if rowIndex == 1 then
@@ -583,6 +597,13 @@ local function SelectAdvancedRowSettings(self, tabGroup, rowConfig, rowIndex, an
 					fixedWidth:SetDisabled(not value)
 				end
 			end)
+			useFixedWidth:SetCallback("OnEnter", function()
+				GameTooltip:SetOwner(self.frame, "ANCHOR_CURSOR")
+				GameTooltip:SetText("Use Fixed Width", nil, nil, nil, nil, true)
+				GameTooltip:AddLine("This will make the row use a fixed width instead of calculating it based on the number of icons.", 1, 1, 1, true)
+				GameTooltip:Show()
+			end)
+			useFixedWidth:SetCallback("OnLeave", function() GameTooltip:Hide() end)
 			self:AddChild(useFixedWidth)
 
 			fixedWidth = AceGUI:Create("Slider")
