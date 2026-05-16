@@ -394,36 +394,48 @@ local function AddBarSettings(parent, title, settings, includeManaRoleSettings, 
 			hideManaRoles:SetItemValue(key, hideManaRoleSettings[key])
 		end
 		generalSettings:AddChild(hideManaRoles)
-	elseif UnitClassBase("player") == "DRUID" then
-		local powerTypeList = title == "Primary" and Constants.DruidPrimaryPowerTypes or Constants.DruidSecondaryPowerTypes
-		local druidFormPowerTypesBySpec = settings.druidFormPowerTypes
+	else
+		local forceMana = AceGUI:Create("CheckBox")
+		forceMana:SetRelativeWidth(0.5)
+		forceMana:SetLabel("Show Mana (if possible)")
+		forceMana:SetValue(settings.forceMana)
+		forceMana:SetCallback("OnValueChanged", function(_, _, value)
+			settings.forceMana = value
+			RefreshResourceBars()
+		end)
+		generalSettings:AddChild(forceMana)
 
-		local druidSettings = AceGUI:Create("InlineGroup")
-		druidSettings:SetFullWidth(true)
-		druidSettings:SetTitle("Druid")
-		druidSettings:SetLayout("flow")
-		parent:AddChild(druidSettings)
+		if UnitClassBase("player") == "DRUID" then
+			local powerTypeList = title == "Primary" and Constants.DruidPrimaryPowerTypes or Constants.DruidSecondaryPowerTypes
+			local druidFormPowerTypesBySpec = settings.druidFormPowerTypes
 
-		local specID = SCM.currentSpecID
-		local druidFormPowerTypes = druidFormPowerTypesBySpec[specID]
-		local function AddDruidFormDropdown(parentGroup, druidFormPowerTypes, formID, label)
-			local formDropdown = AceGUI:Create("Dropdown")
-			formDropdown:SetRelativeWidth(0.33)
-			formDropdown:SetLabel(label)
-			formDropdown:SetList(powerTypeList)
-			formDropdown:SetValue(druidFormPowerTypes[formID])
-			formDropdown:SetCallback("OnValueChanged", function(_, _, value)
-				druidFormPowerTypes[formID] = value
-				RefreshResourceBars()
-			end)
-			parentGroup:AddChild(formDropdown)
+			local druidSettings = AceGUI:Create("InlineGroup")
+			druidSettings:SetFullWidth(true)
+			druidSettings:SetTitle("Druid")
+			druidSettings:SetLayout("flow")
+			parent:AddChild(druidSettings)
+
+			local specID = SCM.currentSpecID
+			local druidFormPowerTypes = druidFormPowerTypesBySpec[specID]
+			local function AddDruidFormDropdown(parentGroup, druidFormPowerTypes, formID, label)
+				local formDropdown = AceGUI:Create("Dropdown")
+				formDropdown:SetRelativeWidth(0.33)
+				formDropdown:SetLabel(label)
+				formDropdown:SetList(powerTypeList)
+				formDropdown:SetValue(druidFormPowerTypes[formID])
+				formDropdown:SetCallback("OnValueChanged", function(_, _, value)
+					druidFormPowerTypes[formID] = value
+					RefreshResourceBars()
+				end)
+				parentGroup:AddChild(formDropdown)
+			end
+
+			AddDruidFormDropdown(druidSettings, druidFormPowerTypes, 0, "Human Form")
+			AddDruidFormDropdown(druidSettings, druidFormPowerTypes, 1, "Bear Form")
+			AddDruidFormDropdown(druidSettings, druidFormPowerTypes, 2, "Cat Form")
+			AddDruidFormDropdown(druidSettings, druidFormPowerTypes, 3, "Travel Form")
+			AddDruidFormDropdown(druidSettings, druidFormPowerTypes, 4, "Moonkin Form")
 		end
-
-		AddDruidFormDropdown(druidSettings, druidFormPowerTypes, 0, "Human Form")
-		AddDruidFormDropdown(druidSettings, druidFormPowerTypes, 1, "Bear Form")
-		AddDruidFormDropdown(druidSettings, druidFormPowerTypes, 2, "Cat Form")
-		AddDruidFormDropdown(druidSettings, druidFormPowerTypes, 3, "Travel Form")
-		AddDruidFormDropdown(druidSettings, druidFormPowerTypes, 4, "Moonkin Form")
 	end
 
 	local barSettings = AceGUI:Create("InlineGroup")
