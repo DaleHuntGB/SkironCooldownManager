@@ -167,14 +167,16 @@ local function ApplyZoomSettings(child, options)
 		elseif ratio < 1 then
 			xCrop = yCrop * ratio
 		end
+
+		local left = (1 - xCrop) / 2
+		local right = 1 - left
+		local top = (1 - yCrop) / 2
+		local bottom = 1 - top
+
+		child.Icon:SetTexCoord(left, right, top, bottom)
+	else
+		child.Icon:SetTexCoord(iconZoom, 1 - iconZoom, iconZoom, 1 - iconZoom)
 	end
-
-	local left = (1 - xCrop) / 2
-	local right = 1 - left
-	local top = (1 - yCrop) / 2
-	local bottom = 1 - top
-
-	child.Icon:SetTexCoord(left, right, top, bottom)
 end
 
 function SCM:SkinChild(child, childConfig)
