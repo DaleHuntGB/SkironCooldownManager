@@ -22,11 +22,6 @@ local function ApplyChargeAndApplicationStyle(child, options, fontPath)
 			child.ChargeCount.Current:SetFont(fontPath, size, outline)
 		end
 
-		if child.SCMCustom then
-			--child.ChargeCount:SetWidth(child.ChargeCount.Current:GetWidth())
-			--child.ChargeCount:SetHeight(child.ChargeCount.Current:GetStringHeight() - 10)
-		end
-
 		child.ChargeCount.Current:ClearAllPoints()
 		child.ChargeCount.Current:SetPoint(
 			rowConfig.chargePoint or options.chargePoint,
@@ -154,22 +149,12 @@ local function ApplyCooldownStyle(child, options)
 			ApplyCooldownFont(self, options)
 		end)
 
-		-- hooksecurefunc(cooldownFrame, "Clear", function(self)
-		-- 	if options.recolorActiveSwipe then
-		-- 		self:SetSwipeColor(0, 0, 0, 0.7)
-		-- 	end
-		-- end)
-
 		ApplyCooldownFont(cooldownFrame, options)
 	end
 end
 
 function SCM:SkinChild(child, childConfig)
 	local options = self.db.profile.options
-	local frameStrata = child.SCMAnchorFrameStrata or options.iconFrameStrata
-	if frameStrata and frameStrata ~= "" then
-		child:SetFrameStrata(frameStrata)
-	end
 
 	if C_AddOns.IsAddOnLoaded("ElvUI") and ElvUI[1].private.skins.blizzard.cooldownManager then
 		return
@@ -177,6 +162,11 @@ function SCM:SkinChild(child, childConfig)
 
 	if not options.enableSkinning then
 		return
+	end
+
+	local frameStrata = child.SCMAnchorFrameStrata or options.iconFrameStrata
+	if frameStrata and frameStrata ~= "" then
+		child:SetFrameStrata(frameStrata)
 	end
 
 	local borderSize = SCM:PixelPerfect() * options.borderSize
