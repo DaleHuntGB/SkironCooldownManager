@@ -158,6 +158,7 @@ local function UpdateStatusBarLook(fillColor, bgColor)
 	anchorFrame = anchorFrame or SCM.Utils.GetAnchorFrame(options.anchors[2])
 	castBar:ClearAllPoints()
 	castBar:SetPoint(options.anchors[1], anchorFrame or UIParent, options.anchors[3], options.anchors[4], options.anchors[5])
+	castBar:SetFrameStrata(options.frameStrata or "BACKGROUND")
 
 	castBar:SetBackdrop({ edgeFile = "Interface\\Buttons\\WHITE8x8", edgeSize = borderSize })
 	castBar:SetBackdropBorderColor(borderColor.r, borderColor.g, borderColor.b, borderColor.a)

@@ -1361,6 +1361,7 @@ function SCMResourceBarControllerMixin:UpdateBarLayout()
 
 	local spacing = barOptions.spacing
 	local growsUp = barOptions.growDirection == "UP"
+	local frameStrata = barOptions.frameStrata or "BACKGROUND"
 
 	local primaryHeightChanged = false
 	local secondaryHeightChanged = false
@@ -1371,6 +1372,7 @@ function SCMResourceBarControllerMixin:UpdateBarLayout()
 	if primaryShown then
 		primaryHeightChanged = SetBarHeight(self.PrimaryBar, primaryHeight)
 		self.PrimaryBar:SetPoint("BOTTOM", self, "BOTTOM")
+		self.PrimaryBar:SetFrameStrata(frameStrata)
 	end
 
 	if secondaryShown then
@@ -1384,6 +1386,7 @@ function SCMResourceBarControllerMixin:UpdateBarLayout()
 		else
 			self.SecondaryBar:SetPoint("BOTTOM", self, "BOTTOM")
 		end
+		self.SecondaryBar:SetFrameStrata(frameStrata)
 	end
 
 	if primaryShown and secondaryShown then
