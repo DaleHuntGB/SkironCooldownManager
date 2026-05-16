@@ -535,6 +535,9 @@ Constants.FakeAuras = {
 	[51485] = 20, -- Earthgrab Totem
 	[198103] = 30, -- Earth Elemental
 	--[444995] = 25, -- Surging Totem
+
+	-- MONK
+	[322118] = 12, -- Invoke Yu'lon, the Jade Serpent
 }
 
 Constants.TargetAuras = {
