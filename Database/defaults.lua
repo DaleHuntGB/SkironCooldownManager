@@ -95,6 +95,7 @@ SCM.DefaultDB = {
 			customVisibilityCondition = "",
 			debug = false,
 			savePosition = false,
+			menuScale = 1,
 			enableSkinning = true,
 			enableCustomIcons = true,
 			simulateAuras = true,

@@ -448,9 +448,10 @@ local function OpenOptions()
 	frame:SetTitle(addonName)
 	frame:SetLayout("flow")
 	SCM.OptionsFrame = frame
-
 	LibWindow.RegisterConfig(frame.frame, options.optionsWindow)
-	
+	LibWindow.SetScale(frame.frame, options.menuScale)
+	frame.frame.TitleContainer:HookScript("OnMouseUp", function() LibWindow.SavePosition(frame.frame) end)
+
 	if options.savePosition then
 		LibWindow.RestorePosition(frame.frame)
 	end
@@ -515,9 +516,7 @@ local function OpenOptions()
 			SCM:RestoreBlizzardGlows()
 		end)
 
-		if options.savePosition then
-			LibWindow.SavePosition(frame.frame)
-		end
+		LibWindow.SavePosition(frame.frame)
 	end)
 
 	if SCM.db.profile.options.showAnchorHighlight then

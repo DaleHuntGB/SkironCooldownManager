@@ -2,6 +2,7 @@ local SCM = select(2, ...)
 local AceGUI = LibStub("AceGUI-3.0")
 local LibEditModeOverride = LibStub("LibEditModeOverride-1.0")
 local LSM = LibStub("LibSharedMedia-3.0")
+local LibWindow = LibStub("LibWindow-1.1")
 
 SCM.MainTabs.General = { value = "General", text = "Global Settings", order = 1, subgroups = {} }
 
@@ -234,12 +235,23 @@ local function SelectGlobalSettingsTab(tabWidget, group, options)
 
 		local savePosition = AceGUI:Create("CheckBox")
 		savePosition:SetRelativeWidth(0.33)
-		savePosition:SetLabel("Save Option Position")
+		savePosition:SetLabel("Save Option Window Position")
 		savePosition:SetValue(options.savePosition)
 		savePosition:SetCallback("OnValueChanged", function(_, _, value)
 			options.savePosition = value
 		end)
 		skinningSettings:AddChild(savePosition)
+		
+		local menuScale = AceGUI:Create("Slider")
+		menuScale:SetRelativeWidth(1)
+		menuScale:SetLabel("Options Scale")
+		menuScale:SetSliderValues(0.5, 2, 0.1)
+		menuScale:SetValue(options.menuScale)
+		menuScale:SetCallback("OnMouseUp", function(_, _, value)
+			options.menuScale = value
+			LibWindow.SetScale(SCM.OptionsFrame.frame, value)
+		end)
+		skinningSettings:AddChild(menuScale)
 
 		local visibilitySettings = AceGUI:Create("InlineGroup")
 		visibilitySettings:SetLayout("flow")

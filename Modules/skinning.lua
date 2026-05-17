@@ -156,10 +156,9 @@ end
 local function ApplyZoomSettings(child, options)
 	local iconZoom = options.iconZoom
 
-	local xCrop = 1 - iconZoom
-	local yCrop = 1 - iconZoom
-
 	if options.keepIconSquareRatio and child.SCMWidth and child.SCMHeight then
+		local xCrop = 1 - iconZoom
+		local yCrop = 1 - iconZoom
 		local ratio = child.SCMWidth / child.SCMHeight
 
 		if ratio > 1 then
