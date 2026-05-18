@@ -1328,36 +1328,48 @@ local function SelectAnchor(widget, parentWidget, anchorIndex, anchorTabsTbl, mo
 									iconSettings:SetTitle("Slot ID " .. buttonData.slotID)
 								end
 
-								local desaturate
+								local desaturate, alwaysShow, showWhileInactive
 								if buttonFrame.data.isBuffIcon or buttonData.isCustom then
-									local alwaysShow = AceGUI:Create("CheckBox")
+									alwaysShow = AceGUI:Create("CheckBox")
 									alwaysShow:SetLabel("Show Always")
 									alwaysShow:SetRelativeWidth(0.5)
 									alwaysShow:SetValue(buttonConfig.alwaysShow)
-									alwaysShow:SetDisabled(not options.hideBuffsWhenInactive)
-									SCM.Utils.SetDisabledTooltip(alwaysShow, "Enable 'Hide Inactive Auras' in Global Settings > General > Auras first.")
+									alwaysShow:SetDisabled(not options.hideBuffsWhenInactive or buttonConfig.showWhileInactive)
+									SCM.Utils.SetDisabledTooltip(alwaysShow, "Enable 'Hide Inactive Auras' in Global Settings > General > Auras first or disable 'Show While Inactive'.")
 									iconSettingsTabs:AddChild(alwaysShow)
 									alwaysShow:SetCallback("OnValueChanged", function(self, event, value)
-										buttonConfig.alwaysShow = value or nil
+										buttonConfig.alwaysShow = value
 										ApplyIconConfigUpdate()
 
 										if desaturate then
 											desaturate:SetDisabled(not value)
 										end
+
+										if showWhileInactive then
+											showWhileInactive:SetDisabled(value)
+										end
 									end)
 								end
 
 								if buttonFrame.data.isBuffIcon then
-									local showWhileInactive = AceGUI:Create("CheckBox")
+									showWhileInactive = AceGUI:Create("CheckBox")
 									showWhileInactive:SetLabel("Show While Inactive")
 									showWhileInactive:SetRelativeWidth(0.5)
 									showWhileInactive:SetValue(buttonConfig.showWhileInactive)
-									showWhileInactive:SetDisabled(not options.hideBuffsWhenInactive)
-									SCM.Utils.SetDisabledTooltip(showWhileInactive, "Enable 'Hide Inactive Auras' in Global Settings > General > Auras first.")
+									showWhileInactive:SetDisabled(not options.hideBuffsWhenInactive or buttonConfig.alwaysShow)
+									SCM.Utils.SetDisabledTooltip(showWhileInactive, "Enable 'Hide Inactive Auras' in Global Settings > General > Auras first or disable 'Show Always'.")
 									iconSettingsTabs:AddChild(showWhileInactive)
 									showWhileInactive:SetCallback("OnValueChanged", function(self, event, value)
-										buttonConfig.showWhileInactive = value or nil
+										buttonConfig.showWhileInactive = value
 										ApplyIconConfigUpdate()
+
+										if desaturate then
+											desaturate:SetDisabled(not value)
+										end
+
+										if alwaysShow then
+											alwaysShow:SetDisabled(value)
+										end
 									end)
 
 									local hideWhileMounted = AceGUI:Create("CheckBox")
@@ -1375,7 +1387,7 @@ local function SelectAnchor(widget, parentWidget, anchorIndex, anchorTabsTbl, mo
 									desaturate:SetLabel("Desaturate While Inactive")
 									desaturate:SetRelativeWidth(0.5)
 									desaturate:SetValue(buttonConfig.desaturate)
-									desaturate:SetDisabled(not buttonConfig.alwaysShow)
+									desaturate:SetDisabled(not buttonConfig.alwaysShow and not buttonConfig.showWhileInactive)
 									SCM.Utils.SetDisabledTooltip(desaturate, "Enable 'Show Always' first.")
 									desaturate:SetCallback("OnValueChanged", function(self, event, value)
 										buttonConfig.desaturate = value or nil
