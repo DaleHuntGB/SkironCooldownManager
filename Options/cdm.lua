@@ -1348,6 +1348,18 @@ local function SelectAnchor(widget, parentWidget, anchorIndex, anchorTabsTbl, mo
 								end
 
 								if buttonFrame.data.isBuffIcon then
+									local showWhileInactive = AceGUI:Create("CheckBox")
+									showWhileInactive:SetLabel("Show While Inactive")
+									showWhileInactive:SetRelativeWidth(0.5)
+									showWhileInactive:SetValue(buttonConfig.showWhileInactive)
+									showWhileInactive:SetDisabled(not options.hideBuffsWhenInactive)
+									SCM.Utils.SetDisabledTooltip(showWhileInactive, "Enable 'Hide Inactive Auras' in Global Settings > General > Auras first.")
+									iconSettingsTabs:AddChild(showWhileInactive)
+									showWhileInactive:SetCallback("OnValueChanged", function(self, event, value)
+										buttonConfig.showWhileInactive = value or nil
+										ApplyIconConfigUpdate()
+									end)
+
 									local hideWhileMounted = AceGUI:Create("CheckBox")
 									hideWhileMounted:SetRelativeWidth(0.5)
 									hideWhileMounted:SetValue(buttonConfig.hideWhileMounted)
