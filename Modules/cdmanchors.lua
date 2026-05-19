@@ -151,6 +151,22 @@ local function GetAnchorOffset(group, visited)
 		return state.transformX or 0, state.transformY or 0
 	end
 
+	if state.currentProxyActive then
+		local anchorFrame = SCM.anchorFrames[group]
+		local proxy = state.currentProxyFrame
+		local anchorX, anchorY
+		local proxyX, proxyY
+		if anchorFrame then
+			anchorX, anchorY = anchorFrame:GetCenter()
+		end
+		if proxy then
+			proxyX, proxyY = proxy:GetCenter()
+		end
+		if anchorX and anchorY and proxyX and proxyY then
+			return proxyX - anchorX, proxyY - anchorY
+		end
+	end
+
 	if not state.parentGroup then
 		local pivotShiftX, pivotShiftY = GetPointShift(state, state.pivot)
 		return -pivotShiftX, anchorOffsetY - pivotShiftY

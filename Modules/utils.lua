@@ -275,10 +275,10 @@ function Utils.GetAnchorFrame(anchorFrames)
 	end
 
 	if anchorFrames:find(",", 1, true) then
-		for _, currentFrame in ipairs({ strsplit(",", anchorFrames) }) do
+		for currentFrame in anchorFrames:gmatch("[^,]+") do
 			currentFrame = strtrim(currentFrame)
 			local anchorFrame = currentFrame ~= "" and GetSingleAnchorFrame(currentFrame)
-			if anchorFrame and anchorFrame:IsVisible() then
+			if anchorFrame and (currentFrame:sub(1, 7) == "ANCHOR:" or anchorFrame:IsVisible()) then
 				return anchorFrame, currentFrame
 			end
 		end

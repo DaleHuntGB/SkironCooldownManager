@@ -288,8 +288,11 @@ local function LayoutAnchorGroup(group, visibleChildren, anchorConfig, options, 
 		state.appliedAnchorOffsetY = anchorOffsetY
 	end
 
-	SCM:UpdateAnchorOffset(group, true)
 	local childAnchor, useProxyAnchor = SCM:GetManagedAnchorChildAnchor(group, groupAnchor, point, anchor, relativePoint, xOffset, yOffset, growDir, initialWidth, anchorOffsetY)
+	local anchorOffsetChanged = SCM:UpdateAnchorOffset(group, true)
+	if useProxyAnchor and changedGroups and anchorOffsetChanged then
+		changedGroups[group] = true
+	end
 
 	for currentRow = 1, rowCount do
 		local row = rows[currentRow]
