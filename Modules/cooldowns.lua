@@ -146,12 +146,7 @@ function Cooldowns.IsChildOnCooldown(child)
 	end
 
 	local spellCooldownInfo = C_Spell.GetSpellCooldown(child.SCMSpellID)
-	if spellCooldownInfo and spellCooldownInfo.isOnGCD then
-		return
-	end
-
-	local hasCooldown = child.Cooldown:IsShown()
-	return hasCooldown
+	return spellCooldownInfo and spellCooldownInfo.isActive and not spellCooldownInfo.isOnGCD
 end
 
 function Cooldowns.SetNormalCooldown(self, parent)
