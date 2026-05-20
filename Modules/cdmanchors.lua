@@ -332,6 +332,7 @@ local function RefreshAnchorVisibilitySelection(group, currentAnchorFrame)
 	end
 
 	state.currentSelectedAnchorFrame = selectedAnchorFrame
+	state.layoutSignature = nil
 	state.currentProxyRequired = InCombatLockdown() or nil
 	SCM:ApplyAnchorGroupCDManagerConfig(group)
 end
