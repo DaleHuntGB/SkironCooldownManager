@@ -275,6 +275,7 @@ local function LayoutAnchorGroup(group, visibleChildren, anchorConfig, options, 
 	if checkDuplicates then
 		uniqueChildren = Cache.cachedLayoutChildren
 		local seenCooldownIDs = Cache.cachedLayoutCooldownIDs
+		local hasDuplicateChildren = false
 		if not uniqueChildren then
 			uniqueChildren = {}
 			Cache.cachedLayoutChildren = uniqueChildren
@@ -297,6 +298,7 @@ local function LayoutAnchorGroup(group, visibleChildren, anchorConfig, options, 
 			if cooldownID then
 				local masterChild = seenCooldownIDs[cooldownID]
 				if masterChild then
+					hasDuplicateChildren = true
 					child.SCMLayoutNextDuplicate = masterChild.SCMLayoutNextDuplicate
 					masterChild.SCMLayoutNextDuplicate = child
 				else
@@ -310,6 +312,7 @@ local function LayoutAnchorGroup(group, visibleChildren, anchorConfig, options, 
 			end
 		end
 		wipe(seenCooldownIDs)
+		checkDuplicates = hasDuplicateChildren
 		layoutChildren = uniqueChildren
 		layoutChildCount = totalChildren
 	end
@@ -364,7 +367,6 @@ local function LayoutAnchorGroup(group, visibleChildren, anchorConfig, options, 
 	end
 
 	for index = rowCount + 1, #rows do
-		wipe(rows[index])
 		rows[index] = nil
 	end
 
@@ -385,20 +387,7 @@ local function LayoutAnchorGroup(group, visibleChildren, anchorConfig, options, 
 	state.effectiveHeight = effectiveHeight
 	state.anchorOffsetY = anchorOffsetY
 
-	local groupAnchor = SCM:GetAnchor(
-		group,
-		point,
-		anchor,
-		relativePoint,
-		xOffset,
-		yOffset,
-		growDir,
-		initialWidth,
-		resetSize,
-		anchorOffsetY,
-		effectiveWidth,
-		effectiveHeight
-	)
+	local groupAnchor = SCM:GetAnchor(group, point, anchor, relativePoint, xOffset, yOffset, growDir, initialWidth, resetSize, anchorOffsetY, effectiveWidth, effectiveHeight)
 
 	if parentChanged then
 		Cache.cachedAnchorLinksDirty = true
