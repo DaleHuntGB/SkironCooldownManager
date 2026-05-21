@@ -329,7 +329,7 @@ local function AddBarSettings(parent, title, settings, includeManaRoleSettings, 
 	parent:AddChild(generalSettings)
 
 	local enableBar = AceGUI:Create("CheckBox")
-	enableBar:SetRelativeWidth(0.5)
+	enableBar:SetRelativeWidth(0.33)
 	enableBar:SetLabel("Enable Bar")
 	enableBar:SetValue(settings.enabled)
 	enableBar:SetCallback("OnValueChanged", function(_, _, value)
@@ -340,7 +340,7 @@ local function AddBarSettings(parent, title, settings, includeManaRoleSettings, 
 
 	local widthSlider
 	local matchAnchorWidth = AceGUI:Create("CheckBox")
-	matchAnchorWidth:SetRelativeWidth(0.5)
+	matchAnchorWidth:SetRelativeWidth(0.33)
 	matchAnchorWidth:SetLabel("Match Anchor Width")
 	matchAnchorWidth:SetValue(settings.matchAnchorWidth)
 	matchAnchorWidth:SetCallback("OnValueChanged", function(_, _, value)
@@ -353,6 +353,16 @@ local function AddBarSettings(parent, title, settings, includeManaRoleSettings, 
 		RefreshResourceBars()
 	end)
 	generalSettings:AddChild(matchAnchorWidth)
+
+	local textOnly = AceGUI:Create("CheckBox")
+	textOnly:SetRelativeWidth(0.33)
+	textOnly:SetLabel("Text Only")
+	textOnly:SetValue(settings.textOnly)
+	textOnly:SetCallback("OnValueChanged", function(_, _, value)
+		settings.textOnly = value
+		RefreshResourceBars()
+	end)
+	generalSettings:AddChild(textOnly)
 
 	local barHeight = AceGUI:Create("Slider")
 	barHeight:SetRelativeWidth(0.5)

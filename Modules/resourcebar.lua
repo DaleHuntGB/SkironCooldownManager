@@ -414,7 +414,7 @@ local function GetSegmentBarSize(bar, segmentCount)
 end
 
 local function UpdateSpellChargeRecharge(bar, chargeInfo)
-	if bar.resourceKind ~= "spellCharges" or not chargeInfo or not chargeInfo.isActive or not bar.spellID then
+	if bar.resourceKind ~= "spellCharges" or not chargeInfo or not chargeInfo.isActive or not bar.spellID or (bar.barOptions and bar.barOptions.textOnly) then
 		HideRechargeSegment(bar)
 		return
 	end
@@ -561,7 +561,7 @@ local function UpdateTicks(bar, maxValue)
 	local hasPowerTokenSegments = bar.powerToken and SCMConstants.SegmentTicksByPowerToken[bar.powerToken]
 	local hasSegmentTicks = hasConfiguredSegments or hasPowerTokenSegments
 
-	if not barOptions or not barOptions.showTicks or not hasSegmentTicks or type(segmentCount) ~= "number" or segmentCount <= 1 then
+	if not barOptions or barOptions.textOnly or not barOptions.showTicks or not hasSegmentTicks or type(segmentCount) ~= "number" or segmentCount <= 1 then
 		HideRegions(bar.SegmentTicks)
 		if bar.SegmentTickFrame then
 			bar.SegmentTickFrame:Hide()
@@ -762,6 +762,11 @@ local function UpdateSegments(bar, maxValue, currentValue, resourceSegmentValues
 		segmentBar:SetPoint("LEFT", (segmentIndex - 1) * segmentWidth, 0)
 		segmentBar:SetWidth(segmentWidth)
 		segmentBar:SetHeight(segmentHeight)
+		if barOptions.textOnly then
+			segmentBar:GetStatusBarTexture():Hide()
+		else
+			segmentBar:GetStatusBarTexture():Show()
+		end
 
 		local segmentR, segmentG, segmentB = r, g, b
 		if chargedSegments and chargedSegments[segmentIndex] then
@@ -789,20 +794,36 @@ local function ApplyBarAppearance(bar, barOptions)
 
 	bar.barOptions = barOptions
 
-	local texturePath = LSM:Fetch("statusbar", barOptions.texture)
-	bar.SCMTexturePath = texturePath
-	bar:SetStatusBarTexture(texturePath)
+	if not barOptions.textOnly then
+		local texturePath = LSM:Fetch("statusbar", barOptions.texture)
+		bar.SCMTexturePath = texturePath
+		bar:SetStatusBarTexture(texturePath)
+		bar:GetStatusBarTexture():Show()
 
-	if bar.SegmentFillBars then
-		for _, segmentBar in ipairs(bar.SegmentFillBars) do
-			segmentBar:SetStatusBarTexture(texturePath)
+		if bar.SegmentFillBars then
+			for _, segmentBar in ipairs(bar.SegmentFillBars) do
+				segmentBar:SetStatusBarTexture(texturePath)
+				segmentBar:GetStatusBarTexture():Show()
+			end
+		end
+		UpdateRechargeSegment(bar)
+
+		local statusBarTexture = bar:GetStatusBarTexture()
+		SetRegionPoint(statusBarTexture, bar)
+		UpdateResourceBarBackgroundTexture(bar, barOptions)
+	else
+		bar:GetStatusBarTexture():Hide()
+		bar.Background:Hide()
+		HideRechargeSegment(bar)
+		if bar.SegmentTickFrame then
+			bar.SegmentTickFrame:Hide()
+		end
+		if bar.SegmentFillBars then
+			for _, segmentBar in ipairs(bar.SegmentFillBars) do
+				segmentBar:GetStatusBarTexture():Hide()
+			end
 		end
 	end
-	UpdateRechargeSegment(bar)
-
-	local statusBarTexture = bar:GetStatusBarTexture()
-	SetRegionPoint(statusBarTexture, bar)
-	UpdateResourceBarBackgroundTexture(bar, barOptions)
 
 	local text = bar.Text
 	local fontPath = LSM:Fetch("font", barOptions.font)
@@ -818,7 +839,11 @@ local function ApplyBarAppearance(bar, barOptions)
 	text:SetShown(barOptions.showValues)
 
 	if bar.BorderFrame then
-		UpdateResourceBarBorder(bar, barOptions)
+		if barOptions.textOnly then
+			bar.BorderFrame:Hide()
+		else
+			UpdateResourceBarBorder(bar, barOptions)
+		end
 	end
 
 	if bar.Text then
