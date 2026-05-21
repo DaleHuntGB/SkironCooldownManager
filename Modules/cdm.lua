@@ -387,7 +387,7 @@ local function LayoutAnchorGroup(group, visibleChildren, anchorConfig, options, 
 	state.effectiveHeight = effectiveHeight
 	state.anchorOffsetY = anchorOffsetY
 
-	local groupAnchor = SCM:GetAnchor(group, point, anchor, relativePoint, xOffset, yOffset, growDir, initialWidth, resetSize, anchorOffsetY, effectiveWidth, effectiveHeight)
+	local groupAnchor = SCM:GetAnchor(group, point, anchor, relativePoint, xOffset, yOffset, growDir, initialWidth, initialHeight, resetSize, anchorOffsetY, effectiveWidth, effectiveHeight)
 
 	if parentChanged then
 		Cache.cachedAnchorLinksDirty = true
@@ -403,9 +403,9 @@ local function LayoutAnchorGroup(group, visibleChildren, anchorConfig, options, 
 		state.appliedAnchorOffsetY = anchorOffsetY
 	end
 
-	local childAnchor, useProxyAnchor = SCM:GetManagedAnchorChildAnchor(group, groupAnchor, point, anchor, relativePoint, xOffset, yOffset, growDir, initialWidth, anchorOffsetY)
-	SCM:UpdateAnchorOffset(group, true)
-	if useProxyAnchor and changedGroups then
+	local childAnchor, useProxyAnchor = SCM:GetManagedAnchorChildAnchor(group, groupAnchor, point, anchor, relativePoint, xOffset, yOffset, growDir, initialWidth, initialHeight, anchorOffsetY)
+	local anchorOffsetChanged = SCM:UpdateAnchorOffset(group, true)
+	if useProxyAnchor and changedGroups and anchorOffsetChanged then
 		changedGroups[group] = true
 	end
 

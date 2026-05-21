@@ -125,7 +125,7 @@ local function GetProxy(group)
 	return proxy, state
 end
 
-local function GetAnchorPointOffsets(point, growDir, iconSize, xOffset, yOffset, anchorOffsetY)
+local function GetAnchorPointOffsets(point, growDir, iconWidth, xOffset, yOffset, anchorOffsetY)
 	local xOffsetMultiplier = 0
 	if growDir == "LEFT" then
 		xOffsetMultiplier = (point == "TOPLEFT" and 1) or ((point == "TOP" or point == "BOTTOM" or point == "CENTER") and 0.5) or 0
@@ -133,7 +133,7 @@ local function GetAnchorPointOffsets(point, growDir, iconSize, xOffset, yOffset,
 		xOffsetMultiplier = (point == "TOPRIGHT" and -1) or ((point == "TOP" or point == "BOTTOM" or point == "CENTER") and -0.5) or 0
 	end
 
-	return xOffset + ((iconSize or 0) * xOffsetMultiplier), yOffset + (anchorOffsetY or 0)
+	return xOffset + ((iconWidth or 0) * xOffsetMultiplier), yOffset + (anchorOffsetY or 0)
 end
 
 local function GetAnchorOffset(group, visited)
@@ -401,7 +401,7 @@ local function SetAnchorVisibilityHooks(group, anchor, selectedAnchorFrame, grou
 	end
 end
 
-function SCM:GetManagedAnchorChildAnchor(group, groupAnchor, point, anchor, relativePoint, xOffset, yOffset, growDir, iconSize, anchorOffsetY)
+function SCM:GetManagedAnchorChildAnchor(group, groupAnchor, point, anchor, relativePoint, xOffset, yOffset, growDir, iconWidth, iconHeight, anchorOffsetY)
 	local state = Cache.cachedAnchorStates[group]
 	if not state then
 		return groupAnchor, false
@@ -432,11 +432,13 @@ function SCM:GetManagedAnchorChildAnchor(group, groupAnchor, point, anchor, rela
 	end
 	target = target or UIParent
 
+	local anchorWidth = iconWidth or iconHeight or 1
+	local anchorHeight = iconHeight or iconWidth or 1
 	proxy:SetFrameStrata((groupAnchor and groupAnchor:GetFrameStrata()) or "HIGH")
 	proxy:SetScale((groupAnchor and groupAnchor:GetScale()) or Cache.cachedViewerScale or 1)
-	proxy:SetSize(SCM:PixelPerfect(max(state.effectiveWidth or 0, iconSize or 1, 1)), SCM:PixelPerfect(max(state.effectiveHeight or 0, iconSize or 1, 1)))
+	proxy:SetSize(SCM:PixelPerfect(max(state.effectiveWidth or 0, anchorWidth, 1)), SCM:PixelPerfect(max(state.effectiveHeight or 0, anchorHeight, 1)))
 	proxy:ClearAllPoints()
-	proxy:SetPoint(self:GetAnchorPivot(point, growDir), target, relativePoint, GetAnchorPointOffsets(point, growDir, iconSize, xOffset, yOffset, anchorOffsetY))
+	proxy:SetPoint(self:GetAnchorPivot(point, growDir), target, relativePoint, GetAnchorPointOffsets(point, growDir, anchorWidth, xOffset, yOffset, anchorOffsetY))
 	proxy:Show()
 
 	state.currentProxyRequired = nil
@@ -445,7 +447,7 @@ function SCM:GetManagedAnchorChildAnchor(group, groupAnchor, point, anchor, rela
 	return proxy, true
 end
 
-function SCM:GetAnchor(group, point, anchor, relativePoint, xOffset, yOffset, growDir, iconSize, resetSize, anchorOffsetY, resetWidth, resetHeight)
+function SCM:GetAnchor(group, point, anchor, relativePoint, xOffset, yOffset, growDir, iconWidth, iconHeight, resetSize, anchorOffsetY, resetWidth, resetHeight)
 	local anchorFrame = self.anchorFrames[group]
 	if not anchorFrame then
 		anchorFrame = CreateFrame("Frame", "SCM_GroupAnchor_" .. group, UIParent)
@@ -494,13 +496,18 @@ function SCM:GetAnchor(group, point, anchor, relativePoint, xOffset, yOffset, gr
 
 	target = target or UIParent
 
+	local anchorWidth = iconWidth or iconHeight or 1
+	local anchorHeight = iconHeight or iconWidth or 1
 	local pivot = self:GetAnchorPivot(point, growDir)
-	local appliedXOffset, appliedYOffset = GetAnchorPointOffsets(point, growDir, iconSize, xOffset, yOffset, anchorOffsetY)
+	local appliedXOffset, appliedYOffset = GetAnchorPointOffsets(point, growDir, anchorWidth, xOffset, yOffset, anchorOffsetY)
 
 	if resetSize then
-		anchorFrame:SetSize(SCM:PixelPerfect(resetWidth or iconSize), SCM:PixelPerfect(resetHeight or iconSize))
+		anchorFrame:SetSize(SCM:PixelPerfect(resetWidth or anchorWidth), SCM:PixelPerfect(resetHeight or anchorHeight))
 	else
-		anchorFrame:SetSize(SCM:PixelPerfect(max(anchorFrame:GetWidth(), iconSize)), SCM:PixelPerfect(max(anchorFrame:GetHeight(), iconSize)))
+		local pixelPerfectMultiplier = SCM:PixelPerfect()
+		local currentWidth = (anchorFrame:GetWidth() or 0) / pixelPerfectMultiplier
+		local currentHeight = (anchorFrame:GetHeight() or 0) / pixelPerfectMultiplier
+		anchorFrame:SetSize(SCM:PixelPerfect(max(currentWidth, anchorWidth)), SCM:PixelPerfect(max(currentHeight, anchorHeight)))
 	end
 	anchorFrame:SetScale(Cache.cachedViewerScale or 1)
 	anchorFrame:ClearAllPoints()
