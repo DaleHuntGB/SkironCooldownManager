@@ -552,8 +552,9 @@ local function CreateAddSpellDropdown(owner, rootDescription, scrollFrame, ancho
 	end
 end
 
-local function SelectAdvancedRowSettings(self, tabGroup, rowConfig, rowIndex, anchorIndex, mode, options)
+local function SelectAdvancedRowSettings(self, tabGroup, rowConfig, rowIndex, anchorIndex, mode, options, data)
 	self:ReleaseChildren()
+	local isBuffBar = mode == "buffbars"
 
 	if tabGroup == "general" then
 		local keepAspectRatio = AceGUI:Create("CheckBox")
@@ -599,6 +600,7 @@ local function SelectAdvancedRowSettings(self, tabGroup, rowConfig, rowIndex, an
 			useFixedWidth:SetLabel("Use Fixed Width")
 			useFixedWidth:SetRelativeWidth(0.5)
 			useFixedWidth:SetValue(rowConfig.useFixedWidth)
+			useFixedWidth:SetDisabled(data.matchAnchorWidth)
 			useFixedWidth:SetCallback("OnValueChanged", function(_, _, value)
 				rowConfig.useFixedWidth = value
 				ApplyModeConfigUpdate(anchorIndex, mode)
@@ -773,6 +775,7 @@ local function SelectRow(widget, rowWidget, parentWidget, scrollFrame, data, anc
 	iconWidth:SetRelativeWidth(0.33)
 	iconWidth:SetSliderValues(10, isBuffBar and 500 or 200, 0.1)
 	iconWidth:SetLabel(widthLabel)
+	iconWidth:SetDisabled(data.matchAnchorWidth)
 	iconWidth:SetValue(rowConfig.iconWidth or rowConfig.size)
 
 	widget:AddChild(iconWidth)
@@ -838,7 +841,7 @@ local function SelectRow(widget, rowWidget, parentWidget, scrollFrame, data, anc
 	advancedRowSettings:SetLayout("flow")
 	advancedRowSettings:SetTabs(advancedTabs)
 	advancedRowSettings:SetCallback("OnGroupSelected", function(self, event, tabGroup)
-		SelectAdvancedRowSettings(self, tabGroup, rowConfig, rowIndex, anchorIndex, mode, options)
+		SelectAdvancedRowSettings(self, tabGroup, rowConfig, rowIndex, anchorIndex, mode, options, data)
 	end)
 	advancedRowSettings:SelectTab("general")
 	widget:AddChild(advancedRowSettings)
@@ -1044,7 +1047,7 @@ local function SelectAnchor(widget, parentWidget, anchorIndex, anchorTabsTbl, mo
 	end
 
 	local point = AceGUI:Create("Dropdown")
-	point:SetRelativeWidth(0.33)
+	point:SetRelativeWidth(isBuffBar and 0.25 or 0.33)
 	point:SetLabel("Point")
 	point:SetList(SCM.Constants.AnchorPoints)
 	point:SetValue(data.anchor[1])
@@ -1055,7 +1058,7 @@ local function SelectAnchor(widget, parentWidget, anchorIndex, anchorTabsTbl, mo
 	anchorOptions:AddChild(point)
 
 	local relativeTo = AceGUI:Create("EditBox")
-	relativeTo:SetRelativeWidth(0.33)
+	relativeTo:SetRelativeWidth(isBuffBar and 0.25 or 0.33)
 	relativeTo:SetLabel("Anchor Frame")
 	relativeTo:SetText(data.anchor[2])
 	relativeTo:SetCallback("OnEnterPressed", function(self, event, text)
@@ -1065,7 +1068,7 @@ local function SelectAnchor(widget, parentWidget, anchorIndex, anchorTabsTbl, mo
 	anchorOptions:AddChild(relativeTo)
 
 	local relativePoint = AceGUI:Create("Dropdown")
-	relativePoint:SetRelativeWidth(0.33)
+	relativePoint:SetRelativeWidth(isBuffBar and 0.25 or 0.33)
 	relativePoint:SetLabel("Relative Point")
 	relativePoint:SetList(SCM.Constants.AnchorPoints)
 	relativePoint:SetValue(data.anchor[3])
@@ -1074,6 +1077,19 @@ local function SelectAnchor(widget, parentWidget, anchorIndex, anchorTabsTbl, mo
 		ApplyModeConfigUpdate(anchorIndex, mode)
 	end)
 	anchorOptions:AddChild(relativePoint)
+
+	if isBuffBar then
+		local matchAnchorWidth = AceGUI:Create("CheckBox")
+		matchAnchorWidth:SetLabel("Match Parent Width")
+		matchAnchorWidth:SetRelativeWidth(0.25)
+		matchAnchorWidth:SetValue(data.matchAnchorWidth or false)
+		matchAnchorWidth:SetCallback("OnValueChanged", function(_, _, value)
+			data.matchAnchorWidth = value
+			ApplyModeConfigUpdate(anchorIndex, mode)
+			widget:SelectTab(anchorIndex)
+		end)
+		anchorOptions:AddChild(matchAnchorWidth)
+	end
 
 	local grow = AceGUI:Create("Dropdown")
 	grow:SetRelativeWidth(0.25)
@@ -1314,7 +1330,7 @@ local function SelectAnchor(widget, parentWidget, anchorIndex, anchorTabsTbl, mo
 						local iconSettingsTabs = AceGUI:Create("TabGroup")
 						iconSettingsTabs:SetLayout("flow")
 						iconSettingsTabs:SetFullWidth(true)
-						iconSettingsTabs:SetTabs(isBuffBar and {{ value = "general", text = "General" }} or iconTypeTabs[buttonData.iconType])
+						iconSettingsTabs:SetTabs(isBuffBar and { { value = "general", text = "General" } } or iconTypeTabs[buttonData.iconType])
 						iconSettingsTabs:SetCallback("OnGroupSelected", function(self, event, group)
 							iconSettingsTabs:ReleaseChildren()
 

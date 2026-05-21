@@ -207,11 +207,11 @@ local function LayoutAnchorGroup(group, visibleChildren, anchorConfig, options, 
 	Cache.cachedVisitedAnchorGroups[group] = true
 
 	local state = GetAnchorState(group)
-	local rowConfig = (anchorConfig and anchorConfig.rowConfig and #anchorConfig.rowConfig > 0) and anchorConfig.rowConfig or DEFAULT_ROW_CONFIG
+	local rowConfig = anchorConfig.rowConfig or DEFAULT_ROW_CONFIG
 	local lastRowConfig = rowConfig[#rowConfig]
-	local growDir = anchorConfig and anchorConfig.grow or "CENTERED"
-	local secondaryGrowDir = anchorConfig and anchorConfig.secondaryGrow or "DOWN"
-	local baseSpacing = anchorConfig and anchorConfig.spacing or 0
+	local growDir = anchorConfig.grow or "CENTERED"
+	local secondaryGrowDir = anchorConfig.secondaryGrow or "DOWN"
+	local baseSpacing = anchorConfig.spacing or 0
 	local point, anchor, relativePoint, xOffset, yOffset = unpack(anchorConfig and anchorConfig.anchor or DEFAULT_ANCHOR)
 	local initialWidth = rowConfig[1].iconWidth or rowConfig[1].size or 47
 	local initialHeight = rowConfig[1].iconHeight or rowConfig[1].size or 47
@@ -375,6 +375,12 @@ local function LayoutAnchorGroup(group, visibleChildren, anchorConfig, options, 
 	local firstRowWidth = (firstRow and firstRow.rowIconWidth) or initialWidth
 	local firstRowHeight = (firstRow and firstRow.rowIconHeight) or initialHeight
 	local effectiveWidth = max(firstRowWidth, maxGroupWidth, 1)
+	if anchorConfig.matchAnchorWidth then
+		local anchorFrame = Utils.GetAnchorFrame(anchor)
+		if anchorFrame then
+			effectiveWidth = max(anchorFrame:GetWidth(), 1)
+		end
+	end
 	local effectiveHeight = max(firstRowHeight, accumulatedY - baseSpacing, 1)
 	local heightDelta = max(effectiveHeight - firstRowHeight, 0)
 	local anchorOffsetY = secondaryGrowDir == "UP" and ((pivot:find("TOP") and heightDelta) or (not pivot:find("BOTTOM") and heightDelta / 2) or 0)
