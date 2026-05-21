@@ -316,24 +316,45 @@ function Utils.NormalizeBuffBarGroup(group)
 	return Utils.ToBuffBarGroup(group)
 end
 
-function Utils.GetAnchorConfigForGroup(config, group, globalAnchorConfig, buffBarAnchorConfig)
-	local anchorConfig = config and config.anchorConfig and config.anchorConfig[group]
-	if anchorConfig then
-		local profileAnchorConfig = SCM.db.profile.options.anchorConfig
-		if anchorConfig.useGlobalProfileConfig and profileAnchorConfig and profileAnchorConfig[group] then
-			return profileAnchorConfig[group]
+function Utils.GetAnchorConfigForGroup(config, anchorIndex, isGlobal, isBuffBar)
+	local options = SCM.db and SCM.db.profile and SCM.db.profile.options
+
+	if isGlobal then
+		local globalAnchorConfig = (config and config.globalAnchorConfig) or SCM.globalAnchorConfig
+		return globalAnchorConfig and globalAnchorConfig[anchorIndex]
+	end
+
+	if isBuffBar then
+		local anchorConfig = config and config.buffBarsAnchorConfig and config.buffBarsAnchorConfig[anchorIndex]
+		local profileAnchorConfig = options and options.buffBarsAnchorConfig
+		if anchorConfig and anchorConfig.useGlobalProfileConfig and profileAnchorConfig and profileAnchorConfig[anchorIndex] then
+			return profileAnchorConfig[anchorIndex]
 		end
 
 		return anchorConfig
 	end
 
+	local anchorConfig = config and config.anchorConfig and config.anchorConfig[anchorIndex]
+	if anchorConfig then
+		local profileAnchorConfig = options and options.anchorConfig
+		if anchorConfig.useGlobalProfileConfig and profileAnchorConfig and profileAnchorConfig[anchorIndex] then
+			return profileAnchorConfig[anchorIndex]
+		end
+
+		return anchorConfig
+	end
+end
+
+function Utils.GetAnchorConfigForLayoutGroup(config, group)
 	if Utils.IsGlobalGroup(group) then
-		return globalAnchorConfig and globalAnchorConfig[group - GLOBAL_GROUP_OFFSET]
+		return Utils.GetAnchorConfigForGroup(config, group - GLOBAL_GROUP_OFFSET, true)
 	end
 
 	if Utils.IsBuffBarGroup(group) then
-		return buffBarAnchorConfig and buffBarAnchorConfig[group - GLOBAL_BUFF_BAR_OFFSET]
+		return Utils.GetAnchorConfigForGroup(config, group - GLOBAL_BUFF_BAR_OFFSET, nil, true)
 	end
+
+	return Utils.GetAnchorConfigForGroup(config, group)
 end
 
 function Utils.SortBySCMOrder(a, b)

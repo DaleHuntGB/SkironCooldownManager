@@ -554,7 +554,6 @@ end
 
 local function SelectAdvancedRowSettings(self, tabGroup, rowConfig, rowIndex, anchorIndex, mode, options, data)
 	self:ReleaseChildren()
-	local isBuffBar = mode == "buffbars"
 
 	if tabGroup == "general" then
 		local keepAspectRatio = AceGUI:Create("CheckBox")
@@ -960,17 +959,29 @@ local function SelectAnchor(widget, parentWidget, anchorIndex, anchorTabsTbl, mo
 
 	local data = sourceData
 	local function GetProfileAnchorConfig()
-		options.anchorConfig = options.anchorConfig or {}
-		local profileAnchorConfig = options.anchorConfig[anchorIndex]
-		if not profileAnchorConfig then
-			profileAnchorConfig = CopyTable(data)
-			options.anchorConfig[anchorIndex] = profileAnchorConfig
+		local config
+		if isBuffBar then
+			options.buffBarsAnchorConfig = options.buffBarsAnchorConfig or {}
+			config = options.buffBarsAnchorConfig[anchorIndex]
+		else
+			options.anchorConfig = options.anchorConfig or {}
+			config = options.anchorConfig[anchorIndex]
 		end
 
-		return profileAnchorConfig
+		if not config then
+			config = CopyTable(data)
+		end
+
+		if isBuffBar then
+			options.buffBarsAnchorConfig[anchorIndex] = config
+		else
+			options.anchorConfig[anchorIndex] = config
+		end
+
+		return config
 	end
 
-	if not isGlobal and not isBuffBar and sourceData.useGlobalProfileConfig then
+	if not isGlobal and sourceData.useGlobalProfileConfig then
 		data = GetProfileAnchorConfig()
 		isProfileConfig = true
 	end
@@ -991,7 +1002,7 @@ local function SelectAnchor(widget, parentWidget, anchorIndex, anchorTabsTbl, mo
 	buttonGroup:SetLayout("flow")
 	anchorOptions:AddChild(buttonGroup)
 
-	local anchorButtonWidth = (isGlobal or isBuffBar) and 0.5 or 0.33
+	local anchorButtonWidth = isGlobal and 0.5 or 0.33
 	local addAnchorButton = AceGUI:Create("Button")
 	addAnchorButton:SetText("Add Anchor")
 	addAnchorButton:SetRelativeWidth(anchorButtonWidth)
@@ -1021,7 +1032,7 @@ local function SelectAnchor(widget, parentWidget, anchorIndex, anchorTabsTbl, mo
 	end)
 	buttonGroup:AddChild(deleteAnchorButton)
 
-	if not isGlobal and not isBuffBar then
+	if not isGlobal then
 		local useGlobalProfileConfig = AceGUI:Create("CheckBox")
 		useGlobalProfileConfig:SetLabel("Use Profile Config (EXPERIMENTAL)")
 		useGlobalProfileConfig:SetRelativeWidth(0.33)
@@ -1895,8 +1906,8 @@ local function SelectAnchor(widget, parentWidget, anchorIndex, anchorTabsTbl, mo
 	top:DoLayout()
 
 	scrollFrame:DoLayout()
-	scrollFrame:FixScroll()
-	scrollFrame:SetScroll(0)
+	--scrollFrame:FixScroll()
+	--scrollFrame:SetScroll(0)
 
 	RunNextFrame(function()
 		horizontalScrollFrame.scrollbar:ScrollToEnd()

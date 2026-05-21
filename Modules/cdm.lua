@@ -183,8 +183,8 @@ local function UpdateAnchorLinks(config)
 	local buffBarsAnchorConfig = config and config.buffBarsAnchorConfig
 	if buffBarsAnchorConfig then
 		for index = 1, #buffBarsAnchorConfig do
-			local anchorConfig = buffBarsAnchorConfig[index]
 			local group = ToBuffBarGroup(index)
+			local anchorConfig = Utils.GetAnchorConfigForGroup(config, index, nil, true)
 			local parentGroup = Utils.ParseAnchorString(anchorConfig and anchorConfig.anchor and anchorConfig.anchor[2])
 			local state = GetAnchorState(group)
 			state.parentGroup = parentGroup
@@ -668,7 +668,7 @@ local function OrderCDManagerSpells_Actual(updateScope, scopedAnchorGroupsOverri
 		LayoutAnchorGroup(
 			group,
 			visibleChildren,
-			Utils.GetAnchorConfigForGroup(config, group, SCM.globalAnchorConfig, SCM.buffBarsAnchorConfig),
+			Utils.GetAnchorConfigForLayoutGroup(config, group),
 			options,
 			changedGroups,
 			nil,
@@ -715,7 +715,7 @@ local function OrderCDManagerSpells_Actual(updateScope, scopedAnchorGroupsOverri
 	if updateScope == UPDATE_SCOPE.ALL or updateScope == UPDATE_SCOPE.BUFF_BAR then
 		if config.buffBarsAnchorConfig then
 			for index = 1, #config.buffBarsAnchorConfig do
-				local anchorConfig = config.buffBarsAnchorConfig[index]
+				local anchorConfig = Utils.GetAnchorConfigForGroup(config, index, nil, true)
 				local group = ToBuffBarGroup(index)
 				if not Cache.cachedVisitedAnchorGroups[group] then
 					Cache.cachedVisitedAnchorGroups[group] = true
