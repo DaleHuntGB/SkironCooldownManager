@@ -115,6 +115,7 @@ end
 local function GetProxy(group)
 	local state = GetAnchorState(group)
 	local proxy = state.currentProxyFrame
+
 	if not proxy and not InCombatLockdown() then
 		proxy = CreateFrame("Frame", "SCM_GroupAnchorProxy_" .. group, UIParent)
 		proxy:Hide()
@@ -365,7 +366,7 @@ local function HookAnchorVisibilityFrame(frame, group, anchor)
 	frame:HookScript("OnHide", OnAnchorVisibilityChanged)
 end
 
-local function SetAnchorVisibilityHooks(group, anchor, selectedAnchorFrame)
+local function SetAnchorVisibilityHooks(group, anchor, selectedAnchorFrame, groupAnchor)
 	local state = GetAnchorState(group)
 	if type(anchor) ~= "string" or not anchor:find(",", 1, true) then
 		state.currentAnchorFrame = nil
@@ -403,6 +404,11 @@ end
 function SCM:GetManagedAnchorChildAnchor(group, groupAnchor, point, anchor, relativePoint, xOffset, yOffset, growDir, iconSize, anchorOffsetY)
 	local state = Cache.cachedAnchorStates[group]
 	if not state then
+		return groupAnchor, false
+	end
+
+	if not (groupAnchor and groupAnchor:IsProtected()) then
+		RemoveProxy(state)
 		return groupAnchor, false
 	end
 
@@ -471,22 +477,20 @@ function SCM:GetAnchor(group, point, anchor, relativePoint, xOffset, yOffset, gr
 		self.anchorFrames[group] = anchorFrame
 	end
 
-	if not (point and anchor) or InCombatLockdown() then
+	if not (point and anchor) or (InCombatLockdown() and anchorFrame:IsProtected()) then
 		return anchorFrame
 	end
 
-	anchorFrame:Show()
-
+	local state = GetAnchorState(group)
 	local target = anchor
 	local selectedAnchorRef
 	if type(target) == "string" then
 		target, selectedAnchorRef = Utils.GetAnchorFrame(target)
-
-		if type(selectedAnchorRef) == "string" and selectedAnchorRef:sub(1, 7) == "ANCHOR:" and target then
-			anchorFrame:SetScale(target:GetScale())
-		end
 	end
-	SetAnchorVisibilityHooks(group, anchor, selectedAnchorRef)
+	local usesVisibilitySelection = type(anchor) == "string" and anchor:find(",", 1, true)
+	if usesVisibilitySelection or state.currentAnchorFrame or state.currentSelectedAnchorFrame then
+		SetAnchorVisibilityHooks(group, anchor, selectedAnchorRef, anchorFrame)
+	end
 
 	target = target or UIParent
 
@@ -502,9 +506,9 @@ function SCM:GetAnchor(group, point, anchor, relativePoint, xOffset, yOffset, gr
 	anchorFrame:ClearAllPoints()
 	anchorFrame:SetPoint(pivot, target, relativePoint, appliedXOffset, appliedYOffset)
 	anchorFrame:Show()
-	RemoveProxy(GetAnchorState(group))
+	RemoveProxy(state)
 
-	local shouldStartDefaultHighlight = self.OptionsFrame ~= nil
+	local shouldStartDefaultHighlight = self.OptionsFrame
 		and self.OptionsFrame:IsShown()
 		and not anchorFrame.isGlowActive
 		and anchorFrame.SCMHighlightState ~= "default"
