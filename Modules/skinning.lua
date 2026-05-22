@@ -30,6 +30,26 @@ local function ApplyChargeAndApplicationStyle(child, options, fontPath)
 			rowConfig.chargeXOffset or options.chargeXOffset,
 			rowConfig.chargeYOffset or options.chargeYOffset
 		)
+
+		child.ChargeCount.Current.SCMRowConfig = rowConfig
+
+		if child.SCMCooldownID then
+			local cooldownData = SCM.defaultCooldownViewerConfig.cooldownIDs[child.SCMCooldownID]
+			if rowConfig and cooldownData and cooldownData.charges and not child.SCMChargeCountHook then
+				child.SCMChargeCountHook = true
+				hooksecurefunc(child.ChargeCount.Current, "SetText", function(self, text)
+					if self.SCMSetText then
+						return
+					end
+
+					if self.SCMRowConfig and self.SCMRowConfig.chargeTruncateWhenZero then
+						self.SCMSetText = true
+						self:SetText(C_StringUtil.TruncateWhenZero(text))
+						self.SCMSetText = nil
+					end
+				end)
+			end
+		end
 	end
 
 	if child.Applications and child.Applications.Applications then

@@ -658,7 +658,7 @@ local function SelectAdvancedRowSettings(self, tabGroup, rowConfig, rowIndex, an
 		self:AddChild(chargeRelativePoint)
 
 		local xOffset = AceGUI:Create("Slider")
-		xOffset:SetRelativeWidth(0.33)
+		xOffset:SetRelativeWidth(0.25)
 		xOffset:SetSliderValues(-50, 50, 0.1)
 		xOffset:SetLabel("X Offset")
 		xOffset:SetValue(rowConfig.chargeXOffset or options.chargeXOffset)
@@ -669,7 +669,7 @@ local function SelectAdvancedRowSettings(self, tabGroup, rowConfig, rowIndex, an
 		self:AddChild(xOffset)
 
 		local yOffset = AceGUI:Create("Slider")
-		yOffset:SetRelativeWidth(0.33)
+		yOffset:SetRelativeWidth(0.25)
 		yOffset:SetSliderValues(-50, 50, 0.1)
 		yOffset:SetLabel("Y Offset")
 		yOffset:SetValue(rowConfig.chargeYOffset or options.chargeYOffset)
@@ -680,7 +680,7 @@ local function SelectAdvancedRowSettings(self, tabGroup, rowConfig, rowIndex, an
 		self:AddChild(yOffset)
 
 		local chargeFontSize = AceGUI:Create("Slider")
-		chargeFontSize:SetRelativeWidth(0.33)
+		chargeFontSize:SetRelativeWidth(0.25)
 		chargeFontSize:SetLabel("Font Size")
 		chargeFontSize:SetSliderValues(1, 50, 1)
 		chargeFontSize:SetValue(rowConfig.chargeFontSize or options.chargeFontSize)
@@ -689,6 +689,16 @@ local function SelectAdvancedRowSettings(self, tabGroup, rowConfig, rowIndex, an
 			ApplyModeConfigUpdate(anchorIndex, mode)
 		end)
 		self:AddChild(chargeFontSize)
+
+		local truncateWhenZero = AceGUI:Create("CheckBox")
+		truncateWhenZero:SetLabel("Truncate When Zero")
+		truncateWhenZero:SetRelativeWidth(0.25)
+		truncateWhenZero:SetValue(rowConfig.chargeTruncateWhenZero)
+		truncateWhenZero:SetCallback("OnValueChanged", function(_, _, value)
+			rowConfig.chargeTruncateWhenZero = value
+			ApplyModeConfigUpdate(anchorIndex, mode)
+		end)
+		self:AddChild(truncateWhenZero)
 	elseif tabGroup == "applications" then
 		local applicationsPoint = AceGUI:Create("Dropdown")
 		applicationsPoint:SetRelativeWidth(0.5)
