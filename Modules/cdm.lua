@@ -217,12 +217,19 @@ local function LayoutAnchorGroup(group, visibleChildren, anchorConfig, options, 
 	local initialHeight = rowConfig[1].iconHeight or rowConfig[1].size or 47
 	local isCentered = growDir == "CENTER" or growDir == "CENTERED"
 	local isFixed = growDir == "FIXED"
-	local lockGroupSize = group == 1
+	local lockGroupSize = group == 1 and SCM.anchorFrames[1] and SCM.anchorFrames[1]:IsProtected()
 	local growsUp = secondaryGrowDir == "UP"
 	local verticalPoint = growsUp and "BOTTOM" or "TOP"
 	local startPoint = (isCentered or isFixed) and verticalPoint or (verticalPoint .. (growDir == "LEFT" and "RIGHT" or "LEFT"))
 	local pivot = SCM:GetAnchorPivot(point, growDir)
 	local parentGroup = Utils.ParseAnchorString(anchor)
+	local matchedAnchorWidth
+	if anchorConfig.matchAnchorWidth and Utils.IsBuffBarGroup(group) then
+		local anchorFrame = Utils.GetAnchorFrame(anchor)
+		if anchorFrame then
+			matchedAnchorWidth = max(anchorFrame:GetWidth(), 1)
+		end
+	end
 	local rows = state.rows
 	local layoutChildren = visibleChildren
 	local childIndex = 1
@@ -265,7 +272,7 @@ local function LayoutAnchorGroup(group, visibleChildren, anchorConfig, options, 
 
 	layoutChildCount = #layoutChildren
 	totalChildren = layoutChildCount
-	layoutSignature = layoutSignature + (configuredChildCount * 31) + (layoutChildCount * 131)
+	layoutSignature = layoutSignature + (configuredChildCount * 31) + (layoutChildCount * 131) + (lockGroupSize and 8191 or 0)
 
 	if allowLayoutSkip and not checkDuplicates and not resetSize and not SCM.isOptionsOpen and state.layoutSignature == layoutSignature then
 		return
@@ -338,6 +345,10 @@ local function LayoutAnchorGroup(group, visibleChildren, anchorConfig, options, 
 			end
 		end
 
+		if matchedAnchorWidth then
+			rowIconWidth = matchedAnchorWidth
+		end
+
 		local endIndex = min(childIndex + rowLimit - 1, totalChildren)
 		local numInRow = endIndex - childIndex + 1
 		local rowWidth = (numInRow * rowIconWidth) + ((numInRow - 1) * baseSpacing)
@@ -375,11 +386,8 @@ local function LayoutAnchorGroup(group, visibleChildren, anchorConfig, options, 
 	local firstRowWidth = (firstRow and firstRow.rowIconWidth) or initialWidth
 	local firstRowHeight = (firstRow and firstRow.rowIconHeight) or initialHeight
 	local effectiveWidth = max(firstRowWidth, maxGroupWidth, 1)
-	if anchorConfig.matchAnchorWidth then
-		local anchorFrame = Utils.GetAnchorFrame(anchor)
-		if anchorFrame then
-			effectiveWidth = max(anchorFrame:GetWidth(), 1)
-		end
+	if matchedAnchorWidth then
+		effectiveWidth = matchedAnchorWidth
 	end
 	local effectiveHeight = max(firstRowHeight, accumulatedY - baseSpacing, 1)
 	local heightDelta = max(effectiveHeight - firstRowHeight, 0)
