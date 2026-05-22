@@ -234,11 +234,12 @@ local function OnRegularCooldownChanged(self, changeType)
 	end
 
 	local options = SCM.db.profile.options
-	if options.disableRegularIconActiveSwipe and not parent.SCMConfig.forceActiveSwipe and self:GetUseAuraDisplayTime() then
+	local useAuraDisplayTime = self:GetUseAuraDisplayTime()
+	if options.disableRegularIconActiveSwipe and not parent.SCMConfig.forceActiveSwipe and useAuraDisplayTime then
 		Cooldowns.OverrideRegularAuraCooldown(self, parent, options)
 	elseif options.disableGCD or (changeType == "CLEAR" and Constants.FixBlizzardSpells[parent.SCMSpellID]) then
 		Cooldowns.SetNormalCooldown(self, parent)
-	elseif parent.Icon.SCMDesaturated and not self:GetUseAuraDisplayTime() then
+	elseif parent.Icon.SCMDesaturated and not useAuraDisplayTime then
 		parent.Icon.SCMDesaturated = nil
 		parent.Icon:SetDesaturated(false)
 	end
@@ -262,7 +263,7 @@ local function OnRegularCooldownChanged(self, changeType)
 		end
 	end
 
-	Icons.UpdateChildGlow(parent, not self:GetUseAuraDisplayTime())
+	Icons.UpdateChildGlow(parent, not useAuraDisplayTime)
 end
 
 function Cooldowns.SetupCooldownHooks(child)

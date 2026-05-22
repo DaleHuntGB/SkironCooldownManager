@@ -40,7 +40,7 @@ end
 
 local function OnCooldownViewerSettingsRefreshLayout(self)
 	SCM:ClearChildrenCache()
-	SCM:UpdateCooldownInfo(true, self:GetDataProvider())
+	SCM:UpdateCooldownInfo(true)
 	SCM:UpdateDB()
 	SCM:ApplyAllCDManagerConfigs()
 end
@@ -87,7 +87,7 @@ end
 local function RefreshCooldownViewerData(releaseCustomIcons)
 	SCM:InvalidateAnchorLinks()
 	SCM:ClearViewerChildrenCache()
-	SCM:UpdateCooldownInfo(true, CooldownViewerSettings:GetDataProvider())
+	SCM:UpdateCooldownInfo(true)
 	SCM:UpdateDB()
 
 	if releaseCustomIcons then
@@ -120,7 +120,7 @@ end
 function SCM:PLAYER_ENTERING_WORLD(isInitialLogin, isReload)
 	if isInitialLogin or isReload then
 		--SCM.Cache.cachedViewerScale = SCM:PixelPerfect()
-		SCM:UpdateCooldownInfo(true, CooldownViewerSettings:GetDataProvider())
+		SCM:UpdateCooldownInfo(true)
 		SCM:UpdateDB()
 
 		SCM:CreateAllCustomIcons()
@@ -385,7 +385,7 @@ function SCM:GetConfigTableByID(configID, iconType, isGlobal)
 	return configTable and configTable[configID]
 end
 
-function SCM:UpdateCooldownInfo(isFirstLoad, dataProvider)
+function SCM:UpdateCooldownInfo(isFirstLoad)
 	if InCombatLockdown() then
 		return
 	end
@@ -395,6 +395,7 @@ function SCM:UpdateCooldownInfo(isFirstLoad, dataProvider)
 		spellIDs = {},
 	}
 
+	local dataProvider = CooldownViewerSettings:GetDataProvider()
 	local displayData = dataProvider and dataProvider.displayData.cooldownInfoByID
 	for _, cooldownCategory in pairs(CooldownViewerSettingsDataProvider_GetCategories()) do
 		self.defaultCooldownViewerConfig[cooldownCategory] = {
