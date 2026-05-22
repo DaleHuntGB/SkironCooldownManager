@@ -95,7 +95,17 @@ local function OnIconCooldownDone(self)
 end
 
 local function OnCustomIconShow(self)
-	if not ShouldShowCustomIcon(self.SCMConfig, self.SCMIconType, nil, nil, self) and not self:GetAttribute("statehidden") then
+	if self:GetAttribute("statehidden") then
+		return
+	end
+
+	if self.SCMShouldBeVisible and not self.SCMLayoutApplied then
+		self.SCMAppliedVisibility = false
+		self:Hide()
+		return
+	end
+
+	if not ShouldShowCustomIcon(self.SCMConfig, self.SCMIconType, nil, nil, self) then
 		Icons.SetChildVisibilityState(self, false, true)
 	end
 end
