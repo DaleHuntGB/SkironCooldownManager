@@ -210,35 +210,12 @@ function SCM:SkinChild(child, childConfig)
 		child:SetFrameStrata(frameStrata)
 	end
 
-	local borderSize = SCM:PixelPerfect() * options.borderSize
+	local borderSize = options.experimentalPixelSettings and options.borderSize or SCM:PixelPerfect(options.borderSize)
 	local borderColor = options.borderColor
 
-	if child.SCMSkinned and self.OptionsFrame ~= nil and self.OptionsFrame:IsShown() then
-		if borderSize == 0 then
-			child.customBorder:Hide()
-		else
-			child.customBorder:SetBackdrop({
-				edgeFile = "Interface\\Buttons\\WHITE8x8",
-				edgeSize = borderSize,
-			})
-			child.customBorder:Show()
-
-			child.customBorder:SetBackdropBorderColor(borderColor.r, borderColor.g, borderColor.b, borderColor.a)
-		end
-
-		child.Icon:ClearAllPoints()
-		child.Icon:SetPoint("TOPLEFT", child, "TOPLEFT", borderSize, -borderSize)
-		child.Icon:SetPoint("BOTTOMRIGHT", child, "BOTTOMRIGHT", -borderSize, borderSize)
-
-		ApplyZoomSettings(child, options)
-		ApplyChargeAndApplicationStyle(child, options, LSM:Fetch("font", options.chargeFont))
-		ApplyCooldownStyle(child, options)
-	elseif not child.SCMSkinned then
+	if not child.SCMSkinned or (child.SCMSkinned and self.OptionsFrame ~= nil and self.OptionsFrame:IsShown()) then
 		child.SCMSkinned = true
 
-		child.Icon:ClearAllPoints()
-		child.Icon:SetPoint("TOPLEFT", child, "TOPLEFT", borderSize, -borderSize)
-		child.Icon:SetPoint("BOTTOMRIGHT", child, "BOTTOMRIGHT", -borderSize, borderSize)
 		local iconZoom = options.iconZoom
 		child.Icon:SetTexCoord(iconZoom, 1 - iconZoom, iconZoom, 1 - iconZoom)
 
@@ -252,12 +229,24 @@ function SCM:SkinChild(child, childConfig)
 			edgeFile = "Interface\\Buttons\\WHITE8x8",
 			edgeSize = borderSize,
 		})
-		child.customBorder:SetBackdropBorderColor(0, 0, 0, 1)
+		child.customBorder:SetBackdropBorderColor(borderColor.r, borderColor.g, borderColor.b, borderColor.a)
 
 		if borderSize == 0 then
 			child.customBorder:Hide()
 		else
 			child.customBorder:Show()
+		end
+
+		if options.experimentalPixelSettings then
+			for _, region in ipairs({ child.customBorder:GetRegions() }) do
+				region:SetTexelSnappingBias(0)
+				region:SetSnapToPixelGrid(false)
+			end
+		else
+			for _, region in ipairs({ child.customBorder:GetRegions() }) do
+				region:SetTexelSnappingBias(1)
+				region:SetSnapToPixelGrid(true)
+			end
 		end
 
 		local textureRegion
@@ -282,6 +271,18 @@ function SCM:SkinChild(child, childConfig)
 					end
 				end)
 			end
+		end
+
+		child.Icon:ClearAllPoints()
+		child.Icon:SetPoint("TOPLEFT", child, "TOPLEFT", borderSize, -borderSize)
+		child.Icon:SetPoint("BOTTOMRIGHT", child, "BOTTOMRIGHT", -borderSize, borderSize)
+
+		if options.experimentalPixelSettings then
+			child.Icon:SetTexelSnappingBias(0)
+			child.Icon:SetSnapToPixelGrid(false)
+		else
+			child.Icon:SetTexelSnappingBias(1)
+			child.Icon:SetSnapToPixelGrid(true)
 		end
 
 		if child.DebuffBorder then
