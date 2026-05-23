@@ -381,16 +381,16 @@ local function UpdateCustomIconCooldown(frame, iconType, config)
 
 		if duration > 0 and (startTime + duration) - GetTime() >= 0 then
 			if not frame.isOnCooldown or frame.SCMCooldownStartTime ~= startTime or frame.SCMCooldownDuration ~= duration then
-				if modRate then
-					frame.Cooldown:SetCooldown(startTime, duration, modRate)
-				else
-					frame.Cooldown:SetCooldown(startTime, duration)
-				end
-
 				if duration < 0.1 then
 					frame.Icon:SetVertexColor(CooldownViewerConstants.ITEM_NOT_USABLE_COLOR:GetRGBA())
 					frame.Icon:SetDesaturated(false)
 				else
+					if modRate then
+						frame.Cooldown:SetCooldown(startTime, duration, modRate)
+					else
+						frame.Cooldown:SetCooldown(startTime, duration)
+					end
+					
 					frame.Icon:SetVertexColor(1, 1, 1)
 					frame.Icon:SetDesaturated(true)
 				end
