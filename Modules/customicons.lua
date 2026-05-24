@@ -332,28 +332,27 @@ local function UpdateCustomIconCooldown(frame, iconType, config)
 	end
 
 	if iconType == "spell" then
-		local spellCooldown = C_Spell.GetSpellCharges(config.spellID)
-		local durationObject = C_Spell.GetSpellChargeDuration(config.spellID, true)
 		local isOnCooldown = false
-		if spellCooldown and spellCooldown.isActive and not spellCooldown.isOnGCD then
-			frame.Cooldown:SetCooldownFromDurationObject(durationObject)
-			isOnCooldown = true
+		local spellCooldown = C_Spell.GetSpellCooldown(config.spellID)
+		if spellCooldown.isActive and not spellCooldown.isOnGCD then
+			local durationObject = C_Spell.GetSpellCooldownDuration(config.spellID, true)
 
-			local spellDurationObject = C_Spell.GetSpellCooldownDuration(config.spellID, true)
-			local desaturation = spellDurationObject:EvaluateRemainingDuration(desaturationCurve)
-			local alpha = spellDurationObject:EvaluateRemainingDuration(alphaCurve)
-			frame.Icon:SetDesaturation(desaturation)
-			frame.Cooldown:SetEdgeColor(1, 1, 1, desaturation)
-			frame.Cooldown:SetSwipeColor(0, 0, 0, alpha)
-			--frame.Cooldown:SetReverse(frame.Icon:IsDesaturated())
-		else
-			spellCooldown = C_Spell.GetSpellCooldown(config.spellID)
-			durationObject = C_Spell.GetSpellCooldownDuration(config.spellID, true)
-			if spellCooldown.isActive and not spellCooldown.isOnGCD then
-				frame.Cooldown:SetCooldownFromDurationObject(durationObject)
-				frame.Icon:SetDesaturation(C_CurveUtil.EvaluateColorValueFromBoolean(durationObject:IsZero(), 0, 1))
-				isOnCooldown = true
-			end
+			frame.Icon:SetDesaturated(true)
+			frame.Cooldown:SetDrawEdge(false)
+			frame.Cooldown:SetSwipeColor(0, 0, 0, 0.7)
+			frame.Cooldown:SetCooldownFromDurationObject(durationObject)
+			frame.Icon:SetDesaturation(C_CurveUtil.EvaluateColorValueFromBoolean(durationObject:IsZero(), 0, 1))
+			isOnCooldown = true
+		end
+
+		spellCooldown = C_Spell.GetSpellCharges(config.spellID)
+
+		if not isOnCooldown and spellCooldown and spellCooldown.isActive and not spellCooldown.isOnGCD then
+			frame.Cooldown:SetCooldownFromDurationObject(C_Spell.GetSpellChargeDuration(config.spellID, true))
+			frame.Icon:SetDesaturated(false)
+			frame.Cooldown:SetDrawEdge(true)
+			frame.Cooldown:SetSwipeColor(0, 0, 0, 0)
+			isOnCooldown = true
 		end
 
 		if not isOnCooldown then
@@ -362,7 +361,7 @@ local function UpdateCustomIconCooldown(frame, iconType, config)
 			frame.Icon:SetDesaturated(false)
 		end
 
-		if (not spellCooldown.isActive or spellCooldown.isOnGCD) and config.showGCD then
+		if not isOnCooldown and (not spellCooldown or not spellCooldown.isActive or spellCooldown.isOnGCD) and config.showGCD then
 			local globalCooldown = C_Spell.GetSpellCooldown(61304)
 
 			if globalCooldown.isActive then
