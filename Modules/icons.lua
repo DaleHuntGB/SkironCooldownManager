@@ -143,8 +143,12 @@ end
 local function OnShow(child)
 	UIParent.SetAlpha(child, child.SCMHidden and 0 or 1)
 	if child.SCMGroup and (child.SCMChanged or child.SCMBuffBar) then
-		if child.SCMBuffBar and Constants.FakeAuras[child.SCMSpellID] then
-			child.SCMFakeAuraInstanceID = true
+		if child.SCMBuffBar then
+			if Constants.FakeAuras[child.SCMSpellID] then
+				child.SCMFakeAuraInstanceID = true
+			elseif child.auraInstanceID then
+				child.SCMAuraInstanceID = child.SCMAuraInstanceID or child.auraInstanceID
+			end
 		end
 
 		SCM:ApplyAnchorGroupCDManagerConfig(child.SCMGroup, child.SCMGlobal, child.viewerFrame and child.viewerFrame.SCMUpdateScope)
@@ -153,7 +157,12 @@ end
 
 local function OnHide(child)
 	if child.SCMGroup and (child.SCMChanged or child.SCMBuffBar) then
-		if child.SCMBuffBar and child.SCMFakeAuraInstanceID then
+		if child.SCMBuffBar then
+			if child.SCMAuraInstanceID and not child.SCMFakeAuraInstanceID and C_UnitAuras.GetAuraDataByAuraInstanceID("player", child.SCMAuraInstanceID) then
+				return
+			end
+
+			child.SCMAuraInstanceID = nil
 			child.SCMFakeAuraInstanceID = nil
 		end
 
