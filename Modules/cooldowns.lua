@@ -107,8 +107,9 @@ local function OnBuffHidePandemicStateFrame(self)
 		return
 	end
 
-	if self.SCMGlow and options.pandemicGlowOption == "replacePandemicGlow" then
+	if self.SCMPandemic and self.SCMGlow and options.pandemicGlowOption == "replacePandemicGlow" then
 		SCM:StopCustomGlow(self)
+		self.SCMPandemic = nil
 	end
 end
 
