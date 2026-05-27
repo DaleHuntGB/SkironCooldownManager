@@ -243,7 +243,7 @@ local function SelectGlobalSettingsTab(tabWidget, group, options)
 		skinningSettings:AddChild(savePosition)
 
 		local menuScale = AceGUI:Create("Slider")
-		menuScale:SetRelativeWidth(1)
+		menuScale:SetRelativeWidth(0.5)
 		menuScale:SetLabel("Options Scale")
 		menuScale:SetSliderValues(0.5, 2, 0.1)
 		menuScale:SetValue(options.menuScale)
@@ -252,6 +252,17 @@ local function SelectGlobalSettingsTab(tabWidget, group, options)
 			LibWindow.SetScale(SCM.OptionsFrame.frame, value)
 		end)
 		skinningSettings:AddChild(menuScale)
+
+		local resetPosition = AceGUI:Create("Button")
+		resetPosition:SetRelativeWidth(0.5)
+		resetPosition:SetText("Reset Position")
+		resetPosition:SetCallback("OnClick", function()
+			options.optionsWindow.x = 0
+			options.optionsWindow.y = 0
+			options.optionsWindow.point = "CENTER"
+			LibWindow.RestorePosition(SCM.OptionsFrame.frame)
+		end)
+		skinningSettings:AddChild(resetPosition)
 
 		local visibilitySettings = AceGUI:Create("InlineGroup")
 		visibilitySettings:SetLayout("flow")
