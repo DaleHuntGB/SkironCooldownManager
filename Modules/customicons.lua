@@ -842,8 +842,6 @@ local function RebuildCustomIconLoadCache()
 	customIconRequests.requestedItemIDs = customIconRequests.requestedItemIDs or {}
 	local requestedSpellIDs = customIconRequests.requestedSpellIDs
 	local requestedItemIDs = customIconRequests.requestedItemIDs
-	wipe(requestedSpellIDs)
-	wipe(requestedItemIDs)
 
 	wipe(Cache.cachedCustomSpellEntriesBySpellID)
 	wipe(Cache.cachedCustomItemEntriesByItemID)
