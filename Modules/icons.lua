@@ -439,11 +439,10 @@ local function ProcessSingleChild(child, validChildren, categoryIndex, isBuffIco
 		return
 	end
 
+	AddChildToGroup(validChildren, group, child)
 	if activeScopedAnchorGroups and not activeScopedAnchorGroups[group] then
 		return
 	end
-
-	AddChildToGroup(validChildren, group, child)
 
 	child.SCMChanged = child.SCMChanged or (not child.SCMConfig or child.SCMConfig ~= groupConfig) or (not child.SCMCooldownID or child.SCMCooldownID ~= cooldownID)
 	child.SCMConfig = groupConfig
@@ -502,11 +501,10 @@ local function ProcessSingleBuffBarChild(child, validChildren, categoryIndex, op
 		return
 	end
 
+	AddChildToGroup(validChildren, group, child)
 	if activeScopedAnchorGroups and not activeScopedAnchorGroups[group] then
 		return
 	end
-
-	AddChildToGroup(validChildren, group, child)
 
 	child.SCMChanged = child.SCMChanged or (not child.SCMConfig or child.SCMConfig ~= groupConfig) or (not child.SCMCooldownID or child.SCMCooldownID ~= cooldownID)
 	child.SCMConfig = groupConfig
