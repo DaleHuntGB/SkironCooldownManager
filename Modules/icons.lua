@@ -144,7 +144,7 @@ local function OnShow(child)
 	UIParent.SetAlpha(child, child.SCMHidden and 0 or 1)
 
 	if child.SCMGroup and child.SCMChanged then
-		if child.SCMBuffBar then
+		if child.SCMBuffBar and (not SCM.OptionsFrame or not SCM.OptionsFrame:IsShown()) then
 			if Constants.FakeAuras[child.SCMSpellID] then
 				child.SCMFakeAuraInstanceID = true
 			end
