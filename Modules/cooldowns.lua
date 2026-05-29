@@ -180,20 +180,6 @@ function Cooldowns.GetChildCooldown(child)
 	return durationObject ~= nil, durationObject
 end
 
-function Cooldowns.IsChildOnCooldown(child)
-	if not child or not child.Cooldown then
-		return
-	end
-
-	local spellCooldownInfo = C_Spell.GetSpellCooldown(child.SCMSpellID)
-	local isOnCooldown = spellCooldownInfo and spellCooldownInfo.isActive and not spellCooldownInfo.isOnGCD
-	if Constants.CheckCooldownFrameSpells[child.SCMSpellID] then
-		return isOnCooldown and child.Cooldown:IsVisible()
-	end
-
-	return isOnCooldown
-end
-
 function Cooldowns.SetNormalCooldown(self, parent)
 	local cooldownData = SCM.defaultCooldownViewerConfig.cooldownIDs[parent.SCMCooldownID]
 	self.SCMSettingRegularSpellCooldown = true
@@ -284,7 +270,7 @@ local function OnRegularCooldownChanged(self, changeType)
 
 	local config = parent.SCMConfig
 	if config.hideWhenNotOnCooldown then
-		local shouldShow = Cooldowns.IsChildOnCooldown(parent) and true or false
+		local shouldShow = Cooldowns.GetChildCooldown(parent) and true or false
 		if parent.SCMShouldBeVisible ~= shouldShow then
 			local viewer = parent.viewerFrame
 			if viewer then
