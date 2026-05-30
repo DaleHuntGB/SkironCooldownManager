@@ -172,9 +172,6 @@ local function ApplyCooldownStyle(child, options)
 
 		child.Cooldown:ClearAllPoints()
 		child.Cooldown:SetAllPoints()
-		-- if child.SCMCustom then
-		-- 	cooldownFrame:SetPoint("TOPLEFT", child, "TOPLEFT", 0, -SCM:PixelPerfect())
-		-- end
 		cooldownFrame:SetPoint("BOTTOMRIGHT", child, "BOTTOMRIGHT", -SCM:PixelPerfect(), SCM:PixelPerfect())
 		cooldownFrame:SetSwipeTexture("Interface\\Buttons\\WHITE8x8")
 
@@ -343,15 +340,16 @@ function SCM:SkinBuffBar(child, config)
 
 		if options.buffBarContent == 2 then
 			bar:SetPoint("TOPLEFT", iconFrame, "TOPLEFT", 0, 0)
+			bar.BarBG:SetPoint("TOPLEFT", iconFrame, "TOPLEFT", 0, 0)
 		else
 			bar:SetPoint("TOPLEFT", iconFrame, "TOPRIGHT", -borderSize, 0)
+			bar.BarBG:SetPoint("TOPLEFT", iconFrame, "TOPRIGHT", -borderSize, 0)
 		end
 
 		bar:SetPoint("BOTTOMLEFT", iconFrame, "BOTTOMRIGHT", -borderSize, 0)
 		bar:SetHeight(iconFrame:GetHeight())
 		bar:SetStatusBarColor(foregroundColor.r, foregroundColor.g, foregroundColor.b, foregroundColor.a)
 		bar.Pip:SetAlpha(0)
-		bar.BarBG:SetPoint("TOPLEFT", iconFrame, "TOPRIGHT", -borderSize, 0)
 		bar.BarBG:SetPoint("BOTTOMLEFT", iconFrame, "BOTTOMRIGHT", -borderSize, 0)
 		bar.BarBG:SetPoint("RIGHT", bar, "RIGHT", 0, 0)
 		bar.BarBG:SetColorTexture(backgroundColor.r, backgroundColor.g, backgroundColor.b, backgroundColor.a)
