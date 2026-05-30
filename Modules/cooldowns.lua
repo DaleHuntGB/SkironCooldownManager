@@ -177,6 +177,10 @@ function Cooldowns.GetChildCooldown(child)
 		end
 	end
 
+	if Constants.CheckCooldownFrameSpells[child.SCMSpellID] then
+		return durationObject ~= nil and child.Cooldown:IsVisible(), durationObject
+	end
+
 	return durationObject ~= nil, durationObject
 end
 
