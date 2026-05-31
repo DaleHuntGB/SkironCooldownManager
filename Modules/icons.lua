@@ -226,7 +226,7 @@ function Icons.SetupBuffBarHooks(child)
 		child:HookScript("OnShow", OnShow)
 		child:HookScript("OnHide", OnHide)
 
-		child.SCMUseFixedDuration = type(Constants.FakeAuras[child.SCMSpellID]) == "number"
+		child.SCMUseFixedDuration = type(Constants.FakeAuras[child.SCMSpellID]) == "number" and Constants.FakeAuras[child.SCMSpellID]
 	else
 		child:HookScript("OnShow", OnShow)
 		hooksecurefunc(child, "OnAuraInstanceInfoCleared", OnHide)
@@ -357,7 +357,7 @@ local function ProcessBuffIcon(child, childData, options)
 	local forceShow = SCM.simulateBuffs or (not SCM.isHideWhenInactiveEnabled and childData.alwaysShow)
 	local shouldHide = (childData.showWhileInactive and not isInactive) or (isInactive and not (forceShow or childData.showWhileInactive))
 	local wasVisible = child.SCMShouldBeVisible
-	
+
 	if shouldHide then
 		child.SCMChanged = child.SCMChanged or wasVisible
 		Icons.SetChildVisibilityState(child, false, true)
