@@ -409,7 +409,7 @@ local function ProcessSingleChild(child, validChildren, categoryIndex, isBuffIco
 	local cooldownID = child:GetCooldownID() or child.SCMCooldownID
 	local categoryConfig = categoryIndex and SCM.defaultCooldownViewerConfig[categoryIndex]
 	local info = categoryConfig and (categoryConfig[cooldownID] or SCM.defaultCooldownViewerConfig.cooldownIDs[cooldownID])
-	local spellID = info and (info.overrideSpellID or info.spellID)
+	local spellID = info and (info.linkedSpellID or info.overrideTooltipSpellID or info.overrideSpellID or info.spellID)
 	if info and info.linkedSpellIDs and #info.linkedSpellIDs == 1 then
 		child.SCMLinkedSpellID = info.linkedSpellIDs[1]
 	end

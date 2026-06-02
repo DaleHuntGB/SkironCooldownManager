@@ -203,6 +203,37 @@ local function UpdateAnchorLinks(config)
 	return anchorLinks
 end
 
+local function GetNextLayoutDuplicateChild(child, masterCooldownID)
+	local duplicateChild = child.SCMLayoutNextDuplicate
+	if duplicateChild and duplicateChild:GetCooldownID() ~= masterCooldownID then
+		child.SCMLayoutNextDuplicate = nil
+		return
+	end
+
+	return duplicateChild
+end
+
+local function LayoutManagedAnchorChild(child, row, anchorConfig, childAnchor, startPoint, offsetX, useProxyAnchor)
+	child.SCMRowConfig = row.rowConfig
+	child.SCMAnchorFrameStrata = anchorConfig and anchorConfig.frameStrata or nil
+
+	if child.SCMLayoutLimited then
+		child.SCMLayoutLimited = nil
+		Icons.SetChildVisibilityState(child, child.SCMShouldBeVisible, true)
+	end
+
+	if child.SCMShouldBeVisible then
+		SCM:UpdateManagedAnchorChild(child, childAnchor, startPoint, offsetX, row.offsetY, row.rowIconWidth, row.rowIconHeight, useProxyAnchor)
+	end
+
+	if not child.SCMBuffBar then
+		SCM:SkinChild(child, child.SCMConfig)
+	else
+		SCM:SkinBuffBar(child, child.SCMConfig)
+	end
+	child.SCMChanged = false
+end
+
 local function LayoutAnchorGroup(group, visibleChildren, anchorConfig, options, changedGroups, resetSize, checkDuplicates, allowLayoutSkip)
 	Cache.cachedVisitedAnchorGroups[group] = true
 
@@ -247,11 +278,13 @@ local function LayoutAnchorGroup(group, visibleChildren, anchorConfig, options, 
 	local configuredChildCount = configuredChildren and #configuredChildren or 0
 	local layoutSignature = visibleChildCount
 	local hasChangedChild = false
+	local hasLinkedDuplicate = false
 
 	table.sort(visibleChildren, SortBySCMOrder)
 	for index = 1, visibleChildCount do
 		local child = visibleChildren[index]
 		hasChangedChild = hasChangedChild or child.SCMChanged
+		hasLinkedDuplicate = hasLinkedDuplicate or child.SCMLayoutNextDuplicate
 		local cooldownID = child.SCMCooldownID
 		local cooldownSignature = tonumber(cooldownID) or 0
 		if cooldownSignature == 0 and cooldownID then
@@ -282,7 +315,7 @@ local function LayoutAnchorGroup(group, visibleChildren, anchorConfig, options, 
 
 	state.layoutSignature = layoutSignature
 
-	if checkDuplicates then
+	if checkDuplicates or hasLinkedDuplicate then
 		uniqueChildren = Cache.cachedLayoutChildren
 		local seenCooldownIDs = Cache.cachedLayoutCooldownIDs
 		local hasDuplicateChildren = false
@@ -436,13 +469,6 @@ local function LayoutAnchorGroup(group, visibleChildren, anchorConfig, options, 
 			local child = layoutChildren[currentChild]
 			local offsetX = 0
 
-			child.SCMRowConfig = row.rowConfig
-			child.SCMAnchorFrameStrata = anchorConfig and anchorConfig.frameStrata or nil
-			if child.SCMLayoutLimited then
-				child.SCMLayoutLimited = nil
-				Icons.SetChildVisibilityState(child, child.SCMShouldBeVisible, true)
-			end
-
 			if isCentered or isFixed then
 				offsetX = (rowChild * (row.rowIconWidth + baseSpacing)) - (row.rowWidth / 2) + (row.rowIconWidth / 2)
 			elseif growDir == "LEFT" then
@@ -451,42 +477,16 @@ local function LayoutAnchorGroup(group, visibleChildren, anchorConfig, options, 
 				offsetX = rowChild * (row.rowIconWidth + baseSpacing)
 			end
 
-			if child.SCMShouldBeVisible then
-				SCM:UpdateManagedAnchorChild(child, childAnchor, startPoint, offsetX, row.offsetY, row.rowIconWidth, row.rowIconHeight, useProxyAnchor)
-			end
+			LayoutManagedAnchorChild(child, row, anchorConfig, childAnchor, startPoint, offsetX, useProxyAnchor)
 
-			if not child.SCMBuffBar then
-				SCM:SkinChild(child, child.SCMConfig)
-			else
-				SCM:SkinBuffBar(child, child.SCMConfig)
-			end
-			child.SCMChanged = false
-
-			if checkDuplicates then
-				local duplicateChild = child.SCMLayoutNextDuplicate
-				child.SCMLayoutNextDuplicate = nil
+			if child.SCMLayoutNextDuplicate then
+				local masterCooldownID = child.SCMCooldownID
+				local duplicateChild = GetNextLayoutDuplicateChild(child, masterCooldownID)
 				while duplicateChild do
 					child = duplicateChild
-					child.SCMRowConfig = row.rowConfig
-					child.SCMAnchorFrameStrata = anchorConfig and anchorConfig.frameStrata or nil
-					if child.SCMLayoutLimited then
-						child.SCMLayoutLimited = nil
-						Icons.SetChildVisibilityState(child, child.SCMShouldBeVisible, true)
-					end
+					LayoutManagedAnchorChild(child, row, anchorConfig, childAnchor, startPoint, offsetX, useProxyAnchor)
 
-					if child.SCMShouldBeVisible then
-						SCM:UpdateManagedAnchorChild(child, childAnchor, startPoint, offsetX, row.offsetY, row.rowIconWidth, row.rowIconHeight, useProxyAnchor)
-					end
-
-					if not child.SCMBuffBar then
-						SCM:SkinChild(child, child.SCMConfig)
-					else
-						SCM:SkinBuffBar(child, child.SCMConfig)
-					end
-					child.SCMChanged = false
-
-					duplicateChild = child.SCMLayoutNextDuplicate
-					child.SCMLayoutNextDuplicate = nil
+					duplicateChild = GetNextLayoutDuplicateChild(child, masterCooldownID)
 				end
 			end
 		end
@@ -501,9 +501,9 @@ local function LayoutAnchorGroup(group, visibleChildren, anchorConfig, options, 
 				Icons.SetChildVisibilityState(child, child.SCMShouldBeVisible, true)
 			end
 
-			if checkDuplicates then
-				local duplicateChild = child.SCMLayoutNextDuplicate
-				child.SCMLayoutNextDuplicate = nil
+			if child.SCMLayoutNextDuplicate then
+				local masterCooldownID = child.SCMCooldownID
+				local duplicateChild = GetNextLayoutDuplicateChild(child, masterCooldownID)
 				while duplicateChild do
 					child = duplicateChild
 					if child.SCMShouldBeVisible then
@@ -512,8 +512,7 @@ local function LayoutAnchorGroup(group, visibleChildren, anchorConfig, options, 
 						Icons.SetChildVisibilityState(child, child.SCMShouldBeVisible, true)
 					end
 
-					duplicateChild = child.SCMLayoutNextDuplicate
-					child.SCMLayoutNextDuplicate = nil
+					duplicateChild = GetNextLayoutDuplicateChild(child, masterCooldownID)
 				end
 			end
 		end
