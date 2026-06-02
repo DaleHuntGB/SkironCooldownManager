@@ -547,6 +547,7 @@ Constants.FakeAuras = {
 	[104316] = 12, -- Call Dreadstalkers
 	[1251781] = 15, -- Summon Vilefiend
 	[1276672] = 12, -- Summon Doomguard (not even Blizzard shows that)
+	[1122] = true, -- Summon Infernal
 
 	-- PALADIN
 	[26573] = true, -- Consecration 12
