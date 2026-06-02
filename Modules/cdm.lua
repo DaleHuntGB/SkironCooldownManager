@@ -203,9 +203,9 @@ local function UpdateAnchorLinks(config)
 	return anchorLinks
 end
 
-local function GetNextLayoutDuplicateChild(child, masterCooldownID)
+local function GetNextLayoutDuplicateChild(child, masterCooldownID, masterChild)
 	local duplicateChild = child.SCMLayoutNextDuplicate
-	if duplicateChild and duplicateChild:GetCooldownID() ~= masterCooldownID then
+	if duplicateChild and (duplicateChild == child or duplicateChild == masterChild or duplicateChild:GetCooldownID() ~= masterCooldownID) then
 		child.SCMLayoutNextDuplicate = nil
 		return
 	end
@@ -341,9 +341,11 @@ local function LayoutAnchorGroup(group, visibleChildren, anchorConfig, options, 
 			if cooldownID then
 				local masterChild = seenCooldownIDs[cooldownID]
 				if masterChild then
-					hasDuplicateChildren = true
-					child.SCMLayoutNextDuplicate = masterChild.SCMLayoutNextDuplicate
-					masterChild.SCMLayoutNextDuplicate = child
+					if masterChild ~= child then
+						hasDuplicateChildren = true
+						child.SCMLayoutNextDuplicate = masterChild.SCMLayoutNextDuplicate
+						masterChild.SCMLayoutNextDuplicate = child
+					end
 				else
 					seenCooldownIDs[cooldownID] = child
 					totalChildren = totalChildren + 1
@@ -480,13 +482,14 @@ local function LayoutAnchorGroup(group, visibleChildren, anchorConfig, options, 
 			LayoutManagedAnchorChild(child, row, anchorConfig, childAnchor, startPoint, offsetX, useProxyAnchor)
 
 			if child.SCMLayoutNextDuplicate then
+				local masterChild = child
 				local masterCooldownID = child.SCMCooldownID
-				local duplicateChild = GetNextLayoutDuplicateChild(child, masterCooldownID)
+				local duplicateChild = GetNextLayoutDuplicateChild(child, masterCooldownID, masterChild)
 				while duplicateChild do
 					child = duplicateChild
 					LayoutManagedAnchorChild(child, row, anchorConfig, childAnchor, startPoint, offsetX, useProxyAnchor)
 
-					duplicateChild = GetNextLayoutDuplicateChild(child, masterCooldownID)
+					duplicateChild = GetNextLayoutDuplicateChild(child, masterCooldownID, masterChild)
 				end
 			end
 		end
@@ -502,8 +505,9 @@ local function LayoutAnchorGroup(group, visibleChildren, anchorConfig, options, 
 			end
 
 			if child.SCMLayoutNextDuplicate then
+				local masterChild = child
 				local masterCooldownID = child.SCMCooldownID
-				local duplicateChild = GetNextLayoutDuplicateChild(child, masterCooldownID)
+				local duplicateChild = GetNextLayoutDuplicateChild(child, masterCooldownID, masterChild)
 				while duplicateChild do
 					child = duplicateChild
 					if child.SCMShouldBeVisible then
@@ -512,7 +516,7 @@ local function LayoutAnchorGroup(group, visibleChildren, anchorConfig, options, 
 						Icons.SetChildVisibilityState(child, child.SCMShouldBeVisible, true)
 					end
 
-					duplicateChild = GetNextLayoutDuplicateChild(child, masterCooldownID)
+					duplicateChild = GetNextLayoutDuplicateChild(child, masterCooldownID, masterChild)
 				end
 			end
 		end
