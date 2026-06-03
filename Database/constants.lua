@@ -577,6 +577,7 @@ Constants.FakeAuras = {
 
 	-- MONK
 	[322118] = true, -- Invoke Yu'lon, the Jade Serpent 12
+	[325197] = true, -- Invoke Chi-ji, the Red Crane 12
 }
 
 Constants.TargetAuras = {
