@@ -2040,7 +2040,7 @@ local function SelectAnchor(widget, parentWidget, anchorIndex, anchorTabsTbl, mo
 							iconSettings:DoLayout()
 							scrollFrame:DoLayout()
 						end)
-						iconSettingsTabs:SelectTab("general")
+						iconSettingsTabs:SelectTab(buttonData.iconType == "bloodlust" and "glow" or "general")
 						iconSettings:AddChild(iconSettingsTabs)
 						lastButtonFrame = buttonFrame
 
