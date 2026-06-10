@@ -418,6 +418,10 @@ function SCM:GetConfigTable(iconType, isGlobal)
 		return isGlobal and self.globalCustomConfig.timerConfig or self.customConfig.timerConfig
 	end
 
+	if iconType == "bloodlust" then
+		return isGlobal and self.globalCustomConfig.bloodlustConfig or self.customConfig.bloodlustConfig
+	end
+
 	return isGlobal and self.globalCustomConfig.itemConfig or self.customConfig.itemConfig
 end
 
