@@ -187,6 +187,9 @@ function SCM:UpdateDB()
 	self.currentConfig.castBarConfig = self.currentConfig.castBarConfig or {}
 	self.specCastBarConfig = self.currentConfig.castBarConfig
 	self.castBarConfig = CreateSpecFallbackConfig(options.castBar, self.currentConfig.castBarConfig)
+	if self.CastBar then
+		self.CastBar.barOptions = self.castBarConfig
+	end
 
 	self.currentConfig.buffBarsAnchorConfig = self.currentConfig.buffBarsAnchorConfig or {}
 	self.buffBarsAnchorConfig = CreateAnchorConfigTables(self.currentConfig.buffBarsAnchorConfig)
