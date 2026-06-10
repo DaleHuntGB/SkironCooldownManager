@@ -37,6 +37,11 @@ local function OnSpellAlertManagerShowAlert(_, child)
 	child.SCMActiveGlow = true
 	child.SpellActivationAlert:Hide()
 
+	if pendingCustomGlowChildren[child] then
+		pendingCustomGlowChildren[child]:Cancel()
+		pendingCustomGlowChildren[child] = nil
+	end
+
 	-- The size of the glow is too large when you start the glow immediately if anyone is wondering why I do that
 	pendingCustomGlowChildren[child] = C_Timer.NewTimer(0, function()
 		SCM:StartCustomGlow(child)
