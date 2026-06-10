@@ -14,6 +14,16 @@ local CustomSpellFrames = {}
 local CustomIconFramePool
 local ShouldShowCustomIcon
 
+local desaturationCurve = C_CurveUtil.CreateCurve()
+desaturationCurve:SetType(Enum.LuaCurveType.Step)
+desaturationCurve:AddPoint(0, 0)
+desaturationCurve:AddPoint(0.001, 1)
+
+local alphaCurve = C_CurveUtil.CreateCurve()
+alphaCurve:SetType(Enum.LuaCurveType.Step)
+alphaCurve:AddPoint(0, 0)
+alphaCurve:AddPoint(0.001, 0.7)
+
 function CustomIcons.GetCustomIconFrames(config)
 	local iconType = GetIconType(config)
 	if not iconType then
@@ -195,27 +205,6 @@ local function SetCustomItemID(frame, config)
 	return itemID
 end
 
-local function CacheCustomItemEntry(itemID, id, config, isGlobal)
-	local entries = Cache.cachedCustomItemEntriesByItemID[itemID]
-	if not entries then
-		entries = {}
-		Cache.cachedCustomItemEntriesByItemID[itemID] = entries
-	end
-
-	tinsert(entries, {
-		id = id,
-		config = config,
-		isGlobal = isGlobal and true or nil,
-	})
-end
-
-local function RequestCustomItemDataLoad(itemID, requestedItemIDs)
-	if not requestedItemIDs[itemID] then
-		requestedItemIDs[itemID] = true
-		C_Item.RequestLoadItemDataByID(itemID)
-	end
-end
-
 local function SetCustomIconCountText(frame, iconType, config)
 	if iconType == "spell" or iconType == "slot" or iconType == "timer" then
 		frame.ChargeCount.Current:SetText("")
@@ -261,16 +250,6 @@ local function UpdateCustomIconCraftQuality(frame, iconType, config)
 
 	Utils.ApplyCraftQuality(craftQuality, itemID)
 end
-
-local desaturationCurve = C_CurveUtil.CreateCurve()
-desaturationCurve:SetType(Enum.LuaCurveType.Step)
-desaturationCurve:AddPoint(0, 0)
-desaturationCurve:AddPoint(0.001, 1)
-
-local alphaCurve = C_CurveUtil.CreateCurve()
-alphaCurve:SetType(Enum.LuaCurveType.Step)
-alphaCurve:AddPoint(0, 0)
-alphaCurve:AddPoint(0.001, 0.7)
 
 local function UpdateCustomIconGlow(frame, isActive)
 	if not frame or not frame.SCMConfig then
@@ -750,6 +729,27 @@ function CustomIcons.ReleaseAllIcons()
 
 	for _, customFrame in pairs(CustomSpellFrames) do
 		ReleaseCustomIconFrame(customFrame)
+	end
+end
+
+local function CacheCustomItemEntry(itemID, id, config, isGlobal)
+	local entries = Cache.cachedCustomItemEntriesByItemID[itemID]
+	if not entries then
+		entries = {}
+		Cache.cachedCustomItemEntriesByItemID[itemID] = entries
+	end
+
+	tinsert(entries, {
+		id = id,
+		config = config,
+		isGlobal = isGlobal and true or nil,
+	})
+end
+
+local function RequestCustomItemDataLoad(itemID, requestedItemIDs)
+	if not requestedItemIDs[itemID] then
+		requestedItemIDs[itemID] = true
+		C_Item.RequestLoadItemDataByID(itemID)
 	end
 end
 

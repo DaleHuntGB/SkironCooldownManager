@@ -266,7 +266,6 @@ local function ClearLayoutPoints()
 		return
 	end
 
-
 	for _, anchorFrame in pairs(SCM.anchorFrames) do
 		anchorFrame:ClearAllPoints()
 	end
