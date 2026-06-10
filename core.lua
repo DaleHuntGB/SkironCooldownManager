@@ -64,7 +64,6 @@ local function RefreshCooldownViewerData(releaseCustomIcons)
 	SCM:InvalidateAnchorLinks()
 	SCM:UpdateCooldownInfo(true)
 	SCM:UpdateDB()
-	SCM:RefreshResourceBarConfig()
 
 	if releaseCustomIcons then
 		SCM:ResetCooldownViewerRuntimeState()
@@ -262,7 +261,6 @@ end
 function SCM:TRAIT_CONFIG_UPDATED()
 	C_Timer.After(0.5, function()
 		RefreshCooldownViewerData(true)
-		SCM:RefreshResourceBarConfig()
 	end)
 end
 
@@ -287,7 +285,6 @@ function SCM:ACTIVE_PLAYER_SPECIALIZATION_CHANGED()
 
 	C_Timer.After(0.5, function()
 		RefreshCooldownViewerData(true)
-		SCM:RefreshResourceBarConfig()
 	end)
 end
 

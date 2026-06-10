@@ -1128,6 +1128,38 @@ function SCMResourceBarControllerMixin:UpdateActiveAnchorFrame(anchor)
 	return activeAnchor
 end
 
+function SCMResourceBarControllerMixin:HookAnchorWidthRefresh(anchor)
+	if not anchor or anchor.SCMProxyGroup then
+		return
+	end
+
+	self.SCMResourceBarHooks = self.SCMResourceBarHooks or {}
+	if self.SCMResourceBarHooks[anchor] then
+		return
+	end
+
+	self.SCMResourceBarHooks[anchor] = true
+	anchor:HookScript("OnSizeChanged", function(changedAnchor)
+		local controller = _G[RESOURCE_BAR_FRAME_NAME]
+		if not (controller and controller.SCMResourceBarInitialized and controller.SCMActiveAnchorFrame == changedAnchor) then
+			return
+		end
+
+		local generalBarOptions = controller.barOptions or SCM.resourceBarConfig
+		if not (generalBarOptions and generalBarOptions.enabled) then
+			return
+		end
+
+		local primaryBarOptions = controller.primaryBarOptions or generalBarOptions.primaryBar
+		local secondaryBarOptions = controller.secondaryBarOptions or generalBarOptions.secondaryBar
+		local primaryMatches = primaryBarOptions and primaryBarOptions.enabled and primaryBarOptions.matchAnchorWidth and not controller.PrimaryBar:IsProtected()
+		local secondaryMatches = secondaryBarOptions and secondaryBarOptions.enabled and secondaryBarOptions.matchAnchorWidth and not controller.SecondaryBar:IsProtected()
+		if primaryMatches or secondaryMatches then
+			SCM:RefreshResourceBarConfig()
+		end
+	end)
+end
+
 function SCMResourceBarControllerMixin:ApplyFrameWidthOptions(bar)
 	local specificBarOptions = bar.barOptions
 	local generalBarOptions = self.barOptions
@@ -1144,21 +1176,8 @@ function SCMResourceBarControllerMixin:ApplyFrameWidthOptions(bar)
 		bar:SetWidth(desiredWidth)
 		local widthChanged = previousWidth ~= (bar:GetWidth() or 0)
 
-		bar.SCMResourceBarHooks = bar.SCMResourceBarHooks or {}
-		if not anchor.SCMProxyGroup and not bar.SCMResourceBarHooks[anchor] then
-			bar.SCMResourceBarHooks[anchor] = true
-			anchor:HookScript("OnSizeChanged", function(changedAnchor)
-				local barOptions = bar.barOptions
-				local controller = bar.Controller
-				local generalBarOptions = controller and controller.barOptions or SCM.resourceBarConfig
-				if bar:IsProtected() or not (generalBarOptions.enabled and barOptions and barOptions.enabled and barOptions.matchAnchorWidth) then
-					return
-				end
-
-				if controller and controller.SCMActiveAnchorFrame == changedAnchor then
-					SCM:RefreshResourceBarConfig()
-				end
-			end)
+		if specificBarOptions.matchAnchorWidth then
+			self:HookAnchorWidthRefresh(anchor)
 		end
 
 		--No idea whats going in with these fucking pixels. BRB taking a math class
