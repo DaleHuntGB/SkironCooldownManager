@@ -919,6 +919,8 @@ local function RebuildCustomIconLoadCache()
 	for _, customConfig in pairs(SCM.globalCustomConfig) do
 		CacheCustomConfig(customConfig, true)
 	end
+
+	UpdateBloodlustTimerEvent()
 end
 
 local function CreateCustomIcon(id, config, isGlobal, skipExisting)
