@@ -275,12 +275,12 @@ function SCM:SkinChild(child, childConfig)
 		child.SCMCooldownParent:ClearAllPoints()
 
 		--TODO: How to get the cooldown frame aligned with the visible part of a frame? Please tell me
-		if child.SCMIconType or child:GetRight() % 1 == 0.5 or (childConfig and childConfig.expCooldownThing)  then
+		--if child.SCMIconType or child:GetRight() % 1 == 0.5 or (childConfig and childConfig.expCooldownThing)  then
 			child.SCMCooldownParent:SetPoint("TOPLEFT", child, "TOPLEFT", 0, 0)
-			child.SCMCooldownParent:SetPoint("BOTTOMRIGHT", child, "BOTTOMRIGHT", -1, 1)
-		else
-			child.SCMCooldownParent:SetAllPoints(child)
-		end
+			child.SCMCooldownParent:SetPoint("BOTTOMRIGHT", child, "BOTTOMRIGHT", -SCM:PixelPerfectSize(1), SCM:PixelPerfectSize(1))
+		--else
+			--child.SCMCooldownParent:SetAllPoints(child)
+		--end
 		child.SCMCooldownParent:SetClipsChildren(true)
 
 		local textureRegion
