@@ -11,8 +11,43 @@ local ToGlobalGroup = Utils.ToGlobalGroup
 
 local CustomItemFrames = {}
 local CustomSpellFrames = {}
+local BloodlustTimerEntries = {}
 local CustomIconFramePool
 local ShouldShowCustomIcon
+local BloodlustTimerEventFrame
+
+local function TriggerBloodlustTimers()
+	for i = 1, #BloodlustTimerEntries do
+		local frame = CustomSpellFrames[BloodlustTimerEntries[i]]
+		if frame and not frame.SCMReleased then
+			frame.lastCastStartTime = GetTime()
+			SCM:ApplyAnchorGroupCDManagerConfig(frame.SCMGroup, frame.SCMGlobal)
+		end
+	end
+end
+
+local function OnBloodlustUnitAura(_, _, unit, updateInfo)
+	if unit ~= "player" or updateInfo.isFullUpdate or not updateInfo.addedAuras then return end
+
+	for _, auraInfo in pairs(updateInfo.addedAuras) do
+		if auraInfo and auraInfo.auraInstanceID then
+			local auraData = C_UnitAuras.GetAuraDataByAuraInstanceID("player", auraInfo.auraInstanceID)
+			if auraData and auraData.spellId and not issecretvalue(auraData.spellId) and SCM.Constants.SatedDebuffs[auraData.spellId] then
+				TriggerBloodlustTimers()
+				return
+			end
+		end
+	end
+end
+
+local function UpdateBloodlustTimerEvent()
+	if #BloodlustTimerEntries > 0 then
+		if not BloodlustTimerEventFrame then BloodlustTimerEventFrame = CreateFrame("Frame") BloodlustTimerEventFrame:SetScript("OnEvent", OnBloodlustUnitAura) end
+		BloodlustTimerEventFrame:RegisterUnitEvent("UNIT_AURA", "player")
+	elseif BloodlustTimerEventFrame then
+		BloodlustTimerEventFrame:UnregisterEvent("UNIT_AURA")
+	end
+end
 
 local desaturationCurve = C_CurveUtil.CreateCurve()
 desaturationCurve:SetType(Enum.LuaCurveType.Step)
@@ -30,7 +65,7 @@ function CustomIcons.GetCustomIconFrames(config)
 		return
 	end
 
-	if iconType == "spell" or iconType == "timer" then
+	if iconType == "spell" or iconType == "timer" or iconType == "bloodlust" then
 		return CustomSpellFrames
 	end
 
@@ -206,7 +241,7 @@ local function SetCustomItemID(frame, config)
 end
 
 local function SetCustomIconCountText(frame, iconType, config)
-	if iconType == "spell" or iconType == "slot" or iconType == "timer" then
+	if iconType == "spell" or iconType == "slot" or iconType == "timer" or iconType == "bloodlust" then
 		frame.ChargeCount.Current:SetText("")
 		frame.ChargeCount.Current:Hide()
 		return
@@ -274,7 +309,7 @@ end
 
 local function GetActiveCustomTimer(frame, iconType, config, now)
 	local duration
-	if iconType == "spell" or iconType == "timer" then
+	if iconType == "spell" or iconType == "timer" or iconType == "bloodlust" then
 		duration = config.duration
 	end
 
@@ -526,7 +561,7 @@ local function DoesItemOrSpellExists(config)
 		return true
 	end
 
-	if iconType == "spell" or iconType == "timer" then
+	if iconType == "spell" or iconType == "timer" or iconType == "bloodlust" then
 		return config.spellID and C_Spell.DoesSpellExist(config.spellID)
 	end
 
@@ -609,7 +644,7 @@ local function ShouldLoadCustomIcon(config)
 end
 
 local function GetCustomIconTexture(config, iconType, frame)
-	if (iconType == "spell" or iconType == "timer") and config.spellID then
+	if (iconType == "spell" or iconType == "timer" or iconType == "bloodlust") and config.spellID then
 		return C_Spell.GetSpellTexture(config.spellID)
 	end
 
@@ -638,7 +673,7 @@ function ShouldShowCustomIcon(config, iconType, hasCount, isOnCooldown, frame)
 	hasCount = hasCount == nil and frame and SetCustomIconCountText(frame, iconType, config) or hasCount
 	isOnCooldown = isOnCooldown == nil and frame and UpdateCustomIconCooldown(frame, iconType, config) or isOnCooldown
 
-	if iconType == "timer" then
+	if iconType == "timer" or iconType == "bloodlust" then
 		return isOnCooldown and true or false
 	end
 
@@ -755,7 +790,7 @@ end
 
 local function CacheCustomIconEntry(id, config, isGlobal, slotItemID)
 	local iconType = GetIconType(config)
-	if (iconType == "spell" or iconType == "timer") and config.spellID then
+	if (iconType == "spell" or iconType == "timer" or iconType == "bloodlust") and config.spellID then
 		local entries = Cache.cachedCustomSpellEntriesBySpellID[config.spellID]
 		if not entries then
 			entries = {}
@@ -847,6 +882,7 @@ local function RebuildCustomIconLoadCache()
 	wipe(Cache.cachedCustomSpellEntriesBySpellID)
 	wipe(Cache.cachedCustomItemEntriesByItemID)
 	wipe(Cache.cachedCustomSlotEntriesByItemID)
+	wipe(BloodlustTimerEntries)
 	for _, entries in pairs(Cache.cachedCustomIconsByGroup) do
 		wipe(entries)
 	end
@@ -868,6 +904,9 @@ local function RebuildCustomIconLoadCache()
 			groupEntries[#groupEntries + 1] = config
 			CacheCustomIconEntry(id, config, isGlobal, slotItemID)
 			RequestCustomIconDataLoad(config, requestedSpellIDs, requestedItemIDs, slotItemID)
+			if GetIconType(config) == "bloodlust" then
+				BloodlustTimerEntries[#BloodlustTimerEntries + 1] = id
+			end
 		end
 	end
 
@@ -878,6 +917,8 @@ local function RebuildCustomIconLoadCache()
 	for _, customConfig in pairs(SCM.globalCustomConfig) do
 		CacheCustomConfig(customConfig, true)
 	end
+
+	UpdateBloodlustTimerEvent()
 end
 
 local function CreateCustomIcon(id, config, isGlobal, skipExisting)
@@ -1202,7 +1243,7 @@ function SCM:AddCustomIcon(anchorGroup, iconType, configID, order, uniqueID, isG
 	configTable[uniqueID] = {
 		id = uniqueID,
 		iconType = iconType,
-		spellID = (iconType == "spell" or iconType == "timer") and configID or nil,
+		spellID = (iconType == "spell" or iconType == "timer" or iconType == "bloodlust") and configID or nil,
 		itemID = iconType == "item" and configID or nil,
 		slotID = iconType == "slot" and configID or nil,
 		anchorGroup = anchorGroup,

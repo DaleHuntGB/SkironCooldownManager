@@ -62,12 +62,13 @@ local iconTypeTabs = {
 		{ value = "items", text = "Items" },
 	},
 	timer = {},
+	bloodlust = { { value = "glow", text = "Glow" } },
 	slot = {
 		{ value = "filter", text = "Filter" },
 	},
 }
 for iconType, options in pairs(iconTypeTabs) do
-	if iconType ~= "all" then
+	if iconType ~= "all" and iconType ~= "bloodlust" then
 		for i = #iconTypeTabs.all, 1, -1 do
 			tinsert(options, 1, iconTypeTabs.all[i])
 		end
@@ -211,6 +212,15 @@ local customButtonConfigs = {
 		end,
 	},
 	{
+		text = "Bloodlust",
+		configID = 2825,
+		iconType = "bloodlust",
+		buildIconData = BuildSpellIconData,
+		config = {
+			duration = 40,
+		},
+	},
+	{
 		text = "Empty",
 		iconType = "empty",
 		buildIconData = BuildEmptyIconData,
@@ -240,11 +250,20 @@ local function CreateCustomIconButton(rootDescription, scrollFrame, anchorIndex,
 
 			insertedData.id = uniqueID
 
+			if buttonConfig.config then
+				local customConfig = SCM:GetConfigTableByID(uniqueID, buttonConfig.iconType, isGlobal)
+				for key, value in pairs(buttonConfig.config) do
+					customConfig[key] = value
+				end
+			end
+
 			SCM:ApplyAnchorGroupCDManagerConfig(anchorIndex, isGlobal)
 		end
 
 		if buttonConfig.popupKey then
 			ShowNumericInputPopup(buttonConfig.popupKey, buttonConfig.popupTitle, AddCustomIcon)
+		elseif buttonConfig.configID then
+			AddCustomIcon(buttonConfig.configID)
 		elseif buttonConfig.iconType == "empty" then
 			AddCustomIcon("")
 		end
@@ -1306,7 +1325,7 @@ local function SelectAnchor(widget, parentWidget, anchorIndex, anchorTabsTbl, mo
 			if config.anchorGroup == anchorIndex then
 				local iconType = config.iconType or (config.spellID and "spell") or "item"
 				local texture
-				if iconType == "spell" or iconType == "timer" then
+				if iconType == "spell" or iconType == "timer" or iconType == "bloodlust" then
 					texture = config.spellID and C_Spell.GetSpellTexture(config.spellID)
 				elseif iconType == "slot" then
 					texture = config.slotID and GetInventoryItemTexture("player", config.slotID) or 134400
@@ -1404,6 +1423,7 @@ local function SelectAnchor(widget, parentWidget, anchorIndex, anchorTabsTbl, mo
 					end
 
 					buttonFrame:SetBackdropBorderColor(0, 1, 0, 1)
+					if buttonData.iconType == "bloodlust" then iconSettings:SetTitle("Bloodlust") end
 
 					if buttonConfig then
 						local function ApplyIconConfigUpdate()
@@ -1809,7 +1829,7 @@ local function SelectAnchor(widget, parentWidget, anchorIndex, anchorTabsTbl, mo
 									iconSettingsTabs:AddChild(customGlowColor)
 								end
 
-								if buttonData.iconType == "spell" or buttonData.iconType == "timer" then
+								if buttonData.iconType == "spell" or buttonData.iconType == "timer" or buttonData.iconType == "bloodlust" then
 									local glowWhileActive = AceGUI:Create("CheckBox")
 									glowWhileActive:SetLabel("Glow While Active")
 									glowWhileActive:SetRelativeWidth(0.5)
@@ -2029,7 +2049,7 @@ local function SelectAnchor(widget, parentWidget, anchorIndex, anchorTabsTbl, mo
 							iconSettings:DoLayout()
 							scrollFrame:DoLayout()
 						end)
-						iconSettingsTabs:SelectTab("general")
+						iconSettingsTabs:SelectTab(buttonData.iconType == "bloodlust" and "glow" or "general")
 						iconSettings:AddChild(iconSettingsTabs)
 						lastButtonFrame = buttonFrame
 

@@ -12,6 +12,7 @@ local function CreateCustomConfigTables(customConfig)
 	customConfig.itemConfig = GetOrCreateTableEntry(customConfig, "itemConfig")
 	customConfig.slotConfig = GetOrCreateTableEntry(customConfig, "slotConfig")
 	customConfig.timerConfig = GetOrCreateTableEntry(customConfig, "timerConfig")
+	customConfig.bloodlustConfig = GetOrCreateTableEntry(customConfig, "bloodlustConfig")
 
 	local allowedKeys = SCM.DefaultDB.profile.globalCustomConfig
 	for key in pairs(customConfig) do

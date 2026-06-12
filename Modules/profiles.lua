@@ -11,6 +11,7 @@ local GLOBAL_CUSTOM_CONFIG_KEYS = {
 	"itemConfig",
 	"slotConfig",
 	"timerConfig",
+	"bloodlustConfig",
 }
 local PROFILE_OPTION_SECTION_KEYS = {
 	resourceBar = true,
