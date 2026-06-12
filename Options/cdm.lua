@@ -212,6 +212,14 @@ local customButtonConfigs = {
 		end,
 	},
 	{
+		text = "Empty",
+		iconType = "empty",
+		buildIconData = BuildEmptyIconData,
+	},
+}
+
+local presetButtonConfigs = {
+	{
 		text = "Bloodlust",
 		configID = 2825,
 		iconType = "bloodlust",
@@ -219,11 +227,6 @@ local customButtonConfigs = {
 		config = {
 			duration = 40,
 		},
-	},
-	{
-		text = "Empty",
-		iconType = "empty",
-		buildIconData = BuildEmptyIconData,
 	},
 }
 
@@ -378,6 +381,9 @@ local function CreateAddSpellDropdown(owner, rootDescription, scrollFrame, ancho
 	if mode == "global" then
 		local customButton = rootDescription:CreateButton("Custom")
 		CreateCustomIconButtons(customButton, scrollFrame, anchorIndex, true, customButtonConfigs)
+
+		local presetButton = rootDescription:CreateButton("Presets")
+		CreateCustomIconButtons(presetButton, scrollFrame, anchorIndex, false, presetButtonConfigs)
 		return
 	end
 
@@ -569,6 +575,9 @@ local function CreateAddSpellDropdown(owner, rootDescription, scrollFrame, ancho
 
 	local customButton = rootDescription:CreateButton("Custom")
 	CreateCustomIconButtons(customButton, scrollFrame, anchorIndex, false, customButtonConfigs)
+
+	local presetButton = rootDescription:CreateButton("Presets")
+	CreateCustomIconButtons(presetButton, scrollFrame, anchorIndex, false, presetButtonConfigs)
 
 	if CreateCategoryObjectLookup and CooldownViewerSettingsDataProvider_GetCategories then
 		local copyFromButton = rootDescription:CreateButton("Copy From")
@@ -1423,7 +1432,9 @@ local function SelectAnchor(widget, parentWidget, anchorIndex, anchorTabsTbl, mo
 					end
 
 					buttonFrame:SetBackdropBorderColor(0, 1, 0, 1)
-					if buttonData.iconType == "bloodlust" then iconSettings:SetTitle("Bloodlust") end
+					if buttonData.iconType == "bloodlust" then
+						iconSettings:SetTitle("Bloodlust")
+					end
 
 					if buttonConfig then
 						local function ApplyIconConfigUpdate()
