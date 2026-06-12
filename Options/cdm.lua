@@ -255,7 +255,6 @@ local function CreateCustomIconButton(rootDescription, scrollFrame, anchorIndex,
 				for key, value in pairs(buttonConfig.config) do
 					customConfig[key] = value
 				end
-				SCM:CreateAllCustomIcons(buttonConfig.iconType)
 			end
 
 			SCM:ApplyAnchorGroupCDManagerConfig(anchorIndex, isGlobal)
