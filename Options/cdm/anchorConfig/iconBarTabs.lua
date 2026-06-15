@@ -1,23 +1,9 @@
 local SCM = select(2, ...)
 local Options = SCM.Options
+local CDMOptions = Options.CDM
 local Utils = SCM.Utils
 local ToGlobalGroup = Utils.ToGlobalGroup
 local ToBuffBarGroup = Utils.ToBuffBarGroup
-
-StaticPopupDialogs["SCM_CONFIRM_COPY_ANCHORS"] = {
-	text = "Copy anchor configuration from |cFFFFFFFF%s|r?\n\nThis will overwrite the current anchor layout for |cFFFFFFFF%s|r.",
-	button1 = "Copy",
-	button2 = "Cancel",
-	OnAccept = function(self, data)
-		if data and data.callback then
-			data.callback()
-		end
-	end,
-	timeout = 0,
-	whileDead = true,
-	hideOnEscape = true,
-	preferredIndex = 3,
-}
 
 StaticPopupDialogs["SCM_RENAME_ANCHOR"] = {
 	text = "New Anchor Name",
@@ -252,4 +238,33 @@ function SCM:RemoveAnchor(anchorIndex, anchorTabsTbl)
 	SCM:ApplyAllCDManagerConfigs()
 
 	return removedIndex
+end
+
+function CDMOptions.CreateAnchorTabGroup(parent, frame, mode)
+	parent:ReleaseChildren()
+
+	local isGlobal = mode == "global"
+	local isBuffBar = mode == "buffbars"
+
+	local anchorTabs = AceGUI:Create("TabGroup")
+	anchorTabs:SetLayout("fill")
+	anchorTabs:SetFullWidth(true)
+	anchorTabs:SetFullHeight(true)
+	anchorTabs.frame:SetPoint("TOPLEFT", parent.frame, "TOPLEFT", 0, -30)
+	anchorTabs.frame:SetPoint("BOTTOMRIGHT", parent.frame, "BOTTOMRIGHT", 0, -5)
+	anchorTabs.frame:SetParent(parent.frame)
+	anchorTabs.frame:Show()
+
+	local sourceConfig = (isGlobal and SCM.globalAnchorConfig) or (isBuffBar and SCM.buffBarsAnchorConfig) or SCM.anchorConfig
+	local anchorTabsTbl = {}
+	for i, anchorConfig in ipairs(sourceConfig) do
+		tinsert(anchorTabsTbl, { value = i, text = anchorConfig.anchorName or ("Anchor " .. i) })
+	end
+
+	anchorTabs:SetTabs(anchorTabsTbl)
+	anchorTabs:SetCallback("OnGroupSelected", function(self, event, anchorIndex)
+		SelectAnchor(self, parent, anchorIndex, anchorTabsTbl, mode)
+	end)
+	parent:AddChild(anchorTabs)
+	anchorTabs:SelectTab(1)
 end

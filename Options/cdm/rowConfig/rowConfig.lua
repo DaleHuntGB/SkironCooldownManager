@@ -1,5 +1,6 @@
 local SCM = select(2, ...)
 local Options = SCM.Options
+local CDMOptions = Options.CDM
 local Utils = SCM.Utils
 
 Options.RowConfig = {}
@@ -382,4 +383,23 @@ function Options.RowConfig.SelectRow(widget, rowWidget, parentWidget, scrollFram
 		ApplyModeConfigUpdate(anchorIndex, mode)
 	end)
 	buttonGroup:AddChild(deleteRowButton)
+end
+
+function CDMOptions.CreateRowConfig(self, widget, parentWidget, scrollFrame, data, anchorIndex, mode, options, isProfileConfig)
+	local rowTabsTbl = {}
+	for i, row in ipairs(data.rowConfig) do
+		tinsert(rowTabsTbl, { value = i, text = "Row " .. i })
+	end
+
+	local rowTabs = AceGUI:Create("TabGroup")
+	rowTabs:SetLayout("flow")
+	rowTabs:SetAutoAdjustHeight(false)
+	rowTabs:SetFullWidth(true)
+	rowTabs:SetHeight(280)
+	rowTabs:SetTabs(rowTabsTbl)
+	rowTabs:SetCallback("OnGroupSelected", function(self, event, rowIndex)
+		SelectRow(self, widget, parentWidget, scrollFrame, data, anchorIndex, rowIndex, rowTabsTbl, mode, options, isProfileConfig)
+	end)
+	rowTabs:SelectTab(1)
+	self:AddChild(rowTabs)
 end

@@ -144,10 +144,10 @@ function CDMOptions.CreateSpellConfigScrollFrame(anchorIndex, mode)
 	iconSettings:SetTitle("")
 	scrollFrame:AddChild(iconSettings)
 
-	CDMOptions.ShowIconSettingsMessage("|TInterface\\common\\help-i:40:40:0:0|tClick on an icon above to show spell specific options.")
+	CDMOptions.ShowIconSettingsMessage(iconSettings, scrollFrame, "|TInterface\\common\\help-i:40:40:0:0|tClick on an icon above to show spell specific options.")
 
 	local lastButtonFrame
-	scrollFrame:SetCallback("OnGroupSelected", function(scrollFrameWidget, event, buttonFrame, button)
+	scrollFrame:SetCallback("OnGroupSelected", function(_, _, buttonFrame, button)
 		iconSettings:ReleaseChildren()
 
 		if lastButtonFrame then
@@ -161,12 +161,12 @@ function CDMOptions.CreateSpellConfigScrollFrame(anchorIndex, mode)
 				end)
 			else
 				if not lastButtonFrame or lastButtonFrame ~= buttonFrame then
-					CDMOptions.CreateSpellConfigTabs(buttonFrame, lastButtonFrame, anchorIndex, mode, isGlobal, isBuffBar)
+					lastButtonFrame = CDMOptions.CreateSpellConfigTabs(scrollFrame, iconSettings, buttonFrame, lastButtonFrame, anchorIndex, mode, isGlobal, isBuffBar)
 				else
 					lastButtonFrame:SetBackdropBorderColor(BLACK_FONT_COLOR:GetRGBA())
 					lastButtonFrame = nil
 
-					CDMOptions.ShowIconSettingsMessage("|TInterface\\common\\help-i:40:40:0:0|tClick on an icon to show spell specific options.")
+					CDMOptions.ShowIconSettingsMessage(iconSettings, scrollFrame, "|TInterface\\common\\help-i:40:40:0:0|tClick on an icon to show spell specific options.")
 				end
 			end
 		elseif button == "RightButton" and not buttonFrame.data.isAddButton then
