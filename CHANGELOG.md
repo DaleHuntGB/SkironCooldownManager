@@ -1,7 +1,7 @@
-### Version 1.5.33 [Alpha]
+### Version 1.5.34 [Alpha]
 
 Additions:
 
 Fixes:
-- Fix the button glow
-- Hopefully fix buff bars disappearing
+- Fix 12.1 lua errors
+- Hopefully fix stuck cooldowns
