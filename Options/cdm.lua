@@ -942,7 +942,7 @@ local function SelectAdvancedRowSettings(self, tabGroup, rowConfig, rowIndex, an
 		end
 	elseif tabGroup == "charges" then
 		local chargeRelativePoint = AceGUI:Create("Dropdown")
-		chargeRelativePoint:SetRelativeWidth(0.5)
+		chargeRelativePoint:SetRelativeWidth(0.25)
 		chargeRelativePoint:SetLabel("Point")
 		chargeRelativePoint:SetList(SCM.Constants.AnchorPoints)
 		chargeRelativePoint:SetValue(rowConfig.chargePoint or options.chargePoint)
@@ -953,7 +953,7 @@ local function SelectAdvancedRowSettings(self, tabGroup, rowConfig, rowIndex, an
 		self:AddChild(chargeRelativePoint)
 
 		local chargeRelativePoint = AceGUI:Create("Dropdown")
-		chargeRelativePoint:SetRelativeWidth(0.5)
+		chargeRelativePoint:SetRelativeWidth(0.25)
 		chargeRelativePoint:SetLabel("Relative Point")
 		chargeRelativePoint:SetList(SCM.Constants.AnchorPoints)
 		chargeRelativePoint:SetValue(rowConfig.chargeRelativePoint or options.chargeRelativePoint)
@@ -986,7 +986,7 @@ local function SelectAdvancedRowSettings(self, tabGroup, rowConfig, rowIndex, an
 		self:AddChild(yOffset)
 
 		local chargeFontSize = AceGUI:Create("Slider")
-		chargeFontSize:SetRelativeWidth(0.25)
+		chargeFontSize:SetRelativeWidth(0.33)
 		chargeFontSize:SetLabel("Font Size")
 		chargeFontSize:SetSliderValues(1, 50, 1)
 		chargeFontSize:SetValue(rowConfig.chargeFontSize or options.chargeFontSize)
@@ -998,7 +998,7 @@ local function SelectAdvancedRowSettings(self, tabGroup, rowConfig, rowIndex, an
 
 		local truncateWhenZero = AceGUI:Create("CheckBox")
 		truncateWhenZero:SetLabel("Truncate When Zero")
-		truncateWhenZero:SetRelativeWidth(0.25)
+		truncateWhenZero:SetRelativeWidth(0.33)
 		truncateWhenZero:SetValue(rowConfig.chargeTruncateWhenZero)
 		truncateWhenZero:SetCallback("OnValueChanged", function(_, _, value)
 			rowConfig.chargeTruncateWhenZero = value
