@@ -86,6 +86,10 @@ local function ApplyChargeAndApplicationStyle(child, options, fontPath)
 			rowConfig.applicationsXOffset or options.chargeXOffset,
 			rowConfig.applicationsYOffset or options.chargeYOffset
 		)
+
+		local chargeColour = rowConfig.chargeColour or options.chargeColour
+		child.Applications.Applications:SetTextColor(chargeColour.r, chargeColour.g, chargeColour.b, chargeColour.a or 1)
+
 	end
 end
 
