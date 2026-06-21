@@ -247,6 +247,42 @@ local presetButtonConfigs = {
 				duration = 30,
 			},
 		},
+		{
+			text = "|T133876:16:16|t Algeth'ar Puzzle Box",
+			configID = 383781,
+			iconType = "timer",
+			buildIconData = BuildSpellIconData,
+			config = {
+				duration = 20,
+			},
+		},
+		{
+			text = "|T7636709:16:16|t Light Company Guldon",
+			configID = 1259633,
+			iconType = "timer",
+			buildIconData = BuildSpellIconData,
+			config = {
+				duration = 15,
+			},
+		},
+		{
+			text = "|T7636706:16:16|t Vaelgor's Final Stare",
+			configID = 1260459,
+			iconType = "timer",
+			buildIconData = BuildSpellIconData,
+			config = {
+				duration = 15,
+			},
+		},
+		{
+			text = "|T2103819:16:16|t Emberwing Feather",
+			configID = 1250508,
+			iconType = "timer",
+			buildIconData = BuildSpellIconData,
+			config = {
+				duration = 10,
+			},
+		},
 	},
 	["ITEMS"] = {
 		{
