@@ -299,7 +299,6 @@ local presetButtonConfigs = {
 		},
 	},
 	["RACIALS"] = {
-		-- Stoneform
 		{
 			text = "|T136225:16:16|t Stoneform",
 			configID = 20594,
@@ -310,7 +309,6 @@ local presetButtonConfigs = {
 				loadRaces = { [3] = true },
 			}
 		},
-		-- Shadowmeld
 		{
 			text = "|T132089:16:16|t Shadowmeld",
 			configID = 58984,
@@ -321,7 +319,6 @@ local presetButtonConfigs = {
 				loadRaces = { [4] = true },
 			}
 		},
-		-- Blood Fury
 		{
 			text = "|T135726:16:16|t Blood Fury",
 			configID = 20572,
@@ -332,7 +329,6 @@ local presetButtonConfigs = {
 				loadRaces = { [2] = true },
 			}
 		},
-		-- Berserking
 		{
 			text = "|T135727:16:16|t Berserking",
 			configID = 26297,
@@ -343,7 +339,6 @@ local presetButtonConfigs = {
 				loadRaces = { [8] = true },
 			}
 		},
-		-- Ancestral Call
 		{
 			text = "|T2021574:16:16|t Ancestral Call",
 			configID = 274738,
@@ -354,7 +349,6 @@ local presetButtonConfigs = {
 				loadRaces = { [36] = true },
 			}
 		},
-		-- Spatial Rift
 		{
 			text = "|T1724004:16:16|t Spatial Rift",
 			configID = 256948,
@@ -365,7 +359,6 @@ local presetButtonConfigs = {
 				loadRaces = { [29] = true },
 			}
 		},
-		-- Fireblood
 		{
 			text = "|T1786406:16:16|t Fireblood",
 			configID = 265221,
@@ -376,7 +369,6 @@ local presetButtonConfigs = {
 				loadRaces = { [34] = true },
 			}
 		},
-		-- War Stomp
 		{
 			text = "|T132368:16:16|t War Stomp",
 			configID = 20549,
@@ -387,7 +379,6 @@ local presetButtonConfigs = {
 				loadRaces = { [6] = true },
 			}
 		},
-		-- Wing Buffet
 		{
 			text = "|T4622488:16:16|t Wing Buffet",
 			configID = 357214,
@@ -398,7 +389,6 @@ local presetButtonConfigs = {
 				loadRaces = { [52] = true, [70] = true, },
 			}
 		},
-		-- Bull Rush
 		{
 			text = "|T1723987:16:16|t Bull Rush",
 			configID = 255654,
@@ -409,7 +399,6 @@ local presetButtonConfigs = {
 				loadRaces = { [28] = true },
 			}
 		},
-		-- Escape Artist
 		{
 			text = "|T132309:16:16|t Escape Artist",
 			configID = 20589,
