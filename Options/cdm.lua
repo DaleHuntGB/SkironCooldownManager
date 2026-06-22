@@ -219,15 +219,233 @@ local customButtonConfigs = {
 }
 
 local presetButtonConfigs = {
-	{
-		text = "Bloodlust",
-		configID = 2825,
-		iconType = "bloodlust",
-		buildIconData = BuildSpellIconData,
-		config = {
-			duration = 40,
+	["TIMERS"] = {
+		{
+			text = "|T136012:16:16|t Bloodlust",
+			configID = 2825,
+			iconType = "bloodlust",
+			buildIconData = BuildSpellIconData,
+			config = {
+				duration = 40,
+			},
+		},
+		{
+			text = "|T7548911:16:16|t Light's Potential",
+			configID = 1236616,
+			iconType = "timer",
+			buildIconData = BuildSpellIconData,
+			config = {
+				duration = 30,
+			},
+		},
+		{
+			text = "|T7548916:16:16|t Potion of Recklessness",
+			configID = 1236994,
+			iconType = "timer",
+			buildIconData = BuildSpellIconData,
+			config = {
+				duration = 30,
+			},
+		},
+		{
+			text = "|T133876:16:16|t Algeth'ar Puzzle Box",
+			configID = 383781,
+			iconType = "timer",
+			buildIconData = BuildSpellIconData,
+			config = {
+				duration = 20,
+			},
+		},
+		{
+			text = "|T7636709:16:16|t Light Company Guidon",
+			configID = 1259633,
+			iconType = "timer",
+			buildIconData = BuildSpellIconData,
+			config = {
+				duration = 15,
+			},
+		},
+		{
+			text = "|T7636706:16:16|t Vaelgor's Final Stare",
+			configID = 1260459,
+			iconType = "timer",
+			buildIconData = BuildSpellIconData,
+			config = {
+				duration = 15,
+			},
+		},
+		{
+			text = "|T2103819:16:16|t Emberwing Feather",
+			configID = 1250508,
+			iconType = "timer",
+			buildIconData = BuildSpellIconData,
+			config = {
+				duration = 10,
+			},
 		},
 	},
+	["ITEMS"] = {
+		{
+			text = "|T7548909:16:16|t Silvermoon Health Potion",
+			configID = 241304,
+			iconType = "item",
+			buildIconData = BuildItemIconData,
+			config = {
+				customItems = {
+					[1] = 241305
+				}
+			},
+		},
+		{
+			text = "|T538745:16:16|t Healthstone",
+			configID = 5512,
+			iconType = "item",
+			buildIconData = BuildItemIconData,
+			config = {
+				customItems = {
+					[1] = 224464,
+				}
+			}
+		},
+		{
+			text = "|T7548911:16:16|t Light's Potential",
+			configID = 245898,
+			iconType = "item",
+			buildIconData = BuildItemIconData,
+			config = {
+				customItems = {
+					[1] = 245897,
+					[2] = 241308,
+					[3] = 241309
+				}
+			}
+		},
+		{
+			text = "|T7548916:16:16|t Potion of Recklessness",
+			configID = 245902,
+			iconType = "item",
+			buildIconData = BuildItemIconData,
+			config = {
+				customItems = {
+					[1] = 245903,
+					[2] = 241288,
+					[3] = 241289
+				}
+			}
+		},
+	},
+	["RACIALS"] = {
+		{
+			text = "|T136225:16:16|t Stoneform",
+			configID = 20594,
+			iconType = "spell",
+			buildIconData = BuildSpellIconData,
+			config = {
+				useLoadRace = true,
+				loadRaces = { [3] = true },
+			}
+		},
+		{
+			text = "|T132089:16:16|t Shadowmeld",
+			configID = 58984,
+			iconType = "spell",
+			buildIconData = BuildSpellIconData,
+			config = {
+				useLoadRace = true,
+				loadRaces = { [4] = true },
+			}
+		},
+		{
+			text = "|T135726:16:16|t Blood Fury",
+			configID = 20572,
+			iconType = "spell",
+			buildIconData = BuildSpellIconData,
+			config = {
+				useLoadRace = true,
+				loadRaces = { [2] = true },
+			}
+		},
+		{
+			text = "|T135727:16:16|t Berserking",
+			configID = 26297,
+			iconType = "spell",
+			buildIconData = BuildSpellIconData,
+			config = {
+				useLoadRace = true,
+				loadRaces = { [8] = true },
+			}
+		},
+		{
+			text = "|T2021574:16:16|t Ancestral Call",
+			configID = 274738,
+			iconType = "spell",
+			buildIconData = BuildSpellIconData,
+			config = {
+				useLoadRace = true,
+				loadRaces = { [36] = true },
+			}
+		},
+		{
+			text = "|T1724004:16:16|t Spatial Rift",
+			configID = 256948,
+			iconType = "spell",
+			buildIconData = BuildSpellIconData,
+			config = {
+				useLoadRace = true,
+				loadRaces = { [29] = true },
+			}
+		},
+		{
+			text = "|T1786406:16:16|t Fireblood",
+			configID = 265221,
+			iconType = "spell",
+			buildIconData = BuildSpellIconData,
+			config = {
+				useLoadRace = true,
+				loadRaces = { [34] = true },
+			}
+		},
+		{
+			text = "|T132368:16:16|t War Stomp",
+			configID = 20549,
+			iconType = "spell",
+			buildIconData = BuildSpellIconData,
+			config = {
+				useLoadRace = true,
+				loadRaces = { [6] = true },
+			}
+		},
+		{
+			text = "|T4622488:16:16|t Wing Buffet",
+			configID = 357214,
+			iconType = "spell",
+			buildIconData = BuildSpellIconData,
+			config = {
+				useLoadRace = true,
+				loadRaces = { [52] = true, [70] = true, },
+			}
+		},
+		{
+			text = "|T1723987:16:16|t Bull Rush",
+			configID = 255654,
+			iconType = "spell",
+			buildIconData = BuildSpellIconData,
+			config = {
+				useLoadRace = true,
+				loadRaces = { [28] = true },
+			}
+		},
+		{
+			text = "|T132309:16:16|t Escape Artist",
+			configID = 20589,
+			iconType = "spell",
+			buildIconData = BuildSpellIconData,
+			config = {
+				useLoadRace = true,
+				loadRaces = { [7] = true },
+			}
+		},
+	}
 }
 
 local function CreateCustomIconButton(rootDescription, scrollFrame, anchorIndex, isGlobal, buttonConfig)
@@ -384,6 +602,15 @@ local function CreateAddSpellDropdown(owner, rootDescription, scrollFrame, ancho
 
 		local presetButton = rootDescription:CreateButton("Presets")
 		CreateCustomIconButtons(presetButton, scrollFrame, anchorIndex, true, presetButtonConfigs)
+
+		local timersButton = presetButton:CreateButton("|T237538:16:16|t Timers")
+		CreateCustomIconButtons(timersButton, scrollFrame, anchorIndex, true, presetButtonConfigs["TIMERS"])
+
+		local itemsButton = presetButton:CreateButton("|T134856:16:16|t Items")
+		CreateCustomIconButtons(itemsButton, scrollFrame, anchorIndex, true, presetButtonConfigs["ITEMS"])
+
+		local racialButton = presetButton:CreateButton("|T135727:16:16|t Racials")
+		CreateCustomIconButtons(racialButton, scrollFrame, anchorIndex, true, presetButtonConfigs["RACIALS"])
 		return
 	end
 
@@ -578,6 +805,15 @@ local function CreateAddSpellDropdown(owner, rootDescription, scrollFrame, ancho
 
 	local presetButton = rootDescription:CreateButton("Presets")
 	CreateCustomIconButtons(presetButton, scrollFrame, anchorIndex, false, presetButtonConfigs)
+
+	local timersButton = presetButton:CreateButton("|T237538:16:16|t Timers")
+	CreateCustomIconButtons(timersButton, scrollFrame, anchorIndex, false, presetButtonConfigs["TIMERS"])
+
+	local itemsButton = presetButton:CreateButton("|T134856:16:16|t Items")
+	CreateCustomIconButtons(itemsButton, scrollFrame, anchorIndex, false, presetButtonConfigs["ITEMS"])
+
+	-- local racialButton = presetButton:CreateButton("|T135727:16:16|t Racials")
+	-- CreateCustomIconButtons(racialButton, scrollFrame, anchorIndex, false, presetButtonConfigs["RACIALS"])
 
 	if CreateCategoryObjectLookup and CooldownViewerSettingsDataProvider_GetCategories then
 		local copyFromButton = rootDescription:CreateButton("Copy From")
@@ -849,6 +1085,66 @@ local function SelectRow(widget, rowWidget, parentWidget, scrollFrame, data, anc
 		return
 	end
 
+	local buttonGroup = AceGUI:Create("SimpleGroup")
+	buttonGroup:SetFullWidth(true)
+	buttonGroup:SetLayout("flow")
+	widget:AddChild(buttonGroup)
+
+	local addRowButton = AceGUI:Create("Button")
+	addRowButton:SetText("Add Row")
+	addRowButton:SetRelativeWidth(0.5)
+	addRowButton:SetDisabled(#rowTabsTbl >= 9)
+	addRowButton:SetCallback("OnClick", function()
+		local nextIndex = (useDataRowConfig and (#data.rowConfig + 1)) or SCM:AddRow(anchorIndex)
+		if isGlobal then
+			data.rowConfig[nextIndex] = { iconHeight = 40, iconWidth = 40, limit = 8 }
+		elseif isBuffBar then
+			data.rowConfig[nextIndex] = { iconHeight = 40, iconWidth = 150, limit = 8 }
+		elseif isProfileConfig then
+			data.rowConfig[nextIndex] = { iconHeight = 40, iconWidth = 40, limit = 8 }
+		end
+
+		tinsert(rowTabsTbl, { value = nextIndex, text = "Row " .. nextIndex })
+		table.sort(rowTabsTbl, function(a, b)
+			return a.value < b.value
+		end)
+		widget:SetTabs(rowTabsTbl)
+		widget:SelectTab(nextIndex)
+		ApplyModeConfigUpdate(anchorIndex, mode)
+	end)
+	buttonGroup:AddChild(addRowButton)
+
+	local deleteRowButton = AceGUI:Create("Button")
+	deleteRowButton:SetText("Delete Row")
+	deleteRowButton:SetRelativeWidth(0.5)
+	deleteRowButton:SetDisabled(rowIndex == 1)
+	deleteRowButton:SetCallback("OnClick", function()
+		if useDataRowConfig then
+			tremove(data.rowConfig, rowIndex)
+		else
+			SCM:RemoveRow(anchorIndex, rowIndex)
+		end
+
+		local removedIndex
+		for i, tab in ipairs(rowTabsTbl) do
+			if tab.value == rowIndex then
+				removedIndex = i
+				tremove(rowTabsTbl, i)
+				break
+			end
+		end
+
+		for i = removedIndex, #rowTabsTbl do
+			rowTabsTbl[i].value = i
+			rowTabsTbl[i].text = "Row " .. i
+		end
+
+		widget:SetTabs(rowTabsTbl)
+		widget:SelectTab(#rowTabsTbl)
+		ApplyModeConfigUpdate(anchorIndex, mode)
+	end)
+	buttonGroup:AddChild(deleteRowButton)
+
 	local rowConfig = data.rowConfig[rowIndex]
 	local widthLabel = isBuffBar and "Bar Width" or "Icon Width"
 	local heightLabel = isBuffBar and "Bar Height" or "Icon Height"
@@ -926,66 +1222,6 @@ local function SelectRow(widget, rowWidget, parentWidget, scrollFrame, data, anc
 	end)
 	advancedRowSettings:SelectTab("general")
 	widget:AddChild(advancedRowSettings)
-
-	local buttonGroup = AceGUI:Create("SimpleGroup")
-	buttonGroup:SetFullWidth(true)
-	buttonGroup:SetLayout("flow")
-	widget:AddChild(buttonGroup)
-
-	local addRowButton = AceGUI:Create("Button")
-	addRowButton:SetText("Add Row")
-	addRowButton:SetRelativeWidth(0.5)
-	addRowButton:SetDisabled(#rowTabsTbl >= 9)
-	addRowButton:SetCallback("OnClick", function()
-		local nextIndex = (useDataRowConfig and (#data.rowConfig + 1)) or SCM:AddRow(anchorIndex)
-		if isGlobal then
-			data.rowConfig[nextIndex] = { iconHeight = 40, iconWidth = 40, limit = 8 }
-		elseif isBuffBar then
-			data.rowConfig[nextIndex] = { iconHeight = 40, iconWidth = 150, limit = 8 }
-		elseif isProfileConfig then
-			data.rowConfig[nextIndex] = { iconHeight = 40, iconWidth = 40, limit = 8 }
-		end
-
-		tinsert(rowTabsTbl, { value = nextIndex, text = "Row " .. nextIndex })
-		table.sort(rowTabsTbl, function(a, b)
-			return a.value < b.value
-		end)
-		widget:SetTabs(rowTabsTbl)
-		widget:SelectTab(nextIndex)
-		ApplyModeConfigUpdate(anchorIndex, mode)
-	end)
-	buttonGroup:AddChild(addRowButton)
-
-	local deleteRowButton = AceGUI:Create("Button")
-	deleteRowButton:SetText("Delete Row")
-	deleteRowButton:SetRelativeWidth(0.5)
-	deleteRowButton:SetDisabled(rowIndex == 1)
-	deleteRowButton:SetCallback("OnClick", function()
-		if useDataRowConfig then
-			tremove(data.rowConfig, rowIndex)
-		else
-			SCM:RemoveRow(anchorIndex, rowIndex)
-		end
-
-		local removedIndex
-		for i, tab in ipairs(rowTabsTbl) do
-			if tab.value == rowIndex then
-				removedIndex = i
-				tremove(rowTabsTbl, i)
-				break
-			end
-		end
-
-		for i = removedIndex, #rowTabsTbl do
-			rowTabsTbl[i].value = i
-			rowTabsTbl[i].text = "Row " .. i
-		end
-
-		widget:SetTabs(rowTabsTbl)
-		widget:SelectTab(#rowTabsTbl)
-		ApplyModeConfigUpdate(anchorIndex, mode)
-	end)
-	buttonGroup:AddChild(deleteRowButton)
 end
 
 local function AddStateOptions(stateType, iconSettingsTabs, iconSettings, scrollFrame, value, options, buttonConfig)
