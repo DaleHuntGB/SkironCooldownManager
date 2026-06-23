@@ -150,6 +150,8 @@ SCM.DefaultDB = {
 					length = 2,
 					thickness = 2,
 					glowColor = { 0.95, 0.95, 0.32, 1 },
+					xOffset = 0,
+					yOffset = 0,
 				},
 				["Autocast"] = {
 					startAnim = true,
