@@ -8,3 +8,6 @@ Fixes:
 - Custom icon cooldown and charge display improvements and fixes
 - Fix the edge and swipe for abilities with charges and an active buff
 - Go back to the old cooldown frame anchoring (hopfully nothing breaks)
+- Fix lua errors when importing profiles
+- Make sure "always show" only works when "Disable "Hide While Inactive"" is enabled
+- Clean up resource bar code
