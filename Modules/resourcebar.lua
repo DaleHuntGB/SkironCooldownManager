@@ -378,6 +378,20 @@ local function HideRegions(regionList)
 	end
 end
 
+local function HideSegmentBars(segmentBars, startIndex)
+	if not segmentBars then
+		return
+	end
+
+	startIndex = startIndex or 1
+	for index, segmentBar in pairs(segmentBars) do
+		if type(index) == "number" and index >= startIndex then
+			segmentBar:ClearAllPoints()
+			segmentBar:Hide()
+		end
+	end
+end
+
 local function GetNumSegments(bar, maxValue)
 	local segmentCount = bar.segmentCount or maxValue
 	if not segmentCount or segmentCount <= 0 then
@@ -532,7 +546,7 @@ local function ResetResourceBar(bar)
 	bar.Text.Value:SetText("")
 
 	HideRegions(bar.SegmentTicks)
-	HideRegions(bar.SegmentFillBars)
+	HideSegmentBars(bar.SegmentFillBars)
 	HideRegions(bar.RuneSegmentBars)
 	HideRechargeSegment(bar)
 	HideResourceBarSpark(bar)
@@ -739,20 +753,20 @@ local function HasSegments(bar, segmentCount)
 end
 
 local function CreateSegments(bar, segmentCount)
-	bar.SegmentFillBars = bar.SegmentFillBars or {}
-	local texturePath = bar.SCMTexturePath or LSM:Fetch("statusbar", bar.barOptions.texture)
+	local segmentBars = bar.SegmentFillBars or {}
+	bar.SegmentFillBars = segmentBars
 
-	for segmentIndex = #bar.SegmentFillBars + 1, segmentCount do
-		local segmentBar = bar.SegmentFillBars[segmentIndex] or CreateFrame("StatusBar", nil, bar)
-		segmentBar:SetMinMaxValues(0, 1)
-		segmentBar:SetStatusBarTexture(texturePath)
-		segmentBar:GetStatusBarTexture():SetTexelSnappingBias(0)
-		segmentBar:GetStatusBarTexture():SetSnapToPixelGrid(false)
-		segmentBar:SetFrameLevel(2)
-		bar.SegmentFillBars[segmentIndex] = segmentBar
+	for segmentIndex = 1, segmentCount do
+		local segmentBar = segmentBars[segmentIndex]
+		if not segmentBar then
+			segmentBar = CreateFrame("StatusBar", nil, bar)
+			segmentBar:SetMinMaxValues(0, 1)
+			segmentBar:SetFrameLevel(2)
+			segmentBars[segmentIndex] = segmentBar
+		end
 	end
 
-	return bar.SegmentFillBars
+	return segmentBars
 end
 
 local function GetProgressValues(bar, segmentCount, currentValue, resourceSegmentValues)
@@ -838,14 +852,13 @@ local function UpdateSegments(bar, maxValue, currentValue, resourceSegmentValues
 	if not HasSegments(bar, segmentCount) or (bar.barOptions and bar.barOptions.textOnly) then
 		bar.SCMSegmentedDisplay = nil
 		bar.SCMActiveSegmentCount = nil
-		HideRegions(bar.SegmentFillBars)
+		HideSegmentBars(bar.SegmentFillBars)
 		HideRegions(bar.RuneSegmentBars)
 		bar:GetStatusBarTexture():SetAlpha(1)
 		return
 	end
 
 	bar.SCMSegmentedDisplay = true
-	bar.segmentCount = segmentCount
 	bar.SCMActiveSegmentCount = segmentCount
 	bar:GetStatusBarTexture():SetAlpha(0)
 	HideRegions(bar.RuneSegmentBars)
@@ -871,9 +884,7 @@ local function UpdateSegments(bar, maxValue, currentValue, resourceSegmentValues
 
 	UpdateSegmentValues(bar, segmentBars, segmentCount, currentValue, resourceSegmentValues)
 
-	for segmentIndex = segmentCount + 1, #segmentBars do
-		segmentBars[segmentIndex]:Hide()
-	end
+	HideSegmentBars(segmentBars, segmentCount + 1)
 end
 
 local function ApplyBarAppearance(bar, barOptions)
@@ -913,11 +924,7 @@ local function ApplyBarAppearance(bar, barOptions)
 		if bar.SegmentTickFrame then
 			bar.SegmentTickFrame:Hide()
 		end
-		if bar.SegmentFillBars then
-			for _, segmentBar in ipairs(bar.SegmentFillBars) do
-				segmentBar:GetStatusBarTexture():Hide()
-			end
-		end
+		HideSegmentBars(bar.SegmentFillBars)
 	end
 
 	local text = bar.Text
@@ -1155,21 +1162,25 @@ function SCMResourceBarControllerMixin:HookAnchorWidthRefresh(anchor)
 		local secondaryBarOptions = controller.secondaryBarOptions or generalBarOptions.secondaryBar
 		local primaryMatches = primaryBarOptions and primaryBarOptions.enabled and primaryBarOptions.matchAnchorWidth and not controller.PrimaryBar:IsProtected()
 		local secondaryMatches = secondaryBarOptions and secondaryBarOptions.enabled and secondaryBarOptions.matchAnchorWidth and not controller.SecondaryBar:IsProtected()
+		local primaryWidthChanged = false
+		local secondaryWidthChanged = false
 
 		if primaryMatches then
-			local primaryWidthChanged = controller:ApplyFrameWidthOptions(controller.PrimaryBar)
+			primaryWidthChanged = controller:ApplyFrameWidthOptions(controller.PrimaryBar)
 		end
 
 		if secondaryMatches then
-			local secondaryWidthChanged = controller:ApplyFrameWidthOptions(controller.SecondaryBar)
+			secondaryWidthChanged = controller:ApplyFrameWidthOptions(controller.SecondaryBar)
 		end
 
 		local primaryHeightChanged, secondaryHeightChanged = controller:UpdateBarLayout()
-		if primaryMatches and (primaryWidthChanged or primaryHeightChanged) then
-			controller:RefreshBarGeometry(controller.PrimaryBar, primaryWidthChanged, true)
+		local primaryGeometryChanged = primaryWidthChanged or primaryHeightChanged
+		local secondaryGeometryChanged = secondaryWidthChanged or secondaryHeightChanged
+		if primaryMatches and primaryGeometryChanged then
+			controller:RefreshBarGeometry(controller.PrimaryBar, primaryGeometryChanged, true)
 		end
-		if secondaryMatches and (secondaryWidthChanged or secondaryHeightChanged) then
-			controller:RefreshBarGeometry(controller.SecondaryBar, secondaryWidthChanged, true)
+		if secondaryMatches and secondaryGeometryChanged then
+			controller:RefreshBarGeometry(controller.SecondaryBar, secondaryGeometryChanged, true)
 		end
 		controller:UpdateContainerShownState()
 	end)
@@ -1458,7 +1469,7 @@ function SCMResourceBarControllerMixin:UpdateBarResourceByKind(bar, currentValue
 	if bar.resourceKind == "spellCharges" then
 		bar.SCMSegmentedDisplay = nil
 		bar.SCMActiveSegmentCount = nil
-		HideRegions(bar.SegmentFillBars)
+		HideSegmentBars(bar.SegmentFillBars)
 		HideRegions(bar.RuneSegmentBars)
 		bar:GetStatusBarTexture():SetAlpha(1)
 		UpdateSpellChargeRecharge(bar, resourceSegmentValues)
@@ -1468,7 +1479,7 @@ function SCMResourceBarControllerMixin:UpdateBarResourceByKind(bar, currentValue
 	if bar.resourceKind == "vengeanceSoulFragments" then
 		bar.SCMSegmentedDisplay = nil
 		bar.SCMActiveSegmentCount = nil
-		HideRegions(bar.SegmentFillBars)
+		HideSegmentBars(bar.SegmentFillBars)
 		HideRegions(bar.RuneSegmentBars)
 		HideRechargeSegment(bar)
 		bar:GetStatusBarTexture():SetAlpha(1)
