@@ -70,6 +70,7 @@ SCM.DefaultDB = {
 			itemConfig = {},
 			slotConfig = {},
 			timerConfig = {},
+			bloodlustConfig = {},
 		},
 		options = {
 			anchorUUFRoles = {
@@ -148,6 +149,9 @@ SCM.DefaultDB = {
 					length = 2,
 					thickness = 2,
 					glowColor = { 0.95, 0.95, 0.32, 1 },
+					xOffset = 0,
+					yOffset = 0,
+					border = false,
 				},
 				["Autocast"] = {
 					startAnim = true,
@@ -156,6 +160,10 @@ SCM.DefaultDB = {
 					scale = 1,
 					glowColor = { 0.95, 0.95, 0.32, 1 },
 				},
+				["Button"] = {
+					glowColor = { 0.95, 0.95, 0.32, 1 },
+					frequency = 0.125,
+				}
 			},
 			buffBarOptions = {
 				barTexture = "Solid",
@@ -260,6 +268,7 @@ SCM.DefaultDB = {
 					showValues = true,
 					forceMana = false,
 					showPercentageSign = true,
+					useSmoothPowerUpdates = false,
 					spark = {
 						enable = false,
 						width = 2,
@@ -332,6 +341,7 @@ SCM.DefaultDB = {
 					disableMaelstromOverflow = false,
 					forceMana = false,
 					showPercentageSign = true,
+					useSmoothPowerUpdates = false,
 					spark = {
 						enable = false,
 						width = 2,

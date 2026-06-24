@@ -19,7 +19,6 @@ local CHARGED_COMBO_POINT_COLOR = SCMConstants.ChargedComboPointColor
 local DEFAULT_RESOURCE_BAR_ANCHOR = "ANCHOR:1"
 local RESOURCE_BAR_RECONFIGURE_EVENTS = {
 	PLAYER_ENTERING_WORLD = true,
-	PLAYER_SPECIALIZATION_CHANGED = true,
 	PLAYER_GAINS_VEHICLE_DATA = true,
 	PLAYER_LOSES_VEHICLE_DATA = true,
 	UNIT_DISPLAYPOWER = true,
@@ -379,6 +378,20 @@ local function HideRegions(regionList)
 	end
 end
 
+local function HideSegmentBars(segmentBars, startIndex)
+	if not segmentBars then
+		return
+	end
+
+	startIndex = startIndex or 1
+	for index, segmentBar in pairs(segmentBars) do
+		if type(index) == "number" and index >= startIndex then
+			segmentBar:ClearAllPoints()
+			segmentBar:Hide()
+		end
+	end
+end
+
 local function GetNumSegments(bar, maxValue)
 	local segmentCount = bar.segmentCount or maxValue
 	if not segmentCount or segmentCount <= 0 then
@@ -472,7 +485,7 @@ local function UpdateSpellChargeRecharge(bar, chargeInfo)
 	segment:SetWidth(segmentWidth)
 	segment:SetHeight(segmentHeight)
 	UpdateRechargeSegment(bar)
-	segment:SetTimerDuration(duration, Enum.StatusBarInterpolation.Immediate, Enum.StatusBarTimerDirection.ElapsedTime)
+	segment:SetTimerDuration(duration, bar.barOptions.useSmoothPowerUpdates and Enum.StatusBarInterpolation.ExponentialEaseOut or Enum.StatusBarInterpolation.Immediate, Enum.StatusBarTimerDirection.ElapsedTime)
 	segment:SetAlpha(C_CurveUtil.EvaluateColorValueFromBoolean(duration:IsZero(), 0, 1))
 	segment:Show()
 end
@@ -533,7 +546,7 @@ local function ResetResourceBar(bar)
 	bar.Text.Value:SetText("")
 
 	HideRegions(bar.SegmentTicks)
-	HideRegions(bar.SegmentFillBars)
+	HideSegmentBars(bar.SegmentFillBars)
 	HideRegions(bar.RuneSegmentBars)
 	HideRechargeSegment(bar)
 	HideResourceBarSpark(bar)
@@ -740,20 +753,20 @@ local function HasSegments(bar, segmentCount)
 end
 
 local function CreateSegments(bar, segmentCount)
-	bar.SegmentFillBars = bar.SegmentFillBars or {}
-	local texturePath = bar.SCMTexturePath or LSM:Fetch("statusbar", bar.barOptions.texture)
+	local segmentBars = bar.SegmentFillBars or {}
+	bar.SegmentFillBars = segmentBars
 
-	for segmentIndex = #bar.SegmentFillBars + 1, segmentCount do
-		local segmentBar = bar.SegmentFillBars[segmentIndex] or CreateFrame("StatusBar", nil, bar)
-		segmentBar:SetMinMaxValues(0, 1)
-		segmentBar:SetStatusBarTexture(texturePath)
-		segmentBar:GetStatusBarTexture():SetTexelSnappingBias(0)
-		segmentBar:GetStatusBarTexture():SetSnapToPixelGrid(false)
-		segmentBar:SetFrameLevel(2)
-		bar.SegmentFillBars[segmentIndex] = segmentBar
+	for segmentIndex = 1, segmentCount do
+		local segmentBar = segmentBars[segmentIndex]
+		if not segmentBar then
+			segmentBar = CreateFrame("StatusBar", nil, bar)
+			segmentBar:SetMinMaxValues(0, 1)
+			segmentBar:SetFrameLevel(2)
+			segmentBars[segmentIndex] = segmentBar
+		end
 	end
 
-	return bar.SegmentFillBars
+	return segmentBars
 end
 
 local function GetProgressValues(bar, segmentCount, currentValue, resourceSegmentValues)
@@ -830,7 +843,7 @@ local function UpdateSegmentValues(bar, segmentBars, segmentCount, currentValue,
 		end
 
 		segmentBar:SetStatusBarColor(segmentR, segmentG, segmentB)
-		segmentBar:SetValue(segmentProgress)
+		segmentBar:SetValue(segmentProgress, bar.barOptions.useSmoothPowerUpdates and Enum.StatusBarInterpolation.ExponentialEaseOut or Enum.StatusBarInterpolation.Immediate)
 	end
 end
 
@@ -839,14 +852,13 @@ local function UpdateSegments(bar, maxValue, currentValue, resourceSegmentValues
 	if not HasSegments(bar, segmentCount) or (bar.barOptions and bar.barOptions.textOnly) then
 		bar.SCMSegmentedDisplay = nil
 		bar.SCMActiveSegmentCount = nil
-		HideRegions(bar.SegmentFillBars)
+		HideSegmentBars(bar.SegmentFillBars)
 		HideRegions(bar.RuneSegmentBars)
 		bar:GetStatusBarTexture():SetAlpha(1)
 		return
 	end
 
 	bar.SCMSegmentedDisplay = true
-	bar.segmentCount = segmentCount
 	bar.SCMActiveSegmentCount = segmentCount
 	bar:GetStatusBarTexture():SetAlpha(0)
 	HideRegions(bar.RuneSegmentBars)
@@ -872,9 +884,7 @@ local function UpdateSegments(bar, maxValue, currentValue, resourceSegmentValues
 
 	UpdateSegmentValues(bar, segmentBars, segmentCount, currentValue, resourceSegmentValues)
 
-	for segmentIndex = segmentCount + 1, #segmentBars do
-		segmentBars[segmentIndex]:Hide()
-	end
+	HideSegmentBars(segmentBars, segmentCount + 1)
 end
 
 local function ApplyBarAppearance(bar, barOptions)
@@ -914,11 +924,7 @@ local function ApplyBarAppearance(bar, barOptions)
 		if bar.SegmentTickFrame then
 			bar.SegmentTickFrame:Hide()
 		end
-		if bar.SegmentFillBars then
-			for _, segmentBar in ipairs(bar.SegmentFillBars) do
-				segmentBar:GetStatusBarTexture():Hide()
-			end
-		end
+		HideSegmentBars(bar.SegmentFillBars)
 	end
 
 	local text = bar.Text
@@ -1067,7 +1073,11 @@ local function OnResourceBarEvent(bar, event)
 		return
 	end
 
-	controller:UpdateBarDisplay(bar)
+	if bar.resourceKind == "spellCharges" then
+		controller:RefreshBarDisplay(bar)
+	else
+		controller:UpdateBarDisplay(bar)
+	end
 	controller:UpdateRefreshState()
 end
 
@@ -1123,15 +1133,64 @@ function SCMResourceBarControllerMixin:UpdateActiveAnchorFrame(anchor)
 		activeAnchor = anchor
 	end
 
-	self.SCMActiveAnchorFrame = activeAnchor
-	self.SCMActiveAnchorGroup = activeAnchorGroup
-	return activeAnchor
+	return activeAnchor, activeAnchorGroup
+end
+
+function SCMResourceBarControllerMixin:HookAnchorWidthRefresh(anchor)
+	if not anchor or anchor.SCMProxyGroup then
+		return
+	end
+
+	self.SCMResourceBarHooks = self.SCMResourceBarHooks or {}
+	if self.SCMResourceBarHooks[anchor] then
+		return
+	end
+
+	self.SCMResourceBarHooks[anchor] = true
+	anchor:HookScript("OnSizeChanged", function(changedAnchor)
+		local controller = _G[RESOURCE_BAR_FRAME_NAME]
+		if not (controller and controller.SCMResourceBarInitialized and controller.SCMActiveAnchorFrame == changedAnchor) then
+			return
+		end
+
+		local generalBarOptions = controller.barOptions or SCM.resourceBarConfig
+		if not (generalBarOptions and generalBarOptions.enabled) then
+			return
+		end
+
+		local primaryBarOptions = controller.primaryBarOptions or generalBarOptions.primaryBar
+		local secondaryBarOptions = controller.secondaryBarOptions or generalBarOptions.secondaryBar
+		local primaryMatches = primaryBarOptions and primaryBarOptions.enabled and primaryBarOptions.matchAnchorWidth and not controller.PrimaryBar:IsProtected()
+		local secondaryMatches = secondaryBarOptions and secondaryBarOptions.enabled and secondaryBarOptions.matchAnchorWidth and not controller.SecondaryBar:IsProtected()
+		local primaryWidthChanged = false
+		local secondaryWidthChanged = false
+
+		if primaryMatches then
+			primaryWidthChanged = controller:ApplyFrameWidthOptions(controller.PrimaryBar)
+		end
+
+		if secondaryMatches then
+			secondaryWidthChanged = controller:ApplyFrameWidthOptions(controller.SecondaryBar)
+		end
+
+		local primaryHeightChanged, secondaryHeightChanged = controller:UpdateBarLayout()
+		local primaryGeometryChanged = primaryWidthChanged or primaryHeightChanged
+		local secondaryGeometryChanged = secondaryWidthChanged or secondaryHeightChanged
+		if primaryMatches and primaryGeometryChanged then
+			controller:RefreshBarGeometry(controller.PrimaryBar, primaryGeometryChanged, true)
+		end
+		if secondaryMatches and secondaryGeometryChanged then
+			controller:RefreshBarGeometry(controller.SecondaryBar, secondaryGeometryChanged, true)
+		end
+		controller:UpdateContainerShownState()
+	end)
 end
 
 function SCMResourceBarControllerMixin:ApplyFrameWidthOptions(bar)
 	local specificBarOptions = bar.barOptions
 	local generalBarOptions = self.barOptions
-	local anchor = self:UpdateActiveAnchorFrame(generalBarOptions.anchorFrame or DEFAULT_RESOURCE_BAR_ANCHOR)
+	local oldAnchor = self.SCMActiveAnchorFrame
+	local anchor, activeAnchorGroup = self:UpdateActiveAnchorFrame(generalBarOptions.anchorFrame or DEFAULT_RESOURCE_BAR_ANCHOR)
 
 	if anchor then
 		local widthFromOptions = specificBarOptions.width
@@ -1144,26 +1203,17 @@ function SCMResourceBarControllerMixin:ApplyFrameWidthOptions(bar)
 		bar:SetWidth(desiredWidth)
 		local widthChanged = previousWidth ~= (bar:GetWidth() or 0)
 
-		bar.SCMResourceBarHooks = bar.SCMResourceBarHooks or {}
-		if not anchor.SCMProxyGroup and not bar.SCMResourceBarHooks[anchor] then
-			bar.SCMResourceBarHooks[anchor] = true
-			anchor:HookScript("OnSizeChanged", function(changedAnchor)
-				local barOptions = bar.barOptions
-				local controller = bar.Controller
-				local generalBarOptions = controller and controller.barOptions or SCM.resourceBarConfig
-				if bar:IsProtected() or not (generalBarOptions.enabled and barOptions and barOptions.enabled and barOptions.matchAnchorWidth) then
-					return
-				end
-
-				if controller and controller.SCMActiveAnchorFrame == changedAnchor then
-					SCM:RefreshResourceBarConfig()
-				end
-			end)
+		if specificBarOptions.matchAnchorWidth then
+			self:HookAnchorWidthRefresh(anchor)
 		end
 
-		--No idea whats going in with these fucking pixels. BRB taking a math class
-		self:ClearAllPoints()
-		PixelUtil.SetPoint(self, generalBarOptions.point, anchor, generalBarOptions.relativePoint, generalBarOptions.xOffset, generalBarOptions.yOffset)
+		if anchor ~= oldAnchor then
+			--No idea whats going in with these fucking pixels. BRB taking a math class
+			self:ClearAllPoints()
+			PixelUtil.SetPoint(self, generalBarOptions.point, anchor, generalBarOptions.relativePoint, generalBarOptions.xOffset, generalBarOptions.yOffset)
+			self.SCMActiveAnchorFrame = anchor
+			self.SCMActiveAnchorGroup = activeAnchorGroup
+		end
 
 		return widthChanged
 	end
@@ -1195,72 +1245,6 @@ function SCMResourceBarControllerMixin:OnUpdate(elapsed)
 	self:UpdateBarDisplay(self.PrimaryBar)
 	self:UpdateBarDisplay(self.SecondaryBar)
 	self:UpdateRefreshState()
-end
-
-function SCMResourceBarControllerMixin:RefreshResourceBars(refreshTicks, optionsChanged)
-	local barOptions = self:ApplyResourceBarOptions()
-	local primaryBarOptions = barOptions.primaryBar
-	local secondaryBarOptions = barOptions.secondaryBar
-
-	if not barOptions.enabled then
-		SCM:ApplyResourceBarAttributeDriver(true)
-		self:UnregisterAllEvents()
-		self.SCMResourceBarEventsRegistered = false
-		self.PrimaryBar:UnregisterAllEvents()
-		self.SecondaryBar:UnregisterAllEvents()
-		self:SetScript("OnUpdate", nil)
-		self.totalElapsed = nil
-		ResetResourceBar(self.PrimaryBar)
-		ResetResourceBar(self.SecondaryBar)
-		self:UpdateContainerShownState()
-		return
-	end
-
-	local primaryResourceChanged = false
-	local secondaryResourceChanged = false
-
-	if primaryBarOptions.enabled then
-		primaryResourceChanged = self:ConfigurePrimaryBar()
-		RegisterBarEvents(self.PrimaryBar, barOptions)
-	else
-		self.PrimaryBar:UnregisterAllEvents()
-		ResetResourceBar(self.PrimaryBar)
-	end
-
-	if secondaryBarOptions.enabled then
-		secondaryResourceChanged = self:ConfigureSecondaryBar()
-		RegisterBarEvents(self.SecondaryBar, barOptions)
-	else
-		self.SecondaryBar:UnregisterAllEvents()
-		ResetResourceBar(self.SecondaryBar)
-	end
-
-	if primaryBarOptions.enabled or secondaryBarOptions.enabled then
-		self:RegisterResourceBarEvents()
-		self:UpdateActiveAnchorFrame(barOptions.anchorFrame or DEFAULT_RESOURCE_BAR_ANCHOR)
-
-		local primaryWidthChanged = false
-		local secondaryWidthChanged = false
-		if primaryBarOptions.enabled then
-			primaryWidthChanged = self:ApplyFrameWidthOptions(self.PrimaryBar)
-		end
-		if secondaryBarOptions.enabled then
-			secondaryWidthChanged = self:ApplyFrameWidthOptions(self.SecondaryBar)
-		end
-
-		local primaryHeightChanged, secondaryHeightChanged = self:UpdateBarLayout()
-		local refreshPrimaryTicks = refreshTicks or primaryResourceChanged or primaryWidthChanged or primaryHeightChanged
-		local refreshSecondaryTicks = refreshTicks or secondaryResourceChanged or secondaryWidthChanged or secondaryHeightChanged
-
-		self:ReconfigureBarDisplay(self.PrimaryBar, refreshPrimaryTicks, optionsChanged)
-		self:ReconfigureBarDisplay(self.SecondaryBar, refreshSecondaryTicks, optionsChanged)
-		self:UpdateContainerShownState()
-		self:UpdateRefreshState()
-
-		EventRegistry:TriggerEvent("SkironCooldownManager.ResourceBar.LayoutUpdated")
-	end
-
-	SCM:ApplyResourceBarAttributeDriver()
 end
 
 function SCMResourceBarControllerMixin:ConfigurePrimaryBar()
@@ -1421,7 +1405,7 @@ function SCMResourceBarControllerMixin:UpdateBarDisplay(bar, currentValue, maxVa
 	end
 
 	bar:SetMinMaxValues(0, maxValue)
-	bar:SetValue(currentValue)
+	bar:SetValue(currentValue, bar.barOptions.useSmoothPowerUpdates and Enum.StatusBarInterpolation.ExponentialEaseOut or Enum.StatusBarInterpolation.Immediate)
 
 	if not isFullUpdate and bar.SCMSegmentedDisplay and bar.SegmentFillBars then
 		local segmentCount = bar.SCMActiveSegmentCount
@@ -1442,10 +1426,6 @@ function SCMResourceBarControllerMixin:UpdateBarDisplay(bar, currentValue, maxVa
 	end
 
 	local text = bar.Text
-	if not text then
-		return
-	end
-
 	local barOptions = bar.barOptions
 	local textValue = text.Value
 	local overrideText = bar.SCMIsPrimaryResourceBar and SCM.primaryResourceBarTextOverride
@@ -1483,55 +1463,50 @@ function SCMResourceBarControllerMixin:UpdateBarDisplay(bar, currentValue, maxVa
 	else
 		textValue:SetText(AbbreviateLargeNumbers(displayValue))
 	end
-
-	return
 end
 
-function SCMResourceBarControllerMixin:ReconfigureBarDisplay(bar, refreshTicks, optionsChanged)
-	if not bar.powerToken then
-		HideResourceBarSpark(bar)
-		return
-	end
-
-	local currentValue, maxValue, displayValue, resourceSegmentValues = GetCurrentPowerValue(bar.resourceKind, bar.powerType, bar.spellID, bar.segmentCount)
-
-	if not maxValue or (bar.resourceKind ~= "spellCharges" and not currentValue) then
-		if bar.resourceKind == "spellCharges" then
-			HideRegions(bar.SegmentFillBars)
-			HideRegions(bar.RuneSegmentBars)
-			HideRechargeSegment(bar)
-			bar:GetStatusBarTexture():SetAlpha(1)
-		else
-			UpdateSegments(bar)
-		end
-
-		if refreshTicks then
-			RefreshBarTicks(bar)
-		end
-
-		HideResourceBarSpark(bar)
-		bar:Hide()
-
-		return
-	end
-
-	bar:Show()
-	self:UpdateBarDisplay(bar, currentValue, maxValue, displayValue, resourceSegmentValues, true)
-
+function SCMResourceBarControllerMixin:UpdateBarResourceByKind(bar, currentValue, maxValue, resourceSegmentValues)
 	if bar.resourceKind == "spellCharges" then
 		bar.SCMSegmentedDisplay = nil
 		bar.SCMActiveSegmentCount = nil
-		HideRegions(bar.SegmentFillBars)
+		HideSegmentBars(bar.SegmentFillBars)
 		HideRegions(bar.RuneSegmentBars)
 		bar:GetStatusBarTexture():SetAlpha(1)
 		UpdateSpellChargeRecharge(bar, resourceSegmentValues)
-	elseif bar.resourceKind == "vengeanceSoulFragments" then
+		return
+	end
+
+	if bar.resourceKind == "vengeanceSoulFragments" then
 		bar.SCMSegmentedDisplay = nil
 		bar.SCMActiveSegmentCount = nil
-		HideRegions(bar.SegmentFillBars)
-		bar:GetStatusBarTexture():SetAlpha(1)
-	else
+		HideSegmentBars(bar.SegmentFillBars)
+		HideRegions(bar.RuneSegmentBars)
 		HideRechargeSegment(bar)
+		bar:GetStatusBarTexture():SetAlpha(1)
+		return
+	end
+
+	HideRechargeSegment(bar)
+	UpdateSegments(bar, maxValue, currentValue, resourceSegmentValues)
+end
+
+function SCMResourceBarControllerMixin:RefreshBarGeometry(bar, refreshTicks, optionsChanged, currentValue, maxValue, resourceSegmentValues, presentationRefreshed)
+	if not bar.powerToken or not bar:IsShown() then
+		HideResourceBarSpark(bar)
+		return
+	end
+
+	if currentValue == nil or maxValue == nil then
+		currentValue, maxValue, _, resourceSegmentValues = GetCurrentPowerValue(bar.resourceKind, bar.powerType, bar.spellID, bar.segmentCount)
+	end
+
+	if not maxValue or (bar.resourceKind ~= "spellCharges" and not currentValue) then
+		return
+	end
+
+	if not presentationRefreshed and bar.resourceKind == "spellCharges" then
+		UpdateSpellChargeRecharge(bar, resourceSegmentValues)
+	elseif not presentationRefreshed and bar.SCMSegmentedDisplay then
 		UpdateSegments(bar, maxValue, currentValue, resourceSegmentValues)
 	end
 
@@ -1572,53 +1547,74 @@ function SCMResourceBarControllerMixin:ReconfigureBarDisplay(bar, refreshTicks, 
 	end
 end
 
-function SCMResourceBarControllerMixin:UpdateBarLayout()
+function SCMResourceBarControllerMixin:RefreshBarDisplay(bar, refreshTicks, optionsChanged)
+	if not bar.powerToken then
+		HideResourceBarSpark(bar)
+		return
+	end
+
+	local currentValue, maxValue, displayValue, resourceSegmentValues = GetCurrentPowerValue(bar.resourceKind, bar.powerType, bar.spellID, bar.segmentCount)
+
+	if not maxValue or (bar.resourceKind ~= "spellCharges" and not currentValue) then
+		self:UpdateBarResourceByKind(bar, currentValue, maxValue, resourceSegmentValues)
+		if refreshTicks then
+			RefreshBarTicks(bar)
+		end
+
+		HideResourceBarSpark(bar)
+		bar:Hide()
+
+		return
+	end
+
+	bar:Show()
+	self:UpdateBarDisplay(bar, currentValue, maxValue, displayValue, resourceSegmentValues, true)
+	self:UpdateBarResourceByKind(bar, currentValue, maxValue, resourceSegmentValues)
+	self:RefreshBarGeometry(bar, refreshTicks, optionsChanged, currentValue, maxValue, resourceSegmentValues, true)
+end
+
+function SCMResourceBarControllerMixin:UpdateSpecificBarLayout(bar)
+	local isPrimary = bar == self.PrimaryBar
 	local barOptions = self.barOptions
-	local primaryBarOptions = self.primaryBarOptions
-	local secondaryBarOptions = self.secondaryBarOptions
+	local specificBarOptions = isPrimary and self.primaryBarOptions or self.secondaryBarOptions
 	local primaryShown = self.PrimaryBar:IsShown()
 	local secondaryShown = self.SecondaryBar:IsShown()
+	local shown = isPrimary and primaryShown or secondaryShown
 	local bothShown = primaryShown and secondaryShown
-	local primaryHeight = 0
-	local secondaryHeight = 0
-
-	if primaryBarOptions then
-		primaryHeight = bothShown and primaryBarOptions.heightAlternative or primaryBarOptions.height
-	end
-
-	if secondaryBarOptions then
-		secondaryHeight = bothShown and secondaryBarOptions.heightAlternative or secondaryBarOptions.height
-	end
-
 	local spacing = barOptions.spacing
 	local growsUp = barOptions.growDirection == "UP"
 	local frameStrata = barOptions.frameStrata or "BACKGROUND"
+	local height = 0
 
-	local primaryHeightChanged = false
-	local secondaryHeightChanged = false
-
-	self.SecondaryBar:ClearAllPoints()
-	self.PrimaryBar:ClearAllPoints()
-
-	if primaryShown then
-		primaryHeightChanged = SetBarHeight(self.PrimaryBar, primaryHeight)
-		self.PrimaryBar:SetPoint("BOTTOM", self, "BOTTOM")
-		self.PrimaryBar:SetFrameStrata(frameStrata)
+	bar:ClearAllPoints()
+	if not (shown and specificBarOptions) then
+		return false, height
 	end
 
-	if secondaryShown then
-		secondaryHeightChanged = SetBarHeight(self.SecondaryBar, secondaryHeight)
-		if primaryShown then
-			if growsUp then
-				self.SecondaryBar:SetPoint("BOTTOM", self.PrimaryBar, "TOP", 0, spacing)
-			else
-				self.SecondaryBar:SetPoint("TOP", self.PrimaryBar, "BOTTOM", 0, -spacing)
-			end
+	height = bothShown and specificBarOptions.heightAlternative or specificBarOptions.height
+	local heightChanged = SetBarHeight(bar, height)
+	bar:SetFrameStrata(frameStrata)
+
+	if isPrimary or not primaryShown then
+		bar:SetPoint("BOTTOM", self, "BOTTOM")
+	else
+		if growsUp then
+			bar:SetPoint("BOTTOM", self.PrimaryBar, "TOP", 0, spacing)
 		else
-			self.SecondaryBar:SetPoint("BOTTOM", self, "BOTTOM")
+			bar:SetPoint("TOP", self.PrimaryBar, "BOTTOM", 0, -spacing)
 		end
-		self.SecondaryBar:SetFrameStrata(frameStrata)
 	end
+
+	return heightChanged, height
+end
+
+function SCMResourceBarControllerMixin:UpdateBarLayout()
+	local barOptions = self.barOptions
+	local primaryShown = self.PrimaryBar:IsShown()
+	local secondaryShown = self.SecondaryBar:IsShown()
+	local spacing = barOptions.spacing
+	local primaryHeightChanged, primaryHeight = self:UpdateSpecificBarLayout(self.PrimaryBar)
+	local secondaryHeightChanged, secondaryHeight = self:UpdateSpecificBarLayout(self.SecondaryBar)
 
 	if primaryShown and secondaryShown then
 		self:SetHeight(primaryHeight + secondaryHeight + spacing)
@@ -1673,6 +1669,71 @@ function SCMResourceBarControllerMixin:RegisterResourceBarEvents()
 	self.SCMResourceBarEventsRegistered = true
 end
 
+function SCMResourceBarControllerMixin:RefreshResourceBars(refreshTicks, optionsChanged)
+	local barOptions = self:ApplyResourceBarOptions()
+	local primaryBarOptions = barOptions.primaryBar
+	local secondaryBarOptions = barOptions.secondaryBar
+
+	if not barOptions.enabled then
+		SCM:ApplyResourceBarAttributeDriver(true)
+		self:UnregisterAllEvents()
+		self.SCMResourceBarEventsRegistered = false
+		self.PrimaryBar:UnregisterAllEvents()
+		self.SecondaryBar:UnregisterAllEvents()
+		self:SetScript("OnUpdate", nil)
+		self.totalElapsed = nil
+		ResetResourceBar(self.PrimaryBar)
+		ResetResourceBar(self.SecondaryBar)
+		self:UpdateContainerShownState()
+		return
+	end
+
+	local primaryResourceChanged = false
+	local secondaryResourceChanged = false
+
+	if primaryBarOptions.enabled then
+		primaryResourceChanged = self:ConfigurePrimaryBar()
+		RegisterBarEvents(self.PrimaryBar, barOptions)
+	else
+		self.PrimaryBar:UnregisterAllEvents()
+		ResetResourceBar(self.PrimaryBar)
+	end
+
+	if secondaryBarOptions.enabled then
+		secondaryResourceChanged = self:ConfigureSecondaryBar()
+		RegisterBarEvents(self.SecondaryBar, barOptions)
+	else
+		self.SecondaryBar:UnregisterAllEvents()
+		ResetResourceBar(self.SecondaryBar)
+	end
+
+	if primaryBarOptions.enabled or secondaryBarOptions.enabled then
+		self:RegisterResourceBarEvents()
+
+		local primaryWidthChanged = false
+		local secondaryWidthChanged = false
+		if primaryBarOptions.enabled then
+			primaryWidthChanged = self:ApplyFrameWidthOptions(self.PrimaryBar)
+		end
+		if secondaryBarOptions.enabled then
+			secondaryWidthChanged = self:ApplyFrameWidthOptions(self.SecondaryBar)
+		end
+
+		local primaryHeightChanged, secondaryHeightChanged = self:UpdateBarLayout()
+		local refreshPrimaryTicks = refreshTicks or primaryResourceChanged or primaryWidthChanged or primaryHeightChanged
+		local refreshSecondaryTicks = refreshTicks or secondaryResourceChanged or secondaryWidthChanged or secondaryHeightChanged
+
+		self:RefreshBarDisplay(self.PrimaryBar, refreshPrimaryTicks, optionsChanged)
+		self:RefreshBarDisplay(self.SecondaryBar, refreshSecondaryTicks, optionsChanged)
+		self:UpdateContainerShownState()
+		self:UpdateRefreshState()
+
+		EventRegistry:TriggerEvent("SkironCooldownManager.ResourceBar.LayoutUpdated")
+	end
+
+	SCM:ApplyResourceBarAttributeDriver()
+end
+
 function SCMResourceBarControllerMixin:Initialize()
 	InitializeBarSkin(self.PrimaryBar)
 	InitializeBarSkin(self.SecondaryBar)
@@ -1722,6 +1783,53 @@ function SCM:InitializeResourceBars()
 	container.SecondaryBar = secondaryBar
 	Mixin(container, SCMResourceBarControllerMixin)
 	container:Initialize()
+end
+
+function SCM:ResetResourceBar()
+	if InCombatLockdown() then
+		return
+	end
+
+	local container = _G[RESOURCE_BAR_FRAME_NAME]
+	if not container then
+		return
+	end
+
+	local primaryBar = container.PrimaryBar or _G["SCM_PrimaryResourceBar"]
+	local secondaryBar = container.SecondaryBar or _G["SCM_SecondaryResourceBar"]
+
+	EventRegistry:UnregisterCallback(ANCHOR_PROXY_SIZE_CHANGED_EVENT, container)
+	container:UnregisterAllEvents()
+	container:SetScript("OnAttributeChanged", nil)
+	container:SetScript("OnEvent", nil)
+	container:SetScript("OnUpdate", nil)
+	container.totalElapsed = nil
+	container.SCMResourceBarEventsRegistered = false
+	container.SCMResourceBarInitialized = nil
+	container.SCMActiveAnchorFrame = nil
+	container.SCMActiveAnchorGroup = nil
+	container.barOptions = nil
+	container.primaryBarOptions = nil
+	container.secondaryBarOptions = nil
+	container:ClearAllPoints()
+	container:SetHeight(0)
+	container:Hide()
+
+	if primaryBar then
+		primaryBar:UnregisterAllEvents()
+		primaryBar:SetScript("OnEvent", nil)
+		ResetResourceBar(primaryBar)
+		primaryBar:ClearAllPoints()
+	end
+
+	if secondaryBar then
+		secondaryBar:UnregisterAllEvents()
+		secondaryBar:SetScript("OnEvent", nil)
+		ResetResourceBar(secondaryBar)
+		secondaryBar:ClearAllPoints()
+	end
+
+	self:ApplyResourceBarAttributeDriver(true)
 end
 
 function SCM:RefreshResourceBarConfig(refreshTicks, optionsChanged)

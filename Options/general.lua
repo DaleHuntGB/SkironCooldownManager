@@ -158,6 +158,18 @@ local function AddCustomGlowOptions(dynamicGlowSettingsGroup)
 			glowTypeOptions.border = value
 		end)
 		dynamicGlowSettingsGroup:AddChild(border)
+	elseif options.glowType == "Button" then
+		local frequency = AceGUI:Create("Slider")
+		frequency:SetRelativeWidth(0.33)
+		frequency:SetValue(glowTypeOptions.frequency or 0.125)
+		frequency:SetLabel("Frequency")
+		frequency:SetSliderValues(-3, 3, 0.05)
+		frequency:SetCallback("OnValueChanged", function(self, event, value)
+			glowTypeOptions.frequency = value
+		end)
+		dynamicGlowSettingsGroup:AddChild(frequency)
+
+		AddGlowColorOption(dynamicGlowSettingsGroup, glowTypeOptions)
 	end
 end
 
@@ -541,7 +553,6 @@ local function SelectGlobalSettingsTab(tabWidget, group, options)
 		borderSize:SetCallback("OnValueChanged", function(_, _, value)
 			options.borderSize = value
 			SCM:CreateCastBar()
-			SCM:UpdateCastBar()
 			SCM:ApplyAllCDManagerConfigs()
 		end)
 		borderSettings:AddChild(borderSize)
@@ -602,7 +613,7 @@ local function SelectGlobalSettingsTab(tabWidget, group, options)
 		chargeSettings:AddChild(chargeFontOutline)
 
 		local chargeRelativePoint = AceGUI:Create("Dropdown")
-		chargeRelativePoint:SetRelativeWidth(0.25)
+		chargeRelativePoint:SetRelativeWidth(0.5)
 		chargeRelativePoint:SetLabel("Point")
 		chargeRelativePoint:SetList(SCM.Constants.AnchorPoints)
 		chargeRelativePoint:SetValue(options.chargePoint)
@@ -613,7 +624,7 @@ local function SelectGlobalSettingsTab(tabWidget, group, options)
 		chargeSettings:AddChild(chargeRelativePoint)
 
 		local chargeRelativePoint = AceGUI:Create("Dropdown")
-		chargeRelativePoint:SetRelativeWidth(0.25)
+		chargeRelativePoint:SetRelativeWidth(0.5)
 		chargeRelativePoint:SetLabel("Relative Point")
 		chargeRelativePoint:SetList(SCM.Constants.AnchorPoints)
 		chargeRelativePoint:SetValue(options.chargeRelativePoint)
@@ -624,7 +635,7 @@ local function SelectGlobalSettingsTab(tabWidget, group, options)
 		chargeSettings:AddChild(chargeRelativePoint)
 
 		local xOffset = AceGUI:Create("Slider")
-		xOffset:SetRelativeWidth(0.25)
+		xOffset:SetRelativeWidth(0.33)
 		xOffset:SetSliderValues(-50, 50, 0.1)
 		xOffset:SetLabel("X Offset")
 		xOffset:SetValue(options.chargeXOffset)
@@ -635,7 +646,7 @@ local function SelectGlobalSettingsTab(tabWidget, group, options)
 		chargeSettings:AddChild(xOffset)
 
 		local yOffset = AceGUI:Create("Slider")
-		yOffset:SetRelativeWidth(0.25)
+		yOffset:SetRelativeWidth(0.33)
 		yOffset:SetSliderValues(-50, 50, 0.1)
 		yOffset:SetLabel("Y Offset")
 		yOffset:SetValue(options.chargeYOffset)
@@ -644,6 +655,16 @@ local function SelectGlobalSettingsTab(tabWidget, group, options)
 			SCM:ApplyAllCDManagerConfigs()
 		end)
 		chargeSettings:AddChild(yOffset)
+
+		local chargeColour = AceGUI:Create("ColorPicker")
+		chargeColour:SetLabel("Colour")
+		chargeColour:SetRelativeWidth(0.33)
+		chargeColour:SetColor(options.chargeColour.r, options.chargeColour.g, options.chargeColour.b, options.chargeColour.a or 1)
+		chargeColour:SetCallback("OnValueChanged", function(_, _, r, g, b, a)
+			options.chargeColour = { r = r, g = g, b = b, a = a }
+			SCM:ApplyAllCDManagerConfigs()
+		end)
+		chargeSettings:AddChild(chargeColour)
 
 		local cooldownTextSettings = AceGUI:Create("InlineGroup")
 		cooldownTextSettings:SetLayout("flow")
@@ -907,6 +928,7 @@ local function SelectGlobalSettingsTab(tabWidget, group, options)
 			["Pixel"] = "Pixel Glow",
 			["Autocast"] = "Autocast Glow",
 			["Proc"] = "Proc Glow",
+			["Button"] = "Button",
 		})
 		glowSettings:AddChild(glowType)
 

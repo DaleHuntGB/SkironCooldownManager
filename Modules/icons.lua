@@ -21,8 +21,10 @@ local function ApplyHideChildNow(child)
 	child.SCMHidden = true
 	UIParent.SetAlpha(child, 0)
 	child:EnableMouse(false)
+	child:SetMouseClickEnabled(false)
 	child.SCMOnEnter = child.SCMOnEnter or child:GetScript("OnEnter")
 	child:SetScript("OnEnter", nil)
+	SCM:StopCustomGlow(child)
 
 	if not child.SCMAlphaHook then
 		child.SCMAlphaHook = true
@@ -73,10 +75,13 @@ function Icons.ShowChild(child)
 	if child.viewerFrame and child.SCMHidden then
 		child.SCMHidden = false
 		UIParent.SetAlpha(child, 1)
-		child:EnableMouse(true)
+		child:SetMouseClickEnabled(false)
 
 		if SCM.showTooltips then
+			child:EnableMouse(true)
 			child:SetScript("OnEnter", child.SCMOnEnter)
+		else
+			child:EnableMouse(false)
 		end
 	end
 end
@@ -100,7 +105,14 @@ function Icons.SetChildVisibilityState(child, shouldShow, applyNow)
 	end
 
 	if child.SCMCustom and not child:GetAttribute("statehidden") then
-		child:SetShown(shouldShow and not child.SCMLayoutLimited)
+		local shouldBeShown = child.SCMShouldBeVisible and not child.SCMLayoutLimited
+		if child:IsShown() == shouldBeShown then
+			return
+		end
+
+		child.SCMSkipShowValidation = shouldBeShown and true or nil
+		child:SetShown(shouldBeShown)
+		child.SCMSkipShowValidation = nil
 	end
 end
 
@@ -119,7 +131,7 @@ end
 function Icons.UpdateChildGlow(child, isInactive)
 	if child.SCMConfig then
 		if child.SCMConfig.glowWhileActive then
-			if not isInactive then
+			if not isInactive and child.SCMShouldBeVisible then
 				SCM:StartCustomGlow(child)
 				return
 			end
@@ -128,7 +140,7 @@ function Icons.UpdateChildGlow(child, isInactive)
 				SCM:StopCustomGlow(child)
 			end
 		elseif child.SCMConfig.glowWhileInactive then
-			if isInactive then
+			if isInactive and child.SCMShouldBeVisible then
 				SCM:StartCustomGlow(child)
 				return
 			end
@@ -152,8 +164,8 @@ local function OnShow(child)
 			if child.SCMFakeAuraInstanceID and child.SCMUseFixedDuration then
 				child.SCMFixedDuration = GetTime() + Constants.FakeAuras[child.SCMSpellID]
 			elseif child.auraInstanceID then
-				child.SCMAuraInstanceID = child.SCMAuraInstanceID or child.auraInstanceID
-				child.SCMAuraDataUnit = child.SCMAuraDataUnit or child.auraDataUnit
+				child.SCMAuraInstanceID = child.auraInstanceID or child.SCMAuraInstanceID
+				child.SCMAuraDataUnit = child.auraDataUnit or child.SCMAuraDataUnit
 			end
 		end
 
@@ -166,7 +178,7 @@ local function OnHide(child)
 		if child.SCMBuffBar then
 			if child.SCMFakeAuraInstanceID and child.SCMFixedDuration and GetTime() < child.SCMFixedDuration then
 				return
-			elseif child.SCMAuraInstanceID and not child.SCMFakeAuraInstanceID then
+			elseif child.SCMAuraInstanceID and child.SCMAuraDataUnit and not child.SCMFakeAuraInstanceID then
 				local auraData = C_UnitAuras.GetAuraDataByAuraInstanceID(child.SCMAuraDataUnit, child.SCMAuraInstanceID)
 				if auraData and auraData.isFromPlayerOrPlayerPet then
 					return
@@ -229,6 +241,7 @@ function Icons.SetupBuffBarHooks(child)
 		child.SCMUseFixedDuration = type(Constants.FakeAuras[child.SCMSpellID]) == "number" and Constants.FakeAuras[child.SCMSpellID]
 	else
 		child:HookScript("OnShow", OnShow)
+		hooksecurefunc(child, "OnAuraInstanceInfoSet", OnShow)
 		hooksecurefunc(child, "OnAuraInstanceInfoCleared", OnHide)
 
 		child.SCMFakeAuraInstanceID = nil
@@ -330,7 +343,7 @@ function Icons.ExpandScopedAnchorGroups(viewer, viewerData, scopedAnchorGroups)
 					end
 				elseif oldCooldownID ~= cooldownID or oldGroup ~= group then
 					child.SCMCooldownID = nil
-					
+
 					if oldGroup then
 						Cache.cachedAnchorStates[oldGroup].layoutSignature = nil
 						scopedAnchorGroups[oldGroup] = true
@@ -374,7 +387,7 @@ local function ProcessRegularIcon(child, childData, options)
 	Icons.SetupRegularIconHooks(child)
 
 	local shouldShow = not (childData.hideWhenNotOnCooldown and not Cooldowns.GetChildCooldown(child))
-	local applyNow = shouldShow and child.SCMHidden and not child.SCMLayoutLimited
+	local applyNow = child.SCMShouldBeVisible ~= shouldShow
 	child.SCMChanged = child.SCMChanged or applyNow
 	Icons.SetChildVisibilityState(child, shouldShow, applyNow)
 	child.SCMIconOptions = options

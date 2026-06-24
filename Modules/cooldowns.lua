@@ -22,7 +22,7 @@ function Cooldowns:ApplyFormatterSettings()
 end
 
 local function OnBuffCooldownSet(self)
-	local parent = (self.SCMConfig and self) or self:GetParent()
+	local parent = (self.SCMConfig and self) or self.SCMParent or self:GetParent()
 	if not parent or not parent.SCMConfig or (not parent.SCMCheckCooldownFrame and not parent.auraInstanceID) then
 		return
 	end
@@ -34,7 +34,7 @@ local function OnBuffCooldownSet(self)
 		parent.SCMFixedDuration = parent.SCMFixedDuration or GetTime() + parent.SCMUseFixedDuration
 	end
 
-	if not parent.SCMHidden or parent.SCMConfig.alwaysShow then
+	if not parent.SCMHidden or (not SCM.isHideWhenInactiveEnabled and parent.SCMConfig.alwaysShow) then
 		Icons.UpdateChildDesaturation(parent, false)
 		Icons.UpdateChildGlow(parent, false)
 
@@ -51,7 +51,7 @@ local function OnBuffCooldownSet(self)
 end
 
 local function OnBuffCooldownEnd(self)
-	local parent = (self.SCMConfig and self) or self:GetParent()
+	local parent = (self.SCMConfig and self) or self.SCMParent or self:GetParent()
 	if not parent or not parent.SCMConfig then
 		return
 	end
@@ -72,7 +72,7 @@ local function OnBuffCooldownEnd(self)
 
 	Icons.UpdateChildGlow(parent, true)
 
-	if parent.SCMConfig.alwaysShow then
+	if (not SCM.isHideWhenInactiveEnabled and parent.SCMConfig.alwaysShow) then
 		Icons.UpdateChildDesaturation(parent, true)
 		return
 	end
@@ -107,17 +107,19 @@ local function OnBuffShowPandemicStateFrame(self)
 end
 
 local function OnBuffHidePandemicStateFrame(self)
-	local options = self.SCMBuffOptions or self.SCMIconOptions
-	if not options then
+	if not self.SCMPandemic or not self.SCMGlow or self.SCMPandemicStop then
 		return
 	end
 
-	if self.SCMPandemic and self.SCMGlow and options.pandemicGlowOption == "replacePandemicGlow" then
-		self.SCMPandemicStop = self.SCMPandemicStop or C_Timer.NewTimer(0.1, function()
-			SCM:StopCustomGlow(self)
-			self.SCMPandemic = nil
-		end)
+	local options = self.SCMBuffOptions or self.SCMIconOptions
+	if not options or options.pandemicGlowOption ~= "replacePandemicGlow" then
+		return
 	end
+
+	self.SCMPandemicStop = C_Timer.NewTimer(0.1, function()
+		SCM:StopCustomGlow(self)
+		self.SCMPandemic = nil
+	end)
 end
 
 function Cooldowns.SetupBuffIconHooks(child, options)
@@ -190,8 +192,9 @@ function Cooldowns.SetNormalCooldown(self, parent)
 
 	local durationObject
 	local desaturate = false
+	local isChargeCooldown = false
 
-	local spellID =  FindSpellOverrideByID(parent.SCMSpellID)
+	local spellID = FindSpellOverrideByID(parent.SCMSpellID)
 	local spellCooldown = C_Spell.GetSpellCooldown(spellID)
 	if spellCooldown and spellCooldown.isActive and not spellCooldown.isOnGCD then
 		desaturate = true
@@ -201,15 +204,26 @@ function Cooldowns.SetNormalCooldown(self, parent)
 	if cooldownData.charges and not durationObject then
 		local spellCharges = C_Spell.GetSpellCharges(spellID)
 		if spellCharges and spellCharges.isActive and not spellCharges.isOnGCD then
+			isChargeCooldown = true
 			durationObject = C_Spell.GetSpellChargeDuration(spellID, true)
 		end
 	end
 
+	local options = SCM.db.profile.options
 	if durationObject then
+		self:Clear()
 		parent.Icon.SCMDesaturated = desaturate
 		parent.Icon:SetDesaturated(desaturate)
-		self:SetCooldownFromDurationObject(durationObject)
-	else
+		if isChargeCooldown then
+			self:SetDrawEdge(true)
+			self:SetDrawSwipe(false)
+			self:SetCooldownFromDurationObject(durationObject)
+		else
+			self:SetDrawEdge(false)
+			self:SetDrawSwipe(true)
+			self:SetCooldownFromDurationObject(durationObject)
+		end
+	elseif not self:GetUseAuraDisplayTime() or (options.disableRegularIconActiveSwipe and not parent.SCMConfig.forceActiveSwipe)  then
 		parent.Icon.SCMDesaturated = nil
 		parent.Icon:SetDesaturated(false)
 		self:Clear()
@@ -257,7 +271,7 @@ function Cooldowns.OverwriteRegularChildCooldownBySpellID(spellID, overrideSpell
 end
 
 local function OnRegularCooldownChanged(self, changeType)
-	local parent = self:GetParent()
+	local parent = self.SCMParent or self:GetParent()
 	if not (parent and parent.SCMConfig) or self.SCMSettingRegularSpellCooldown or self.SCMClearingGCD then
 		return
 	end
@@ -307,8 +321,9 @@ function Cooldowns.SetupCooldownHooks(child)
 		OnRegularCooldownChanged(self, "CLEAR")
 	end)
 
+	child.Cooldown.SCMParent = child
 	child.Cooldown:HookScript("OnCooldownDone", function(self, ...)
-		local parent = self:GetParent()
+		local parent = self.SCMParent or self:GetParent()
 		parent.Icon.SCMDesaturated = nil
 		OnRegularCooldownChanged(self, "DONE")
 	end)

@@ -94,17 +94,24 @@ end
 
 local function ApplyCooldownFont(cooldownFrame, options)
 	options = options or SCM.db.profile.options
+	local cooldownFontString = cooldownFrame.SCMCooldownFontString
+	if not cooldownFontString then
+		local region = cooldownFrame:GetRegions()
+		if region and region.SetFont then
+			cooldownFontString = region
+			cooldownFrame.SCMCooldownFontString = region
+		end
+	end
 
 	if options.changeCooldownFont then
 		local fontPath = LSM:Fetch("font", options.cooldownFont)
-		local cooldownFontString = cooldownFrame:GetRegions()
 		if cooldownFontString and cooldownFontString.SetFont then
 			if not originalCooldownFont then
 				originalCooldownFont = { cooldownFontString:GetFont() }
 			end
 
-			local parent = cooldownFrame:GetParent()
-			if parent.SCMWidth and parent.SCMHeight then
+			local parent = cooldownFrame.SCMParent or cooldownFrame:GetParent()
+			if parent and parent.SCMWidth and parent.SCMHeight then
 				local width, height = parent.SCMWidth, parent.SCMHeight
 				local iconSize = min(width, height)
 				local rowConfig = parent.SCMRowConfig
@@ -129,20 +136,23 @@ local function ApplyCooldownFont(cooldownFrame, options)
 			end
 		end
 	elseif originalCooldownFont then
-		local cooldownFontString = cooldownFrame:GetRegions()
 		if cooldownFontString and cooldownFontString.SetFont then
 			cooldownFontString:SetFont(unpack(originalCooldownFont))
 		end
 	end
 
-	local parent = cooldownFrame:GetParent()
-	if parent.SCMConfig then
+	local parent = cooldownFrame.SCMParent or cooldownFrame:GetParent()
+	if parent and parent.SCMConfig then
 		cooldownFrame:SetHideCountdownNumbers(parent.SCMConfig.hideCountdownNumbers)
 	end
 end
 
 local function ApplyCooldownSwipe(cooldownFrame, options)
-	local parent = cooldownFrame:GetParent()
+	local parent = cooldownFrame.SCMParent or cooldownFrame:GetParent()
+	if not parent then
+		return
+	end
+
 	local forceActiveSwipe = parent.SCMConfig and parent.SCMConfig.forceActiveSwipe
 
 	if parent.auraInstanceID or parent.SCMFakeAuraInstanceID or parent.SCMBuffOptions then
@@ -180,7 +190,7 @@ local function OnSetCooldown(self)
 	ApplyCooldownFont(self, options)
 end
 
-local function ApplyCooldownStyle(child, options)
+local function ApplyCooldownStyle(child, options, childConfig)
 	local cooldownFrame = child.GetCooldownFrame and child:GetCooldownFrame() or child.Cooldown
 	if cooldownFrame then
 		if child.SCMCooldownSkinHook then
@@ -192,10 +202,16 @@ local function ApplyCooldownStyle(child, options)
 			child.CooldownFlash:SetAlpha(0)
 		end
 
-		child.Cooldown:ClearAllPoints()
-		child.Cooldown:SetAllPoints()
-		cooldownFrame:SetPoint("BOTTOMRIGHT", child, "BOTTOMRIGHT", -SCM:PixelPerfect(), SCM:PixelPerfect())
 		cooldownFrame:SetSwipeTexture("Interface\\Buttons\\WHITE8x8")
+		cooldownFrame:ClearAllPoints()
+		if childConfig and childConfig.expCooldownThing then
+			cooldownFrame:SetAllPoints(child)
+		else
+			cooldownFrame:SetPoint("TOPLEFT", child, "TOPLEFT", 0, 0)
+			cooldownFrame:SetPoint("BOTTOMRIGHT", child, "BOTTOMRIGHT", -SCM:PixelPerfectSize(1), SCM:PixelPerfectSize(1))
+		end
+
+		cooldownFrame.SCMParent = child
 
 		hooksecurefunc(cooldownFrame, "SetCooldown", OnSetCooldown)
 		OnSetCooldown(cooldownFrame)
@@ -247,11 +263,12 @@ function SCM:SkinChild(child, childConfig)
 	local borderSize = options.borderSize
 	local borderColor = options.borderColor
 
-	if not child.SCMSkinned or (child.SCMSkinned and self.OptionsFrame ~= nil and self.OptionsFrame:IsShown()) then
+	if not child.SCMSkinned or (child.SCMSkinned and self.OptionsFrame and self.OptionsFrame:IsShown()) then
 		child.SCMSkinned = true
 
 		child.customBorder = child.customBorder or CreateFrame("Frame", nil, child, "BackdropTemplate")
 		child.customBorder:SetFrameLevel(child:GetFrameLevel() + 1)
+		child.customBorder:ClearAllPoints()
 		child.customBorder:SetAllPoints(child)
 		child.customBorder:SetBackdrop({
 			edgeFile = "Interface\\Buttons\\WHITE8x8",
@@ -300,7 +317,7 @@ function SCM:SkinChild(child, childConfig)
 
 		ApplyZoomSettings(child, options)
 		ApplyChargeAndApplicationStyle(child, options, LSM:Fetch("font", options.chargeFont))
-		ApplyCooldownStyle(child, options)
+		ApplyCooldownStyle(child, options, childConfig)
 	end
 
 	for _, customSkin in ipairs(SCM.Skins) do

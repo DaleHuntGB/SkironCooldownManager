@@ -61,7 +61,7 @@ local function CreatePips(empoweredStages)
 			castBar.StageBands[i] = band
 		end
 
-		local color = stageColors[min(i, #stageColors)]
+		local color = stageColors[i]
 		band:ClearAllPoints()
 		band:SetColorTexture(color.r, color.g, color.b, color.a)
 		band:SetTexelSnappingBias(0)
@@ -615,6 +615,12 @@ function SCM:CreateCastBar()
 			SCM:RefreshCastBarWidth()
 		end
 	end, castBar)
+	EventRegistry:RegisterCallback("SkironCooldownManager.ResourceBar.LayoutUpdated", function()
+		local currentOptions = castBar.barOptions or SCM.castBarConfig
+		if currentOptions and currentOptions.enable then
+			UpdateStatusBarLook()
+		end
+	end, castBar)
 	self:UpdateCastBar()
 	return castBar
 end
@@ -691,10 +697,6 @@ function SCM:UpdateCastBar()
 
 		self:RefreshCastBarWidth(0.1)
 		PlayerCastingBarFrame:UnregisterAllEvents()
-
-		EventRegistry:RegisterCallback("SkironCooldownManager.ResourceBar.LayoutUpdated", function()
-			UpdateStatusBarLook()
-		end, castBar)
 	else
 		castBar:SetScript("OnEvent", nil)
 		castBar:UnregisterAllEvents()
