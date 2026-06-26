@@ -93,7 +93,7 @@ local function AddIconColorOptions(iconSettingsTabs, iconSettings, scrollFrame, 
 			CDMOptions.ApplyIconConfigUpdate(buttonFrame, buttonData, anchorIndex, mode, isGlobal, isBuffBar)
 		end)
 		notsureyetOptions:AddChild(desaturate)
-	elseif buttonData.iconType ~= "timer" then
+	elseif buttonData.isCustom and buttonData.iconType ~= "timer" then
 		if buttonData.iconType == "spell" then
 			local showNotUsable = AceGUI:Create("CheckBox")
 			showNotUsable:SetLabel("Show Not Usable")
