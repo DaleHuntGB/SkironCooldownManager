@@ -72,6 +72,9 @@ Options\cdm\spellConfig\tabs\glow.lua
 Options\cdm\spellConfig\tabs\load.lua
 Options\cdm\spellConfig\tabs\filter.lua
 Options\cdm\spellConfig\tabs\items.lua
+Options\cdm\spellConfig\tabs\cooldown.lua
+Options\cdm\spellConfig\tabs\visibility.lua
+Options\cdm\spellConfig\tabs\display.lua
 ## Options\cdm\spellConfig\tabs\states.lua
 Options\general.lua
 Options\castbar.lua

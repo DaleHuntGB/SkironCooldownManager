@@ -6,6 +6,9 @@ local AceGUI = LibStub("AceGUI-3.0")
 local iconTypeTabs = {
 	all = {
 		{ value = "general", text = "General" },
+		{ value = "visibility", text = "Visibility" },
+		{ value = "display", text = "Display" },
+		{ value = "cooldown", text = "Cooldown" },
 		{ value = "glow", text = "Glow" },
 		{ value = "load", text = "Load Conditions" },
 	},
@@ -62,6 +65,12 @@ function CDMOptions.CreateSpellConfigTabs(parentScrollFrame, iconSettings, butto
 
 			if group == "general" then
 				CDMOptions.CreateGeneralTabSettings(self, iconSettings, parentScrollFrame, buttonFrame, buttonData, iconConfig, anchorIndex, mode, isGlobal, isBuffBar)
+			elseif group == "cooldown" then
+				CDMOptions.CreateCooldownTabSettings(self, iconSettings, parentScrollFrame, buttonFrame, buttonData, iconConfig, anchorIndex, mode, isGlobal, isBuffBar)
+			elseif group == "visibility" then
+				CDMOptions.CreateVisibilityTabSettings(self, iconSettings, parentScrollFrame, buttonFrame, buttonData, iconConfig, anchorIndex, mode, isGlobal, isBuffBar)
+			elseif group == "display" then
+				CDMOptions.CreateDisplayTabSettings(self, iconSettings, parentScrollFrame, buttonFrame, buttonData, iconConfig, anchorIndex, mode, isGlobal, isBuffBar)
 			elseif group == "load" then
 				CDMOptions.CreateLoadTabSettings(self, iconSettings, parentScrollFrame, buttonFrame, buttonData, iconConfig, anchorIndex, mode, isGlobal, isBuffBar)
 			elseif group == "glow" then
