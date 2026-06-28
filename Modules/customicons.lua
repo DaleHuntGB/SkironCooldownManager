@@ -621,6 +621,15 @@ function CustomIcons.GetDefaultLoadClasses()
 	return loadClasses
 end
 
+function CustomIcons.GetDefaultLoadSpecializations()
+	local loadSpecializations = {}
+	local specializations = SCM.Utils.GetSpecList()
+	for specID in pairs(specializations) do
+		loadSpecializations[specID] = false
+	end
+	return loadSpecializations
+end
+
 function CustomIcons.GetDefaultLoadRaces()
 	local loadRaces = {}
 	for raceID in pairs(SCM.Constants.Races) do
@@ -647,6 +656,10 @@ local function ShouldLoadCustomIcon(config)
 	end
 
 	if config.useLoadClass and not MatchesLoadFilter(config.loadClasses, SCM.currentClass) then
+		return false
+	end
+
+	if config.useLoadSpecialization and not MatchesLoadFilter(config.loadSpecializations, SCM.currentSpecID) then
 		return false
 	end
 
@@ -1273,6 +1286,8 @@ function SCM:AddCustomIcon(anchorGroup, iconType, configID, order, uniqueID, isG
 		order = order,
 		useLoadClass = false,
 		loadClasses = CustomIcons.GetDefaultLoadClasses(),
+		useLoadSpecialization = false,
+		loadSpecializations = CustomIcons.GetDefaultLoadSpecializations(),
 		useLoadRace = false,
 		loadRaces = CustomIcons.GetDefaultLoadRaces(),
 		useLoadRole = false,
