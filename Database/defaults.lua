@@ -83,7 +83,6 @@ SCM.DefaultDB = {
 				["DAMAGER"] = true,
 				["TANK"] = true,
 			},
-			cooldownBreakpoints = SCM.Constants.CooldownTimer.DefaultBreakpoints,
 			elvUIAnchors = {},
 			anchorConfig = {},
 			showAnchorHighlight = true,
