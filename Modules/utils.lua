@@ -439,18 +439,39 @@ function Utils.GetClassList(addAll)
 	return classes
 end
 
---- Returns a table of { [specID] = displayString } for all specs of the given class.
---- Utils.GetClassList must have been called at least once to populate the classID lookup.
+--- Returns a table of { [specID] = displayString } and a sorted list of spec IDs.
+--- Pass a class file name to return only specs for that class.
 function Utils.GetSpecList(classFileName)
 	local specs = {}
-	if classFileName and classFileNameToID[classFileName] then
-		local classID = classFileNameToID[classFileName]
+	local specNames = {}
+	local specIDs = {}
+	local classIDs = {}
+
+	if not next(classFileNameToID) then Utils.GetClassList(false) end
+
+	if classFileName then
+		classIDs[1] = classFileNameToID[classFileName]
+	else
+		for _, classID in pairs(classFileNameToID) do
+			classIDs[#classIDs + 1] = classID
+		end
+	end
+
+	for i = 1, #classIDs do
+		local classID = classIDs[i]
 		for specIndex = 1, C_SpecializationInfo.GetNumSpecializationsForClassID(classID) do
 			local id, name, _, icon = GetSpecializationInfoForClassID(classID, specIndex)
 			if id and name and icon then
 				specs[id] = ("|T%s:14:14:0:0|t %s"):format(icon, name)
+				specNames[id] = name
+				specIDs[#specIDs + 1] = id
 			end
 		end
 	end
-	return specs
+
+	table.sort(specIDs, function(specIDA, specIDB)
+		return specNames[specIDA] < specNames[specIDB]
+	end)
+
+	return specs, specIDs
 end
