@@ -1,6 +1,7 @@
 local SCM = select(2, ...)
 local Options = SCM.Options
 local CDMOptions = Options.CDM
+local CustomIcons = SCM.CustomIcons
 local AceGUI = LibStub("AceGUI-3.0")
 
 local function GetDefaultLoadRaceNames()
