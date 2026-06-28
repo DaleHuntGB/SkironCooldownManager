@@ -70,6 +70,40 @@ function CDMOptions.CreateLoadTabSettings(iconSettingsTabs, iconSettings, scroll
 
 			iconSettingsTabs:AddChild(loadClass)
 
+			local useLoadSpecialization = AceGUI:Create("CheckBox")
+			useLoadSpecialization:SetLabel("Specialization")
+			useLoadSpecialization:SetRelativeWidth(0.5)
+			useLoadSpecialization:SetValue(buttonConfig.useLoadSpecialization)
+			iconSettingsTabs:AddChild(useLoadSpecialization)
+
+			local loadSpecialization = AceGUI:Create("Dropdown")
+			loadSpecialization:SetRelativeWidth(0.5)
+			loadSpecialization:SetLabel("Specializations")
+			loadSpecialization:SetList(SCM.Utils.GetSpecList())
+			loadSpecialization:SetMultiselect(true)
+			loadSpecialization:SetDisabled(not buttonConfig.useLoadSpecialization)
+			loadSpecialization:SetCallback("OnValueChanged", function(_, _, key, value)
+				buttonConfig.loadSpecializations = buttonConfig.loadSpecializations or CustomIcons.GetDefaultLoadSpecializations()
+				buttonConfig.loadSpecializations[key] = value
+				CDMOptions.ApplyIconConfigUpdate(buttonFrame, buttonData, anchorIndex, mode, isGlobal, isBuffBar)
+			end)
+
+			if not buttonConfig.loadSpecializations then
+				buttonConfig.loadSpecializations = CustomIcons.GetDefaultLoadSpecializations()
+			end
+
+			for key, value in pairs(buttonConfig.loadSpecializations) do
+				loadSpecialization:SetItemValue(key, value)
+			end
+
+			useLoadSpecialization:SetCallback("OnValueChanged", function(self, event, value)
+				buttonConfig.useLoadSpecialization = value or nil
+				loadSpecialization:SetDisabled(not value)
+				CDMOptions.ApplyIconConfigUpdate(buttonFrame, buttonData, anchorIndex, mode, isGlobal, isBuffBar)
+			end)
+
+			iconSettingsTabs:AddChild(loadSpecialization)
+
 			local useLoadRole = AceGUI:Create("CheckBox")
 			useLoadRole:SetLabel("Role")
 			useLoadRole:SetRelativeWidth(0.5)
