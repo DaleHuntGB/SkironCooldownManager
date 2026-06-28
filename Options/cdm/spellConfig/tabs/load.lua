@@ -154,8 +154,8 @@ function CDMOptions.CreateLoadTabSettings(iconSettingsTabs, iconSettings, scroll
 				buttonConfig.loadRaces = buttonConfig.loadRaces or CustomIcons.GetDefaultLoadRaces()
 				buttonConfig.loadRaces[key] = value
 
-				if type(Constants.Races[key]) == "number" then
-					buttonConfig.loadRaces[Constants.Races[key]] = value
+				if type(SCM.Constants.Races[key]) == "number" then
+					buttonConfig.loadRaces[SCM.Constants.Races[key]] = value
 				end
 
 				CDMOptions.ApplyIconConfigUpdate(buttonFrame, buttonData, anchorIndex, mode, isGlobal, isBuffBar)
