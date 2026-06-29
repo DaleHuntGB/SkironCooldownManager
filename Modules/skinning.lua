@@ -397,6 +397,8 @@ function SCM:SkinBuffBar(child, config)
 		local fontOutline = buffBarOptions.fontOutline or "OUTLINE"
 		bar.Name:SetFont(LSM:Fetch("font", buffBarOptions.font), buffBarOptions.fontSize, fontOutline)
 		bar.Duration:SetFont(LSM:Fetch("font", buffBarOptions.font), buffBarOptions.fontSize, fontOutline)
+		bar.Name:SetShown(not buffBarOptions.hideNameText)
+		bar.Duration:SetShown(not buffBarOptions.hideDurationText)
 
 		local nameColor = buffBarOptions.nameColor
 		bar.Name:ClearPointsOffset()
