@@ -174,6 +174,8 @@ SCM.DefaultDB = {
 				font = "Expressway",
 				fontSize = 15,
 				fontOutline = "OUTLINE",
+				hideNameText = false,
+				hideDurationText = false,
 				nameXOffset = 5,
 				nameYOffset = 0,
 				nameColor = {r = 1, g = 1, b = 1, a = 1},
