@@ -188,7 +188,7 @@ function CDMOptions.CreateCooldownTabSettings(iconSettingsTabs, iconSettings, pa
 		local cooldownMoveTL = AceGUI:Create("CheckBox")
 		cooldownMoveTL:SetRelativeWidth(0.33)
 		cooldownMoveTL:SetValue(iconConfig.cooldownMoveTL)
-		cooldownMoveTL:SetLabel("Move TOPLEFT")
+		cooldownMoveTL:SetLabel("Offset TOPLEFT")
 		positionSettings:AddChild(cooldownMoveTL)
 
 		local cooldownXOffsetTL = AceGUI:Create("Slider")
@@ -226,7 +226,7 @@ function CDMOptions.CreateCooldownTabSettings(iconSettingsTabs, iconSettings, pa
 		local cooldownMoveBR = AceGUI:Create("CheckBox")
 		cooldownMoveBR:SetRelativeWidth(0.33)
 		cooldownMoveBR:SetValue(iconConfig.cooldownMoveBR)
-		cooldownMoveBR:SetLabel("Move BOTTOMRIGHT")
+		cooldownMoveBR:SetLabel("Offset BOTTOMRIGHT")
 		positionSettings:AddChild(cooldownMoveBR)
 
 		local cooldownXOffsetBR = AceGUI:Create("Slider")

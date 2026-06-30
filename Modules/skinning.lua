@@ -208,8 +208,19 @@ local function ApplyCooldownStyle(child, options, childConfig)
 
 		cooldownFrame:SetSwipeTexture("Interface\\Buttons\\WHITE8x8")
 		cooldownFrame:ClearAllPoints()
-		if childConfig and childConfig.expCooldownThing then
-			cooldownFrame:SetAllPoints(child)
+
+		if childConfig then
+			if childConfig.cooldownMoveTL then
+				cooldownFrame:SetPoint("TOPLEFT", child, "TOPLEFT", childConfig.cooldownXOffsetTL, childConfig.cooldownYOffsetTL)
+			else
+				cooldownFrame:SetPoint("TOPLEFT", child, "TOPLEFT", 0, 0)
+			end
+
+			if childConfig.cooldownMoveBR then
+				cooldownFrame:SetPoint("BOTTOMRIGHT", child, "BOTTOMRIGHT", childConfig.cooldownXOffsetBR, childConfig.cooldownYOffsetBR)
+			else
+				cooldownFrame:SetPoint("BOTTOMRIGHT", child, "BOTTOMRIGHT", -SCM:PixelPerfectSize(1), SCM:PixelPerfectSize(1))
+			end
 		else
 			cooldownFrame:SetPoint("TOPLEFT", child, "TOPLEFT", 0, 0)
 			cooldownFrame:SetPoint("BOTTOMRIGHT", child, "BOTTOMRIGHT", -SCM:PixelPerfectSize(1), SCM:PixelPerfectSize(1))
