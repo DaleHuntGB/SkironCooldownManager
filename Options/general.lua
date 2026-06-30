@@ -286,6 +286,7 @@ local function SelectGlobalSettingsTab(tabWidget, group, options)
 		hideWhileMounted:SetRelativeWidth(0.33)
 		hideWhileMounted:SetLabel("Hide While Mounted")
 		hideWhileMounted:SetValue(options.hideWhileMounted)
+		hideWhileMounted:SetDisabled(options.useCustomVisibilityCondition)
 		hideWhileMounted:SetCallback("OnValueChanged", function(_, _, value)
 			options.hideWhileMounted = value
 
@@ -298,6 +299,7 @@ local function SelectGlobalSettingsTab(tabWidget, group, options)
 		hideWhileDead:SetRelativeWidth(0.33)
 		hideWhileDead:SetLabel("Hide While Dead")
 		hideWhileDead:SetValue(options.hideWhileDead)
+		hideWhileDead:SetDisabled(options.useCustomVisibilityCondition)
 		hideWhileDead:SetCallback("OnValueChanged", function(_, _, value)
 			options.hideWhileDead = value
 
@@ -310,6 +312,7 @@ local function SelectGlobalSettingsTab(tabWidget, group, options)
 		hideWhileInVehicle:SetRelativeWidth(0.33)
 		hideWhileInVehicle:SetLabel("Hide While In Vehicle")
 		hideWhileInVehicle:SetValue(options.hideWhileInVehicle)
+		hideWhileInVehicle:SetDisabled(options.useCustomVisibilityCondition)
 		hideWhileInVehicle:SetCallback("OnValueChanged", function(_, _, value)
 			options.hideWhileInVehicle = value
 
@@ -322,6 +325,7 @@ local function SelectGlobalSettingsTab(tabWidget, group, options)
 		hideWhileResting:SetRelativeWidth(0.33)
 		hideWhileResting:SetLabel("Hide While Resting")
 		hideWhileResting:SetValue(options.hideWhileResting)
+		hideWhileResting:SetDisabled(options.useCustomVisibilityCondition)
 		hideWhileResting:SetCallback("OnValueChanged", function(_, _, value)
 			options.hideWhileResting = value
 
@@ -334,6 +338,7 @@ local function SelectGlobalSettingsTab(tabWidget, group, options)
 		hideOutOfCombat:SetRelativeWidth(0.33)
 		hideOutOfCombat:SetLabel("Hide Outside Of Combat")
 		hideOutOfCombat:SetValue(options.hideOutOfCombat)
+		hideOutOfCombat:SetDisabled(options.useCustomVisibilityCondition)
 		hideOutOfCombat:SetCallback("OnValueChanged", function(_, _, value)
 			options.hideOutOfCombat = value
 
