@@ -51,12 +51,10 @@ local function AddGlowColorOption(dynamicGlowSettingsGroup, glowTypeOptions)
 	dynamicGlowSettingsGroup:AddChild(glowColor)
 end
 
-local function AddCustomGlowOptions(dynamicGlowSettingsGroup)
-	local options = SCM.db.profile.options
+local function AddCustomGlowOptions(dynamicGlowSettingsGroup, glowTypeOptions, glowType)
 	dynamicGlowSettingsGroup:ReleaseChildren()
 
-	local glowTypeOptions = options.glowTypeOptions[options.glowType]
-	if options.glowType == "Proc" then
+	if glowType == "Proc" then
 		local startAnim = AceGUI:Create("CheckBox")
 		startAnim:SetRelativeWidth(0.33)
 		startAnim:SetValue(glowTypeOptions.startAnim)
@@ -68,7 +66,7 @@ local function AddCustomGlowOptions(dynamicGlowSettingsGroup)
 
 		AddGlowOffsetOptions(dynamicGlowSettingsGroup, glowTypeOptions)
 		AddGlowColorOption(dynamicGlowSettingsGroup, glowTypeOptions)
-	elseif options.glowType == "Autocast" then
+	elseif glowType == "Autocast" then
 		--color,numParticles,frequency,scale,xOffset,yOffset
 
 		local numParticles = AceGUI:Create("Slider")
@@ -104,7 +102,7 @@ local function AddCustomGlowOptions(dynamicGlowSettingsGroup)
 
 		AddGlowOffsetOptions(dynamicGlowSettingsGroup, glowTypeOptions)
 		AddGlowColorOption(dynamicGlowSettingsGroup, glowTypeOptions)
-	elseif options.glowType == "Pixel" then
+	elseif glowType == "Pixel" then
 		--color,numLines,frequency,length,thickness,xOffset,yOffset,border
 
 		local numLines = AceGUI:Create("Slider")
@@ -158,7 +156,7 @@ local function AddCustomGlowOptions(dynamicGlowSettingsGroup)
 			glowTypeOptions.border = value
 		end)
 		dynamicGlowSettingsGroup:AddChild(border)
-	elseif options.glowType == "Button" then
+	elseif glowType == "Button" then
 		local frequency = AceGUI:Create("Slider")
 		frequency:SetRelativeWidth(0.33)
 		frequency:SetValue(glowTypeOptions.frequency or 0.125)
@@ -933,17 +931,17 @@ local function SelectGlobalSettingsTab(tabWidget, group, options)
 		glowType:SetCallback("OnValueChanged", function(_, _, value)
 			options.glowType = value
 			SCM:RefreshAllGlows()
-			AddCustomGlowOptions(dynamicGlowSettingsGroup)
+			AddCustomGlowOptions(dynamicGlowSettingsGroup, options.glowTypeOptions[value], value)
 			glowSettings:DoLayout()
 			tabWidget:DoLayout()
 		end)
 		glowType:SetValue(options.glowType or "Pixel")
-		AddCustomGlowOptions(dynamicGlowSettingsGroup)
+		AddCustomGlowOptions(dynamicGlowSettingsGroup, options.glowTypeOptions[options.glowType], options.glowType)
 
 		local pandemicGlowSettings = AceGUI:Create("InlineGroup")
 		pandemicGlowSettings:SetLayout("flow")
 		pandemicGlowSettings:SetFullWidth(true)
-		pandemicGlowSettings:SetTitle("Pandemic Debuffs")
+		pandemicGlowSettings:SetTitle("Pandemic Glow")
 		tabWidget:AddChild(pandemicGlowSettings)
 
 		local pandemicGlowOption = AceGUI:Create("Dropdown")
@@ -951,13 +949,101 @@ local function SelectGlobalSettingsTab(tabWidget, group, options)
 			{ keepPandemicGlow = "Keep", disablePandemicGlow = "Disable", replacePandemicGlow = "Replace" },
 			{ "keepPandemicGlow", "disablePandemicGlow", "replacePandemicGlow" }
 		)
-		pandemicGlowOption:SetRelativeWidth(0.33)
+		pandemicGlowOption:SetRelativeWidth(1)
 		pandemicGlowOption:SetLabel("Pandemic Glow")
 		pandemicGlowOption:SetValue(options.pandemicGlowOption or "keepPandemicGlow")
 		pandemicGlowOption:SetCallback("OnValueChanged", function(_, _, value)
 			options.pandemicGlowOption = value
 		end)
 		pandemicGlowSettings:AddChild(pandemicGlowOption)
+
+		local pandemicGlowBorderSettings = AceGUI:Create("InlineGroup")
+		pandemicGlowBorderSettings:SetLayout("flow")
+		pandemicGlowBorderSettings:SetFullWidth(true)
+		pandemicGlowBorderSettings:SetTitle("Border")
+		pandemicGlowSettings:AddChild(pandemicGlowBorderSettings)
+
+		local replaceWithBorder = AceGUI:Create("CheckBox")
+		replaceWithBorder:SetRelativeWidth(0.33)
+		replaceWithBorder:SetLabel("Replace With Border")
+		replaceWithBorder:SetValue(options.pandemicReplaceWithBorder)
+		replaceWithBorder:SetDisabled(options.pandemicReplaceWithCustomGlow)
+		pandemicGlowBorderSettings:AddChild(replaceWithBorder)
+
+		local borderSize = AceGUI:Create("Slider")
+		borderSize:SetRelativeWidth(0.33)
+		borderSize:SetLabel("Border Size")
+		borderSize:SetSliderValues(0, 10, 0.1)
+		borderSize:SetValue(options.pandemicBorderSize or 1)
+		borderSize:SetCallback("OnValueChanged", function(_, _, value)
+			options.pandemicBorderSize = value
+			SCM:ApplyAllCDManagerConfigs()
+		end)
+		pandemicGlowBorderSettings:AddChild(borderSize)
+
+		local borderColor = AceGUI:Create("ColorPicker")
+		borderColor:SetRelativeWidth(0.33)
+		borderColor:SetLabel("Border Color")
+		borderColor:SetHasAlpha(true)
+
+		local color = options.pandemicBorderColor or { r = 0, g = 0, b = 0, a = 0 }
+		borderColor:SetColor(color.r, color.g, color.b, color.a)
+		borderColor:SetCallback("OnValueChanged", function(self, event, r, g, b, a)
+			options.pandemicBorderColor = { r = r, g = g, b = b, a = a }
+			SCM:ApplyAllCDManagerConfigs()
+		end)
+		pandemicGlowBorderSettings:AddChild(borderColor)
+
+		local pandemicGlowGlowSettings = AceGUI:Create("InlineGroup")
+		pandemicGlowGlowSettings:SetLayout("flow")
+		pandemicGlowGlowSettings:SetFullWidth(true)
+		pandemicGlowGlowSettings:SetTitle("Custom Glow")
+		pandemicGlowSettings:AddChild(pandemicGlowGlowSettings)
+
+		local replaceWithCustomGlow = AceGUI:Create("CheckBox")
+		replaceWithCustomGlow:SetRelativeWidth(0.5)
+		replaceWithCustomGlow:SetLabel("Replace With Custom Glow")
+		replaceWithCustomGlow:SetDisabled(options.pandemicReplaceWithBorder)
+		replaceWithCustomGlow:SetValue(options.pandemicReplaceWithCustomGlow)
+
+		pandemicGlowGlowSettings:AddChild(replaceWithCustomGlow)
+
+		local pandemicGlowType = AceGUI:Create("Dropdown")
+		pandemicGlowType:SetRelativeWidth(0.5)
+		pandemicGlowType:SetLabel("Custom Glow Type")
+		pandemicGlowType:SetList({
+			["Pixel"] = "Pixel Glow",
+			["Autocast"] = "Autocast Glow",
+			["Proc"] = "Proc Glow",
+			["Button"] = "Button",
+		})
+		pandemicGlowGlowSettings:AddChild(pandemicGlowType)
+
+		local dynamicGlowSettingsGroup = AceGUI:Create("InlineGroup")
+		dynamicGlowSettingsGroup:SetLayout("flow")
+		dynamicGlowSettingsGroup:SetFullWidth(true)
+		pandemicGlowGlowSettings:AddChild(dynamicGlowSettingsGroup)
+		pandemicGlowType:SetCallback("OnValueChanged", function(_, _, value)
+			options.pandemicGlowType = value
+			AddCustomGlowOptions(dynamicGlowSettingsGroup, options.pandemicCustomGlowTypeOptions[value], value)
+			pandemicGlowGlowSettings:DoLayout()
+			tabWidget:DoLayout()
+		end)
+		pandemicGlowType:SetValue(options.pandemicGlowType or "Pixel")
+		AddCustomGlowOptions(dynamicGlowSettingsGroup, options.pandemicCustomGlowTypeOptions[options.pandemicGlowType], options.pandemicGlowType)
+
+		replaceWithBorder:SetCallback("OnValueChanged", function(_, _, value)
+			options.pandemicReplaceWithBorder = value
+			SCM:ApplyAllCDManagerConfigs()
+
+			replaceWithCustomGlow:SetDisabled(value)
+		end)
+
+		replaceWithCustomGlow:SetCallback("OnValueChanged", function(_, _, value)
+			options.pandemicReplaceWithCustomGlow = value
+
+			replaceWithBorder:SetDisabled(value)
+		end)
 	elseif group == "BuffBar" then
 		local buffBarOptions = options.buffBarOptions
 

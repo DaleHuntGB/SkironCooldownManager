@@ -275,12 +275,11 @@ function SCM:SkinChild(child, childConfig)
 		child:SetFrameStrata(frameStrata)
 	end
 
-	local borderSize = options.borderSize
-	local borderColor = options.borderColor
-
 	if not child.SCMSkinned or (child.SCMSkinned and self.OptionsFrame and self.OptionsFrame:IsShown()) then
 		child.SCMSkinned = true
 
+		local borderSize = options.borderSize
+		local borderColor = options.borderColor
 		child.customBorder = child.customBorder or CreateFrame("Frame", nil, child, "BackdropTemplate")
 		child.customBorder:SetFrameLevel(child:GetFrameLevel() + 1)
 		child.customBorder:ClearAllPoints()
@@ -298,6 +297,25 @@ function SCM:SkinChild(child, childConfig)
 		end
 
 		for _, region in ipairs({ child.customBorder:GetRegions() }) do
+			region:SetTexelSnappingBias(0)
+			region:SetSnapToPixelGrid(false)
+		end
+
+		borderSize = options.pandemicBorderSize
+		borderColor = options.pandemicBorderColor
+
+		child.pandemicBorder = child.pandemicBorder or CreateFrame("Frame", nil, child, "BackdropTemplate")
+		child.pandemicBorder:SetFrameLevel(child:GetFrameLevel() + 2)
+		child.pandemicBorder:ClearAllPoints()
+		child.pandemicBorder:SetAllPoints(child)
+		child.pandemicBorder:SetBackdrop({
+			edgeFile = "Interface\\Buttons\\WHITE8x8",
+			edgeSize = borderSize,
+		})
+		child.pandemicBorder:SetBackdropBorderColor(borderColor.r, borderColor.g, borderColor.b, borderColor.a)
+		child.pandemicBorder:Hide()
+
+		for _, region in ipairs({ child.pandemicBorder:GetRegions() }) do
 			region:SetTexelSnappingBias(0)
 			region:SetSnapToPixelGrid(false)
 		end
