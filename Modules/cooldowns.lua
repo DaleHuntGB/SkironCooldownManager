@@ -27,10 +27,7 @@ local function OnBuffCooldownSet(self)
 		return
 	end
 
-	if parent.auraInstanceID and (not parent.SCMAuraInstanceID or parent.auraInstanceID ~= parent.SCMAuraInstanceID) and parent.auraDataUnit == "player" then
-		parent.SCMAuraInstanceID = parent.auraInstanceID
-		parent.SCMAuraDataUnit = parent.auraDataUnit or parent.SCMAuraDataunit
-	elseif parent.SCMUseFixedDuration then
+	if parent.SCMUseFixedDuration then
 		parent.SCMFixedDuration = parent.SCMFixedDuration or GetTime() + parent.SCMUseFixedDuration
 	end
 
@@ -56,14 +53,8 @@ local function OnBuffCooldownEnd(self)
 		return
 	end
 
-	if parent.SCMAuraInstanceID and not parent.SCMCheckCooldownFrame then
-		local auraData = C_UnitAuras.GetAuraDataByAuraInstanceID(parent.SCMAuraDataUnit, parent.SCMAuraInstanceID)
-		if auraData and auraData.isFromPlayerOrPlayerPet then
-			return
-		else
-			parent.SCMAuraInstanceID = nil
-			parent.SCMAuraDataUnit = nil
-		end
+	if parent:IsShown() and parent.Cooldown and parent.Cooldown:IsVisible() then
+		return
 	elseif parent.SCMFixedDuration and GetTime() < parent.SCMFixedDuration then
 		return
 	end
@@ -72,7 +63,7 @@ local function OnBuffCooldownEnd(self)
 
 	Icons.UpdateChildGlow(parent, true)
 
-	if (not SCM.isHideWhenInactiveEnabled and parent.SCMConfig.alwaysShow) then
+	if not SCM.isHideWhenInactiveEnabled and parent.SCMConfig.alwaysShow then
 		Icons.UpdateChildDesaturation(parent, true)
 		return
 	end
@@ -158,7 +149,11 @@ function Cooldowns.SetupBuffIconHooks(child, options)
 	else
 		if not child.SCMAuraHooked then
 			hooksecurefunc(child, "OnAuraInstanceInfoSet", OnBuffCooldownSet)
-			hooksecurefunc(child, "OnAuraInstanceInfoCleared", OnBuffCooldownEnd)
+			hooksecurefunc(child, "OnAuraInstanceInfoCleared", function(self)
+				C_Timer.After(0, function()
+					OnBuffCooldownEnd(self)
+				end)
+			end)
 			child.SCMAuraHooked = true
 		end
 
@@ -236,7 +231,7 @@ function Cooldowns.SetNormalCooldown(self, parent)
 			self:SetDrawSwipe(true)
 			self:SetCooldownFromDurationObject(durationObject)
 		end
-	elseif not self:GetUseAuraDisplayTime() or (options.disableRegularIconActiveSwipe and not parent.SCMConfig.forceActiveSwipe)  then
+	elseif not self:GetUseAuraDisplayTime() or (options.disableRegularIconActiveSwipe and not parent.SCMConfig.forceActiveSwipe) then
 		parent.Icon.SCMDesaturated = nil
 		parent.Icon:SetDesaturated(false)
 		self:Clear()

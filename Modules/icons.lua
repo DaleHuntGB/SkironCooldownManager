@@ -163,9 +163,6 @@ local function OnShow(child)
 
 			if child.SCMFakeAuraInstanceID and child.SCMUseFixedDuration then
 				child.SCMFixedDuration = GetTime() + Constants.FakeAuras[child.SCMSpellID]
-			elseif child.auraInstanceID then
-				child.SCMAuraInstanceID = child.auraInstanceID or child.SCMAuraInstanceID
-				child.SCMAuraDataUnit = child.auraDataUnit or child.SCMAuraDataUnit
 			end
 		end
 
@@ -178,15 +175,10 @@ local function OnHide(child)
 		if child.SCMBuffBar then
 			if child.SCMFakeAuraInstanceID and child.SCMFixedDuration and GetTime() < child.SCMFixedDuration then
 				return
-			elseif child.SCMAuraInstanceID and child.SCMAuraDataUnit and not child.SCMFakeAuraInstanceID then
-				local auraData = C_UnitAuras.GetAuraDataByAuraInstanceID(child.SCMAuraDataUnit, child.SCMAuraInstanceID)
-				if auraData and auraData.isFromPlayerOrPlayerPet then
-					return
-				end
+			elseif child:IsShown() and child.Cooldown and child.Cooldown:IsVisible() then
+				return
 			end
 
-			child.SCMAuraInstanceID = nil
-			child.SCMAuraDataUnit = nil
 			child.SCMFixedDuration = nil
 
 			child.SCMFakeAuraInstanceID = nil
@@ -399,7 +391,7 @@ local function ProcessBuffBar(child, childData, options)
 	Icons.SetupBuffBarHooks(child)
 	child.SCMBuffBarOptions = options
 
-	local isInactive = not child.auraInstanceID and not child.SCMFakeAuraInstanceID and not child.SCMAuraInstanceID
+	local isInactive = not child.auraInstanceID
 	local forceShow = SCM.simulateBuffs or (not SCM.isHideWhenInactiveEnabled and childData.alwaysShow)
 	local shouldHide = isInactive and not forceShow
 
