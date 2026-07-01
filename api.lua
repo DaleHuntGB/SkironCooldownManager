@@ -15,6 +15,10 @@ function SCMAPI.ImportProfile(profileName, importString)
 	SCM:ImportProfile(profileName, importString)
 end
 
+function SCMAPI.ExportProfile(classFileName, specID, exportOptions)
+	return SCM:ExportProfile(classFileName, specID, exportOptions)
+end
+
 function SCMAPI.ImportGlobalSettings(importString)
 	SCM:ImportGlobalSettings(importString)
 end
