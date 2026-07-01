@@ -1,6 +1,7 @@
 local SCM = select(2, ...)
 local Options = SCM.Options
 local CDMOptions = Options.CDM
+local Utils = SCM.Utils
 local AceGUI = LibStub("AceGUI-3.0")
 
 local iconTypeTabs = {
@@ -32,7 +33,13 @@ end
 
 function CDMOptions.CreateSpellConfigTabs(parentScrollFrame, iconSettings, buttonFrame, anchorIndex, mode, isGlobal, isBuffBar)
 	local buttonData = buttonFrame.data
-	local iconConfig = buttonData.isCustom and SCM:GetConfigTableByID(buttonData.id, buttonData.iconType, isGlobal) or SCM:GetSpellConfigForGroup(buttonData.id, anchorIndex)
+	local iconConfig
+
+	if buttonData.isCustom then
+		iconConfig = SCM:GetConfigTableByID(buttonData.id, buttonData.iconType, isGlobal, isBuffBar)
+	else
+		iconConfig = SCM:GetSpellConfigForGroup(buttonData.id, isBuffBar and Utils.ToBuffBarGroup(anchorIndex) or anchorIndex)
+	end
 
 	if not iconConfig then
 		CDMOptions.ShowIconSettingsMessage(iconSettings, parentScrollFrame, "|TInterface\\common\\help-i:40:40:0:0|tThis icon could not be resolved for the current anchor.")
