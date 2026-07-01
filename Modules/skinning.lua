@@ -111,7 +111,12 @@ local function ApplyCooldownFont(cooldownFrame, options)
 				end
 
 				local percentageFontSize = config and config.cooldownFontSize or options.cooldownFontSize
-				local fontSize = max(1, floor(iconSize * percentageFontSize + 0.5))
+				local fontSize
+				if percentageFontSize > 1 then
+					fontSize = percentageFontSize
+				else
+					fontSize = max(1, floor(iconSize * percentageFontSize + 0.5))
+				end
 
 				local fontOutline = options.cooldownFontOutline or "OUTLINE"
 				if config and config.cooldownFontOutline then
