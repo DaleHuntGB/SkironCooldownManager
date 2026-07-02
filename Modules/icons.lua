@@ -354,7 +354,6 @@ local function ProcessBuffIcon(child, childData, options)
 
 	local isInactive
 	if not issecretvalue(child.isActive) then
-		print("PROCESS", child.isActive, child.SCMSpellID, C_Spell.GetSpellName(child.SCMSpellID))
 		isInactive = not child.isActive
 	elseif child.SCMCheckCooldownFrame then
 		isInactive = not child.Cooldown:IsVisible() and not child.SCMFixedDuration
