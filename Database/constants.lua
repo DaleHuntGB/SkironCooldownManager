@@ -553,11 +553,14 @@ Constants.Races = {
 Constants.FakeAuras = {
 	-- WARLOCK
 	[265187] = 15, -- Summon Tyrant 15
-	[1288950] = 23, -- Grimoire: Fel Ravager
+	[1288950] = 20, -- Grimoire: Fel Ravager
+	[1288945] = 20, -- Grimoire: Imp Lord
 	[104316] = 12, -- Call Dreadstalkers
 	[1251781] = 15, -- Summon Vilefiend
 	[1276672] = 12, -- Summon Doomguard (not even Blizzard shows that)
 	[1122] = true, -- Summon Infernal
+	[205180] = 25, -- Summon Darkglare
+
 
 	-- PALADIN
 	[26573] = true, -- Consecration 12

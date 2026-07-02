@@ -53,9 +53,9 @@ local function OnBuffCooldownEnd(self)
 		return
 	end
 
-	if parent:IsShown() and parent.Cooldown and parent.Cooldown:IsVisible() then
+	if parent.SCMFixedDuration and GetTime() < parent.SCMFixedDuration then
 		return
-	elseif parent.SCMFixedDuration and GetTime() < parent.SCMFixedDuration then
+	elseif parent:IsShown() and parent.Cooldown and parent.Cooldown:IsVisible() then
 		return
 	end
 
@@ -136,9 +136,11 @@ function Cooldowns.SetupBuffIconHooks(child, options)
 	child.SCMBuffOptions = options
 
 	-- Cooldowns
+
 	if checkCooldownFrame then
 		if not child.SCMCooldownHooked then
 			hooksecurefunc(child.Cooldown, "SetCooldown", OnBuffCooldownSet)
+			hooksecurefunc(child, "OnAuraInstanceInfoSet", OnBuffCooldownSet)
 			hooksecurefunc(child.Cooldown, "Clear", OnBuffCooldownEnd)
 			child.Cooldown:HookScript("OnCooldownDone", OnBuffCooldownEnd)
 			child.SCMCooldownHooked = true
