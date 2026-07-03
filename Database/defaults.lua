@@ -70,13 +70,9 @@ SCM.DefaultDB = {
 			itemConfig = {},
 			slotConfig = {},
 			timerConfig = {},
+			bloodlustConfig = {},
 		},
 		options = {
-			anchorUUFRoles = {
-				["HEALER"] = false,
-				["DAMAGER"] = true,
-				["TANK"] = true,
-			},
 			anchorElvUIRoles = {
 				["HEALER"] = false,
 				["DAMAGER"] = true,
@@ -110,7 +106,7 @@ SCM.DefaultDB = {
 			chargeRelativePoint = "BOTTOMRIGHT",
 			chargeXOffset = -8,
 			chargeYOffset = 10,
-
+			chargeColour = { r = 1, g = 1, b = 1, a = 1 },
 			changeCooldownFont = true,
 			cooldownFont = "Expressway",
 			cooldownFontSize = 0.6,
@@ -130,7 +126,38 @@ SCM.DefaultDB = {
 			anchorsYOffset = 0,
 			borderColor = { r = 0, g = 0, b = 0, a = 1 },
 			adjustResourceWidth = true,
+			pandemicGlowType = "Proc",
 			pandemicGlowOption = "keepPandemicGlow",
+			pandemicReplaceWithBorder = false,
+			pandemicReplaceWithCustomGlow = false,
+			pandemicBorderSize = 2,
+			pandemicBorderColor = { r = 1, g = 0, b = 0, a = 1 },
+			pandemicCustomGlowTypeOptions = {
+				["Proc"] = {
+					glowColor = { 0.95, 0.95, 0.32, 1 },
+				},
+				["Pixel"] = {
+					numLines = 8,
+					frequency = 0.25,
+					length = 2,
+					thickness = 2,
+					glowColor = { 0.95, 0.95, 0.32, 1 },
+					xOffset = 0,
+					yOffset = 0,
+					border = false,
+				},
+				["Autocast"] = {
+					startAnim = true,
+					numParticles = 4,
+					frequency = 0.125,
+					scale = 1,
+					glowColor = { 0.95, 0.95, 0.32, 1 },
+				},
+				["Button"] = {
+					glowColor = { 0.95, 0.95, 0.32, 1 },
+					frequency = 0.125,
+				},
+			},
 			recolorActiveSwipe = false,
 			disableRegularIconActiveSwipe = false,
 			disableGCD = false,
@@ -148,6 +175,9 @@ SCM.DefaultDB = {
 					length = 2,
 					thickness = 2,
 					glowColor = { 0.95, 0.95, 0.32, 1 },
+					xOffset = 0,
+					yOffset = 0,
+					border = false,
 				},
 				["Autocast"] = {
 					startAnim = true,
@@ -155,6 +185,10 @@ SCM.DefaultDB = {
 					frequency = 0.125,
 					scale = 1,
 					glowColor = { 0.95, 0.95, 0.32, 1 },
+				},
+				["Button"] = {
+					glowColor = { 0.95, 0.95, 0.32, 1 },
+					frequency = 0.125,
 				},
 			},
 			buffBarOptions = {
@@ -166,6 +200,12 @@ SCM.DefaultDB = {
 				font = "Expressway",
 				fontSize = 15,
 				fontOutline = "OUTLINE",
+				nameXOffset = 5,
+				nameYOffset = 0,
+				nameColor = { r = 1, g = 1, b = 1, a = 1 },
+				durationXOffset = -8,
+				durationYOffset = 0,
+				durationColor = { r = 1, g = 1, b = 1, a = 1 },
 			},
 			resourceBars = {
 				"PrimaryResourceBar",
@@ -223,7 +263,7 @@ SCM.DefaultDB = {
 					TIP_OF_THE_SPEAR = { enabled = false, color = { r = 1.00, g = 0.82, b = 0.20 } },
 					ICICLES = { enabled = false, color = { r = 0.50, g = 0.78, b = 1.00 } },
 					SPELL_CHARGES_FIRE_BLAST = { enabled = false, color = { r = 1.00, g = 0.34, b = 0.12 } },
-					SPELL_CHARGES_SERENITY= { enabled = false, color = { r = 1.00, g = 1.00, b = 1.00 } },
+					SPELL_CHARGES_SERENITY = { enabled = false, color = { r = 1.00, g = 1.00, b = 1.00 } },
 				},
 				primaryBar = {
 					enabled = true,
@@ -253,6 +293,8 @@ SCM.DefaultDB = {
 					heightAlternative = 20,
 					showValues = true,
 					forceMana = false,
+					showPercentageSign = true,
+					useSmoothPowerUpdates = false,
 					spark = {
 						enable = false,
 						width = 2,
@@ -324,6 +366,8 @@ SCM.DefaultDB = {
 					showValues = true,
 					disableMaelstromOverflow = false,
 					forceMana = false,
+					showPercentageSign = true,
+					useSmoothPowerUpdates = false,
 					spark = {
 						enable = false,
 						width = 2,

@@ -15,6 +15,8 @@ local CHILD_SCM_RESET_FIELDS = {
 	"SCMSpellID",
 	"SCMLinkedSpellID",
 	"SCMAuraInstanceID",
+	"SCMFakeAuraInstanceID",
+	"SCMUseFixedDuration",
 	"SCMOrder",
 	"SCMGroup",
 	"SCMGlobal",
@@ -169,7 +171,6 @@ function Utils.ResetChildSCMState(child)
 	if not child then
 		return
 	end
-
 
 	if child.SCMHideTimer then
 		child.SCMHideTimer:Cancel()

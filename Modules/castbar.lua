@@ -61,7 +61,7 @@ local function CreatePips(empoweredStages)
 			castBar.StageBands[i] = band
 		end
 
-		local color = stageColors[min(i, #stageColors)]
+		local color = stageColors[i]
 		band:ClearAllPoints()
 		band:SetColorTexture(color.r, color.g, color.b, color.a)
 		band:SetTexelSnappingBias(0)
@@ -395,6 +395,16 @@ local function HandleCast(durationObject, castType, empoweredStages, isChannelSt
 		spellName, _, spellTexture, _, _, _, notInterruptible, spellID = UnitChannelInfo("player")
 	end
 
+	if spellID == 1271478 then
+		local specID = GetLootSpecialization()
+		if specID and specID > 0 then
+			local specName, _, specIcon = select(2, GetSpecializationInfoByID(specID))
+
+			spellName = GENERATE_LOOT_FOR_SPEC:format(specName)
+			spellTexture = specIcon
+		end
+	end
+
 	if notInterruptible then
 		fillColor = options.interruptColor
 	else
@@ -507,13 +517,6 @@ local function HandleCast(durationObject, castType, empoweredStages, isChannelSt
 	local remaining = durationObject:GetRemainingDuration()
 	castBar.Status:SetMinMaxValues(0, totalDuration)
 	castBar.Status:SetValue(isChannel and remaining or totalDuration - remaining)
-
-	if spellID == 1271478 then
-		local specID = GetLootSpecialization()
-		if specID and specID > 0 then
-			spellName = GENERATE_LOOT_FOR_SPEC:format((select(2, GetSpecializationInfoByID(specID))))
-		end
-	end
 
 	castBar.SpellNameText:SetText(spellName or "")
 	castBar.SpellNameText:SetWidth(max(castBar.SpellNameText:GetStringWidth(), 1))
@@ -634,6 +637,12 @@ function SCM:CreateCastBar()
 			SCM:RefreshCastBarWidth()
 		end
 	end, castBar)
+	EventRegistry:RegisterCallback("SkironCooldownManager.ResourceBar.LayoutUpdated", function()
+		local currentOptions = castBar.barOptions or SCM.castBarConfig
+		if currentOptions and currentOptions.enable then
+			UpdateStatusBarLook()
+		end
+	end, castBar)
 	self:UpdateCastBar()
 	return castBar
 end
@@ -710,10 +719,6 @@ function SCM:UpdateCastBar()
 
 		self:RefreshCastBarWidth(0.1)
 		PlayerCastingBarFrame:UnregisterAllEvents()
-
-		EventRegistry:RegisterCallback("SkironCooldownManager.ResourceBar.LayoutUpdated", function()
-			UpdateStatusBarLook()
-		end, castBar)
 	else
 		castBar:SetScript("OnEvent", nil)
 		castBar:UnregisterAllEvents()

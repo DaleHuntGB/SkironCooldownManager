@@ -2,16 +2,6 @@ local SCM = select(2, ...)
 local LSM = LibStub("LibSharedMedia-3.0")
 
 local originalCooldownFont
-local function GetCooldownFontScale(options)
-	local cooldownFontScale = options.cooldownFontSize or 0.6
-	if cooldownFontScale > 1 then
-		cooldownFontScale = cooldownFontScale / 40
-		options.cooldownFontSize = cooldownFontScale
-	end
-
-	return cooldownFontScale
-end
-
 local function ApplyChargeAndApplicationStyle(child, options, fontPath)
 	local rowConfig = child.SCMRowConfig or {}
 	if child.ChargeCount and child.ChargeCount.Current then
@@ -20,6 +10,14 @@ local function ApplyChargeAndApplicationStyle(child, options, fontPath)
 
 		if fontPath then
 			child.ChargeCount.Current:SetFont(fontPath, size, outline)
+			child.ChargeCount.Current:SetWordWrap(false)
+			child.ChargeCount.Current:SetNonSpaceWrap(false)
+			child.ChargeCount.Current:SetMaxLines(1)
+
+			local width = child.ChargeCount.Current:GetStringWidth()
+			if not issecretvalue(width) then
+				child.ChargeCount:SetWidth(width)
+			end
 		end
 
 		child.ChargeCount.Current:ClearAllPoints()
@@ -30,6 +28,9 @@ local function ApplyChargeAndApplicationStyle(child, options, fontPath)
 			rowConfig.chargeXOffset or options.chargeXOffset,
 			rowConfig.chargeYOffset or options.chargeYOffset
 		)
+
+		local chargeColour = rowConfig.chargeColour or options.chargeColour
+		child.ChargeCount.Current:SetTextColor(chargeColour.r, chargeColour.g, chargeColour.b, chargeColour.a or 1)
 
 		child.ChargeCount.Current.SCMRowConfig = rowConfig
 
@@ -57,6 +58,14 @@ local function ApplyChargeAndApplicationStyle(child, options, fontPath)
 		local outline = rowConfig.applicationsFontOutline or options.chargeFontOutline or "OUTLINE"
 		if fontPath then
 			child.Applications.Applications:SetFont(fontPath, size, outline)
+			child.Applications.Applications:SetWordWrap(false)
+			child.Applications.Applications:SetNonSpaceWrap(false)
+			child.Applications.Applications:SetMaxLines(1)
+
+			local width = child.Applications.Applications:GetStringWidth()
+			if not issecretvalue(width) then
+				child.Applications:SetWidth(width)
+			end
 		end
 
 		child.Applications.Applications:ClearAllPoints()
@@ -67,54 +76,130 @@ local function ApplyChargeAndApplicationStyle(child, options, fontPath)
 			rowConfig.applicationsXOffset or options.chargeXOffset,
 			rowConfig.applicationsYOffset or options.chargeYOffset
 		)
+
+		local chargeColour = rowConfig.chargeColour or options.chargeColour
+		child.Applications.Applications:SetTextColor(chargeColour.r, chargeColour.g, chargeColour.b, chargeColour.a or 1)
 	end
 end
 
 local function ApplyCooldownFont(cooldownFrame, options)
 	options = options or SCM.db.profile.options
+	local cooldownFontString = cooldownFrame.SCMCooldownFontString
+	if not cooldownFontString then
+		local region = cooldownFrame:GetRegions()
+		if region and region.SetFont then
+			cooldownFontString = region
+			cooldownFrame.SCMCooldownFontString = region
+		end
+	end
 
 	if options.changeCooldownFont then
 		local fontPath = LSM:Fetch("font", options.cooldownFont)
-		local cooldownFontString = cooldownFrame:GetRegions()
 		if cooldownFontString and cooldownFontString.SetFont then
 			if not originalCooldownFont then
 				originalCooldownFont = { cooldownFontString:GetFont() }
 			end
 
-			local parent = cooldownFrame:GetParent()
-			if parent.SCMWidth and parent.SCMHeight then
-				local width, height = parent.SCMWidth, parent.SCMHeight
-				local iconSize = min(width, height)
-				local rowConfig = parent.SCMRowConfig
-				local fontSize
+			local parent = cooldownFrame.SCMParent or cooldownFrame:GetParent()
+			if parent and parent.SCMWidth and parent.SCMHeight then
+				local iconSize = min(parent.SCMWidth, parent.SCMHeight)
+				local childConfig = parent.SCMConfig
+				local config = parent.SCMRowConfig
 
-				if rowConfig and rowConfig.cooldownFontSize then
-					fontSize = rowConfig.cooldownFontSize
-				else
-					fontSize = max(1, floor(iconSize * GetCooldownFontScale(options) + 0.5))
+				if childConfig and childConfig.cooldownOverrideGlobal then
+					config = childConfig
 				end
 
-				local fontOutline = rowConfig and rowConfig.cooldownFontOutline or options.cooldownFontOutline or "OUTLINE"
+				local percentageFontSize = config and config.cooldownFontSize or options.cooldownFontSize
+				local fontSize
+				if percentageFontSize > 1 then
+					fontSize = percentageFontSize
+				else
+					fontSize = max(1, floor(iconSize * percentageFontSize + 0.5))
+				end
+
+				local fontOutline = options.cooldownFontOutline or "OUTLINE"
+				if config and config.cooldownFontOutline then
+					fontOutline = config.cooldownFontOutline
+				end
+
 				cooldownFontString:SetFont(fontPath, fontSize, fontOutline)
 				cooldownFontString:SetShadowColor(0, 0, 0, 0)
 				cooldownFontString:SetShadowOffset(0, 0)
 
-				local cooldownFontColor = options.cooldownFontColor
-				cooldownFontString:SetTextColor(cooldownFontColor.r, cooldownFontColor.g, cooldownFontColor.b, cooldownFontColor.a)
-
 				cooldownFontString:ClearAllPoints()
-				cooldownFontString:SetPoint("CENTER", parent, "CENTER", options.cooldownXOffset, options.cooldownYOffset)
+
+				local point = "CENTER"
+				local relativePoint = "CENTER"
+				local xOffset = options.cooldownXOffset
+				local yOffset = options.cooldownYOffset
+
+				if config then
+					point = config.cooldownTextPoint or point
+					relativePoint = config.cooldownTextRelativePoint or relativePoint
+					xOffset = config.cooldownTextXOffset or xOffset
+					yOffset = config.cooldownTextYOffset or yOffset
+				end
+
+				cooldownFontString:SetPoint(point, parent, relativePoint, xOffset, yOffset)
 			end
 		end
 	elseif originalCooldownFont then
-		local cooldownFontString = cooldownFrame:GetRegions()
 		if cooldownFontString and cooldownFontString.SetFont then
 			cooldownFontString:SetFont(unpack(originalCooldownFont))
 		end
 	end
+
+	local parent = cooldownFrame.SCMParent or cooldownFrame:GetParent()
+	if parent and parent.SCMConfig then
+		cooldownFrame:SetHideCountdownNumbers(parent.SCMConfig.hideCountdownNumbers)
+	end
 end
 
-local function ApplyCooldownStyle(child, options)
+local function ApplyCooldownSwipe(cooldownFrame, options)
+	local parent = cooldownFrame.SCMParent or cooldownFrame:GetParent()
+	if not parent then
+		return
+	end
+
+	local forceActiveSwipe = parent.SCMConfig and parent.SCMConfig.forceActiveSwipe
+
+	if parent.auraInstanceID or parent.SCMFakeAuraInstanceID or parent.SCMBuffOptions then
+		if options.disableRegularIconActiveSwipe and not forceActiveSwipe then
+			if options.recolorNormalSwipe then
+				cooldownFrame:SetSwipeColor(unpack(options.normalSwipeColor))
+			else
+				cooldownFrame:SetSwipeColor(0, 0, 0, 0.7)
+			end
+
+			if parent.SCMBuffOptions then
+				cooldownFrame:SetReverse(options.reverseActiveSwipe)
+			end
+		else
+			if options.recolorActiveSwipe then
+				cooldownFrame:SetSwipeColor(unpack(options.activeSwipeColor))
+			end
+
+			cooldownFrame:SetReverse(options.reverseActiveSwipe)
+		end
+	elseif options.recolorNormalSwipe then
+		cooldownFrame:SetSwipeColor(unpack(options.normalSwipeColor))
+		cooldownFrame:SetReverse(false)
+	else
+		cooldownFrame:SetSwipeColor(0, 0, 0, 0.7)
+	end
+end
+
+local function OnSetCooldown(self)
+	local options = SCM.db.profile.options
+
+	SCM.Cooldowns.ApplyNumericRuleFormatter(self)
+
+	ApplyCooldownSwipe(self, options)
+	ApplyCooldownFont(self, options)
+end
+
+local function ApplyCooldownStyle(child, options, childConfig)
 	local cooldownFrame = child.GetCooldownFrame and child:GetCooldownFrame() or child.Cooldown
 	if cooldownFrame then
 		if child.SCMCooldownSkinHook then
@@ -126,46 +211,30 @@ local function ApplyCooldownStyle(child, options)
 			child.CooldownFlash:SetAlpha(0)
 		end
 
-		cooldownFrame:ClearAllPoints()
-		cooldownFrame:SetPoint("TOPLEFT", child, "TOPLEFT", 0, -0)
-		cooldownFrame:SetPoint("BOTTOMRIGHT", child, "BOTTOMRIGHT", -0, 0)
 		cooldownFrame:SetSwipeTexture("Interface\\Buttons\\WHITE8x8")
+		cooldownFrame:ClearAllPoints()
 
-		hooksecurefunc(cooldownFrame, "SetCooldown", function(self)
-			local options = SCM.db.profile.options
-			local parent = self:GetParent()
-			local forceActiveSwipe = parent.SCMConfig and parent.SCMConfig.forceActiveSwipe
-
-			SCM.Cooldowns.ApplyNumericRuleFormatter(self)
-
-			if parent.auraInstanceID or parent.SCMFakeAuraInstanceID or parent.SCMBuffOptions then
-				if options.disableRegularIconActiveSwipe and not forceActiveSwipe then
-					if options.recolorNormalSwipe then
-						self:SetSwipeColor(unpack(options.normalSwipeColor))
-					else
-						self:SetSwipeColor(0, 0, 0, 0.7)
-					end
-
-					if parent.SCMBuffOptions then
-						self:SetReverse(options.reverseActiveSwipe)
-					end
-				else
-					if options.recolorActiveSwipe then
-						self:SetSwipeColor(unpack(options.activeSwipeColor))
-					end
-
-					self:SetReverse(options.reverseActiveSwipe)
-				end
-			elseif options.recolorNormalSwipe then
-				self:SetSwipeColor(unpack(options.normalSwipeColor))
-				self:SetReverse(false)
+		if childConfig then
+			if childConfig.cooldownMoveTL then
+				cooldownFrame:SetPoint("TOPLEFT", child, "TOPLEFT", childConfig.cooldownXOffsetTL, childConfig.cooldownYOffsetTL)
 			else
-				self:SetSwipeColor(0, 0, 0, 0.7)
+				cooldownFrame:SetPoint("TOPLEFT", child, "TOPLEFT", 0, 0)
 			end
-			ApplyCooldownFont(self, options)
-		end)
 
-		ApplyCooldownFont(cooldownFrame, options)
+			if childConfig.cooldownMoveBR then
+				cooldownFrame:SetPoint("BOTTOMRIGHT", child, "BOTTOMRIGHT", childConfig.cooldownXOffsetBR, childConfig.cooldownYOffsetBR)
+			else
+				cooldownFrame:SetPoint("BOTTOMRIGHT", child, "BOTTOMRIGHT", -SCM:PixelPerfectSize(1), SCM:PixelPerfectSize(1))
+			end
+		else
+			cooldownFrame:SetPoint("TOPLEFT", child, "TOPLEFT", 0, 0)
+			cooldownFrame:SetPoint("BOTTOMRIGHT", child, "BOTTOMRIGHT", -SCM:PixelPerfectSize(1), SCM:PixelPerfectSize(1))
+		end
+
+		cooldownFrame.SCMParent = child
+
+		hooksecurefunc(cooldownFrame, "SetCooldown", OnSetCooldown)
+		OnSetCooldown(cooldownFrame)
 	end
 end
 
@@ -211,14 +280,14 @@ function SCM:SkinChild(child, childConfig)
 		child:SetFrameStrata(frameStrata)
 	end
 
-	local borderSize = options.borderSize
-	local borderColor = options.borderColor
-
-	if not child.SCMSkinned or (child.SCMSkinned and self.OptionsFrame ~= nil and self.OptionsFrame:IsShown()) then
+	if not child.SCMSkinned or (child.SCMSkinned and self.OptionsFrame and self.OptionsFrame:IsShown()) then
 		child.SCMSkinned = true
 
+		local borderSize = options.borderSize
+		local borderColor = options.borderColor
 		child.customBorder = child.customBorder or CreateFrame("Frame", nil, child, "BackdropTemplate")
 		child.customBorder:SetFrameLevel(child:GetFrameLevel() + 1)
+		child.customBorder:ClearAllPoints()
 		child.customBorder:SetAllPoints(child)
 		child.customBorder:SetBackdrop({
 			edgeFile = "Interface\\Buttons\\WHITE8x8",
@@ -233,6 +302,25 @@ function SCM:SkinChild(child, childConfig)
 		end
 
 		for _, region in ipairs({ child.customBorder:GetRegions() }) do
+			region:SetTexelSnappingBias(0)
+			region:SetSnapToPixelGrid(false)
+		end
+
+		borderSize = options.pandemicBorderSize
+		borderColor = options.pandemicBorderColor
+
+		child.pandemicBorder = child.pandemicBorder or CreateFrame("Frame", nil, child, "BackdropTemplate")
+		child.pandemicBorder:SetFrameLevel(child:GetFrameLevel() + 2)
+		child.pandemicBorder:ClearAllPoints()
+		child.pandemicBorder:SetAllPoints(child)
+		child.pandemicBorder:SetBackdrop({
+			edgeFile = "Interface\\Buttons\\WHITE8x8",
+			edgeSize = borderSize,
+		})
+		child.pandemicBorder:SetBackdropBorderColor(borderColor.r, borderColor.g, borderColor.b, borderColor.a)
+		child.pandemicBorder:Hide()
+
+		for _, region in ipairs({ child.pandemicBorder:GetRegions() }) do
 			region:SetTexelSnappingBias(0)
 			region:SetSnapToPixelGrid(false)
 		end
@@ -267,7 +355,7 @@ function SCM:SkinChild(child, childConfig)
 
 		ApplyZoomSettings(child, options)
 		ApplyChargeAndApplicationStyle(child, options, LSM:Fetch("font", options.chargeFont))
-		ApplyCooldownStyle(child, options)
+		ApplyCooldownStyle(child, options, childConfig)
 	end
 
 	for _, customSkin in ipairs(SCM.Skins) do
@@ -329,15 +417,16 @@ function SCM:SkinBuffBar(child, config)
 
 		if options.buffBarContent == 2 then
 			bar:SetPoint("TOPLEFT", iconFrame, "TOPLEFT", 0, 0)
+			bar.BarBG:SetPoint("TOPLEFT", iconFrame, "TOPLEFT", 0, 0)
 		else
 			bar:SetPoint("TOPLEFT", iconFrame, "TOPRIGHT", -borderSize, 0)
+			bar.BarBG:SetPoint("TOPLEFT", iconFrame, "TOPRIGHT", -borderSize, 0)
 		end
 
 		bar:SetPoint("BOTTOMLEFT", iconFrame, "BOTTOMRIGHT", -borderSize, 0)
 		bar:SetHeight(iconFrame:GetHeight())
 		bar:SetStatusBarColor(foregroundColor.r, foregroundColor.g, foregroundColor.b, foregroundColor.a)
 		bar.Pip:SetAlpha(0)
-		bar.BarBG:SetPoint("TOPLEFT", iconFrame, "TOPRIGHT", -borderSize, 0)
 		bar.BarBG:SetPoint("BOTTOMLEFT", iconFrame, "BOTTOMRIGHT", -borderSize, 0)
 		bar.BarBG:SetPoint("RIGHT", bar, "RIGHT", 0, 0)
 		bar.BarBG:SetColorTexture(backgroundColor.r, backgroundColor.g, backgroundColor.b, backgroundColor.a)
@@ -346,6 +435,16 @@ function SCM:SkinBuffBar(child, config)
 		local fontOutline = buffBarOptions.fontOutline or "OUTLINE"
 		bar.Name:SetFont(LSM:Fetch("font", buffBarOptions.font), buffBarOptions.fontSize, fontOutline)
 		bar.Duration:SetFont(LSM:Fetch("font", buffBarOptions.font), buffBarOptions.fontSize, fontOutline)
+
+		local nameColor = buffBarOptions.nameColor
+		bar.Name:ClearPointsOffset()
+		bar.Name:AdjustPointsOffset(buffBarOptions.nameXOffset, buffBarOptions.nameYOffset)
+		bar.Name:SetTextColor(nameColor.r, nameColor.g, nameColor.b, nameColor.a)
+
+		local durationColor = buffBarOptions.durationColor
+		bar.Duration:ClearPointsOffset()
+		bar.Duration:AdjustPointsOffset(buffBarOptions.durationXOffset, buffBarOptions.durationYOffset)
+		bar.Duration:SetTextColor(durationColor.r, durationColor.g, durationColor.b, durationColor.a)
 
 		bar.customBorder = bar.customBorder or CreateFrame("Frame", nil, bar, "BackdropTemplate")
 		bar.customBorder:SetFrameLevel(bar:GetFrameLevel() + 1)
@@ -412,12 +511,8 @@ function SCM:SkinBuffBar(child, config)
 		if iconFrame.Applications then
 			local applications = iconFrame.Applications
 			applications:SetWordWrap(false)
-			if applications.SetNonSpaceWrap then
-				applications:SetNonSpaceWrap(false)
-			end
-			if applications.SetMaxLines then
-				applications:SetMaxLines(1)
-			end
+			applications:SetNonSpaceWrap(false)
+			applications:SetMaxLines(1)
 
 			local size = rowConfig.applicationsFontSize or options.chargeFontSize
 			local outline = rowConfig.applicationsFontOutline or options.chargeFontOutline or "OUTLINE"

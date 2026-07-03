@@ -58,6 +58,7 @@ local function AddLayoutSettings(parent, settings)
 	hideWhileMounted:SetRelativeWidth(0.33)
 	hideWhileMounted:SetLabel("Hide While Mounted")
 	hideWhileMounted:SetValue(settings.hideWhileMounted)
+	hideWhileMounted:SetDisabled(settings.useCustomVisibilityCondition)
 	hideWhileMounted:SetCallback("OnValueChanged", function(_, _, value)
 		settings.hideWhileMounted = value
 		RefreshResourceBars()
@@ -68,6 +69,7 @@ local function AddLayoutSettings(parent, settings)
 	hideWhileDead:SetRelativeWidth(0.33)
 	hideWhileDead:SetLabel("Hide While Dead")
 	hideWhileDead:SetValue(settings.hideWhileDead)
+	hideWhileDead:SetDisabled(settings.useCustomVisibilityCondition)
 	hideWhileDead:SetCallback("OnValueChanged", function(_, _, value)
 		settings.hideWhileDead = value
 		RefreshResourceBars()
@@ -78,6 +80,7 @@ local function AddLayoutSettings(parent, settings)
 	hideWhileInVehicle:SetRelativeWidth(0.33)
 	hideWhileInVehicle:SetLabel("Hide While In Vehicle")
 	hideWhileInVehicle:SetValue(settings.hideWhileInVehicle)
+	hideWhileInVehicle:SetDisabled(settings.useCustomVisibilityCondition)
 	hideWhileInVehicle:SetCallback("OnValueChanged", function(_, _, value)
 		settings.hideWhileInVehicle = value
 		RefreshResourceBars()
@@ -88,6 +91,7 @@ local function AddLayoutSettings(parent, settings)
 	hideWhileResting:SetRelativeWidth(0.33)
 	hideWhileResting:SetLabel("Hide While Resting")
 	hideWhileResting:SetValue(settings.hideWhileResting)
+	hideWhileResting:SetDisabled(settings.useCustomVisibilityCondition)
 	hideWhileResting:SetCallback("OnValueChanged", function(_, _, value)
 		settings.hideWhileResting = value
 		RefreshResourceBars()
@@ -98,6 +102,7 @@ local function AddLayoutSettings(parent, settings)
 	hideOutOfCombat:SetRelativeWidth(0.33)
 	hideOutOfCombat:SetLabel("Hide Outside Of Combat")
 	hideOutOfCombat:SetValue(settings.hideOutOfCombat)
+	hideOutOfCombat:SetDisabled(settings.useCustomVisibilityCondition)
 	hideOutOfCombat:SetCallback("OnValueChanged", function(_, _, value)
 		settings.hideOutOfCombat = value
 		RefreshResourceBars()
@@ -342,7 +347,7 @@ local function AddBarSettings(parent, title, settings, includeManaRoleSettings, 
 	parent:AddChild(generalSettings)
 
 	local enableBar = AceGUI:Create("CheckBox")
-	enableBar:SetRelativeWidth(0.33)
+	enableBar:SetRelativeWidth(0.25)
 	enableBar:SetLabel("Enable Bar")
 	enableBar:SetValue(settings.enabled)
 	enableBar:SetCallback("OnValueChanged", function(_, _, value)
@@ -353,7 +358,7 @@ local function AddBarSettings(parent, title, settings, includeManaRoleSettings, 
 
 	local widthSlider
 	local matchAnchorWidth = AceGUI:Create("CheckBox")
-	matchAnchorWidth:SetRelativeWidth(0.33)
+	matchAnchorWidth:SetRelativeWidth(0.25)
 	matchAnchorWidth:SetLabel("Match Anchor Width")
 	matchAnchorWidth:SetValue(settings.matchAnchorWidth)
 	matchAnchorWidth:SetCallback("OnValueChanged", function(_, _, value)
@@ -368,7 +373,7 @@ local function AddBarSettings(parent, title, settings, includeManaRoleSettings, 
 	generalSettings:AddChild(matchAnchorWidth)
 
 	local textOnly = AceGUI:Create("CheckBox")
-	textOnly:SetRelativeWidth(0.33)
+	textOnly:SetRelativeWidth(0.25)
 	textOnly:SetLabel("Text Only")
 	textOnly:SetValue(settings.textOnly)
 	textOnly:SetCallback("OnValueChanged", function(_, _, value)
@@ -376,6 +381,16 @@ local function AddBarSettings(parent, title, settings, includeManaRoleSettings, 
 		RefreshResourceBars()
 	end)
 	generalSettings:AddChild(textOnly)
+
+	local useSmoothPowerUpdates = AceGUI:Create("CheckBox")
+	useSmoothPowerUpdates:SetRelativeWidth(0.25)
+	useSmoothPowerUpdates:SetLabel("Smooth Updates")
+	useSmoothPowerUpdates:SetValue(settings.useSmoothPowerUpdates and true or false)
+	useSmoothPowerUpdates:SetCallback("OnValueChanged", function(_, _, value)
+		settings.useSmoothPowerUpdates = value
+		RefreshResourceBars()
+	end)
+	generalSettings:AddChild(useSmoothPowerUpdates)
 
 	local barHeight = AceGUI:Create("Slider")
 	barHeight:SetRelativeWidth(0.5)
@@ -722,7 +737,7 @@ local function AddBarSettings(parent, title, settings, includeManaRoleSettings, 
 	parent:AddChild(textSettings)
 
 	local showValues = AceGUI:Create("CheckBox")
-	showValues:SetRelativeWidth(0.33)
+	showValues:SetRelativeWidth(0.25)
 	showValues:SetLabel("Show Text")
 	showValues:SetValue(settings.showValues)
 	showValues:SetCallback("OnValueChanged", function(_, _, value)
@@ -731,9 +746,19 @@ local function AddBarSettings(parent, title, settings, includeManaRoleSettings, 
 	end)
 	textSettings:AddChild(showValues)
 
+	local showValues = AceGUI:Create("CheckBox")
+	showValues:SetRelativeWidth(0.25)
+	showValues:SetLabel("Show Percent Sign")
+	showValues:SetValue(settings.showPercentageSign)
+	showValues:SetCallback("OnValueChanged", function(_, _, value)
+		settings.showPercentageSign = value
+		RefreshResourceBars()
+	end)
+	textSettings:AddChild(showValues)
+
 	local font = AceGUI:Create("LSM30_Font")
 	font:SetLabel("Text Font")
-	font:SetRelativeWidth(0.33)
+	font:SetRelativeWidth(0.25)
 	font:SetList(LSM:HashTable("font"))
 	font:SetValue(settings.font)
 	font:SetCallback("OnValueChanged", function(self, _, value)
@@ -744,7 +769,7 @@ local function AddBarSettings(parent, title, settings, includeManaRoleSettings, 
 	textSettings:AddChild(font)
 
 	local textOutline = AceGUI:Create("Dropdown")
-	textOutline:SetRelativeWidth(0.33)
+	textOutline:SetRelativeWidth(0.25)
 	textOutline:SetLabel("Outline")
 	textOutline:SetList(Constants.TextOutline, Constants.TextOutlineSorted)
 	textOutline:SetValue(settings.textOutline)
@@ -757,7 +782,7 @@ local function AddBarSettings(parent, title, settings, includeManaRoleSettings, 
 	local fontSize = AceGUI:Create("Slider")
 	fontSize:SetRelativeWidth(0.33)
 	fontSize:SetLabel("Font Size")
-	fontSize:SetSliderValues(6, 28, 1)
+	fontSize:SetSliderValues(6, 100, 1)
 	fontSize:SetValue(settings.fontSize)
 	fontSize:SetCallback("OnValueChanged", function(_, _, value)
 		settings.fontSize = value
