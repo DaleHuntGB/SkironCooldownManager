@@ -332,7 +332,7 @@ function CDMOptions.SelectRow(widget, rowWidget, parentWidget, scrollFrame, data
 
 	local iconHeight = AceGUI:Create("Slider")
 	iconHeight:SetRelativeWidth(0.33)
-	iconHeight:SetSliderValues(10, 200, 0.1)
+	iconHeight:SetSliderValues(3, 200, 0.1)
 	iconHeight:SetLabel(heightLabel)
 	iconHeight:SetValue(rowConfig.iconHeight or rowConfig.size)
 	iconHeight:SetCallback("OnValueChanged", function(self, event, value)
