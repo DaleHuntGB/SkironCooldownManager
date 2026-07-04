@@ -104,15 +104,18 @@ function Options.AddAnchorParentAutocomplete(_, editBox, onValueSelected)
 
 		if token == "" then suggestionFrame:Hide() return end
 
-		for _, label in ipairs({ "Cast Bar", "Primary Resource Bar", "Secondary Resource Bar", "Anchor", "Global Anchor" }) do
-			local value = SCM.Constants.SCMAnchors[label]
-			if value then
-				local count = (label == "Anchor" and #(SCM.anchorConfig or {})) or (label == "Global Anchor" and #(SCM.globalAnchorConfig or {})) or 1
-				for i = 1, count do
-					local anchor = label == "Global Anchor" and value:gsub("10#", tostring(SCM.Utils.ToGlobalGroup(i))) or value:gsub("#", i)
-					local display = (label == "Anchor" or label == "Global Anchor") and (label .. " #" .. i) or label
-					if strfind(strlower(anchor), tokenLower, 1, true) or strfind(strlower(display), tokenLower, 1, true) then
-						tinsert(suggestions, { anchor, display })
+		for _, anchorList in pairs(SCM.Constants.SCMAnchors) do
+			if anchorList then
+				for label, value in pairs(anchorList) do
+					if value then
+						local count = (label == "Anchor" and #(SCM.anchorConfig or {})) or (label == "Global Anchor" and #(SCM.globalAnchorConfig or {})) or 1
+						for i = 1, count do
+							local anchor = label == "Global Anchor" and value:gsub("10#", tostring(SCM.Utils.ToGlobalGroup(i))) or value:gsub("#", i)
+							local display = (label == "Anchor" or label == "Global Anchor") and (label .. " #" .. i) or label
+							if strfind(strlower(anchor), tokenLower, 1, true) or strfind(strlower(display), tokenLower, 1, true) then
+								tinsert(suggestions, { anchor, display })
+							end
+						end
 					end
 				end
 			end
