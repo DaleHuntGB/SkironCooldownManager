@@ -4,6 +4,34 @@ local CDMOptions = Options.CDM
 local Constants = SCM.Constants
 local AceGUI = LibStub("AceGUI-3.0")
 
+local REMOVE_OPTION = "remove"
+
+local optionOrder = { "desaturate", "visibility", "glow", "border" }
+
+local options = {
+	desaturate = {
+		name = "Desaturate",
+		toggle = true,
+		defaultEnabled = true,
+	},
+	visibility = {
+		name = "Visibility",
+		options = Constants.Visibility,
+		optionsSorted = Constants.VisibilitySorted,
+		defaultValue = "show",
+	},
+	glow = {
+		name = "Show Glow",
+		subregionType = "glow",
+		defaultVisibility = "show",
+	},
+	border = {
+		name = "Show Border",
+		subregionType = "border",
+		defaultVisibility = "show",
+	},
+}
+
 local function GetUnusedStates(iconConfig)
 	local states, statesSorted = {}, {}
 
@@ -17,64 +45,153 @@ local function GetUnusedStates(iconConfig)
 	return states, statesSorted
 end
 
-local function AddStateVisibilityOptions(stateGroup, state, stateOptions)
-	local showToggle = AceGUI:Create("CheckBox")
-	showToggle:SetRelativeWidth(0.5)
-	showToggle:SetLabel("Show Icon")
-	stateGroup:AddChild(showToggle)
+local function BuildUsedStateTabs(iconConfig)
+	local stateTabs = {}
 
-	local hideToggle = AceGUI:Create("CheckBox")
-	hideToggle:SetRelativeWidth(0.5)
-	hideToggle:SetLabel("Hide Icon")
-	stateGroup:AddChild(hideToggle)
+	for _, stateValue in ipairs(Constants.StatesSorted) do
+		if iconConfig.usedStates[stateValue] then
+			tinsert(stateTabs, { value = stateValue, text = Constants.States[stateValue] })
+		end
+	end
+
+	return stateTabs
 end
 
-local function AddStateGlowOptions(stateGroup, state, stateOptions)
-	local glowToggle = AceGUI:Create("CheckBox")
-	glowToggle:SetRelativeWidth(0.5)
-	glowToggle:SetLabel("Glow")
-	stateGroup:AddChild(glowToggle)
+local function GetStateOptions(stateOptions, currentOption, includeRemove)
+	local optionList, optionListSorted = {}, {}
 
-	local glowRegionDropdown = AceGUI:Create("Dropdown")
-	glowRegionDropdown:SetLabel("Subregion")
-	glowRegionDropdown:SetRelativeWidth(0.5)
-	stateGroup:AddChild(glowRegionDropdown)
+	for _, optionKey in ipairs(optionOrder) do
+		if optionKey == currentOption or not stateOptions[optionKey] then
+			optionList[optionKey] = options[optionKey].name
+			tinsert(optionListSorted, optionKey)
+		end
+	end
 
-	local glowVisiblityDropdown = AceGUI:Create("Dropdown")
-	glowVisiblityDropdown:SetLabel("Visibility")
-	glowVisiblityDropdown:SetRelativeWidth(0.33)
-	stateGroup:AddChild(glowVisiblityDropdown)
+	if includeRemove then
+		optionList[REMOVE_OPTION] = "Remove"
+		tinsert(optionListSorted, REMOVE_OPTION)
+	end
+
+	return optionList, optionListSorted
 end
 
-local function AddStateBorderOptions(stateGroup, state, stateOptions)
-	local borderToggle = AceGUI:Create("CheckBox")
-	borderToggle:SetRelativeWidth(0.33)
-	borderToggle:SetLabel("Border")
-	stateGroup:AddChild(borderToggle)
+local function SetDefaultOptionValues(stateOptions, optionKey)
+	stateOptions[optionKey] = stateOptions[optionKey] or {}
 
-	local borderRegionDropdown = AceGUI:Create("Dropdown")
-	borderRegionDropdown:SetLabel("Subregion")
-	borderRegionDropdown:SetRelativeWidth(0.33)
-	stateGroup:AddChild(borderRegionDropdown)
+	local option = options[optionKey]
+	local optionValues = stateOptions[optionKey]
+	if option.toggle then
+		if optionValues.enabled == nil then
+			optionValues.enabled = option.defaultEnabled
+		end
+	elseif option.subregionType then
+		optionValues.visibility = optionValues.visibility or option.defaultVisibility
+	else
+		optionValues.value = optionValues.value or option.defaultValue
+	end
 
-	local borderVisiblityDropdown = AceGUI:Create("Dropdown")
-	borderVisiblityDropdown:SetLabel("Visibility")
-	borderVisiblityDropdown:SetRelativeWidth(0.33)
-	stateGroup:AddChild(borderVisiblityDropdown)
+	return optionValues
 end
 
-local function AddStateOptions(state, iconSettingsTabs, scrollFrame, iconConfig, isGlobal, isBuffBar)
+local function AddSelectedStateOption(stateTabs, state, stateOptions, selectedOptions, optionKey, optionIndex, subregionOptions)
+	local option = options[optionKey]
+	if not option then
+		return
+	end
+
+	local optionDropdown = AceGUI:Create("Dropdown")
+	optionDropdown:SetLabel("Option")
+	optionDropdown:SetRelativeWidth(0.33)
+	optionDropdown:SetList(GetStateOptions(stateOptions, optionKey, true))
+	optionDropdown:SetValue(optionKey)
+	optionDropdown:SetCallback("OnValueChanged", function(_, _, value)
+		if value == REMOVE_OPTION then
+			local removedOption = selectedOptions[optionIndex]
+			if removedOption then
+				tremove(selectedOptions, optionIndex)
+				stateOptions[removedOption] = nil
+			end
+		elseif options[value] and not stateOptions[value] then
+			local previousOption = selectedOptions[optionIndex]
+			if previousOption ~= value then
+				selectedOptions[optionIndex] = value
+				stateOptions[previousOption] = nil
+				SetDefaultOptionValues(stateOptions, value)
+			end
+		end
+
+		stateTabs:SelectTab(state)
+	end)
+	stateTabs:AddChild(optionDropdown)
+
+	local optionValues = SetDefaultOptionValues(stateOptions, optionKey)
+
+	if option.toggle then
+		local toggle = AceGUI:Create("CheckBox")
+		toggle:SetRelativeWidth(0.67)
+		toggle:SetLabel(option.name)
+		toggle:SetValue(optionValues.enabled)
+		toggle:SetCallback("OnValueChanged", function(_, _, value)
+			optionValues.enabled = value
+		end)
+		stateTabs:AddChild(toggle)
+	elseif option.subregionType then
+		local subregions, subregionsSorted = {}, {}
+		for index, subregionData in ipairs(subregionOptions and subregionOptions[option.subregionType] or {}) do
+			subregions[index] = (Constants.Subregions[subregionData.type] or "Subregion") .. " " .. index
+			tinsert(subregionsSorted, index)
+		end
+
+		local subregionDropdown = AceGUI:Create("Dropdown")
+		subregionDropdown:SetLabel("Subregion")
+		subregionDropdown:SetRelativeWidth(0.67)
+		subregionDropdown:SetList(subregions, subregionsSorted)
+		subregionDropdown:SetValue(optionValues.subregion)
+		subregionDropdown:SetCallback("OnValueChanged", function(_, _, value)
+			optionValues.subregion = value
+		end)
+		stateTabs:AddChild(subregionDropdown)
+	else
+		local valueDropdown = AceGUI:Create("Dropdown")
+		valueDropdown:SetLabel(option.name)
+		valueDropdown:SetRelativeWidth(0.67)
+		valueDropdown:SetList(option.options, option.optionsSorted)
+		valueDropdown:SetValue(optionValues.value)
+		valueDropdown:SetCallback("OnValueChanged", function(_, _, value)
+			optionValues.value = value
+		end)
+		stateTabs:AddChild(valueDropdown)
+	end
+end
+
+local function AddStateOptions(state, stateTabs, iconConfig, stateDropdown)
+	iconConfig.stateOptions[state] = iconConfig.stateOptions[state] or {}
+
 	local stateOptions = iconConfig.stateOptions[state]
+	stateOptions.selectedOptions = stateOptions.selectedOptions or {}
 
-	local stateGroup = AceGUI:Create("InlineGroup")
-	stateGroup:SetLayout("flow")
-	stateGroup:SetFullWidth(true)
-	stateGroup:SetTitle(Constants.States[state])
-	scrollFrame:AddChild(stateGroup)
+	local selectedOptions = stateOptions.selectedOptions
+	local subregionOptions = iconConfig.subregionOptions
 
-	AddStateVisibilityOptions(stateGroup, state, stateOptions)
-	AddStateGlowOptions(stateGroup, state, stateOptions)
-	AddStateBorderOptions(stateGroup, state, stateOptions)
+	for optionIndex, optionKey in ipairs(selectedOptions) do
+		AddSelectedStateOption(stateTabs, state, stateOptions, selectedOptions, optionKey, optionIndex, subregionOptions)
+	end
+
+	local optionList, optionListSorted = GetStateOptions(stateOptions)
+	if #optionListSorted > 0 then
+		local optionDropdown = AceGUI:Create("Dropdown")
+		optionDropdown:SetLabel("Add Option")
+		optionDropdown:SetRelativeWidth(0.33)
+		optionDropdown:SetList(optionList, optionListSorted)
+		optionDropdown:SetCallback("OnValueChanged", function(_, _, value)
+			if options[value] and not stateOptions[value] then
+				tinsert(selectedOptions, value)
+				SetDefaultOptionValues(stateOptions, value)
+				stateTabs:SelectTab(state)
+			end
+		end)
+		stateTabs:AddChild(optionDropdown)
+	end
 
 	local removeStateButton = AceGUI:Create("Button")
 	removeStateButton:SetText("Remove")
@@ -82,9 +199,18 @@ local function AddStateOptions(state, iconSettingsTabs, scrollFrame, iconConfig,
 	removeStateButton:SetCallback("OnClick", function()
 		iconConfig.usedStates[state] = nil
 		iconConfig.stateOptions[state] = nil
-		iconSettingsTabs:SelectByValue("state")
+
+		stateDropdown:SetList(GetUnusedStates(iconConfig))
+		local usedStateTabs = BuildUsedStateTabs(iconConfig)
+		stateTabs:SetTabs(usedStateTabs)
+
+		if usedStateTabs[1] then
+			stateTabs:SelectTab(usedStateTabs[1].value)
+		else
+			stateTabs:ReleaseChildren()
+		end
 	end)
-	stateGroup:AddChild(removeStateButton)
+	stateTabs:AddChild(removeStateButton)
 end
 
 function CDMOptions.CreateStateTabSettings(iconSettingsTabs, iconSettings, parentScrollFrame, buttonFrame, buttonData, iconConfig, anchorIndex, mode, isGlobal, isBuffBar)
@@ -129,11 +255,19 @@ function CDMOptions.CreateStateTabSettings(iconSettingsTabs, iconSettings, paren
 			addStateButton:SetDisabled(value == nil)
 		end)
 
-		for _, stateValue in ipairs(Constants.StatesSorted) do
-			if iconConfig.usedStates[stateValue] then
-				AddStateOptions(stateValue, iconSettingsTabs, scrollFrame, iconConfig, isGlobal, isBuffBar)
+		local stateTabs = AceGUI:Create("TabGroup")
+		local usedStateTabs = BuildUsedStateTabs(iconConfig)
+		stateTabs:SetLayout("flow")
+		stateTabs:SetFullWidth(true)
+		stateTabs:SetTabs(usedStateTabs)
+		stateTabs:SetCallback("OnGroupSelected", function(self, _, selectedTab)
+			self:ReleaseChildren()
+			if not selectedTab then
+				return
 			end
-		end
+			AddStateOptions(selectedTab, self, iconConfig, stateDropdown)
+		end)
+		scrollFrame:AddChild(stateTabs)
 
 		addStateButton:SetCallback("OnClick", function()
 			if not selectedState or iconConfig.usedStates[selectedState] then
@@ -143,12 +277,15 @@ function CDMOptions.CreateStateTabSettings(iconSettingsTabs, iconSettings, paren
 			iconConfig.usedStates[selectedState] = true
 			iconConfig.stateOptions[selectedState] = iconConfig.stateOptions[selectedState] or {}
 
-			AddStateOptions(selectedState, iconSettingsTabs, scrollFrame, iconConfig, isGlobal, isBuffBar)
-			iconSettingsTabs:DoLayout()
-
+			stateTabs:SetTabs(BuildUsedStateTabs(iconConfig))
+			stateTabs:SelectTab(selectedState)
 			selectedState = nil
 			stateDropdown:SetValue(selectedState)
 			stateDropdown:SetList(GetUnusedStates(iconConfig))
 		end)
+
+		if usedStateTabs[1] then
+			stateTabs:SelectTab(usedStateTabs[1].value)
+		end
 	end
 end
