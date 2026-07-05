@@ -7,10 +7,8 @@ local AceGUI = LibStub("AceGUI-3.0")
 local iconTypeTabs = {
 	all = {
 		{ value = "general", text = "General" },
-		{ value = "visibility", text = "Visibility" },
 		{ value = "display", text = "Display" },
 		{ value = "cooldown", text = "Cooldown" },
-		{ value = "glow", text = "Glow" },
 		{ value = "subregion", text = "Subregions (NYI)" },
 		{ value = "state", text = "States (NYI)" },
 		{ value = "load", text = "Load Conditions" },
