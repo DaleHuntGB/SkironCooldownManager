@@ -4,6 +4,7 @@ local Cooldowns = SCM.Cooldowns
 local Icons = SCM.Icons
 local Cache = SCM.Cache
 local Constants = SCM.Constants
+local States = SCM.States
 
 local NumericRuleFormatter = C_StringUtil.CreateNumericRuleFormatter()
 Cooldowns.NumericRuleFormatter = NumericRuleFormatter
@@ -323,8 +324,9 @@ local function OnRegularCooldownChanged(self, changeType)
 	end
 
 	local options = SCM.db.profile.options
+	local config = parent.SCMConfig
 	local useAuraDisplayTime = self:GetUseAuraDisplayTime()
-	if options.disableRegularIconActiveSwipe and not parent.SCMConfig.forceActiveSwipe and useAuraDisplayTime then
+	if options.disableRegularIconActiveSwipe and not config.forceActiveSwipe and useAuraDisplayTime then
 		Cooldowns.OverrideRegularAuraCooldown(self, parent, options)
 	elseif options.disableGCD or (changeType == "CLEAR" and Constants.FixBlizzardSpells[parent.SCMSpellID]) then
 		Cooldowns.SetNormalCooldown(self, parent)
@@ -333,23 +335,8 @@ local function OnRegularCooldownChanged(self, changeType)
 		parent.Icon:SetDesaturated(false)
 	end
 
-	local config = parent.SCMConfig
-	if config.hideWhenNotOnCooldown then
-		local shouldShow = Cooldowns.GetChildCooldown(parent) and true or false
-		if parent.SCMShouldBeVisible ~= shouldShow then
-			local viewer = parent.viewerFrame
-			if viewer then
-				if viewer == EssentialCooldownViewer then
-					SCM:ApplyEssentialCDManagerConfig()
-				elseif viewer == UtilityCooldownViewer then
-					SCM:ApplyUtilityCDManagerConfig()
-				end
-			elseif parent.SCMGroup then
-				SCM:ApplyAnchorGroupCDManagerConfig(parent.SCMGroup, parent.SCMGlobal)
-			else
-				SCM:ApplyAllCDManagerConfigs()
-			end
-		end
+	if config.stateOptions then
+		RunNextFrame(function() States.SetCooldownState(parent, Cooldowns.GetChildCooldown(parent)) end)
 	end
 
 	Icons.UpdateChildGlow(parent, not useAuraDisplayTime)

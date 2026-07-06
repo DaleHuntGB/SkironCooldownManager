@@ -45,7 +45,7 @@ local function GetUnusedStates(iconConfig)
 	return states, statesSorted
 end
 
-local function BuildUsedStateTabs(iconConfig)
+local function GetUsedStateTabs(iconConfig)
 	local stateTabs = {}
 
 	for _, stateValue in ipairs(Constants.StatesSorted) do
@@ -201,7 +201,7 @@ local function AddStateOptions(state, stateTabs, iconConfig, stateDropdown)
 		iconConfig.stateOptions[state] = nil
 
 		stateDropdown:SetList(GetUnusedStates(iconConfig))
-		local usedStateTabs = BuildUsedStateTabs(iconConfig)
+		local usedStateTabs = GetUsedStateTabs(iconConfig)
 		stateTabs:SetTabs(usedStateTabs)
 
 		if usedStateTabs[1] then
@@ -256,7 +256,7 @@ function CDMOptions.CreateStateTabSettings(iconSettingsTabs, iconSettings, paren
 		end)
 
 		local stateTabs = AceGUI:Create("TabGroup")
-		local usedStateTabs = BuildUsedStateTabs(iconConfig)
+		local usedStateTabs = GetUsedStateTabs(iconConfig)
 		stateTabs:SetLayout("flow")
 		stateTabs:SetFullWidth(true)
 		stateTabs:SetTabs(usedStateTabs)
@@ -277,7 +277,7 @@ function CDMOptions.CreateStateTabSettings(iconSettingsTabs, iconSettings, paren
 			iconConfig.usedStates[selectedState] = true
 			iconConfig.stateOptions[selectedState] = iconConfig.stateOptions[selectedState] or {}
 
-			stateTabs:SetTabs(BuildUsedStateTabs(iconConfig))
+			stateTabs:SetTabs(GetUsedStateTabs(iconConfig))
 			stateTabs:SelectTab(selectedState)
 			selectedState = nil
 			stateDropdown:SetValue(selectedState)
