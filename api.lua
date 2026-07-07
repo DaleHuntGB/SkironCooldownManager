@@ -64,7 +64,7 @@ function SCMAPI.RegisterAnchorParents(addonName, anchors)
 	if addonName and anchors then
 		SCM.Constants.SCMAnchors[addonName] = SCM.Constants.SCMAnchors[addonName] or {}
 		for label, anchor in pairs(anchors) do
-			SCM.Constants.SCMAnchors[addonName][label] = anchor
+			SCM.Constants.SCMAnchors[addonName][label] = SCM.Constants.SCMAnchors[addonName][label] or anchor
 		end
 	end
 end
