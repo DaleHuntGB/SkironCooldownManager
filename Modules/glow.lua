@@ -30,7 +30,6 @@ function SCM:StartCustomGlow(child, glowTypeOptions, glowType, key, forceUpdate)
 	child.SCMGlow = glowType
 	child.SCMGlowKey = key
 
-	DevTool:AddData(glowTypeOptions, child.SCMSpellID .. " START")
 	if glowType == "Proc" then
 		LibCustomGlow.ProcGlow_Start(child, { key = key, frameLevel = 1, color = color, startAnim = glowTypeOptions.startAnim, xOffset = glowTypeOptions.xOffset, yOffset = glowTypeOptions.yOffset })
 	elseif glowType == "Autocast" then
