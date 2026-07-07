@@ -28,21 +28,7 @@ local function SetBuffActive(parent)
 	end
 
 	parent.SCMActive = true
-
-	if not parent.SCMHidden or (not SCM.isHideWhenInactiveEnabled and parent.SCMConfig.alwaysShow) then
-		Icons.UpdateChildDesaturation(parent, false)
-		Icons.UpdateChildGlow(parent, false)
-
-		if parent.SCMConfig.showWhileInactive then
-			Icons.HideChild(parent)
-			SCM:ApplyAnchorGroupCDManagerConfig(parent.SCMGroup, nil, parent.viewerFrame and parent.viewerFrame.SCMUpdateScope)
-		end
-	elseif parent.SCMHidden then
-		Icons.ShowChild(parent)
-		Icons.UpdateChildDesaturation(parent, false)
-		Icons.UpdateChildGlow(parent, false)
-		SCM:ApplyAnchorGroupCDManagerConfig(parent.SCMGroup, nil, parent.viewerFrame and parent.viewerFrame.SCMUpdateScope)
-	end
+	States.SetActiveState(parent, true)
 end
 
 local function SetBuffInactive(parent, isActiveState)
@@ -54,19 +40,7 @@ local function SetBuffInactive(parent, isActiveState)
 
 	parent.SCMFixedDuration = nil
 	parent.SCMActive = nil
-
-	Icons.UpdateChildGlow(parent, true)
-
-	if not SCM.isHideWhenInactiveEnabled and parent.SCMConfig.alwaysShow then
-		Icons.UpdateChildDesaturation(parent, true)
-		return
-	end
-
-	-- print("INACTIVE", parent.SCMSpellID, C_Spell.GetSpellName(parent.SCMSpellID), parent.SCMHidden)
-	--local options = parent.SCMBuffOptions
-	if not parent.SCMHidden or (parent.SCMHidden and parent.SCMConfig.showWhileInactive) then
-		SCM:ApplyAnchorGroupCDManagerConfig(parent.SCMGroup, nil, parent.viewerFrame and parent.viewerFrame.SCMUpdateScope)
-	end
+	States.SetActiveState(parent, false)
 end
 
 local function OnBuffActiveStateChanged(self)
@@ -209,8 +183,10 @@ function Cooldowns.SetupBuffIconHooks(child, options)
 end
 
 function Cooldowns.GetChildCooldown(child)
-	if not child.SCMSpellID then return end
-	
+	if not child.SCMSpellID then
+		return
+	end
+
 	local cooldownData = SCM.defaultCooldownViewerConfig.cooldownIDs[child.SCMCooldownID]
 
 	local durationObject
@@ -338,7 +314,10 @@ local function OnRegularCooldownChanged(self, changeType)
 	end
 
 	if config.stateOptions then
-		RunNextFrame(function() States.SetCooldownState(parent, Cooldowns.GetChildCooldown(parent)) end)
+		RunNextFrame(function()
+			States.SetActiveState(parent, useAuraDisplayTime)
+			States.SetCooldownState(parent, Cooldowns.GetChildCooldown(parent))
+		end)
 	end
 
 	Icons.UpdateChildGlow(parent, not useAuraDisplayTime)
