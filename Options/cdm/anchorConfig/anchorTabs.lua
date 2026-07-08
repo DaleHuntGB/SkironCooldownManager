@@ -279,8 +279,8 @@ function CDMOptions.SelectAnchor(widget, parentWidget, anchorIndex, anchorTabsTb
 		end
 		anchorOptions:DoLayout()
 	end)
-	advancedConfigTabs:SelectTab("spellConfig")
 	anchorOptions:AddChild(advancedConfigTabs)
+	advancedConfigTabs:SelectTab("spellConfig")
 
 	scrollFrame:DoLayout()
 	--scrollFrame:FixScroll()

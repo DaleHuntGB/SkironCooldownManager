@@ -141,8 +141,8 @@ local function CDM(self, frame, group)
 			CDMOptions.CreateAnchorTabGroup(widget, frame, mode)
 		end
 	end)
-	modeTabs:SelectTab("spec")
 	self:AddChild(modeTabs)
+	modeTabs:SelectTab("spec")
 
 	self.typeTab = modeTabs
 end

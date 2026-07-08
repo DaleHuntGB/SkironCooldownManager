@@ -128,7 +128,7 @@ local function AddSelectedStateOption(stateTabs, state, stateOptions, selectedOp
 
 	if option.toggle then
 		local toggle = AceGUI:Create("CheckBox")
-		toggle:SetRelativeWidth(0.67)
+		toggle:SetRelativeWidth(0.66)
 		toggle:SetLabel(option.name)
 		toggle:SetValue(optionValues.enabled)
 		toggle:SetCallback("OnValueChanged", function(_, _, value)
@@ -144,7 +144,7 @@ local function AddSelectedStateOption(stateTabs, state, stateOptions, selectedOp
 
 		local subregionDropdown = AceGUI:Create("Dropdown")
 		subregionDropdown:SetLabel("Subregion")
-		subregionDropdown:SetRelativeWidth(0.67)
+		subregionDropdown:SetRelativeWidth(0.66)
 		subregionDropdown:SetList(subregions, subregionsSorted)
 		subregionDropdown:SetValue(optionValues.subregion)
 		subregionDropdown:SetCallback("OnValueChanged", function(_, _, value)
@@ -154,7 +154,7 @@ local function AddSelectedStateOption(stateTabs, state, stateOptions, selectedOp
 	else
 		local valueDropdown = AceGUI:Create("Dropdown")
 		valueDropdown:SetLabel(option.name)
-		valueDropdown:SetRelativeWidth(0.67)
+		valueDropdown:SetRelativeWidth(0.66)
 		valueDropdown:SetList(option.options, option.optionsSorted)
 		valueDropdown:SetValue(optionValues.value)
 		valueDropdown:SetCallback("OnValueChanged", function(_, _, value)
