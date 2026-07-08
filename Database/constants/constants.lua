@@ -131,29 +131,6 @@ Constants.StatesSorted = {
 	-- "recharging",
 	-- "ongcd",
 	-- "mounted",
-	["spell"] = {
-		"ready",
-		"cooldown",
-		"active",
-		"inactive",
-	},
-	["item"] = {
-		"ready",
-		"cooldown",
-	},
-	["slot"] = {
-		"ready",
-		"cooldown",
-	},
-	["custom"] = {
-		"ready",
-		"cooldown",
-	},
-	-- "nocharges",
-	-- "maxcharges",
-	-- "recharging",
-	-- "ongcd",
-	-- "mounted",
 }
 
 Constants.Visibility = {
