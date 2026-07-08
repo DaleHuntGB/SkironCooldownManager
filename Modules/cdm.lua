@@ -633,7 +633,7 @@ local function MergeUpdateScope(currentScope, newScope)
 	return UPDATE_SCOPE.ALL
 end
 
-local function OrderCDManagerSpells_Actual(updateScope, scopedAnchorGroupsOverride)
+local function OrderCDManagerSpells_Actual(updateScope, scopedAnchorGroupsOverride, refreshStates)
 	Cache.cachedViewerScale = 1
 
 	wipe(Cache.cachedChildrenTbl)
@@ -662,7 +662,7 @@ local function OrderCDManagerSpells_Actual(updateScope, scopedAnchorGroupsOverri
 
 	for i = 1, #viewerProcessOrder do
 		local viewerData = viewerProcessOrder[i]
-		Icons.ProcessChildren(_G[viewerData.frameName], Cache.cachedChildrenTbl, viewerData)
+		Icons.ProcessChildren(_G[viewerData.frameName], Cache.cachedChildrenTbl, viewerData, refreshStates)
 	end
 
 	for group, children in pairs(Cache.cachedChildrenTbl) do
@@ -682,10 +682,10 @@ local function OrderCDManagerSpells_Actual(updateScope, scopedAnchorGroupsOverri
 	if updateScope ~= UPDATE_SCOPE.BUFF_BAR then
 		if scopedAnchorGroups then
 			for group in pairs(scopedAnchorGroups) do
-				CustomIcons.ProcessGroupIcons(group, Cache.cachedCooldownFrameTbl)
+				CustomIcons.ProcessGroupIcons(group, Cache.cachedCooldownFrameTbl, refreshStates)
 			end
 		else
-			CustomIcons.ProcessGroupIcons(nil, Cache.cachedCooldownFrameTbl)
+			CustomIcons.ProcessGroupIcons(nil, Cache.cachedCooldownFrameTbl, refreshStates)
 		end
 	end
 
@@ -766,14 +766,14 @@ local function OnOrderThrottleTick()
 	end
 end
 
-local function OrderCDManagerSpells(updateScope, applyNow)
+local function OrderCDManagerSpells(updateScope, applyNow, refreshStates)
 	updateScope = updateScope or UPDATE_SCOPE.ALL
 
-	if updateScope == UPDATE_SCOPE.BUFF or updateScope == UPDATE_SCOPE.BUFF_BAR or applyNow then
-		if applyNow or updateScope == UPDATE_SCOPE.ALL then
+	if applyNow then
+		if updateScope == UPDATE_SCOPE.ALL then
 			pendingUpdateScope = nil
 		end
-		OrderCDManagerSpells_Actual(updateScope)
+		OrderCDManagerSpells_Actual(updateScope, nil, refreshStates)
 		return
 	end
 	if isThrottled then

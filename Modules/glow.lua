@@ -3,17 +3,17 @@ local LibCustomGlow = LibStub("LibCustomGlow-1.0")
 
 local activeGlows = {}
 
-function SCM:StartCustomGlow(child, glowTypeOptions, glowType, key, forceUpdate)
+function SCM:StartCustomGlow(child, glowTypeOptions, glowType, key, forceUpdate, skipGlowState)
 	if not child then
 		return
 	end
 
 	local options = self.db.profile.options
-	if child.SCMGlow and options.glowType == child.SCMGlow then
+	if not skipGlowState and child.SCMGlow and options.glowType == child.SCMGlow then
 		return
 	end
 
-	if child.SCMGlow and (options.glowType ~= child.SCMGlow or (self.OptionsFrame and self.OptionsFrame:IsVisible()) or forceUpdate) then
+	if not skipGlowState and child.SCMGlow and (options.glowType ~= child.SCMGlow or (self.OptionsFrame and self.OptionsFrame:IsVisible()) or forceUpdate) then
 		self:StopCustomGlow(child)
 	end
 
@@ -24,11 +24,17 @@ function SCM:StartCustomGlow(child, glowTypeOptions, glowType, key, forceUpdate)
 
 	local glowType = glowType or options.glowType
 	local glowTypeOptions = glowTypeOptions or options.glowTypeOptions[glowType]
+	if not (glowType and glowTypeOptions) then
+		return
+	end
+
 	local color = childConfig.useCustomGlowColor and childConfig.customGlowColor or glowTypeOptions.glowColor
 	key = key or "SCM"
 
-	child.SCMGlow = glowType
-	child.SCMGlowKey = key
+	if not skipGlowState then
+		child.SCMGlow = glowType
+		child.SCMGlowKey = key
+	end
 
 	if glowType == "Proc" then
 		LibCustomGlow.ProcGlow_Start(child, { key = key, frameLevel = 1, color = color, startAnim = glowTypeOptions.startAnim, xOffset = glowTypeOptions.xOffset, yOffset = glowTypeOptions.yOffset })
@@ -76,21 +82,37 @@ function SCM:StartCustomGlow(child, glowTypeOptions, glowType, key, forceUpdate)
 		LibCustomGlow.ButtonGlow_Start(child, color, glowTypeOptions.frequency)
 	end
 
-	activeGlows[child] = true
+	if not skipGlowState then
+		activeGlows[child] = true
+	end
 end
 
-function SCM:StopCustomGlow(child)
-	if child.SCMGlow == "Proc" then
-		LibCustomGlow.ProcGlow_Stop(child, child.SCMGlow)
-	elseif child.SCMGlow == "Autocast" then
-		LibCustomGlow.AutoCastGlow_Stop(child, child.SCMGlowKey)
-	elseif child.SCMGlow == "Pixel" then
-		LibCustomGlow.PixelGlow_Stop(child, child.SCMGlowKey)
-	elseif child.SCMGlow == "Button" then
+local function StopGlow(child, glowType, key)
+	if glowType == "Proc" then
+		LibCustomGlow.ProcGlow_Stop(child, key)
+	elseif glowType == "Autocast" then
+		LibCustomGlow.AutoCastGlow_Stop(child, key)
+	elseif glowType == "Pixel" then
+		LibCustomGlow.PixelGlow_Stop(child, key)
+	elseif glowType == "Button" then
 		LibCustomGlow.ButtonGlow_Stop(child)
 	end
+end
+
+function SCM:StopCustomGlow(child, key, glowType)
+	if not child then
+		return
+	end
+
+	if key then
+		StopGlow(child, glowType, key)
+		return
+	end
+
+	StopGlow(child, child.SCMGlow, child.SCMGlowKey)
 
 	child.SCMGlow = nil
+	child.SCMGlowKey = nil
 	activeGlows[child] = nil
 end
 

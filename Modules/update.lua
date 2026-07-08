@@ -32,13 +32,13 @@ function SCM:ApplyBuffBarCDManagerConfig()
 	end
 end
 
-function SCM:ApplyAllCDManagerConfigs(isInit)
+function SCM:ApplyAllCDManagerConfigs(isInit, refreshStates)
 	if C_CVar.GetCVar("cooldownViewerEnabled") == "1" and SCM.currentConfig then
-		OrderCDManagerSpells(UPDATE_SCOPE.ALL, isInit)
+		OrderCDManagerSpells(UPDATE_SCOPE.ALL, isInit, refreshStates)
 	end
 end
 
-function SCM:ApplyAnchorGroupCDManagerConfig(group, isGlobal, updateScope)
+function SCM:ApplyAnchorGroupCDManagerConfig(group, isGlobal, updateScope, refreshStates)
 	if C_CVar.GetCVar("cooldownViewerEnabled") ~= "1" or not SCM.currentConfig then
 		return
 	end
@@ -60,7 +60,7 @@ function SCM:ApplyAnchorGroupCDManagerConfig(group, isGlobal, updateScope)
 
 	local scopedGroups = self:AcquireScopedGroupCache()
 	scopedGroups[scopedGroup] = true
-	OrderCDManagerSpells_Actual(updateScope, scopedGroups)
+	OrderCDManagerSpells_Actual(updateScope, scopedGroups, refreshStates)
 	self:ReleaseScopedGroupCache(scopedGroups)
 end
 

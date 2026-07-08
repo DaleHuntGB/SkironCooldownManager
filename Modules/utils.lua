@@ -32,6 +32,8 @@ local CHILD_SCM_RESET_FIELDS = {
 	"SCMRowConfig",
 	"SCMShouldBeVisible",
 	"SCMGlow",
+	"SCMStateBorders",
+	"SCMActiveStateBorders",
 	"SCMActiveGlow",
 	"SCMAnchorFrame",
 	"SCMAnchorFrameStrata",
@@ -181,6 +183,13 @@ function Utils.ResetChildSCMState(child)
 		SCM:StopCustomGlow(child)
 	end
 
+	if SCM.States and SCM.States.StopStateGlows then
+		SCM.States.StopStateGlows(child)
+	end
+	if child.SCMActiveStateBorders and SCM.States and SCM.States.HideAllStateBorders then
+		SCM.States.HideAllStateBorders(child)
+	end
+
 	if child.Icon then
 		child.Icon.SCMDesaturated = nil
 	end
@@ -290,8 +299,8 @@ function Utils.GetAnchorFrame(anchorFrames)
 	end
 
 	if anchorFrames:find(",", 1, true) then
-		for currentFrame in anchorFrames:gmatch("[^,]+") do
-			currentFrame = strtrim(currentFrame)
+		for frameName in anchorFrames:gmatch("[^,]+") do
+			local currentFrame = strtrim(frameName)
 			local anchorFrame = currentFrame ~= "" and GetSingleAnchorFrame(currentFrame)
 			if anchorFrame and (currentFrame:sub(1, 7) == "ANCHOR:" or anchorFrame:IsVisible()) then
 				return anchorFrame, currentFrame
@@ -396,13 +405,28 @@ function Utils.AddChildToGroup(validChildren, group, child, isGlobal)
 		child.SCMGlobal = true
 	end
 
-	local groupChildren = GetOrCreateTableEntry(validChildren, group)
+	local groupChildren = validChildren[group]
+	if not groupChildren then
+		if validChildren == Cache.cachedChildrenTbl then
+			groupChildren = GetOrCreateTableEntry(Cache.cachedGroupedChildren, group)
+			wipe(groupChildren)
+		elseif validChildren == Cache.cachedCooldownFrameTbl then
+			groupChildren = GetOrCreateTableEntry(Cache.cachedVisibleChildren, group)
+			wipe(groupChildren)
+		else
+			groupChildren = {}
+		end
+		validChildren[group] = groupChildren
+	end
+
 	groupChildren[#groupChildren + 1] = child
 	return group
 end
 
 function Utils.GetIconType(config)
-	if not config or not (type(config) == "table") then return end
+	if not config or not (type(config) == "table") then
+		return
+	end
 	return config.iconType or (config.spellID and "spell") or "item"
 end
 

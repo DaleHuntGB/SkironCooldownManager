@@ -213,6 +213,28 @@ local function AddSubregionOptions(subregionData, subregionTabs, iconConfig)
 		glowType:SetValue(subregionData.glowType)
 		AddCustomGlowOptions(dynamicGlowSettingsGroup, subregionData.glowTypeOptions[subregionData.glowType], subregionData.glowType)
 	elseif subregionData.type == "border" then
+		local borderSize = AceGUI:Create("Slider")
+		borderSize:SetRelativeWidth(0.5)
+		borderSize:SetLabel("Border Size")
+		borderSize:SetSliderValues(0, 5, 0.1)
+		borderSize:SetValue(subregionData.borderSize or 1)
+		borderSize:SetCallback("OnValueChanged", function(_, _, value)
+			subregionData.borderSize = value
+		end)
+		subregionTabs:AddChild(borderSize)
+
+		local borderColor = AceGUI:Create("ColorPicker")
+		borderColor:SetRelativeWidth(0.5)
+		borderColor:SetLabel("Border Color")
+		borderColor:SetHasAlpha(true)
+
+		subregionData.borderColor = subregionData.borderColor or {r = 0, g = 0, b = 0, a = 1}
+		local color = subregionData.borderColor
+		borderColor:SetColor(color.r, color.g, color.b, color.a)
+		borderColor:SetCallback("OnValueChanged", function(_, _, r, g, b, a)
+			subregionData.borderColor = { r = r, g = g, b = b, a = a }
+		end)
+		subregionTabs:AddChild(borderColor)
 	elseif subregionData.type == "text" then
 	end
 

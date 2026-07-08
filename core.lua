@@ -27,7 +27,7 @@ function SCM.RefreshCooldownViewerData(releaseCustomIcons)
 		SCM.CustomIcons.ReleaseAllIcons()
 	end
 	SCM:CreateAllCustomIcons()
-	SCM:ApplyAllCDManagerConfigs(true)
+	SCM:ApplyAllCDManagerConfigs(true, true)
 	SCM:UpdateCastBar()
 	SCM:RefreshResourceBarConfig()
 end

@@ -95,11 +95,11 @@ Constants.States = {
 	["inactive"] = "Inactive",
 	["ready"] = "Ready",
 	["cooldown"] = "On Cooldown",
-	["nocharges"] = "No Charges",
-	["maxcharges"] = "Max Charges",
-	["recharging"] = "Recharging",
-	["ongcd"] = "On GCD",
-	["mounted"] = "Mounted"
+	-- ["nocharges"] = "No Charges",
+	-- ["maxcharges"] = "Max Charges",
+	-- ["recharging"] = "Recharging",
+	-- ["ongcd"] = "On GCD",
+	-- ["mounted"] = "Mounted"
 }
 
 Constants.StatesSorted = {
@@ -107,11 +107,11 @@ Constants.StatesSorted = {
 	"cooldown",
 	"active",
 	"inactive",
-	"nocharges",
-	"maxcharges",
-	"recharging",
-	"ongcd",
-	"mounted",
+	-- "nocharges",
+	-- "maxcharges",
+	-- "recharging",
+	-- "ongcd",
+	-- "mounted",
 }
 
 Constants.Visibility = {

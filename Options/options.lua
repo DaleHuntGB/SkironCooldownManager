@@ -61,13 +61,13 @@ function Options.GetEffectiveAnchorGroup(anchorIndex, mode)
 	return anchorIndex
 end
 
-function Options.ApplyModeConfigUpdate(anchorIndex, mode)
+function Options.ApplyModeConfigUpdate(anchorIndex, mode, refreshStates)
 	if mode == "global" then
-		SCM:ApplyAnchorGroupCDManagerConfig(anchorIndex, true)
+		SCM:ApplyAnchorGroupCDManagerConfig(anchorIndex, true, nil, refreshStates)
 	elseif mode == "buffbars" then
-		SCM:ApplyAnchorGroupCDManagerConfig(anchorIndex, false, UPDATE_SCOPE.BUFF_BAR)
+		SCM:ApplyAnchorGroupCDManagerConfig(anchorIndex, false, UPDATE_SCOPE.BUFF_BAR, refreshStates)
 	else
-		SCM:ApplyAllCDManagerConfigs(true)
+		SCM:ApplyAllCDManagerConfigs(true, refreshStates)
 	end
 end
 

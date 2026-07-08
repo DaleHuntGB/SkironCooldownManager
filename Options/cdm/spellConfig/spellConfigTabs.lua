@@ -9,8 +9,8 @@ local iconTypeTabs = {
 		{ value = "general", text = "General" },
 		{ value = "display", text = "Display" },
 		{ value = "cooldown", text = "Cooldown" },
-		{ value = "subregion", text = "Subregions (NYI)" },
-		{ value = "state", text = "States (NYI)" },
+		{ value = "subregion", text = "Subregions (Alpha)" },
+		{ value = "state", text = "States (Alpha)" },
 		{ value = "load", text = "Load Conditions" },
 	},
 	spell = {},
@@ -48,18 +48,20 @@ function CDMOptions.CreateSpellConfigTabs(parentScrollFrame, iconSettings, butto
 
 	buttonFrame:SetBackdropBorderColor(0, 1, 0, 1)
 
-	-- if buttonData.iconType == "bloodlust" then
-	-- 	iconSettings:SetTitle("Bloodlust")
-	-- elseif buttonData.spellID and buttonData.spellID > 0 then
-	-- 	iconSettings:SetTitle(C_Spell.GetSpellName(buttonData.spellID))
-	-- elseif buttonData.itemID then
-	-- 	iconSettings:SetTitle(C_Item.GetItemNameByID(buttonData.itemID))
-	-- elseif buttonData.slotID then
-	-- 	iconSettings:SetTitle("Slot ID " .. buttonData.slotID)
-	-- end
-
 	if iconConfig then
-		local maxHeight
+		local selectedIconText = AceGUI:Create("Heading")
+		selectedIconText:SetRelativeWidth(1)
+		iconSettings:AddChild(selectedIconText)
+
+		if buttonData.iconType == "bloodlust" then
+			selectedIconText:SetText("Bloodlust")
+		elseif buttonData.spellID and buttonData.spellID > 0 then
+			selectedIconText:SetText(C_Spell.GetSpellName(buttonData.spellID))
+		elseif buttonData.itemID then
+			selectedIconText:SetText(C_Item.GetItemNameByID(buttonData.itemID))
+		elseif buttonData.slotID then
+			selectedIconText:SetText("Slot ID " .. buttonData.slotID)
+		end
 
 		local iconSettingsTabs = AceGUI:Create("TreeGroup")
 		iconSettingsTabs:SetLayout("flow")
@@ -83,8 +85,10 @@ function CDMOptions.CreateSpellConfigTabs(parentScrollFrame, iconSettings, butto
 			elseif group == "glow" then
 				CDMOptions.CreateGlowTabSettings(self, iconSettings, parentScrollFrame, buttonFrame, buttonData, iconConfig, anchorIndex, mode, isGlobal, isBuffBar)
 			elseif group == "state" then
+				CDMOptions.ShowIconSettingsMessage(self, iconSettingsTabs, "|TInterface\\common\\help-i:40:40:0:0|tThese options are subject to change.")
 				CDMOptions.CreateStateTabSettings(self, iconSettings, parentScrollFrame, buttonFrame, buttonData, iconConfig, anchorIndex, mode, isGlobal, isBuffBar)
 			elseif group == "subregion" then
+				CDMOptions.ShowIconSettingsMessage(self, iconSettingsTabs, "|TInterface\\common\\help-i:40:40:0:0|tThese options are subject to change.")
 				CDMOptions.CreateSubregionTabSettings(self, iconSettings, parentScrollFrame, buttonFrame, buttonData, iconConfig, anchorIndex, mode, isGlobal, isBuffBar)
 			elseif group == "items" then
 				CDMOptions.CreateItemsTabSettings(self, iconSettings, parentScrollFrame, buttonFrame, buttonData, iconConfig, anchorIndex, mode, isGlobal, isBuffBar)

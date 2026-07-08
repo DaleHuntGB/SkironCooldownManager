@@ -4,6 +4,7 @@ local CustomIcons = SCM.CustomIcons
 local CDM = SCM.CDM
 local Cache = SCM.Cache
 local Icons = SCM.Icons
+local States = SCM.States
 local Utils = SCM.Utils
 local GetIconType = Utils.GetIconType
 local ResetChildSCMState = Utils.ResetChildSCMState
@@ -160,7 +161,7 @@ local function OnIconCooldownDone(self)
 end
 
 local function OnCustomIconShow(self)
-	if self:GetAttribute("statehidden") then
+	if self:GetAttribute("statehidden") or self.SCMSkipShowValidation then
 		return
 	end
 
@@ -170,16 +171,9 @@ local function OnCustomIconShow(self)
 		return
 	end
 
-	if self.SCMSkipShowValidation then
-		return
-	end
-
-	if self.SCMIconType == "empty" then
-		return
-	end
-
-	if not ShouldShowCustomIcon(self.SCMConfig, self.SCMIconType, nil, nil, self) then
-		Icons.SetChildVisibilityState(self, false, true)
+	if self.SCMIconType ~= "empty" and not self.SCMShouldBeVisible then
+		self.SCMAppliedVisibility = false
+		self:Hide()
 	end
 end
 
@@ -1015,7 +1009,7 @@ function CustomIcons.CreateIcons(customConfig, isGlobal, iconType)
 	end
 end
 
-local function ProcessCustomIcon(id, config, validChildren)
+local function ProcessCustomIcon(id, config, validChildren, refreshStates)
 	local anchorGroup = config.anchorGroup or 1
 	local customFrames = CustomIcons.GetCustomIconFrames(config)
 	if not customFrames then
@@ -1050,6 +1044,11 @@ local function ProcessCustomIcon(id, config, validChildren)
 			local shouldShow = ShouldShowCustomIcon(config, iconType, hasCount, isOnCooldown)
 
 			Icons.SetChildVisibilityState(frame, shouldShow, true)
+			if shouldShow and refreshStates then
+				local isActive = (iconType == "timer" or iconType == "bloodlust") and isOnCooldown or nil
+				States.SyncState(frame, isActive, isOnCooldown, true, true)
+				shouldShow = frame.SCMShouldBeVisible
+			end
 			CDM.AddChildToScopedGroup(Cache.cachedChildrenTbl, anchorGroup, frame, frame.SCMGlobal)
 
 			if shouldShow then
@@ -1069,24 +1068,24 @@ local function ProcessCustomIcon(id, config, validChildren)
 	end
 end
 
-local function ProcessCustomIconEntries(entries, validChildren)
+local function ProcessCustomIconEntries(entries, validChildren, refreshStates)
 	if not entries then
 		return
 	end
 
 	for i = 1, #entries, 2 do
-		ProcessCustomIcon(entries[i], entries[i + 1], validChildren)
+		ProcessCustomIcon(entries[i], entries[i + 1], validChildren, refreshStates)
 	end
 end
 
-function CustomIcons.ProcessGroupIcons(group, validChildren)
+function CustomIcons.ProcessGroupIcons(group, validChildren, refreshStates)
 	if group then
-		ProcessCustomIconEntries(Cache.cachedCustomIconsByGroup[group], validChildren)
+		ProcessCustomIconEntries(Cache.cachedCustomIconsByGroup[group], validChildren, refreshStates)
 		return
 	end
 
 	for _, entries in pairs(Cache.cachedCustomIconsByGroup) do
-		ProcessCustomIconEntries(entries, validChildren)
+		ProcessCustomIconEntries(entries, validChildren, refreshStates)
 	end
 end
 

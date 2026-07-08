@@ -79,23 +79,18 @@ local function MigrateBuffIconStates(spellConfig)
 		local buffIconGroup = config.source[Enum.CooldownViewerCategory.TrackedBuff] or config.source[Enum.CooldownViewerCategory.TrackedBars]
 		if buffIconGroup then
 			local anchorGroupConfig = config.anchorGroup[buffIconGroup]
-			if anchorGroupConfig and not anchorGroupConfig.selectedStates then
-				anchorGroupConfig.usedStates = {
-					active = true,
-					inactive = true,
-				}
-				anchorGroupConfig.selectedStates = { "active", "inactive" }
-				anchorGroupConfig.stateOptions = {
-					active = {
-						selectedOptions = { "visibility" },
-						visibility = {
-							value = "show",
-						},
-					},
-					inactive = {
-						selectedOptions = { "visibility" },
-						visibility = {
-							value = "hide",
+			if anchorGroupConfig and not anchorGroupConfig.effectRules then
+				anchorGroupConfig.effectRules = {
+					visibility = {
+						rules = {
+							{
+								state = "active",
+								value = "show",
+							},
+							{
+								state = "inactive",
+								value = "hide",
+							},
 						},
 					},
 				}

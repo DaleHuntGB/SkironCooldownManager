@@ -4,6 +4,7 @@ local Cache = SCM.Cache
 
 Cache.cachedViewerScale = 1
 Cache.cachedChildrenTbl = {}
+Cache.cachedGroupedChildren = {}
 Cache.cachedVisibleChildren = {}
 Cache.cachedCooldownFrameTbl = {}
 Cache.cachedViewerChildren = {}
@@ -57,6 +58,7 @@ function SCM:ResetCooldownViewerRuntimeState()
 
 	wipe(Cache.cachedViewerChildren)
 	wipe(Cache.cachedChildrenTbl)
+	wipe(Cache.cachedGroupedChildren)
 	wipe(Cache.cachedCooldownFrameTbl)
 	wipe(Cache.cachedVisitedAnchorGroups)
 	wipe(Cache.cachedVisibleChildren)

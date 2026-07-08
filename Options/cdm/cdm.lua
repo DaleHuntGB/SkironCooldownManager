@@ -10,7 +10,7 @@ local Utils = SCM.Utils
 SCM.MainTabs.CDM = { value = "CDM", text = "Cooldown Manager", order = 2, subgroups = {} }
 
 local function GetSpellAnchorGroupConfig(order, sourceIndex)
-	if sourceIndex ~= Enum.CooldownViewerCategory.TrackedBuff and sourceIndex ~= num.CooldownViewerCategory.TrackedBars then
+	if sourceIndex ~= Enum.CooldownViewerCategory.TrackedBuff and sourceIndex ~= Enum.CooldownViewerCategory.TrackedBar then
 		return {
 			order = order,
 		}
@@ -18,22 +18,17 @@ local function GetSpellAnchorGroupConfig(order, sourceIndex)
 
 	return {
 		order = order,
-		usedStates = {
-			active = true,
-			inactive = true,
-		},
-		selectedStates = { "active", "inactive" },
-		stateOptions = {
-			active = {
-				selectedOptions = { "visibility" },
-				visibility = {
-					value = "show",
-				},
-			},
-			inactive = {
-				selectedOptions = { "visibility" },
-				visibility = {
-					value = "hide",
+		effectRules = {
+			visibility = {
+				rules = {
+					{
+						state = "active",
+						value = "show",
+					},
+					{
+						state = "inactive",
+						value = "hide",
+					},
 				},
 			},
 		},
