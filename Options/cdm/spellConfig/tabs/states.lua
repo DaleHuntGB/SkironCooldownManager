@@ -64,11 +64,16 @@ local function GetUsedRuleStates(rules, currentRule)
 	return usedStates
 end
 
-local function GetRuleStateList(rules, currentRule)
+local function GetRuleStateList(rules, currentRule, iconType, isCustom)
 	local usedStates = GetUsedRuleStates(rules, currentRule)
 	local states, statesSorted = {}, {}
 
-	for _, stateKey in ipairs(Constants.StatesSorted) do
+	local constantStatesSorted = Constants.StatesSorted[iconType] or Constants.StatesSorted.spell
+	if isCustom and iconType == "spell" then
+		constantStatesSorted = Constants.StatesSorted.custom
+	end
+
+	for _, stateKey in ipairs(constantStatesSorted) do
 		if stateKey == currentRule.state or not usedStates[stateKey] then
 			states[stateKey] = Constants.States[stateKey]
 			tinsert(statesSorted, stateKey)
@@ -78,9 +83,14 @@ local function GetRuleStateList(rules, currentRule)
 	return states, statesSorted
 end
 
-local function GetFirstUnusedRuleState(rules)
+local function GetFirstUnusedRuleState(rules, iconType, isCustom)
+	local constantStatesSorted = Constants.StatesSorted[iconType] or Constants.StatesSorted.spell
+	if isCustom and iconType == "spell" then
+		constantStatesSorted = Constants.StatesSorted.custom
+	end
+
 	local usedStates = GetUsedRuleStates(rules)
-	for _, stateKey in ipairs(Constants.StatesSorted) do
+	for _, stateKey in ipairs(constantStatesSorted) do
 		if not usedStates[stateKey] then
 			return stateKey
 		end
@@ -146,11 +156,11 @@ local function AddRuleValueControl(effectTabGroup, effectKey, iconConfig, rule, 
 	end
 end
 
-local function AddEffectRule(effectTabGroup, effectKey, rules, iconConfig, rule, ruleIndex, applyConfigUpdate)
+local function AddEffectRule(effectTabGroup, effectKey, rules, buttonData, iconConfig, rule, ruleIndex, applyConfigUpdate)
 	local stateDropdown = AceGUI:Create("Dropdown")
 	stateDropdown:SetLabel("State")
 	stateDropdown:SetRelativeWidth(0.33)
-	stateDropdown:SetList(GetRuleStateList(rules, rule))
+	stateDropdown:SetList(GetRuleStateList(rules, rule, buttonData.iconType, buttonData.isCustom))
 	stateDropdown:SetValue(rule.state)
 	stateDropdown:SetCallback("OnValueChanged", function(_, _, value)
 		rule.state = value
@@ -209,7 +219,7 @@ local function AddEffectRule(effectTabGroup, effectKey, rules, iconConfig, rule,
 	effectTabGroup:AddChild(remove)
 end
 
-local function AddEffectOptions(effectKey, effectTabGroup, iconConfig, applyConfigUpdate)
+local function AddEffectOptions(effectKey, effectTabGroup, buttonData, iconConfig, ApplyConfigUpdate)
 	local effectConfig = iconConfig.effectRules and iconConfig.effectRules[effectKey]
 	local rules = effectConfig and effectConfig.rules
 
@@ -221,7 +231,7 @@ local function AddEffectOptions(effectKey, effectTabGroup, iconConfig, applyConf
 				separator:SetRelativeWidth(1)
 				effectTabGroup:AddChild(separator)
 			end
-			AddEffectRule(effectTabGroup, effectKey, rules, iconConfig, rule, ruleIndex, applyConfigUpdate)
+			AddEffectRule(effectTabGroup, effectKey, rules, buttonData, iconConfig, rule, ruleIndex, ApplyConfigUpdate)
 		end
 
 		local separator = AceGUI:Create("Heading")
@@ -230,7 +240,7 @@ local function AddEffectOptions(effectKey, effectTabGroup, iconConfig, applyConf
 		effectTabGroup:AddChild(separator)
 	end
 
-	local firstUnusedRuleState = GetFirstUnusedRuleState(rules)
+	local firstUnusedRuleState = GetFirstUnusedRuleState(rules, buttonData.iconType, buttonData.isCustom)
 	local addRule = AceGUI:Create("Button")
 	addRule:SetText("Add Rule")
 	addRule:SetRelativeWidth(0.33)
@@ -264,7 +274,7 @@ local function AddEffectOptions(effectKey, effectTabGroup, iconConfig, applyConf
 		end
 		SetDefaultRuleValues(rule, effectKey, iconConfig)
 		tinsert(rules, rule)
-		applyConfigUpdate()
+		ApplyConfigUpdate()
 		effectTabGroup:SelectTab(effectKey)
 	end)
 	effectTabGroup:AddChild(addRule)
@@ -301,7 +311,7 @@ function CDMOptions.CreateStateTabSettings(iconSettingsTabs, iconSettings, paren
 			return
 		end
 
-		AddEffectOptions(selectedTab, self, iconConfig, ApplyConfigUpdate)
+		AddEffectOptions(selectedTab, self, buttonData, iconConfig, ApplyConfigUpdate)
 		iconSettings:DoLayout()
 		parentScrollFrame:DoLayout()
 	end)

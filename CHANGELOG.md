@@ -1,16 +1,11 @@
-### Version 1.5.34 [Alpha]
+### Version 1.6 [Alpha]
 
 Additions:
-- Add more presets (potions, racials, etc)
-- Add option for a "Smooth" resource bar
+- Add a state and subregion system (still in alpha and subject to change)
+- Rework of the cdm options
+- Add "Hide Active Swipe" option
+- Spells now have tooltips in the dropdown menu
 
 Fixes:
-- Fix 12.1 lua errors
-- Hopefully fix stuck cooldowns
-- Custom icon cooldown and charge display improvements and fixes
-- Fix the edge and swipe for abilities with charges and an active buff
-- Go back to the old cooldown frame anchoring (hopfully nothing breaks)
-- Fix lua errors when importing profiles
-- Make sure "always show" only works when "Disable "Hide While Inactive"" is enabled
-- Clean up resource bar code
-- Make sure the border is disabled when it should be
+- Fixes for 12.1 changes
+- Fix resource bar position not updating when changing the offsets in the options

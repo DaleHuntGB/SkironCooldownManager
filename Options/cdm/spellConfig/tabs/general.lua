@@ -59,6 +59,8 @@ local function AddIconOptions(iconSettingsTabs, iconSettings, scrollFrame, butto
 			buttonConfig.customGlowColor = { r, g, b, a }
 		end)
 		glowOptions:AddChild(customGlowColor)
+	elseif buttonData.iconType ~= "spell" and buttonData.iconType ~= "timer" then
+		CDMOptions.ShowIconSettingsMessage(iconSettingsTabs, iconSettingsTabs, "|TInterface\\common\\help-i:40:40:0:0|tNothing to see here yet.")
 	end
 
 	AddTimerOptions(iconSettingsTabs, iconSettings, scrollFrame, buttonFrame, buttonData, buttonConfig, anchorIndex, mode, isGlobal, isBuffBar)

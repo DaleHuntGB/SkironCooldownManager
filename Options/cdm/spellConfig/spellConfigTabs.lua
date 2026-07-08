@@ -7,13 +7,14 @@ local AceGUI = LibStub("AceGUI-3.0")
 local iconTypeTabs = {
 	all = {
 		{ value = "general", text = "General" },
-		{ value = "display", text = "Display" },
-		{ value = "cooldown", text = "Cooldown" },
 		{ value = "subregion", text = "Subregions (Alpha)" },
 		{ value = "state", text = "States (Alpha)" },
+		{ value = "cooldown", text = "Cooldown" },
 		{ value = "load", text = "Load Conditions" },
 	},
-	spell = {},
+	spell = {
+		{ value = "display", text = "Display" },
+	},
 	item = {
 		{ value = "items", text = "Items" },
 	},
@@ -56,9 +57,9 @@ function CDMOptions.CreateSpellConfigTabs(parentScrollFrame, iconSettings, butto
 		if buttonData.iconType == "bloodlust" then
 			selectedIconText:SetText("Bloodlust")
 		elseif buttonData.spellID and buttonData.spellID > 0 then
-			selectedIconText:SetText(C_Spell.GetSpellName(buttonData.spellID))
+			selectedIconText:SetText(string.format("|T%d:0|t%s", buttonData.texture, C_Spell.GetSpellName(buttonData.spellID)))
 		elseif buttonData.itemID then
-			selectedIconText:SetText(C_Item.GetItemNameByID(buttonData.itemID))
+			selectedIconText:SetText(string.format("|T%d:0|t%s", buttonData.texture, C_Item.GetItemNameByID(buttonData.itemID)))
 		elseif buttonData.slotID then
 			selectedIconText:SetText("Slot ID " .. buttonData.slotID)
 		end
