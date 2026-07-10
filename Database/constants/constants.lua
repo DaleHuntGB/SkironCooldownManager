@@ -33,7 +33,6 @@ Constants.SecondaryGrowthDirections = {
 }
 
 Constants.FrameStrata = {
-	[""] = "Default",
 	BACKGROUND = "Background",
 	LOW = "Low",
 	MEDIUM = "Medium",
@@ -45,7 +44,6 @@ Constants.FrameStrata = {
 }
 
 Constants.FrameStrataSorted = {
-	"",
 	"BACKGROUND",
 	"LOW",
 	"MEDIUM",

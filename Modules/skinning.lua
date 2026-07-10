@@ -20,6 +20,7 @@ local function ApplyChargeAndApplicationStyle(child, options, fontPath)
 			end
 		end
 
+		child.ChargeCount:SetFrameStrata(options.chargeFrameStrata)
 		child.ChargeCount.Current:ClearAllPoints()
 		child.ChargeCount.Current:SetPoint(
 			rowConfig.chargePoint or options.chargePoint,
@@ -68,6 +69,7 @@ local function ApplyChargeAndApplicationStyle(child, options, fontPath)
 			end
 		end
 
+		child.Applications:SetFrameStrata(options.chargeFrameStrata)
 		child.Applications.Applications:ClearAllPoints()
 		child.Applications.Applications:SetPoint(
 			rowConfig.applicationsPoint or options.chargePoint,
@@ -211,6 +213,7 @@ local function ApplyCooldownStyle(child, options, childConfig)
 			child.CooldownFlash:SetAlpha(0)
 		end
 
+		cooldownFrame:SetFrameStrata(options.cooldownFrameStrata)
 		cooldownFrame:SetSwipeTexture("Interface\\Buttons\\WHITE8x8")
 		cooldownFrame:ClearAllPoints()
 
