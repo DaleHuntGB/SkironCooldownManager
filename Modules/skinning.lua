@@ -201,10 +201,10 @@ local function OnSetCooldown(self)
 	ApplyCooldownFont(self, options)
 end
 
-local function ApplyCooldownStyle(child, options, childConfig, isOptionsOpen)
+local function ApplyCooldownStyle(child, options, childConfig)
 	local cooldownFrame = child.GetCooldownFrame and child:GetCooldownFrame() or child.Cooldown
 	if cooldownFrame then
-		if cooldownFrame.SCMCooldownSkinHook and not isOptionsOpen then
+		if child.SCMCooldownSkinHook then
 			return
 		end
 
@@ -219,23 +219,19 @@ local function ApplyCooldownStyle(child, options, childConfig, isOptionsOpen)
 
 		if childConfig then
 			if childConfig.cooldownMoveTL then
-				cooldownFrame:SetPoint("TOPLEFT", child, "TOPLEFT", childConfig.cooldownXOffsetTL or 0, childConfig.cooldownYOffsetTL or 0)
+				cooldownFrame:SetPoint("TOPLEFT", child, "TOPLEFT", childConfig.cooldownXOffsetTL, childConfig.cooldownYOffsetTL)
 			else
 				cooldownFrame:SetPoint("TOPLEFT", child, "TOPLEFT", 0, 0)
 			end
 
 			if childConfig.cooldownMoveBR then
-				cooldownFrame:SetPoint("BOTTOMRIGHT", child, "BOTTOMRIGHT", childConfig.cooldownXOffsetBR or -SCM:PixelPerfectSize(1), childConfig.cooldownYOffsetBR or SCM:PixelPerfectSize(1))
+				cooldownFrame:SetPoint("BOTTOMRIGHT", child, "BOTTOMRIGHT", childConfig.cooldownXOffsetBR, childConfig.cooldownYOffsetBR)
 			else
 				cooldownFrame:SetPoint("BOTTOMRIGHT", child, "BOTTOMRIGHT", -SCM:PixelPerfectSize(1), SCM:PixelPerfectSize(1))
 			end
 		else
 			cooldownFrame:SetPoint("TOPLEFT", child, "TOPLEFT", 0, 0)
 			cooldownFrame:SetPoint("BOTTOMRIGHT", child, "BOTTOMRIGHT", -SCM:PixelPerfectSize(1), SCM:PixelPerfectSize(1))
-		end
-
-		if child.SCMCooldownSkinHook then
-			return
 		end
 
 		cooldownFrame.SCMParent = child
@@ -287,8 +283,7 @@ function SCM:SkinChild(child, childConfig)
 		child:SetFrameStrata(frameStrata)
 	end
 
-	local isOptionsOpen = self.OptionsFrame and self.OptionsFrame:IsShown()
-	if not child.SCMSkinned or isOptionsOpen then
+	if not child.SCMSkinned or (child.SCMSkinned and self.OptionsFrame and self.OptionsFrame:IsShown()) then
 		child.SCMSkinned = true
 
 		local borderSize = options.borderSize
@@ -363,7 +358,7 @@ function SCM:SkinChild(child, childConfig)
 
 		ApplyZoomSettings(child, options)
 		ApplyChargeAndApplicationStyle(child, options, LSM:Fetch("font", options.chargeFont))
-		ApplyCooldownStyle(child, options, childConfig, isOptionsOpen)
+		ApplyCooldownStyle(child, options, childConfig)
 	end
 
 	for _, customSkin in ipairs(SCM.Skins) do
