@@ -20,7 +20,8 @@ local function ApplyChargeAndApplicationStyle(child, options, fontPath)
 			end
 		end
 
-		child.ChargeCount:SetFrameStrata(options.chargeFrameStrata)
+		child.ChargeCount:SetFrameStrata(child:GetFrameStrata())
+		child.ChargeCount:SetFrameLevel(child:GetFrameLevel() + options.chargeFrameLevel)
 		child.ChargeCount.Current:ClearAllPoints()
 		child.ChargeCount.Current:SetPoint(
 			rowConfig.chargePoint or options.chargePoint,
@@ -69,7 +70,8 @@ local function ApplyChargeAndApplicationStyle(child, options, fontPath)
 			end
 		end
 
-		child.Applications:SetFrameStrata(options.chargeFrameStrata)
+		child.Applications:SetFrameStrata(child:GetFrameStrata())
+		child.Applications:SetFrameLevel(child:GetFrameLevel() + options.chargeFrameLevel)
 		child.Applications.Applications:ClearAllPoints()
 		child.Applications.Applications:SetPoint(
 			rowConfig.applicationsPoint or options.chargePoint,
@@ -201,6 +203,32 @@ local function OnSetCooldown(self)
 	ApplyCooldownFont(self, options)
 end
 
+local function ApplyCooldownPoints(cooldownFrame, child, options, childConfig)
+	local pixel = SCM:PixelPerfectSize(1)
+	local topLeftX, topLeftY = 0, 0
+	local bottomRightX, bottomRightY = -pixel, pixel
+
+	if childConfig and childConfig.cooldownMoveTL then
+		topLeftX = childConfig.cooldownXOffsetTL or 0
+		topLeftY = childConfig.cooldownYOffsetTL or 0
+	elseif options.cooldownMoveTL then
+		topLeftX = options.cooldownXOffsetTL or 0
+		topLeftY = options.cooldownYOffsetTL or 0
+	end
+
+	if childConfig and childConfig.cooldownMoveBR then
+		bottomRightX = childConfig.cooldownXOffsetBR or -pixel
+		bottomRightY = childConfig.cooldownYOffsetBR or pixel
+	elseif options.cooldownMoveBR then
+		bottomRightX = options.cooldownXOffsetBR or -pixel
+		bottomRightY = options.cooldownYOffsetBR or pixel
+	end
+
+	cooldownFrame:ClearAllPoints()
+	cooldownFrame:SetPoint("TOPLEFT", child, "TOPLEFT", topLeftX, topLeftY)
+	cooldownFrame:SetPoint("BOTTOMRIGHT", child, "BOTTOMRIGHT", bottomRightX, bottomRightY)
+end
+
 local function ApplyCooldownStyle(child, options, childConfig, isOptionsOpen)
 	local cooldownFrame = child.GetCooldownFrame and child:GetCooldownFrame() or child.Cooldown
 	if cooldownFrame then
@@ -213,26 +241,10 @@ local function ApplyCooldownStyle(child, options, childConfig, isOptionsOpen)
 			child.CooldownFlash:SetAlpha(0)
 		end
 
-		cooldownFrame:SetFrameStrata(options.cooldownFrameStrata)
+		cooldownFrame:SetFrameStrata(child:GetFrameStrata())
+		cooldownFrame:SetFrameLevel(child:GetFrameLevel() + (options.cooldownFrameLevel or 1))
 		cooldownFrame:SetSwipeTexture("Interface\\Buttons\\WHITE8x8")
-		cooldownFrame:ClearAllPoints()
-
-		if childConfig then
-			if childConfig.cooldownMoveTL then
-				cooldownFrame:SetPoint("TOPLEFT", child, "TOPLEFT", childConfig.cooldownXOffsetTL or 0, childConfig.cooldownYOffsetTL or 0)
-			else
-				cooldownFrame:SetPoint("TOPLEFT", child, "TOPLEFT", 0, 0)
-			end
-
-			if childConfig.cooldownMoveBR then
-				cooldownFrame:SetPoint("BOTTOMRIGHT", child, "BOTTOMRIGHT", childConfig.cooldownXOffsetBR or -SCM:PixelPerfectSize(1), childConfig.cooldownYOffsetBR or SCM:PixelPerfectSize(1))
-			else
-				cooldownFrame:SetPoint("BOTTOMRIGHT", child, "BOTTOMRIGHT", -SCM:PixelPerfectSize(1), SCM:PixelPerfectSize(1))
-			end
-		else
-			cooldownFrame:SetPoint("TOPLEFT", child, "TOPLEFT", 0, 0)
-			cooldownFrame:SetPoint("BOTTOMRIGHT", child, "BOTTOMRIGHT", -SCM:PixelPerfectSize(1), SCM:PixelPerfectSize(1))
-		end
+		ApplyCooldownPoints(cooldownFrame, child, options, childConfig)
 
 		if child.SCMCooldownSkinHook then
 			return

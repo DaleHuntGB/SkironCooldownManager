@@ -204,7 +204,7 @@ local function GetCooldownBreakpointComponents(displayStyle, minValue)
 	end
 end
 
-local function SelectGlobalSettingsTab(tabWidget, group, options)
+local function SelectGlobalSettingsTab(tabWidget, scrollFrame, group, options)
 	tabWidget:ReleaseChildren()
 
 	if group == "General" then
@@ -659,16 +659,16 @@ local function SelectGlobalSettingsTab(tabWidget, group, options)
 		end)
 		chargeSettings:AddChild(yOffset)
 
-		local chargeFrameStrata = AceGUI:Create("Dropdown")
-		chargeFrameStrata:SetRelativeWidth(0.5)
-		chargeFrameStrata:SetLabel("Frame Strata")
-		chargeFrameStrata:SetList(SCM.Constants.FrameStrata, SCM.Constants.FrameStrataSorted)
-		chargeFrameStrata:SetValue(options.chargeFrameStrata or "")
-		chargeFrameStrata:SetCallback("OnValueChanged", function(_, _, value)
-			options.chargeFrameStrata = value
+		local chargeFrameLevel = AceGUI:Create("Slider")
+		chargeFrameLevel:SetRelativeWidth(0.5)
+		chargeFrameLevel:SetLabel("Frame Level")
+		chargeFrameLevel:SetSliderValues(0, 10, 1)
+		chargeFrameLevel:SetValue(options.chargeFrameLevel or 1)
+		chargeFrameLevel:SetCallback("OnValueChanged", function(_, _, value)
+			options.chargeFrameLevel = value
 			SCM:ApplyAllCDManagerConfigs()
 		end)
-		chargeSettings:AddChild(chargeFrameStrata)
+		chargeSettings:AddChild(chargeFrameLevel)
 
 		local chargeColour = AceGUI:Create("ColorPicker")
 		chargeColour:SetLabel("Colour")
@@ -757,16 +757,96 @@ local function SelectGlobalSettingsTab(tabWidget, group, options)
 		end)
 		cooldownTextSettings:AddChild(cooldownYOffset)
 
-		local cooldownFrameStrata = AceGUI:Create("Dropdown")
-		cooldownFrameStrata:SetRelativeWidth(0.33)
-		cooldownFrameStrata:SetLabel("Frame Strata")
-		cooldownFrameStrata:SetList(SCM.Constants.FrameStrata, SCM.Constants.FrameStrataSorted)
-		cooldownFrameStrata:SetValue(options.cooldownFrameStrata or "")
-		cooldownFrameStrata:SetCallback("OnValueChanged", function(_, _, value)
-			options.cooldownFrameStrata = value
+		local cooldownFrameLevel = AceGUI:Create("Slider")
+		cooldownFrameLevel:SetRelativeWidth(0.33)
+		cooldownFrameLevel:SetLabel("Frame Level")
+		cooldownFrameLevel:SetSliderValues(0, 10, 1)
+		cooldownFrameLevel:SetValue(options.cooldownFrameLevel or 1)
+		cooldownFrameLevel:SetCallback("OnValueChanged", function(_, _, value)
+			options.cooldownFrameLevel = value
 			SCM:ApplyAllCDManagerConfigs()
 		end)
-		cooldownTextSettings:AddChild(cooldownFrameStrata)
+		cooldownTextSettings:AddChild(cooldownFrameLevel)
+
+		local cooldownPositionSettings = AceGUI:Create("InlineGroup")
+		cooldownPositionSettings:SetLayout("flow")
+		cooldownPositionSettings:SetFullWidth(true)
+		cooldownPositionSettings:SetTitle("Cooldown Frame Position")
+		tabWidget:AddChild(cooldownPositionSettings)
+
+		local cooldownMoveTL = AceGUI:Create("CheckBox")
+		cooldownMoveTL:SetRelativeWidth(0.33)
+		cooldownMoveTL:SetValue(options.cooldownMoveTL)
+		cooldownMoveTL:SetLabel("Offset TOPLEFT")
+		cooldownPositionSettings:AddChild(cooldownMoveTL)
+
+		local cooldownXOffsetTL = AceGUI:Create("Slider")
+		cooldownXOffsetTL:SetRelativeWidth(0.33)
+		cooldownXOffsetTL:SetSliderValues(-50, 50, 0.1)
+		cooldownXOffsetTL:SetLabel("X Offset TOPLEFT")
+		cooldownXOffsetTL:SetValue(options.cooldownXOffsetTL or 0)
+		cooldownXOffsetTL:SetDisabled(not options.cooldownMoveTL)
+		cooldownXOffsetTL:SetCallback("OnValueChanged", function(_, _, value)
+			options.cooldownXOffsetTL = value
+			SCM:ApplyAllCDManagerConfigs()
+		end)
+		cooldownPositionSettings:AddChild(cooldownXOffsetTL)
+
+		local cooldownYOffsetTL = AceGUI:Create("Slider")
+		cooldownYOffsetTL:SetRelativeWidth(0.33)
+		cooldownYOffsetTL:SetSliderValues(-50, 50, 0.1)
+		cooldownYOffsetTL:SetLabel("Y Offset TOPLEFT")
+		cooldownYOffsetTL:SetValue(options.cooldownYOffsetTL or 0)
+		cooldownYOffsetTL:SetDisabled(not options.cooldownMoveTL)
+		cooldownYOffsetTL:SetCallback("OnValueChanged", function(_, _, value)
+			options.cooldownYOffsetTL = value
+			SCM:ApplyAllCDManagerConfigs()
+		end)
+		cooldownPositionSettings:AddChild(cooldownYOffsetTL)
+
+		cooldownMoveTL:SetCallback("OnValueChanged", function(_, _, value)
+			options.cooldownMoveTL = value
+			cooldownXOffsetTL:SetDisabled(not value)
+			cooldownYOffsetTL:SetDisabled(not value)
+			SCM:ApplyAllCDManagerConfigs()
+		end)
+
+		local cooldownMoveBR = AceGUI:Create("CheckBox")
+		cooldownMoveBR:SetRelativeWidth(0.33)
+		cooldownMoveBR:SetValue(options.cooldownMoveBR)
+		cooldownMoveBR:SetLabel("Offset BOTTOMRIGHT")
+		cooldownPositionSettings:AddChild(cooldownMoveBR)
+
+		local cooldownXOffsetBR = AceGUI:Create("Slider")
+		cooldownXOffsetBR:SetRelativeWidth(0.33)
+		cooldownXOffsetBR:SetSliderValues(-50, 50, 0.1)
+		cooldownXOffsetBR:SetLabel("X Offset BOTTOMRIGHT")
+		cooldownXOffsetBR:SetValue(options.cooldownXOffsetBR or -SCM:PixelPerfectSize(1))
+		cooldownXOffsetBR:SetDisabled(not options.cooldownMoveBR)
+		cooldownXOffsetBR:SetCallback("OnValueChanged", function(_, _, value)
+			options.cooldownXOffsetBR = value
+			SCM:ApplyAllCDManagerConfigs()
+		end)
+		cooldownPositionSettings:AddChild(cooldownXOffsetBR)
+
+		local cooldownYOffsetBR = AceGUI:Create("Slider")
+		cooldownYOffsetBR:SetRelativeWidth(0.33)
+		cooldownYOffsetBR:SetSliderValues(-50, 50, 0.1)
+		cooldownYOffsetBR:SetLabel("Y Offset BOTTOMRIGHT")
+		cooldownYOffsetBR:SetValue(options.cooldownYOffsetBR or SCM:PixelPerfectSize(1))
+		cooldownYOffsetBR:SetDisabled(not options.cooldownMoveBR)
+		cooldownYOffsetBR:SetCallback("OnValueChanged", function(_, _, value)
+			options.cooldownYOffsetBR = value
+			SCM:ApplyAllCDManagerConfigs()
+		end)
+		cooldownPositionSettings:AddChild(cooldownYOffsetBR)
+
+		cooldownMoveBR:SetCallback("OnValueChanged", function(_, _, value)
+			options.cooldownMoveBR = value
+			cooldownXOffsetBR:SetDisabled(not value)
+			cooldownYOffsetBR:SetDisabled(not value)
+			SCM:ApplyAllCDManagerConfigs()
+		end)
 
 		local cooldownTimerSettings = AceGUI:Create("InlineGroup")
 		cooldownTimerSettings:SetLayout("flow")
@@ -1293,6 +1373,7 @@ local function SelectGlobalSettingsTab(tabWidget, group, options)
 		fontSettings:AddChild(durationYOffset)
 	end
 
+	scrollFrame:DoLayout()
 	tabWidget:DoLayout()
 end
 
@@ -1326,7 +1407,7 @@ local function General(self, frame, group)
 	--globalSettingsTabs:SetFullHeight(true)
 	globalSettingsTabs:SetLayout("flow")
 	globalSettingsTabs:SetCallback("OnGroupSelected", function(self, event, group)
-		SelectGlobalSettingsTab(self, group, options)
+		SelectGlobalSettingsTab(self, scrollFrame, group, options)
 	end)
 	globalSettingsTabs:SelectTab("General")
 	scrollFrame:AddChild(globalSettingsTabs)
