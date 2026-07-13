@@ -166,10 +166,9 @@ local function ApplyCooldownSwipe(cooldownFrame, options)
 		return
 	end
 
-	local forceActiveSwipe = parent.SCMConfig and parent.SCMConfig.forceActiveSwipe
-
-	if parent.auraInstanceID or parent.SCMFakeAuraInstanceID or parent.SCMBuffOptions then
-		if options.disableRegularIconActiveSwipe and not forceActiveSwipe then
+	local childConfig = parent.SCMConfig
+	if cooldownFrame:GetUseAuraDisplayTime() or parent.SCMFakeAuraInstanceID or parent.SCMBuffOptions then
+		if (options.disableRegularIconActiveSwipe or childConfig.hideActiveSwipe) and not childConfig.forceActiveSwipe then
 			if options.recolorNormalSwipe then
 				cooldownFrame:SetSwipeColor(unpack(options.normalSwipeColor))
 			else
@@ -203,7 +202,11 @@ local function OnSetCooldown(self)
 	ApplyCooldownFont(self, options)
 end
 
-local function ApplyCooldownPoints(cooldownFrame, child, options, childConfig)
+local function ApplyCooldownPoints(cooldownFrame, child, options, childConfig, isOptionsOpen)
+	if child.SCMCooldownSkinHook and not isOptionsOpen then
+		return
+	end
+
 	local pixel = SCM:PixelPerfectSize(1)
 	local topLeftX, topLeftY = 0, 0
 	local bottomRightX, bottomRightY = -pixel, pixel
@@ -236,7 +239,6 @@ local function ApplyCooldownStyle(child, options, childConfig, isOptionsOpen)
 			return
 		end
 
-		child.SCMCooldownSkinHook = true
 		if child.CooldownFlash then
 			child.CooldownFlash:SetAlpha(0)
 		end
@@ -244,12 +246,13 @@ local function ApplyCooldownStyle(child, options, childConfig, isOptionsOpen)
 		cooldownFrame:SetFrameStrata(child:GetFrameStrata())
 		cooldownFrame:SetFrameLevel(child:GetFrameLevel() + (options.cooldownFrameLevel or 1))
 		cooldownFrame:SetSwipeTexture("Interface\\Buttons\\WHITE8x8")
-		ApplyCooldownPoints(cooldownFrame, child, options, childConfig)
+		ApplyCooldownPoints(cooldownFrame, child, options, childConfig, isOptionsOpen)
 
 		if child.SCMCooldownSkinHook then
 			return
 		end
 
+		child.SCMCooldownSkinHook = true
 		cooldownFrame.SCMParent = child
 
 		hooksecurefunc(cooldownFrame, "SetCooldown", OnSetCooldown)

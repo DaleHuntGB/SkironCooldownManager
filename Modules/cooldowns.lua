@@ -187,7 +187,6 @@ function Cooldowns.SetupBuffIconHooks(child, options)
 		child.SCMCheckCooldownFrame = nil
 		child.SCMUseFixedDuration = nil
 	end
-
 end
 
 function Cooldowns.GetChildCooldown(child)
@@ -219,49 +218,56 @@ function Cooldowns.GetChildCooldown(child)
 end
 
 function Cooldowns.SetNormalCooldown(self, parent)
+	local options = SCM.db.profile.options
 	local cooldownData = SCM.defaultCooldownViewerConfig.cooldownIDs[parent.SCMCooldownID]
-	self.SCMSettingRegularSpellCooldown = true
 
 	local durationObject
 	local desaturate = false
 	local isChargeCooldown = false
+	local useAuraDisplayTime = self:GetUseAuraDisplayTime()
+	local childConfig = parent.SCMConfig
 
-	local spellID = FindSpellOverrideByID(parent.SCMSpellID)
-	local spellCooldown = C_Spell.GetSpellCooldown(spellID)
-	if spellCooldown and spellCooldown.isActive and not spellCooldown.isOnGCD then
-		desaturate = true
-		durationObject = C_Spell.GetSpellCooldownDuration(spellID, true)
-	end
+	if not useAuraDisplayTime or ((childConfig.hideActiveSwipe or options.disableRegularIconActiveSwipe) and not childConfig.forceActiveSwipe) then
+		self.SCMSettingRegularSpellCooldown = true
 
-	if cooldownData.charges and not durationObject then
-		local spellCharges = C_Spell.GetSpellCharges(spellID)
-		if spellCharges and spellCharges.isActive and not spellCharges.isOnGCD then
-			isChargeCooldown = true
-			durationObject = C_Spell.GetSpellChargeDuration(spellID, true)
+		local spellID = FindSpellOverrideByID(parent.SCMSpellID)
+		local spellCooldown = C_Spell.GetSpellCooldown(spellID)
+		if spellCooldown then
+			if (options.disableGCD and spellCooldown.isOnGCD) or (spellCooldown.isActive and not spellCooldown.isOnGCD) then
+				desaturate = true
+				durationObject = C_Spell.GetSpellCooldownDuration(spellID, true)
+			end
 		end
-	end
 
-	local options = SCM.db.profile.options
-	if durationObject then
-		self:Clear()
-		parent.Icon.SCMDesaturated = desaturate
-		parent.Icon:SetDesaturated(desaturate)
-		if isChargeCooldown then
-			self:SetDrawEdge(true)
-			self:SetDrawSwipe(false)
-			self:SetCooldownFromDurationObject(durationObject)
+		if cooldownData.charges and not durationObject then
+			local spellCharges = C_Spell.GetSpellCharges(spellID)
+			if spellCharges and spellCharges.isActive and not spellCharges.isOnGCD then
+				isChargeCooldown = true
+				durationObject = C_Spell.GetSpellChargeDuration(spellID, true)
+			end
+		end
+
+		if durationObject then
+			self:Clear()
+			parent.Icon.SCMDesaturated = desaturate
+			parent.Icon:SetDesaturated(desaturate)
+			if isChargeCooldown then
+				self:SetDrawEdge(true)
+				self:SetDrawSwipe(false)
+				self:SetCooldownFromDurationObject(durationObject)
+			else
+				self:SetDrawEdge(false)
+				self:SetDrawSwipe(true)
+				self:SetCooldownFromDurationObject(durationObject)
+			end
 		else
-			self:SetDrawEdge(false)
-			self:SetDrawSwipe(true)
-			self:SetCooldownFromDurationObject(durationObject)
+			parent.Icon.SCMDesaturated = nil
+			parent.Icon:SetDesaturated(false)
+			self:Clear()
 		end
-	elseif not self:GetUseAuraDisplayTime() or (options.disableRegularIconActiveSwipe and not parent.SCMConfig.forceActiveSwipe) then
-		parent.Icon.SCMDesaturated = nil
-		parent.Icon:SetDesaturated(false)
-		self:Clear()
-	end
 
-	self.SCMSettingRegularSpellCooldown = nil
+		self.SCMSettingRegularSpellCooldown = nil
+	end
 end
 
 function Cooldowns.OverrideRegularAuraCooldown(self, parent, options)
