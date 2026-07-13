@@ -87,7 +87,7 @@ function CDMOptions.CreateCooldownTabSettings(iconSettingsTabs, iconSettings, pa
 		cooldownFont:SetCallback("OnValueChanged", function(self, event, value)
 			iconConfig.cooldownFont = value
 			self:SetValue(value)
-			SCM:ApplyAllCDManagerConfigs()
+			CDMOptions.ApplyIconConfigUpdate(buttonFrame, buttonData, anchorIndex, mode, isGlobal, isBuffBar)
 		end)
 		textSettings:AddChild(cooldownFont)
 
@@ -100,7 +100,7 @@ function CDMOptions.CreateCooldownTabSettings(iconSettingsTabs, iconSettings, pa
 		cooldownFontSize:SetDisabled(not iconConfig.cooldownOverrideGlobal)
 		cooldownFontSize:SetCallback("OnValueChanged", function(self, event, value)
 			iconConfig.cooldownFontSize = value
-			SCM:ApplyAllCDManagerConfigs()
+			CDMOptions.ApplyIconConfigUpdate(buttonFrame, buttonData, anchorIndex, mode, isGlobal, isBuffBar)
 		end)
 		textSettings:AddChild(cooldownFontSize)
 
@@ -112,7 +112,7 @@ function CDMOptions.CreateCooldownTabSettings(iconSettingsTabs, iconSettings, pa
 		cooldownFontOutline:SetDisabled(not iconConfig.cooldownOverrideGlobal)
 		cooldownFontOutline:SetCallback("OnValueChanged", function(_, _, value)
 			iconConfig.cooldownFontOutline = value
-			SCM:ApplyAllCDManagerConfigs()
+			CDMOptions.ApplyIconConfigUpdate(buttonFrame, buttonData, anchorIndex, mode, isGlobal, isBuffBar)
 		end)
 		textSettings:AddChild(cooldownFontOutline)
 
@@ -123,7 +123,7 @@ function CDMOptions.CreateCooldownTabSettings(iconSettingsTabs, iconSettings, pa
 		cooldownTextPoint:SetDisabled(not iconConfig.cooldownOverrideGlobal)
 		cooldownTextPoint:SetCallback("OnValueChanged", function(_, _, value)
 			iconConfig.cooldownTextPoint = value
-			SCM:ApplyAllCDManagerConfigs()
+			CDMOptions.ApplyIconConfigUpdate(buttonFrame, buttonData, anchorIndex, mode, isGlobal, isBuffBar)
 		end)
 		if iconConfig.cooldownTextPoint then
 			cooldownTextPoint:SetValue(iconConfig.cooldownTextPoint)
@@ -150,7 +150,7 @@ function CDMOptions.CreateCooldownTabSettings(iconSettingsTabs, iconSettings, pa
 		cooldownXOffsetText:SetDisabled(not iconConfig.cooldownOverrideGlobal)
 		cooldownXOffsetText:SetCallback("OnValueChanged", function(_, _, value)
 			iconConfig.cooldownTextXOffset = value
-			SCM:ApplyAllCDManagerConfigs()
+			CDMOptions.ApplyIconConfigUpdate(buttonFrame, buttonData, anchorIndex, mode, isGlobal, isBuffBar)
 		end)
 		textSettings:AddChild(cooldownXOffsetText)
 
@@ -162,7 +162,7 @@ function CDMOptions.CreateCooldownTabSettings(iconSettingsTabs, iconSettings, pa
 		cooldownYOffsetText:SetDisabled(not iconConfig.cooldownOverrideGlobal)
 		cooldownYOffsetText:SetCallback("OnValueChanged", function(_, _, value)
 			iconConfig.cooldownTextYOffset = value
-			SCM:ApplyAllCDManagerConfigs()
+			CDMOptions.ApplyIconConfigUpdate(buttonFrame, buttonData, anchorIndex, mode, isGlobal, isBuffBar)
 		end)
 		textSettings:AddChild(cooldownYOffsetText)
 
@@ -199,7 +199,7 @@ function CDMOptions.CreateCooldownTabSettings(iconSettingsTabs, iconSettings, pa
 		cooldownXOffsetTL:SetDisabled(not iconConfig.cooldownMoveTL)
 		cooldownXOffsetTL:SetCallback("OnValueChanged", function(_, _, value)
 			iconConfig.cooldownXOffsetTL = value
-			SCM:ApplyAllCDManagerConfigs()
+			CDMOptions.ApplyIconConfigUpdate(buttonFrame, buttonData, anchorIndex, mode, isGlobal, isBuffBar)
 		end)
 		positionSettings:AddChild(cooldownXOffsetTL)
 
@@ -211,7 +211,7 @@ function CDMOptions.CreateCooldownTabSettings(iconSettingsTabs, iconSettings, pa
 		cooldownYOffsetTL:SetDisabled(not iconConfig.cooldownMoveTL)
 		cooldownYOffsetTL:SetCallback("OnValueChanged", function(_, _, value)
 			iconConfig.cooldownYOffsetTL = value
-			SCM:ApplyAllCDManagerConfigs()
+			CDMOptions.ApplyIconConfigUpdate(buttonFrame, buttonData, anchorIndex, mode, isGlobal, isBuffBar)
 		end)
 		positionSettings:AddChild(cooldownYOffsetTL)
 
@@ -237,7 +237,7 @@ function CDMOptions.CreateCooldownTabSettings(iconSettingsTabs, iconSettings, pa
 		cooldownXOffsetBR:SetDisabled(not iconConfig.cooldownMoveBR)
 		cooldownXOffsetBR:SetCallback("OnValueChanged", function(_, _, value)
 			iconConfig.cooldownXOffsetBR = value
-			SCM:ApplyAllCDManagerConfigs()
+			CDMOptions.ApplyIconConfigUpdate(buttonFrame, buttonData, anchorIndex, mode, isGlobal, isBuffBar)
 		end)
 		positionSettings:AddChild(cooldownXOffsetBR)
 
@@ -249,7 +249,7 @@ function CDMOptions.CreateCooldownTabSettings(iconSettingsTabs, iconSettings, pa
 		cooldownYOffsetBR:SetDisabled(not iconConfig.cooldownMoveBR)
 		cooldownYOffsetBR:SetCallback("OnValueChanged", function(_, _, value)
 			iconConfig.cooldownYOffsetBR = value
-			SCM:ApplyAllCDManagerConfigs()
+			CDMOptions.ApplyIconConfigUpdate(buttonFrame, buttonData, anchorIndex, mode, isGlobal, isBuffBar)
 		end)
 		positionSettings:AddChild(cooldownYOffsetBR)
 
