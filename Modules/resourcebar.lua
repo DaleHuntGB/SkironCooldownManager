@@ -438,16 +438,11 @@ local function UpdateRechargeSegment(bar)
 end
 
 local function GetSegmentBarSize(bar, segmentCount)
-	local segmentWidth = bar:GetWidth() / segmentCount
-	local segmentHeight = bar:GetHeight()
-	local borderSize = 0
-	local barOptions = bar.barOptions
+	local inset = CalculateResourceBarPixelInset(bar)
+	local innerWidth = max(0, bar:GetWidth() - (inset * 2))
+	local innerHeight = max(0, bar:GetHeight() - (inset * 2))
 
-	if barOptions and barOptions.showBorder then
-		borderSize = (barOptions.backdropSize or 0) * 2
-	end
-
-	return segmentWidth, max(0, segmentHeight - borderSize)
+	return innerWidth / segmentCount, innerHeight
 end
 
 local function UpdateSpellChargeRecharge(bar, chargeInfo)
