@@ -259,6 +259,31 @@ local function GetConfiguredGroupForCategory(childData, categoryIndex)
 	return childData.source[categoryIndex] or (pairedCategory and childData.source[pairedCategory])
 end
 
+function Icons.IsViewerLayoutDirty(viewer)
+	local children = Cache.cachedViewerChildren[viewer]
+	if not children or viewer:GetNumChildren() ~= #children then
+		return true
+	end
+
+	local categoryIndex = SCM.CooldownViewerNameToIndex[viewer:GetName()]
+	for _, child in ipairs(children) do
+		if child.GetCooldownID then
+			local cooldownID = child:GetCooldownID()
+			if cooldownID ~= child.SCMCooldownID then
+				if child.SCMCooldownID then
+					return true
+				end
+
+				local _, childData = GetSpellConfigByCooldownID(SCM.spellConfig, cooldownID)
+				local group = GetConfiguredGroupForCategory(childData, categoryIndex)
+				if group and childData.anchorGroup and childData.anchorGroup[group] then
+					return true
+				end
+			end
+		end
+	end
+end
+
 function Icons.CollectScopedAnchorGroups(updateScope, config, viewerUpdateMapping)
 	if updateScope == "all" then
 		return

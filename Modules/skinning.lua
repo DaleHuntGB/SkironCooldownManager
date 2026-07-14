@@ -196,10 +196,10 @@ end
 local function OnSetCooldown(self)
 	local options = SCM.db.profile.options
 
-	SCM.Cooldowns.ApplyNumericRuleFormatter(self)
-
 	ApplyCooldownSwipe(self, options)
-	ApplyCooldownFont(self, options)
+	if not self.SCMCooldownFontString then
+		ApplyCooldownFont(self, options)
+	end
 end
 
 local function ApplyCooldownPoints(cooldownFrame, child, options, childConfig, isOptionsOpen)
@@ -246,14 +246,16 @@ local function ApplyCooldownStyle(child, options, childConfig, isOptionsOpen)
 		cooldownFrame:SetFrameStrata(child:GetFrameStrata())
 		cooldownFrame:SetFrameLevel(child:GetFrameLevel() + (options.cooldownFrameLevel or 1))
 		cooldownFrame:SetSwipeTexture("Interface\\Buttons\\WHITE8x8")
+		cooldownFrame.SCMParent = child
 		ApplyCooldownPoints(cooldownFrame, child, options, childConfig, isOptionsOpen)
+		SCM.Cooldowns.ApplyNumericRuleFormatter(cooldownFrame)
+		ApplyCooldownFont(cooldownFrame, options)
 
 		if child.SCMCooldownSkinHook then
 			return
 		end
 
 		child.SCMCooldownSkinHook = true
-		cooldownFrame.SCMParent = child
 
 		hooksecurefunc(cooldownFrame, "SetCooldown", OnSetCooldown)
 		OnSetCooldown(cooldownFrame)

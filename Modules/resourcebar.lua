@@ -1009,11 +1009,6 @@ local function BarNeedsContinuousRefresh(bar)
 		return hasRuneValues and displayValue < maxValue
 	end
 
-	if bar.resourceKind == "spellCharges" then
-		local chargeInfo = bar.spellID and C_Spell.GetSpellCharges(bar.spellID)
-		return chargeInfo ~= nil and chargeInfo.isActive
-	end
-
 	if bar.powerType == Enum.PowerType.Essence then
 		local currentValue = UnitPower("player", Enum.PowerType.Essence) or 0
 		local maxValue = UnitPowerMax("player", Enum.PowerType.Essence) or 0

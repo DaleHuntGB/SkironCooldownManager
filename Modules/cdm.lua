@@ -615,24 +615,6 @@ local function UpdateAnchorChain(changedGroups, config)
 	SCM:ReleaseScopedGroupCache(visitedGroups)
 end
 
-local function MergeUpdateScope(currentScope, newScope)
-	if not currentScope or currentScope == newScope then
-		return newScope
-	end
-
-	if currentScope == UPDATE_SCOPE.ALL or newScope == UPDATE_SCOPE.ALL then
-		return UPDATE_SCOPE.ALL
-	end
-
-	local currentIsEssentialUtility = currentScope == UPDATE_SCOPE.ESSENTIAL or currentScope == UPDATE_SCOPE.UTILITY or currentScope == UPDATE_SCOPE.ESSENTIAL_UTILITY
-	local newIsEssentialUtility = newScope == UPDATE_SCOPE.ESSENTIAL or newScope == UPDATE_SCOPE.UTILITY or newScope == UPDATE_SCOPE.ESSENTIAL_UTILITY
-	if currentIsEssentialUtility and newIsEssentialUtility then
-		return UPDATE_SCOPE.ESSENTIAL_UTILITY
-	end
-
-	return UPDATE_SCOPE.ALL
-end
-
 local function OrderCDManagerSpells_Actual(updateScope, scopedAnchorGroupsOverride, refreshStates)
 	Cache.cachedViewerScale = 1
 
@@ -752,37 +734,33 @@ local function OrderCDManagerSpells_Actual(updateScope, scopedAnchorGroupsOverri
 	SCM:ReleaseScopedGroupCache(changedGroups)
 	Cache.activeScopedAnchorGroups = nil
 end
+
 CDM.OrderSpellsActual = OrderCDManagerSpells_Actual
 
-local isThrottled = false
-local pendingUpdateScope
-
-local function OnOrderThrottleTick()
-	isThrottled = false
-	if pendingUpdateScope then
-		local updateScope = pendingUpdateScope
-		pendingUpdateScope = nil
-		OrderCDManagerSpells_Actual(updateScope)
-	end
-end
+local pendingUpdateScopes = {}
 
 local function OrderCDManagerSpells(updateScope, applyNow, refreshStates)
 	updateScope = updateScope or UPDATE_SCOPE.ALL
 
 	if applyNow then
 		if updateScope == UPDATE_SCOPE.ALL then
-			pendingUpdateScope = nil
+			wipe(pendingUpdateScopes)
+		else
+			pendingUpdateScopes[updateScope] = nil
 		end
 		OrderCDManagerSpells_Actual(updateScope, nil, refreshStates)
 		return
 	end
-	if isThrottled then
-		pendingUpdateScope = MergeUpdateScope(pendingUpdateScope, updateScope)
+	if pendingUpdateScopes[updateScope] then
 		return
 	end
 
-	pendingUpdateScope = updateScope
-	isThrottled = true
-	C_Timer.After(0.1, OnOrderThrottleTick)
+	pendingUpdateScopes[updateScope] = true
+	C_Timer.After(0.1, function()
+		if pendingUpdateScopes[updateScope] then
+			pendingUpdateScopes[updateScope] = nil
+			OrderCDManagerSpells_Actual(updateScope)
+		end
+	end)
 end
 CDM.OrderSpells = OrderCDManagerSpells
