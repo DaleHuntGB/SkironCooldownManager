@@ -4,13 +4,6 @@ local CDMOptions = Options.CDM
 local Constants = SCM.Constants
 local AceGUI = LibStub("AceGUI-3.0")
 
-local effectTabs = {
-	{ value = "visibility", text = "Visibility" },
-	{ value = "desaturate", text = "Desaturate" },
-	{ value = "glow", text = "Glow" },
-	{ value = "border", text = "Border" },
-}
-
 local effectOptions = {
 	visibility = {
 		name = "Visibility",
@@ -156,7 +149,7 @@ local function AddRuleValueControl(effectTabGroup, effectKey, iconConfig, rule, 
 	end
 end
 
-local function AddEffectRule(effectTabGroup, effectKey, rules, buttonData, iconConfig, rule, ruleIndex, applyConfigUpdate)
+local function AddEffectRule(iconSettingsTabs, stateType, container, rules, buttonData, iconConfig, rule, ruleIndex, applyConfigUpdate)
 	local stateDropdown = AceGUI:Create("Dropdown")
 	stateDropdown:SetLabel("State")
 	stateDropdown:SetRelativeWidth(0.33)
@@ -165,11 +158,11 @@ local function AddEffectRule(effectTabGroup, effectKey, rules, buttonData, iconC
 	stateDropdown:SetCallback("OnValueChanged", function(_, _, value)
 		rule.state = value
 		applyConfigUpdate()
-		effectTabGroup:SelectTab(effectKey)
+		iconSettingsTabs:SelectByPath("state", stateType)
 	end)
-	effectTabGroup:AddChild(stateDropdown)
+	container:AddChild(stateDropdown)
 
-	AddRuleValueControl(effectTabGroup, effectKey, iconConfig, rule, applyConfigUpdate)
+	AddRuleValueControl(container, stateType, iconConfig, rule, applyConfigUpdate)
 
 	local elseIf = AceGUI:Create("CheckBox")
 	elseIf:SetLabel("Else If")
@@ -180,7 +173,7 @@ local function AddEffectRule(effectTabGroup, effectKey, rules, buttonData, iconC
 		rule.elseIf = value or nil
 		applyConfigUpdate()
 	end)
-	effectTabGroup:AddChild(elseIf)
+	container:AddChild(elseIf)
 
 	local moveUp = AceGUI:Create("Button")
 	moveUp:SetText("Move Up")
@@ -191,9 +184,9 @@ local function AddEffectRule(effectTabGroup, effectKey, rules, buttonData, iconC
 		rules[ruleIndex - 1] = rule
 		rules[ruleIndex] = previousRule
 		applyConfigUpdate()
-		effectTabGroup:SelectTab(effectKey)
+		iconSettingsTabs:SelectByPath("state", stateType)
 	end)
-	effectTabGroup:AddChild(moveUp)
+	container:AddChild(moveUp)
 
 	local moveDown = AceGUI:Create("Button")
 	moveDown:SetText("Move Down")
@@ -204,9 +197,9 @@ local function AddEffectRule(effectTabGroup, effectKey, rules, buttonData, iconC
 		rules[ruleIndex + 1] = rule
 		rules[ruleIndex] = nextRule
 		applyConfigUpdate()
-		effectTabGroup:SelectTab(effectKey)
+		iconSettingsTabs:SelectByPath("state", stateType)
 	end)
-	effectTabGroup:AddChild(moveDown)
+	container:AddChild(moveDown)
 
 	local remove = AceGUI:Create("Button")
 	remove:SetText("Remove")
@@ -214,13 +207,13 @@ local function AddEffectRule(effectTabGroup, effectKey, rules, buttonData, iconC
 	remove:SetCallback("OnClick", function()
 		tremove(rules, ruleIndex)
 		applyConfigUpdate()
-		effectTabGroup:SelectTab(effectKey)
+		iconSettingsTabs:SelectByPath("state", stateType)
 	end)
-	effectTabGroup:AddChild(remove)
+	container:AddChild(remove)
 end
 
-local function AddEffectOptions(effectKey, effectTabGroup, buttonData, iconConfig, ApplyConfigUpdate)
-	local effectConfig = iconConfig.effectRules and iconConfig.effectRules[effectKey]
+local function AddEffectOptions(iconSettingsTabs, stateType, container, buttonData, iconConfig, ApplyConfigUpdate)
+	local effectConfig = iconConfig.effectRules and iconConfig.effectRules[stateType]
 	local rules = effectConfig and effectConfig.rules
 
 	if rules and #rules > 0 then
@@ -229,15 +222,15 @@ local function AddEffectOptions(effectKey, effectTabGroup, buttonData, iconConfi
 				local separator = AceGUI:Create("Heading")
 				separator:SetText("")
 				separator:SetRelativeWidth(1)
-				effectTabGroup:AddChild(separator)
+				container:AddChild(separator)
 			end
-			AddEffectRule(effectTabGroup, effectKey, rules, buttonData, iconConfig, rule, ruleIndex, ApplyConfigUpdate)
+			AddEffectRule(iconSettingsTabs, stateType, container, rules, buttonData, iconConfig, rule, ruleIndex, ApplyConfigUpdate)
 		end
 
 		local separator = AceGUI:Create("Heading")
 		separator:SetText("")
 		separator:SetRelativeWidth(1)
-		effectTabGroup:AddChild(separator)
+		container:AddChild(separator)
 	end
 
 	local firstUnusedRuleState = GetFirstUnusedRuleState(rules, buttonData.iconType, buttonData.isCustom)
@@ -252,12 +245,12 @@ local function AddEffectOptions(effectKey, effectTabGroup, buttonData, iconConfi
 
 		iconConfig.effectRules = iconConfig.effectRules or {}
 
-		effectConfig = iconConfig.effectRules[effectKey]
+		effectConfig = iconConfig.effectRules[stateType]
 		if not effectConfig then
 			effectConfig = {
 				rules = {},
 			}
-			iconConfig.effectRules[effectKey] = effectConfig
+			iconConfig.effectRules[stateType] = effectConfig
 		end
 
 		rules = effectConfig.rules
@@ -269,19 +262,19 @@ local function AddEffectOptions(effectKey, effectTabGroup, buttonData, iconConfi
 		local rule = {
 			state = firstUnusedRuleState,
 		}
-		if #rules > 0 and not effectOptions[effectKey].allowsMultiple then
+		if #rules > 0 and not effectOptions[stateType].allowsMultiple then
 			rule.elseIf = true
 		end
-		SetDefaultRuleValues(rule, effectKey, iconConfig)
+		SetDefaultRuleValues(rule, stateType, iconConfig)
 		tinsert(rules, rule)
 		ApplyConfigUpdate()
-		effectTabGroup:SelectTab(effectKey)
+		iconSettingsTabs:SelectByPath("state", stateType)
 	end)
-	effectTabGroup:AddChild(addRule)
+	container:AddChild(addRule)
 end
 
-function CDMOptions.CreateStateTabSettings(iconSettingsTabs, iconSettings, parentScrollFrame, buttonFrame, buttonData, iconConfig, anchorIndex, mode, isGlobal, isBuffBar)
-	if isBuffBar then
+function CDMOptions.CreateStateTabSettings(iconSettingsTabs, iconSettings, parentScrollFrame, buttonFrame, buttonData, iconConfig, anchorIndex, mode, isGlobal, isBuffBar, stateType)
+	if isBuffBar or not effectOptions[stateType] then
 		return
 	end
 
@@ -301,20 +294,5 @@ function CDMOptions.CreateStateTabSettings(iconSettingsTabs, iconSettings, paren
 	scrollFrame:SetFullHeight(true)
 	rootGroup:AddChild(scrollFrame)
 
-	local effectTabGroup = AceGUI:Create("TabGroup")
-	effectTabGroup:SetLayout("flow")
-	effectTabGroup:SetFullWidth(true)
-	effectTabGroup:SetTabs(effectTabs)
-	effectTabGroup:SetCallback("OnGroupSelected", function(self, _, selectedTab)
-		self:ReleaseChildren()
-		if not selectedTab then
-			return
-		end
-
-		AddEffectOptions(selectedTab, self, buttonData, iconConfig, ApplyConfigUpdate)
-		iconSettings:DoLayout()
-		parentScrollFrame:DoLayout()
-	end)
-	scrollFrame:AddChild(effectTabGroup)
-	effectTabGroup:SelectTab("visibility")
+	AddEffectOptions(iconSettingsTabs, stateType, scrollFrame, buttonData, iconConfig, ApplyConfigUpdate)
 end

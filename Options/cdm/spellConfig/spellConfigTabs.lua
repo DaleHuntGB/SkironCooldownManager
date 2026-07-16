@@ -4,11 +4,18 @@ local CDMOptions = Options.CDM
 local Utils = SCM.Utils
 local AceGUI = LibStub("AceGUI-3.0")
 
+local stateTypeTree = {
+	{ value = "visibility", text = "Visibility" },
+	{ value = "desaturate", text = "Desaturate" },
+	{ value = "glow", text = "Glow" },
+	{ value = "border", text = "Border" },
+}
+
 local iconTypeTabs = {
 	all = {
 		{ value = "general", text = "General" },
 		{ value = "subregion", text = "Subregions (Alpha)" },
-		{ value = "state", text = "States (Alpha)" },
+		{ value = "state", text = "States (Alpha)", children = stateTypeTree },
 		{ value = "cooldown", text = "Cooldown" },
 		{ value = "load", text = "Load Conditions" },
 	},
@@ -72,6 +79,7 @@ function CDMOptions.CreateSpellConfigTabs(parentScrollFrame, iconSettings, butto
 		iconSettingsTabs:SetTree(isBuffBar and { { value = "general", text = "General" } } or iconTypeTabs[buttonData.iconType])
 		iconSettingsTabs:SetCallback("OnGroupSelected", function(self, _, group)
 			self:ReleaseChildren()
+			local stateType = group:match("%c([^%c]+)$")
 
 			if group == "general" then
 				CDMOptions.CreateGeneralTabSettings(self, iconSettings, parentScrollFrame, buttonFrame, buttonData, iconConfig, anchorIndex, mode, isGlobal, isBuffBar)
@@ -84,8 +92,11 @@ function CDMOptions.CreateSpellConfigTabs(parentScrollFrame, iconSettings, butto
 			elseif group == "load" then
 				CDMOptions.CreateLoadTabSettings(self, iconSettings, parentScrollFrame, buttonFrame, buttonData, iconConfig, anchorIndex, mode, isGlobal, isBuffBar)
 			elseif group == "state" then
+				self:SelectByPath("state", "visibility")
+				return
+			elseif stateType then
 				CDMOptions.ShowIconSettingsMessage(self, iconSettingsTabs, "|TInterface\\common\\help-i:40:40:0:0|tThese options are subject to change.")
-				CDMOptions.CreateStateTabSettings(self, iconSettings, parentScrollFrame, buttonFrame, buttonData, iconConfig, anchorIndex, mode, isGlobal, isBuffBar)
+				CDMOptions.CreateStateTabSettings(self, iconSettings, parentScrollFrame, buttonFrame, buttonData, iconConfig, anchorIndex, mode, isGlobal, isBuffBar, stateType)
 			elseif group == "subregion" then
 				CDMOptions.ShowIconSettingsMessage(self, iconSettingsTabs, "|TInterface\\common\\help-i:40:40:0:0|tThese options are subject to change.")
 				CDMOptions.CreateSubregionTabSettings(self, iconSettings, parentScrollFrame, buttonFrame, buttonData, iconConfig, anchorIndex, mode, isGlobal, isBuffBar)
