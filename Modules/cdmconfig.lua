@@ -93,6 +93,14 @@ local function MigrateBuffIconStates(spellConfig)
 							},
 						},
 					},
+					desaturate = {
+						rules = {
+							{
+								state = "active",
+								enabled = false,
+							},
+						},
+					},
 				}
 			end
 		end

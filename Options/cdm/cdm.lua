@@ -31,6 +31,14 @@ local function GetSpellAnchorGroupConfig(order, sourceIndex)
 					},
 				},
 			},
+			desaturate = {
+				rules = {
+					{
+						state = "active",
+						enabled = false,
+					},
+				},
+			},
 		},
 	}
 end
