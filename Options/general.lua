@@ -214,14 +214,33 @@ local function SelectGlobalSettingsTab(tabWidget, scrollFrame, group, options)
 		skinningSettings:SetTitle("General")
 		tabWidget:AddChild(skinningSettings)
 
-		local enableSkinning = AceGUI:Create("CheckBox")
-		enableSkinning:SetRelativeWidth(0.33)
-		enableSkinning:SetLabel("Enable Skinning")
-		enableSkinning:SetValue(options.enableSkinning)
-		enableSkinning:SetCallback("OnValueChanged", function(_, _, value)
-			options.enableSkinning = value
+		local enableIconSkinning = AceGUI:Create("CheckBox")
+		enableIconSkinning:SetRelativeWidth(0.33)
+		enableIconSkinning:SetLabel("Enable Icon Skinning")
+		enableIconSkinning:SetValue(options.enableIconSkinning)
+		enableIconSkinning:SetCallback("OnValueChanged", function(_, _, value)
+			SCM.ShowReloadPopup({
+				checkbox = enableIconSkinning,
+				options = options,
+				key = "enableIconSkinning",
+				value = value,
+			})
 		end)
-		skinningSettings:AddChild(enableSkinning)
+		skinningSettings:AddChild(enableIconSkinning)
+
+		local enableBuffBarSkinning = AceGUI:Create("CheckBox")
+		enableBuffBarSkinning:SetRelativeWidth(0.33)
+		enableBuffBarSkinning:SetLabel("Enable Buff Bar Skinning")
+		enableBuffBarSkinning:SetValue(options.enableBuffBarSkinning)
+		enableBuffBarSkinning:SetCallback("OnValueChanged", function(_, _, value)
+			SCM.ShowReloadPopup({
+				checkbox = enableBuffBarSkinning,
+				options = options,
+				key = "enableBuffBarSkinning",
+				value = value,
+			})
+		end)
+		skinningSettings:AddChild(enableBuffBarSkinning)
 
 		local showAnchorHighlight = AceGUI:Create("CheckBox")
 		showAnchorHighlight:SetValue(options.showAnchorHighlight)
