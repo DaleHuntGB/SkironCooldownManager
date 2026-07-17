@@ -493,7 +493,9 @@ SCM.DefaultClassConfig = {
 
 SCM.Defaults.GlobalSettingsTabs = {
 	{ value = "General", text = "General" },
+	{ value = "Auras", text = "Auras" },
 	{ value = "Icons", text = "Icons" },
+	{ value = "Cooldowns", text = "Cooldowns" },
 	{ value = "Glow", text = "Glow" },
 	{ value = "BuffBar", text = "Buff Bars" },
 }

@@ -403,6 +403,7 @@ local function SelectGlobalSettingsTab(tabWidget, scrollFrame, group, options)
 			SCM:CreateAllCustomIcons()
 		end)
 
+	elseif group == "Auras" then
 		local auraSettings = AceGUI:Create("InlineGroup")
 		auraSettings:SetLayout("flow")
 		auraSettings:SetFullWidth(true)
@@ -699,6 +700,7 @@ local function SelectGlobalSettingsTab(tabWidget, scrollFrame, group, options)
 		end)
 		chargeSettings:AddChild(chargeColour)
 
+	elseif group == "Cooldowns" then
 		local cooldownTextSettings = AceGUI:Create("InlineGroup")
 		cooldownTextSettings:SetLayout("flow")
 		cooldownTextSettings:SetFullWidth(true)
