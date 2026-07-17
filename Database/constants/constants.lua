@@ -93,11 +93,7 @@ Constants.States = {
 	["inactive"] = "Inactive",
 	["ready"] = "Ready",
 	["cooldown"] = "On Cooldown",
-	-- ["nocharges"] = "No Charges",
-	-- ["maxcharges"] = "Max Charges",
-	-- ["recharging"] = "Recharging",
-	-- ["ongcd"] = "On GCD",
-	-- ["mounted"] = "Mounted"
+	["recharging"] = "Recharging",
 }
 
 Constants.StatesSorted = {
@@ -106,6 +102,7 @@ Constants.StatesSorted = {
 		"cooldown",
 		"active",
 		"inactive",
+		"recharging",
 	},
 	["item"] = {
 		"ready",

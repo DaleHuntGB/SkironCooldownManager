@@ -1048,7 +1048,7 @@ local function ProcessCustomIcon(id, config, validChildren, refreshStates)
 			Icons.SetChildVisibilityState(frame, shouldShow, true)
 			if shouldShow and refreshStates then
 				local isActive = (iconType == "timer" or iconType == "bloodlust") and isOnCooldown or nil
-				States.SyncState(frame, isActive, isOnCooldown, true, true)
+				States.SyncState(frame, isActive, isOnCooldown and "cooldown" or "ready", true, true)
 				shouldShow = frame.SCMShouldBeVisible
 			end
 			CDM.AddChildToScopedGroup(Cache.cachedChildrenTbl, anchorGroup, frame, frame.SCMGlobal)

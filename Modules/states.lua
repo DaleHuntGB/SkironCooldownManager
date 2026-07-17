@@ -286,7 +286,7 @@ local function ApplyStateOptions(child, skipLayoutRefresh, state)
 		return
 	end
 
-	local cooldownRuleState = state.Cooldown and "cooldown" or state.Cooldown == false and "ready" or nil
+	local cooldownRuleState = state.CooldownState
 	local activeRuleState = state.Active and "active" or state.Active == false and "inactive" or nil
 	local hasRuleState = cooldownRuleState or activeRuleState
 
@@ -357,7 +357,7 @@ function States.RefreshStateOptions(child)
 	end
 end
 
-local function UpdateState(child, updateActive, isActive, updateCooldown, isOnCooldown, skipLayoutRefresh, forceRefresh)
+local function UpdateState(child, updateActive, isActive, updateCooldown, cooldownState, skipLayoutRefresh, forceRefresh)
 	local config = child and child.SCMConfig
 	if not config then
 		return false
@@ -385,13 +385,8 @@ local function UpdateState(child, updateActive, isActive, updateCooldown, isOnCo
 	end
 
 	if updateCooldown then
-		local cooldown
-		if isOnCooldown ~= nil then
-			cooldown = isOnCooldown
-		end
-
-		if state.Cooldown ~= cooldown then
-			state.Cooldown = cooldown
+		if state.CooldownState ~= cooldownState then
+			state.CooldownState = cooldownState
 			changed = true
 		end
 	end
@@ -404,12 +399,12 @@ local function UpdateState(child, updateActive, isActive, updateCooldown, isOnCo
 	return true
 end
 
-function States.SyncState(child, isActive, isOnCooldown, skipLayoutRefresh, forceRefresh)
-	return UpdateState(child, isActive ~= nil, isActive, isOnCooldown ~= nil, isOnCooldown, skipLayoutRefresh, forceRefresh)
+function States.SyncState(child, isActive, cooldownState, skipLayoutRefresh, forceRefresh)
+	return UpdateState(child, isActive ~= nil, isActive, cooldownState ~= nil, cooldownState, skipLayoutRefresh, forceRefresh)
 end
 
-function States.SetCooldownState(child, isOnCooldown)
-	return UpdateState(child, false, nil, true, isOnCooldown)
+function States.SetCooldownState(child, cooldownState)
+	return UpdateState(child, false, nil, true, cooldownState)
 end
 
 function States.SetActiveState(child, isActive)

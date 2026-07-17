@@ -197,24 +197,31 @@ function Cooldowns.GetChildCooldown(child)
 	local cooldownData = SCM.defaultCooldownViewerConfig.cooldownIDs[child.SCMCooldownID]
 
 	local durationObject
+	local cooldownState = "ready"
 
 	local spellCooldown = C_Spell.GetSpellCooldown(child.SCMSpellID)
 	if spellCooldown and spellCooldown.isActive and not spellCooldown.isOnGCD then
 		durationObject = C_Spell.GetSpellCooldownDuration(child.SCMSpellID, true)
+		if durationObject then
+			cooldownState = "cooldown"
+		end
 	end
 
 	if cooldownData.charges and not durationObject then
 		local spellCharges = C_Spell.GetSpellCharges(child.SCMSpellID)
 		if spellCharges and spellCharges.isActive and not spellCharges.isOnGCD then
 			durationObject = C_Spell.GetSpellChargeDuration(child.SCMSpellID, true)
+			if durationObject then
+				cooldownState = "recharging"
+			end
 		end
 	end
 
 	if Constants.CheckCooldownFrameSpells[child.SCMSpellID] then
-		return durationObject ~= nil and child.Cooldown:IsVisible(), durationObject
+		return durationObject and child.Cooldown:IsVisible() and cooldownState or "ready", durationObject
 	end
 
-	return durationObject ~= nil, durationObject
+	return cooldownState, durationObject
 end
 
 function Cooldowns.SetNormalCooldown(self, parent)
@@ -264,10 +271,12 @@ function Cooldowns.SetNormalCooldown(self, parent)
 	if durationObject then
 		local isSpellCooldown = cooldownType == "spell"
 		local isChargeCooldown = cooldownType == "charge"
+		local cooldownState = isSpellCooldown and "cooldown" or isChargeCooldown and "recharging" or "ready"
 
-		if childConfig.effectRules and childConfig.effectRules.desaturate then
-			States.SyncState(parent, useAuraDisplayTime, isSpellCooldown or isChargeCooldown, true, true)
-		else
+		if childConfig.effectRules then
+			States.SyncState(parent, useAuraDisplayTime, cooldownState, true, true)
+		end
+		if not (childConfig.effectRules and childConfig.effectRules.desaturate) then
 			Icons.UpdateChildDesaturation(parent, isSpellCooldown and not useAuraDisplayTime, true)
 		end
 
@@ -275,9 +284,10 @@ function Cooldowns.SetNormalCooldown(self, parent)
 		self:SetDrawSwipe(not isChargeCooldown)
 		self:SetCooldownFromDurationObject(durationObject)
 	else
-		if childConfig.effectRules and childConfig.effectRules.desaturate then
-			States.SyncState(parent, useAuraDisplayTime, false, true, true)
-		else
+		if childConfig.effectRules then
+			States.SyncState(parent, useAuraDisplayTime, "ready", true, true)
+		end
+		if not (childConfig.effectRules and childConfig.effectRules.desaturate) then
 			Icons.UpdateChildDesaturation(parent, false)
 		end
 
