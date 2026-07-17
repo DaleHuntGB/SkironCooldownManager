@@ -43,37 +43,6 @@ local function CreateAnchorConfigTables(customConfig)
 	return customConfig
 end
 
-local function CreateTrackedBarSpellConfig(spellConfig)
-	if type(spellConfig) ~= "table" then
-		return
-	end
-
-	for _, config in pairs(spellConfig) do
-		if type(config) == "table" and type(config.source) == "table" and type(config.anchorGroup) == "table" then
-			local trackedBarGroup = config.source[Enum.CooldownViewerCategory.TrackedBar]
-			local normalizedTrackedBarGroup = Utils.NormalizeBuffBarGroup(trackedBarGroup)
-			local legacyGroup = normalizedTrackedBarGroup and (normalizedTrackedBarGroup - 200)
-			local groupConfig = (trackedBarGroup and config.anchorGroup[trackedBarGroup]) or (legacyGroup and config.anchorGroup[legacyGroup])
-
-			if trackedBarGroup ~= normalizedTrackedBarGroup then
-				config.source[Enum.CooldownViewerCategory.TrackedBar] = normalizedTrackedBarGroup
-			end
-
-			if normalizedTrackedBarGroup and groupConfig then
-				config.anchorGroup[normalizedTrackedBarGroup] = groupConfig
-			end
-
-			if trackedBarGroup and trackedBarGroup ~= normalizedTrackedBarGroup then
-				config.anchorGroup[trackedBarGroup] = nil
-			end
-
-			if legacyGroup and legacyGroup ~= normalizedTrackedBarGroup then
-				config.anchorGroup[legacyGroup] = nil
-			end
-		end
-	end
-end
-
 local function CreateSpecFallbackConfig(config, specConfig, isActive, setSpecConfig)
 	config = config or {}
 	setSpecConfig = setSpecConfig or nop
@@ -138,44 +107,8 @@ local function CreateSpecFallbackConfig(config, specConfig, isActive, setSpecCon
 	return setmetatable({}, metatable)
 end
 
-local function CreateCooldownBreakpoints(options)
-	if not options.cooldownBreakpoints or #options.cooldownBreakpoints == 0 then
-		options.cooldownBreakpoints = CopyTable(SCM.Constants.CooldownTimer.DefaultBreakpoints)
-	else
-		for _, breakpoint in ipairs(options.cooldownBreakpoints) do
-			if not breakpoint.threshold then
-				breakpoint.threshold = 0
-			end
-
-			if not breakpoint.step then
-				breakpoint.step = 1
-			end
-
-			if breakpoint.components then
-				local components = breakpoint.components
-				local nextIndex = 1
-				for i = 1, 10 do
-					local component = components[i]
-					if component then
-						if i ~= nextIndex then
-							components[nextIndex] = component
-							components[i] = nil
-						end
-
-						nextIndex = nextIndex + 1
-					end
-				end
-			end
-		end
-	end
-end
-
 function SCM:UpdateDB()
-	self:MigrateLegacyGlobalConfigToProfiles()
-
 	local options = self.db.profile.options
-
-	CreateCooldownBreakpoints(options)
 
 	local firstGlobalGroup = SCM.Utils.ToGlobalGroup(1)
 	local firstBuffBarGroup = SCM.Utils.ToBuffBarGroup(1)
@@ -205,9 +138,7 @@ function SCM:UpdateDB()
 	self.currentConfig = self.db.profile[class][specID]
 	self.anchorConfig = self.currentConfig.anchorConfig
 	self.spellConfig = self.currentConfig.spellConfig
-	self:MigrateLegacySpellConfigKeys(self.spellConfig, self.defaultCooldownViewerConfig)
-	CreateTrackedBarSpellConfig(self.spellConfig)
-	self:MigrateLegacyIconOptions(self.spellConfig)
+	self:MigrateDB()
 	self.itemConfig = self.currentConfig.itemConfig
 
 	self.currentConfig.customConfig = self.currentConfig.customConfig or {}
@@ -229,7 +160,6 @@ function SCM:UpdateDB()
 
 	self.globalAnchorConfig = self.db.profile.globalAnchorConfig
 	self.globalCustomConfig = CreateCustomConfigTables(self.db.profile.globalCustomConfig)
-	self:RemoveOldAnchorConfigs(self.currentConfig, self.globalAnchorConfig, self.globalCustomConfig)
 
 	self.isHideWhenInactiveEnabled = self:GetHideWhenInactive() == 1
 	self.showTooltips = self:GetShowTooltip() == 1
