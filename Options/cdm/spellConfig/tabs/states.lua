@@ -59,12 +59,13 @@ local function GetUsedRuleStates(rules, currentRule)
 	return usedStates
 end
 
-local function GetRuleStateList(rules, currentRule, iconType, isCustom)
+local function GetRuleStateList(rules, currentRule, buttonData, isBuffBar)
 	local usedStates = GetUsedRuleStates(rules, currentRule)
 	local states, statesSorted = {}, {}
 
-	local constantStatesSorted = Constants.StatesSorted[iconType] or Constants.StatesSorted.spell
-	if isCustom and iconType == "spell" then
+	local iconType = buttonData.iconType
+	local constantStatesSorted = isBuffBar and Constants.StatesSorted.buffBar or Constants.StatesSorted[iconType] or Constants.StatesSorted.spell
+	if not isBuffBar and buttonData.isCustom and iconType == "spell" then
 		constantStatesSorted = Constants.StatesSorted.custom
 	end
 
@@ -78,9 +79,10 @@ local function GetRuleStateList(rules, currentRule, iconType, isCustom)
 	return states, statesSorted
 end
 
-local function GetFirstUnusedRuleState(rules, iconType, isCustom)
-	local constantStatesSorted = Constants.StatesSorted[iconType] or Constants.StatesSorted.spell
-	if isCustom and iconType == "spell" then
+local function GetFirstUnusedRuleState(rules, buttonData, isBuffBar)
+	local iconType = buttonData.iconType
+	local constantStatesSorted = isBuffBar and Constants.StatesSorted.buffBar or Constants.StatesSorted[iconType] or Constants.StatesSorted.spell
+	if not isBuffBar and buttonData.isCustom and iconType == "spell" then
 		constantStatesSorted = Constants.StatesSorted.custom
 	end
 
@@ -155,11 +157,11 @@ local function AddRuleValueControl(effectTabGroup, effectKey, iconConfig, rule, 
 	end
 end
 
-local function AddEffectRule(iconSettingsTabs, stateType, container, rules, buttonData, iconConfig, rule, ruleIndex, applyConfigUpdate)
+local function AddEffectRule(iconSettingsTabs, stateType, container, rules, buttonData, iconConfig, rule, ruleIndex, applyConfigUpdate, isBuffBar)
 	local stateDropdown = AceGUI:Create("Dropdown")
 	stateDropdown:SetLabel("State")
 	stateDropdown:SetRelativeWidth(0.33)
-	stateDropdown:SetList(GetRuleStateList(rules, rule, buttonData.iconType, buttonData.isCustom))
+	stateDropdown:SetList(GetRuleStateList(rules, rule, buttonData, isBuffBar))
 	stateDropdown:SetValue(rule.state)
 	stateDropdown:SetCallback("OnValueChanged", function(_, _, value)
 		rule.state = value
@@ -218,7 +220,7 @@ local function AddEffectRule(iconSettingsTabs, stateType, container, rules, butt
 	container:AddChild(remove)
 end
 
-local function AddEffectOptions(iconSettingsTabs, stateType, container, buttonData, iconConfig, ApplyConfigUpdate)
+local function AddEffectOptions(iconSettingsTabs, stateType, container, buttonData, iconConfig, ApplyConfigUpdate, isBuffBar)
 	local effectConfig = iconConfig.effectRules and iconConfig.effectRules[stateType]
 	local rules = effectConfig and effectConfig.rules
 
@@ -230,7 +232,7 @@ local function AddEffectOptions(iconSettingsTabs, stateType, container, buttonDa
 				separator:SetRelativeWidth(1)
 				container:AddChild(separator)
 			end
-			AddEffectRule(iconSettingsTabs, stateType, container, rules, buttonData, iconConfig, rule, ruleIndex, ApplyConfigUpdate)
+			AddEffectRule(iconSettingsTabs, stateType, container, rules, buttonData, iconConfig, rule, ruleIndex, ApplyConfigUpdate, isBuffBar)
 		end
 
 		local separator = AceGUI:Create("Heading")
@@ -239,7 +241,7 @@ local function AddEffectOptions(iconSettingsTabs, stateType, container, buttonDa
 		container:AddChild(separator)
 	end
 
-	local firstUnusedRuleState = GetFirstUnusedRuleState(rules, buttonData.iconType, buttonData.isCustom)
+	local firstUnusedRuleState = GetFirstUnusedRuleState(rules, buttonData, isBuffBar)
 	local addRule = AceGUI:Create("Button")
 	addRule:SetText("Add Rule")
 	addRule:SetRelativeWidth(0.33)
@@ -280,7 +282,7 @@ local function AddEffectOptions(iconSettingsTabs, stateType, container, buttonDa
 end
 
 function CDMOptions.CreateStateTabSettings(iconSettingsTabs, iconSettings, parentScrollFrame, buttonFrame, buttonData, iconConfig, anchorIndex, mode, isGlobal, isBuffBar, stateType)
-	if isBuffBar or not effectOptions[stateType] then
+	if not effectOptions[stateType] then
 		return
 	end
 
@@ -300,5 +302,5 @@ function CDMOptions.CreateStateTabSettings(iconSettingsTabs, iconSettings, paren
 	scrollFrame:SetFullHeight(true)
 	rootGroup:AddChild(scrollFrame)
 
-	AddEffectOptions(iconSettingsTabs, stateType, scrollFrame, buttonData, iconConfig, ApplyConfigUpdate)
+	AddEffectOptions(iconSettingsTabs, stateType, scrollFrame, buttonData, iconConfig, ApplyConfigUpdate, isBuffBar)
 end

@@ -154,7 +154,7 @@ function SCM:UpdateCooldownInfo()
 					self.defaultCooldownViewerConfig.cooldownIDs[data.cooldownID] = data
 
 					local spellID = data.spellID
-					if spellID then
+					if spellID and not issecretvalue(spellID) then
 						self.defaultCooldownViewerConfig[cooldownCategory].spellIDs[spellID] = data
 						self.defaultCooldownViewerConfig.spellIDs[spellID] = data
 						for _, linkedSpellID in ipairs(data.linkedSpellIDs or {}) do

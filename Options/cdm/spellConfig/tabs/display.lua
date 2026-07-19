@@ -4,48 +4,32 @@ local CDMOptions = Options.CDM
 local AceGUI = LibStub("AceGUI-3.0")
 
 local function AddIconColorOptions(iconSettingsTabs, iconSettings, scrollFrame, buttonFrame, buttonData, buttonConfig, anchorIndex, mode, isGlobal, isBuffBar)
-	local options = SCM.db.profile.options
-
-	if (buttonData.isCustom and buttonData.iconType == "spell") or buttonFrame.data.isBuffIcon then
+	if buttonData.isCustom and buttonData.iconType == "spell" then
 		local notsureyetOptions = AceGUI:Create("InlineGroup")
 		notsureyetOptions:SetLayout("flow")
 		notsureyetOptions:SetFullWidth(true)
 		iconSettingsTabs:AddChild(notsureyetOptions)
 
-		if buttonFrame.data.isBuffIcon then
-			local desaturate = AceGUI:Create("CheckBox")
-			desaturate:SetLabel("Desaturate While Inactive")
-			desaturate:SetRelativeWidth(0.5)
-			desaturate:SetValue(buttonConfig.desaturate)
-			desaturate:SetDisabled(not buttonConfig.alwaysShow and not buttonConfig.showWhileInactive)
-			SCM.Utils.SetDisabledTooltip(desaturate, "Enable 'Show Always' first.")
-			desaturate:SetCallback("OnValueChanged", function(self, event, value)
-				buttonConfig.desaturate = value or nil
-				CDMOptions.ApplyIconConfigUpdate(buttonFrame, buttonData, anchorIndex, mode, isGlobal, isBuffBar)
-			end)
-			notsureyetOptions:AddChild(desaturate)
-		elseif buttonData.isCustom and buttonData.iconType == "spell" then
-			local showNotUsable = AceGUI:Create("CheckBox")
-			showNotUsable:SetLabel("Show Not Usable")
-			showNotUsable:SetRelativeWidth(0.5)
-			showNotUsable:SetValue(buttonConfig.showNotUsable)
-			showNotUsable:SetCallback("OnValueChanged", function(self, event, value)
-				buttonConfig.showNotUsable = value or nil
-				CDMOptions.ApplyIconConfigUpdate(buttonFrame, buttonData, anchorIndex, mode, isGlobal, isBuffBar)
-			end)
-			notsureyetOptions:AddChild(showNotUsable)
+		local showNotUsable = AceGUI:Create("CheckBox")
+		showNotUsable:SetLabel("Show Not Usable")
+		showNotUsable:SetRelativeWidth(0.5)
+		showNotUsable:SetValue(buttonConfig.showNotUsable)
+		showNotUsable:SetCallback("OnValueChanged", function(self, event, value)
+			buttonConfig.showNotUsable = value or nil
+			CDMOptions.ApplyIconConfigUpdate(buttonFrame, buttonData, anchorIndex, mode, isGlobal, isBuffBar)
+		end)
+		notsureyetOptions:AddChild(showNotUsable)
 
-			local showOutOfRange = AceGUI:Create("CheckBox")
-			showOutOfRange:SetLabel("Show Out Of Range")
-			showOutOfRange:SetRelativeWidth(0.5)
-			showOutOfRange:SetValue(buttonConfig.showOutOfRange)
-			showOutOfRange:SetCallback("OnValueChanged", function(self, event, value)
-				buttonConfig.showOutOfRange = value
-				C_Spell.EnableSpellRangeCheck(buttonData.spellID, value)
-				CDMOptions.ApplyIconConfigUpdate(buttonFrame, buttonData, anchorIndex, mode, isGlobal, isBuffBar)
-			end)
-			notsureyetOptions:AddChild(showOutOfRange)
-		end
+		local showOutOfRange = AceGUI:Create("CheckBox")
+		showOutOfRange:SetLabel("Show Out Of Range")
+		showOutOfRange:SetRelativeWidth(0.5)
+		showOutOfRange:SetValue(buttonConfig.showOutOfRange)
+		showOutOfRange:SetCallback("OnValueChanged", function(self, event, value)
+			buttonConfig.showOutOfRange = value
+			C_Spell.EnableSpellRangeCheck(buttonData.spellID, value)
+			CDMOptions.ApplyIconConfigUpdate(buttonFrame, buttonData, anchorIndex, mode, isGlobal, isBuffBar)
+		end)
+		notsureyetOptions:AddChild(showOutOfRange)
 	else
 		CDMOptions.ShowIconSettingsMessage(iconSettingsTabs, iconSettingsTabs, "|TInterface\\common\\help-i:40:40:0:0|tNothing to see here yet.")
 	end

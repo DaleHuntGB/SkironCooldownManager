@@ -27,7 +27,6 @@ local CHILD_SCM_RESET_FIELDS = {
 	"SCMCustom",
 	"SCMIconType",
 	"SCMIconTexture",
-	"SCMGlowWhileActive",
 	"SCMPandemic",
 	"SCMRowConfig",
 	"SCMShouldBeVisible",

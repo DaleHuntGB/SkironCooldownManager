@@ -324,17 +324,6 @@ local function BuildIconData(configID, iconType)
 	end
 end
 
-local function GetSortRank(info, data)
-	if type(data.category) == "number" and data.category < 0 then
-		return 4
-	end
-	if info.isKnown then
-		return 1
-	end
-
-	return data.category
-end
-
 local function DoesScrollFrameContainSpellConfig(scrollFrame, configID, cooldownID)
 	return scrollFrame.dataProvider:FindByPredicate(function(data)
 		if data.isCustom or data.isAddButton then
@@ -415,24 +404,53 @@ local function CreateCustomIconButtons(rootDescription, scrollFrame, anchorIndex
 	return customButton
 end
 
-local function SortSpells(a, b)
-	local rankA = GetSortRank(a.info, a.data)
-	local rankB = GetSortRank(b.info, b.data)
+local function GetSortRank(info, data, category)
+	if type(data.category) == "number" and data.category < 0 then
+		return 30
+	end
+
+	if not info.isKnown then
+		return 20
+	end
+
+	if info.equipSlot then
+		local equipSlotRank = info.equipSlot == 13 and 11 or 12
+		return equipSlotRank + category
+	end
+
+	if data.spellCategoryID == 4 then
+		return 13
+	end
+
+	return 10
+end
+
+local function SortSpells(itemA, itemB)
+	local rankA = itemA.sortRank
+	local rankB = itemB.sortRank
 
 	if rankA ~= rankB then
 		return rankA < rankB
 	end
 
-	local nameA = C_Spell.GetSpellName(a.info.spellID)
-	local nameB = C_Spell.GetSpellName(b.info.spellID)
-
+	local nameA = itemA.sortName
+	local nameB = itemB.sortName
 	if nameA and nameB then
 		return nameA < nameB
 	end
+
+	return itemA.data.cooldownID < itemB.data.cooldownID
 end
 
 local function ProcessAndCreateButtons(parentButton, items, isBuffIcon, scrollFrame, anchorIndex, mode)
+	for _, item in ipairs(items) do
+		item.sortRank = GetSortRank(item.info, item.data, item.category)
+		item.sortName = item.info.spellID and C_Spell.GetSpellName(item.info.spellID)
+	end
+
 	table.sort(items, SortSpells)
+
+	local trinketSlots = {}
 
 	for _, item in ipairs(items) do
 		local data = item.data
@@ -445,8 +463,52 @@ local function ProcessAndCreateButtons(parentButton, items, isBuffIcon, scrollFr
 			info.isDisabled = type(data.category) == "number" and data.category < 0
 			info.category = data.category
 
+			local buttonName
 			local activeColor = (type(data.category) == "number" and data.category < 0 and colorDisabled) or (info.isKnown and colorKnown) or colorUnknown
-			local button = parentButton:CreateButton(string.format("|T%d:0|t |cff%s%s (%d)|r", C_Spell.GetSpellTexture(info.spellID), activeColor, C_Spell.GetSpellName(info.spellID), info.spellID), function(info)
+
+			if info.equipSlot and #info.linkedSpellIDs > 0 then
+				info.spellID = info.linkedSpellIDs[1]
+			end
+			if info.equipSlot and (info.equipSlot == 13 or info.equipSlot == 14) then
+				local trinketTexture = GetInventoryItemTexture("player", info.equipSlot)
+				local trinketName = "Trinket " .. ((info.equipSlot == 13 and 1) or 2)
+				if item.category == 8 then
+					trinketSlots[info.equipSlot] = (trinketSlots[info.equipSlot] or 0) + 1
+					trinketName = trinketName .. " - Aura " .. trinketSlots[info.equipSlot]
+					if info.spellID then
+						trinketTexture = C_Spell.GetSpellTexture(info.spellID)
+					end
+				end
+
+				buttonName = string.format("|T%d:0|t |cff%s%s|r", trinketTexture, activeColor, trinketName)
+			elseif info.spellID then
+				buttonName = string.format("|T%d:0|t |cff%s%s (%d)|r", C_Spell.GetSpellTexture(info.spellID), activeColor, C_Spell.GetSpellName(info.spellID), info.spellID)
+			elseif info.spellCategoryID then
+				local itemTexture, itemName
+				if info.spellCategoryID == 4 then
+					itemTexture = "Interface/ICONS/INV_POTION_114"
+					itemName = "Combat Potion"
+					info.tooltipTitle = COOLDOWN_VIEWER_TOOLTIP_POTION_COMBAT_TITLE
+					info.tooltipDescription = COOLDOWN_VIEWER_TOOLTIP_POTION_COMBAT_DESCRIPTION
+
+					if item.category == 6 then
+						itemName = itemName .. " Aura"
+					end
+				elseif info.spellCategoryID == 30 then
+					itemTexture = "Interface/ICONS/INV_POTION_54"
+					itemName = "Health Potion"
+					info.tooltipTitle = COOLDOWN_VIEWER_TOOLTIP_POTION_HEALTH_TITLE
+					info.tooltipDescription = COOLDOWN_VIEWER_TOOLTIP_POTION_HEALTH_DESCRIPTION
+				elseif info.spellCategoryID == 1711 then
+					itemTexture = "Interface/ICONS/Warlock_ Healthstone"
+					itemName = "Healthstone"
+					info.tooltipItemID = 5512
+				end
+
+				buttonName = string.format("|T%s:0|t |cff%s%s|r", itemTexture, activeColor, itemName)
+			end
+
+			local button = parentButton:CreateButton(buttonName, function(info)
 				if not CDMOptions.IsSpellInData(info.cooldownID, info.category) and not DoesScrollFrameContainSpellConfig(scrollFrame, info.configID, info.cooldownID) then
 					local dataIndex = scrollFrame:AddSpellBySpellID(info)
 					SCM:AddSpellToConfig(anchorIndex, dataIndex, info, data, item.targetCategory, isBuffIcon)
@@ -454,9 +516,23 @@ local function ProcessAndCreateButtons(parentButton, items, isBuffIcon, scrollFr
 				end
 				return MenuResponse.Open
 			end, info)
-			button:SetTooltip(function(tooltip, elementDescription)
-				tooltip:SetSpellByID(info.spellID)
-			end)
+
+			if info.spellID then
+				button:SetTooltip(function(tooltip)
+					tooltip:SetSpellByID(info.spellID)
+				end)
+			elseif info.tooltipTitle and info.tooltipDescription then
+				button:SetTooltip(function(tooltip)
+					tooltip:AddLine(info.tooltipTitle, 1, 1, 1)
+
+					local r, g, b = NORMAL_FONT_COLOR:GetRGB()
+					tooltip:AddLine(info.tooltipDescription, r, g, b, true)
+				end)
+			elseif info.tooltipItemID then
+				button:SetTooltip(function(tooltip)
+					tooltip:SetItemByID(info.tooltipItemID)
+				end)
+			end
 		end
 	end
 end
@@ -470,6 +546,7 @@ local function CreateIconButtons(rootDescription, scrollFrame, anchorIndex, mode
 	local items = {}
 	for _, categoryID in ipairs({ ... }) do
 		local cooldownIDs = C_CooldownViewer.GetCooldownViewerCategorySet(categoryID, true)
+
 		for _, cooldownID in ipairs(cooldownIDs) do
 			local info = C_CooldownViewer.GetCooldownViewerCooldownInfo(cooldownID)
 			local data = cooldownInfoByID[cooldownID]
@@ -480,7 +557,7 @@ local function CreateIconButtons(rootDescription, scrollFrame, anchorIndex, mode
 				info.spellID = spellID
 
 				if configID and not CDMOptions.IsSpellInData(cooldownID, data.category) and not DoesScrollFrameContainSpellConfig(scrollFrame, configID, cooldownID) then
-					table.insert(items, { info = info, data = data, cooldownID = cooldownID, targetCategory = targetCategory })
+					table.insert(items, { info = info, data = data, category = categoryID, cooldownID = cooldownID, targetCategory = targetCategory })
 				end
 			end
 		end
@@ -604,9 +681,11 @@ function CDMOptions.CreateAddSpellDropdown(owner, rootDescription, scrollFrame, 
 
 	CreateIconButtons(rootDescription, scrollFrame, anchorIndex, mode, "Essential", Enum.CooldownViewerCategory.Essential, false, nil, 0)
 	CreateIconButtons(rootDescription, scrollFrame, anchorIndex, mode, "Utility", Enum.CooldownViewerCategory.Utility, false, nil, 1)
-	CreateIconButtons(rootDescription, scrollFrame, anchorIndex, mode, "Buff", Enum.CooldownViewerCategory.TrackedBuff, true, function(categoryID, data)
-		return categoryID == 2 or (categoryID == 3 and (type(data.category) == "number" and data.category <= 3))
+	CreateIconButtons(rootDescription, scrollFrame, anchorIndex, mode, "Buffs", Enum.CooldownViewerCategory.TrackedBuff, true, function(categoryID, data)
+		return categoryID == 2 or (categoryID == 3 and (type(data.category) == "number" and data.category <= 3)) or categoryID == 6 or categoryID == 8
 	end, 2, 3)
+	--CreateIconButtons(rootDescription, scrollFrame, anchorIndex, mode, "Slots", Enum.CooldownViewerCategory.EquipSlotEssential, false, nil, 7, 8)
+	--CreateIconButtons(rootDescription, scrollFrame, anchorIndex, mode, "Potions", Enum.CooldownViewerCategory.SpecAgnosticEssential, false, nil, 5, 6)
 
 	rootDescription:CreateDivider()
 
@@ -615,7 +694,7 @@ function CDMOptions.CreateAddSpellDropdown(owner, rootDescription, scrollFrame, 
 	local presetButton = CreateCustomIconButtons(rootDescription, scrollFrame, anchorIndex, false, presetButtonConfigs, "Presets")
 	CreateCustomIconButtons(presetButton, scrollFrame, anchorIndex, false, presetButtonConfigs["TIMERS"], "|T237538:16:16|t Timers")
 	CreateCustomIconButtons(presetButton, scrollFrame, anchorIndex, false, presetButtonConfigs["ITEMS"], "|T134856:16:16|t Items")
-	
+
 	CreateCopyButtons(rootDescription, scrollFrame, anchorIndex, mode)
 	CreateExternalCustomEntries(rootDescription, scrollFrame, anchorIndex)
 end

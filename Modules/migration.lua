@@ -39,12 +39,8 @@ local function CreateCooldownBreakpoints(options)
 end
 
 local function CreateTrackedBarSpellConfig(spellConfig)
-	if type(spellConfig) ~= "table" then
-		return
-	end
-
 	for _, config in pairs(spellConfig) do
-		if type(config) == "table" and type(config.source) == "table" and type(config.anchorGroup) == "table" then
+		if config.source and config.anchorGroup then
 			local trackedBarGroup = config.source[Enum.CooldownViewerCategory.TrackedBar]
 			local normalizedTrackedBarGroup = Utils.NormalizeBuffBarGroup(trackedBarGroup)
 			local legacyGroup = normalizedTrackedBarGroup and (normalizedTrackedBarGroup - 200)
@@ -70,47 +66,66 @@ local function CreateTrackedBarSpellConfig(spellConfig)
 end
 
 local function SetEffectRules(config, effect, rules)
-	local effectRules = config.effectRules
-
-	if not effectRules[effect] then
-		effectRules[effect] = {
-			rules = rules,
-		}
-	end
+	config.effectRules[effect] = {
+		rules = rules,
+	}
 end
 
-local function MigrateVisibilityRules(config, isBuffIcon)
+local function MigrateVisibilityRules(config, isAura, isCustom, isTimer, isItem)
 	local hasVisibilityRules = config.effectRules.visibility ~= nil
-	local shouldCreateRules = isBuffIcon or config.hideWhenInactive or config.hideWhenNotOnCooldown
+	local shouldCreateRules = isAura or isCustom or isTimer or config.alwaysShow or config.showWhileInactive or config.hideWhenInactive or config.hideWhenNotOnCooldown
 
 	if not hasVisibilityRules and shouldCreateRules then
 		local rules
-		if isBuffIcon then
+		if isTimer then
+			rules = {
+				{ state = "active", value = "show" },
+				{ state = "inactive", value = "hide", elseIf = true },
+			}
+		elseif isAura then
 			if config.showWhileInactive then
 				rules = {
-					{ state = "active", value = "hide" },
 					{ state = "inactive", value = "show" },
+					{ state = "active", value = "hide", elseIf = true },
 				}
 			elseif config.alwaysShow then
-				rules = {
-					{ state = "active", value = "show" },
-					{ state = "inactive", value = "show" },
-				}
+				rules = {}
 			else
 				rules = {
 					{ state = "active", value = "show" },
-					{ state = "inactive", value = "hide" },
+					{ state = "inactive", value = "hide", elseIf = true },
 				}
 			end
+		elseif isItem then
+			if config.alwaysShow then
+				rules = {}
+			elseif config.hideWhenNotOnCooldown then
+				rules = {
+					{ state = "cooldown", value = "show" },
+					{ state = "ready", value = "hide", elseIf = true },
+					{ state = "noitem", value = "hide", elseIf = true },
+				}
+			else
+				rules = {
+					{ state = "noitem", value = "hide" },
+				}
+			end
+		elseif config.showWhileInactive then
+			rules = {
+				{ state = "inactive", value = "show" },
+				{ state = "active", value = "hide", elseIf = true },
+			}
+		elseif config.alwaysShow and isCustom then
+			rules = {}
 		elseif config.hideWhenNotOnCooldown then
 			rules = {
 				{ state = "cooldown", value = "show" },
-				{ state = "ready", value = "hide" },
+				{ state = "ready", value = "hide", elseIf = true },
 			}
 		else
 			rules = {
 				{ state = "active", value = "show" },
-				{ state = "inactive", value = "hide" },
+				{ state = "inactive", value = "hide", elseIf = true },
 			}
 		end
 
@@ -123,9 +138,9 @@ local function MigrateVisibilityRules(config, isBuffIcon)
 	config.showWhileInactive = nil
 end
 
-local function MigrateDesaturateRules(config, isBuffIcon)
+local function MigrateDesaturateRules(config, isAura)
 	local hasDesaturateRules = config.effectRules.desaturate ~= nil
-	if not hasDesaturateRules and isBuffIcon then
+	if not hasDesaturateRules and isAura then
 		local rules = {
 			{ state = "active", enabled = false },
 		}
@@ -161,16 +176,32 @@ local function MigrateLegacyIconOptions(spellConfig)
 	for _, config in pairs(spellConfig) do
 		local source = config.source
 		local anchorGroups = config.anchorGroup
-
-		local buffIconGroup = source[Enum.CooldownViewerCategory.TrackedBuff]
-		for anchorGroup, anchorGroupConfig in pairs(anchorGroups) do
-			if not IsBuffBarGroup(anchorGroup) then
-				local isBuffIcon = anchorGroup == buffIconGroup
+		if source and anchorGroups then
+			local buffIconGroup = source[Enum.CooldownViewerCategory.TrackedBuff]
+			for anchorGroup, anchorGroupConfig in pairs(anchorGroups) do
+				local isAura = anchorGroup == buffIconGroup or IsBuffBarGroup(anchorGroup)
 				anchorGroupConfig.effectRules = anchorGroupConfig.effectRules or {}
-				MigrateDesaturateRules(anchorGroupConfig, isBuffIcon)
-				MigrateVisibilityRules(anchorGroupConfig, isBuffIcon)
+				MigrateDesaturateRules(anchorGroupConfig, isAura)
+				MigrateVisibilityRules(anchorGroupConfig, isAura, false)
 				MigrateGlowRules(anchorGroupConfig)
 			end
+		end
+	end
+end
+
+local function MigrateLegacyCustomOptions(customConfig)
+	if not customConfig then
+		return
+	end
+
+	for configKey, configTable in pairs(customConfig) do
+		local isTimer = configKey == "timerConfig"
+		local isItem = configKey == "itemConfig"
+		for _, config in pairs(configTable) do
+			config.effectRules = config.effectRules or {}
+			MigrateDesaturateRules(config, false)
+			MigrateVisibilityRules(config, false, true, isTimer, isItem)
+			MigrateGlowRules(config)
 		end
 	end
 end
@@ -189,13 +220,13 @@ local function HasAnchorConfig(anchorGroup, anchorConfig, buffBarsAnchorConfig)
 end
 
 local function RemoveOldSpellConfigAnchors(config, anchorConfig, buffBarsAnchorConfig)
-	local source = type(config) == "table" and config.source
-	local anchorGroups = type(config) == "table" and config.anchorGroup
-	if type(anchorGroups) ~= "table" then
+	local source = config.source
+	local anchorGroups = config.anchorGroup
+	if not anchorGroups then
 		return
 	end
 
-	if type(source) == "table" then
+	if source then
 		for sourceIndex, anchorGroup in pairs(source) do
 			if not HasAnchorConfig(anchorGroup, anchorConfig, buffBarsAnchorConfig) then
 				source[sourceIndex] = nil
@@ -213,15 +244,10 @@ local function RemoveOldSpellConfigAnchors(config, anchorConfig, buffBarsAnchorC
 end
 
 local function HasCustomAnchorConfig(config, anchorConfig)
-	local anchorGroup = type(config) == "table" and config.anchorGroup
-	return type(anchorGroup) == "number" and HasAnchorConfig(anchorGroup, anchorConfig)
+	return HasAnchorConfig(config.anchorGroup, anchorConfig)
 end
 
 local function RemoveOldSpellConfigAnchorsFromTable(spellConfig, anchorConfig, buffBarsAnchorConfig)
-	if type(spellConfig) ~= "table" then
-		return
-	end
-
 	for configID, config in pairs(spellConfig) do
 		if not RemoveOldSpellConfigAnchors(config, anchorConfig, buffBarsAnchorConfig) then
 			spellConfig[configID] = nil
@@ -230,13 +256,13 @@ local function RemoveOldSpellConfigAnchorsFromTable(spellConfig, anchorConfig, b
 end
 
 local function RemoveOldCustomConfigAnchors(customConfig, anchorConfig)
-	if type(customConfig) ~= "table" then
+	if not customConfig then
 		return
 	end
 
 	for _, configKey in ipairs({ "spellConfig", "itemConfig", "slotConfig", "timerConfig" }) do
 		local configTable = customConfig[configKey]
-		if type(configTable) == "table" then
+		if configTable then
 			for id, config in pairs(configTable) do
 				if not HasCustomAnchorConfig(config, anchorConfig) then
 					configTable[id] = nil
@@ -262,9 +288,9 @@ local function MigrateLegacyGlobalConfigToProfiles(self)
 
 		if legacyCustomConfig then
 			local profileCustomConfig = profile.globalCustomConfig
-			if profileCustomConfig == nil then
+			if not profileCustomConfig then
 				profile.globalCustomConfig = CopyTable(legacyCustomConfig)
-			elseif profileCustomConfig == "table" then
+			else
 				for key, config in pairs(legacyCustomConfig) do
 					if not profileCustomConfig[key] then
 						profileCustomConfig[key] = CopyTable(config)
@@ -279,17 +305,15 @@ local function MigrateLegacyGlobalConfigToProfiles(self)
 end
 
 local function RemoveOldAnchorConfigs(currentConfig, globalAnchorConfig, globalCustomConfig)
-	if type(currentConfig) == "table" then
-		RemoveOldSpellConfigAnchorsFromTable(currentConfig.spellConfig, currentConfig.anchorConfig, currentConfig.buffBarsAnchorConfig)
-		RemoveOldCustomConfigAnchors(currentConfig.customConfig, currentConfig.anchorConfig)
-	end
+	RemoveOldSpellConfigAnchorsFromTable(currentConfig.spellConfig, currentConfig.anchorConfig, currentConfig.buffBarsAnchorConfig)
+	RemoveOldCustomConfigAnchors(currentConfig.customConfig, currentConfig.anchorConfig)
 
 	RemoveOldCustomConfigAnchors(globalCustomConfig, globalAnchorConfig)
 end
 
 local function GetCooldownDataForLegacySpellConfig(defaultCooldownViewerConfig, configID, config)
-	local spellID = config.spellID or (type(configID) == "number" and configID)
-	if not spellID or not defaultCooldownViewerConfig then
+	local spellID = config.spellID or configID
+	if not defaultCooldownViewerConfig then
 		return
 	end
 
@@ -306,7 +330,7 @@ local function GetCooldownDataForLegacySpellConfig(defaultCooldownViewerConfig, 
 		end
 	end
 
-	return defaultCooldownViewerConfig.spellIDs and defaultCooldownViewerConfig.spellIDs[spellID]
+	return defaultCooldownViewerConfig.spellIDs[spellID]
 end
 
 local function MigrateLegacySpellConfigKeys(spellConfig, defaultCooldownViewerConfig)
@@ -326,10 +350,8 @@ local function MigrateLegacySpellConfigKeys(spellConfig, defaultCooldownViewerCo
 			local migratedID = GetCooldownConfigKey(cooldownID)
 			config.spellID = spellID
 			config.cooldownID = cooldownID
-			if migratedID then
-				spellConfig[migratedID] = config
-				spellConfig[legacyID] = nil
-			end
+			spellConfig[migratedID] = config
+			spellConfig[legacyID] = nil
 		else
 			spellConfig[legacyID] = nil
 		end
@@ -338,12 +360,12 @@ end
 
 function SCM:MigrateLegacyProfileOptions()
 	local legacyOptions = self.db.global.options
-	if type(legacyOptions) ~= "table" then
+	if not legacyOptions then
 		return
 	end
 
 	for _, profile in pairs(self.db.profiles) do
-		if type(profile) == "table" and type(profile.options) ~= "table" then
+		if not profile.options then
 			profile.options = CopyTable(legacyOptions)
 		end
 	end
@@ -364,5 +386,7 @@ function SCM:MigrateDB()
 	MigrateLegacySpellConfigKeys(self.spellConfig, self.defaultCooldownViewerConfig)
 	CreateTrackedBarSpellConfig(self.spellConfig)
 	MigrateLegacyIconOptions(self.spellConfig)
+	MigrateLegacyCustomOptions(self.currentConfig.customConfig)
+	MigrateLegacyCustomOptions(self.db.profile.globalCustomConfig)
 	RemoveOldAnchorConfigs(self.currentConfig, self.db.profile.globalAnchorConfig, self.db.profile.globalCustomConfig)
 end

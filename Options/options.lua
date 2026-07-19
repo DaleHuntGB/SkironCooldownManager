@@ -61,13 +61,13 @@ function Options.GetEffectiveAnchorGroup(anchorIndex, mode)
 	return anchorIndex
 end
 
-function Options.ApplyModeConfigUpdate(anchorIndex, mode, refreshStates)
+function Options.ApplyModeConfigUpdate(anchorIndex, mode, refreshOptions, refreshGlowOptions)
 	if mode == "global" then
-		SCM:ApplyAnchorGroupCDManagerConfig(anchorIndex, true, nil, refreshStates)
+		SCM:ApplyAnchorGroupCDManagerConfig(anchorIndex, true, nil, refreshOptions, refreshGlowOptions)
 	elseif mode == "buffbars" then
-		SCM:ApplyAnchorGroupCDManagerConfig(anchorIndex, false, UPDATE_SCOPE.BUFF_BAR, refreshStates)
+		SCM:ApplyAnchorGroupCDManagerConfig(anchorIndex, false, UPDATE_SCOPE.BUFF_BAR, refreshOptions, refreshGlowOptions)
 	else
-		SCM:ApplyAllCDManagerConfigs(true, refreshStates)
+		SCM:ApplyAllCDManagerConfigs(true, refreshOptions, refreshGlowOptions)
 	end
 end
 
@@ -207,16 +207,33 @@ function SCM:GetShowTooltip()
 	return LibEditModeOverride:GetFrameSetting(BuffIconCooldownViewer, Enum.EditModeCooldownViewerSetting.ShowTooltips)
 end
 
-function SCM:SetHideWhenInactive(value)
+local function SetViewerHideWhenInactive(viewer, value)
 	LibEditModeOverride:LoadLayouts()
 
-	if LibEditModeOverride:CanEditActiveLayout() then
-		local currentSetting = LibEditModeOverride:GetFrameSetting(BuffIconCooldownViewer, Enum.EditModeCooldownViewerSetting.HideWhenInactive)
-		if (value and currentSetting == 1) or (not value and currentSetting == 0) then
-			LibEditModeOverride:SetFrameSetting(BuffIconCooldownViewer, Enum.EditModeCooldownViewerSetting.HideWhenInactive, value and 0 or 1)
-			LibEditModeOverride:SaveOnly()
-			LibEditModeOverride:ApplyChanges()
-		end
+	if not LibEditModeOverride:CanEditActiveLayout() then
+		return false
+	end
+
+	local targetSetting = value and 0 or 1
+	local currentSetting = LibEditModeOverride:GetFrameSetting(viewer, Enum.EditModeCooldownViewerSetting.HideWhenInactive)
+	if currentSetting ~= targetSetting then
+		LibEditModeOverride:SetFrameSetting(viewer, Enum.EditModeCooldownViewerSetting.HideWhenInactive, targetSetting)
+		LibEditModeOverride:SaveOnly()
+		LibEditModeOverride:ApplyChanges()
+	end
+
+	return true
+end
+
+function SCM:SetHideWhenInactive(value)
+	if SetViewerHideWhenInactive(BuffIconCooldownViewer, value) then
+		self.isHideWhenInactiveEnabled = not value
+	end
+end
+
+function SCM:SetBuffBarHideWhenInactive(value)
+	if SetViewerHideWhenInactive(BuffBarCooldownViewer, value) then
+		self.isHideWhenInactiveBarsEnabled = not value
 	end
 end
 
@@ -289,6 +306,7 @@ function SCM:ApplyOptions()
 
 	local options = self.db.profile.options
 	self:SetHideWhenInactive(options.hideBuffsWhenInactive)
+	self:SetBuffBarHideWhenInactive(options.disableBuffBarHideWhenInactive)
 	self:SetBuffBarContent(options.buffBarContent)
 	self:ApplyAttributeDriver(options.hideWhileMounted)
 	self.Cooldowns:ApplyFormatterSettings()

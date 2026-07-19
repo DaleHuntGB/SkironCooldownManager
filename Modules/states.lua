@@ -1,7 +1,6 @@
 local SCM = select(2, ...)
 local States = SCM.States
 local Icons = SCM.Icons
-local SetChildVisibilityState = Icons.SetChildVisibilityState
 local UpdateChildDesaturation = Icons.UpdateChildDesaturation
 local GlobalGlowSubregion = SCM.Constants.GlobalGlowSubregion
 
@@ -10,6 +9,8 @@ function States.GetState(child)
 		child.SCMState = {
 			Visibility = true,
 		}
+	elseif child.SCMState.Visibility == nil then
+		child.SCMState.Visibility = true
 	end
 
 	return child.SCMState
@@ -68,7 +69,7 @@ local function GetGlowOptions(config, subregion)
 	return glowType, glowTypeOptions
 end
 
-local function ApplyGlowRules(child, state, config, effectConfig, cooldownRuleState, activeRuleState)
+local function ApplyGlowRules(child, state, config, effectConfig, cooldownRuleState, activeRuleState, refreshGlowOptions)
 	local rules = effectConfig.rules
 	local activeStateGlows = state.ActiveStateGlows
 	if not rules or not rules[1] then
@@ -90,7 +91,7 @@ local function ApplyGlowRules(child, state, config, effectConfig, cooldownRuleSt
 			state.ActiveStateGlows = activeStateGlows
 
 			local activeStateGlow = activeStateGlows[key]
-			if not activeStateGlow or activeStateGlow.glowType ~= glowType or activeStateGlow.glowTypeOptions ~= glowTypeOptions then
+			if refreshGlowOptions or not activeStateGlow or activeStateGlow.glowType ~= glowType then
 				if activeStateGlow then
 					SCM:StopCustomGlow(child, key, activeStateGlow.glowType)
 				end
@@ -107,7 +108,6 @@ local function ApplyGlowRules(child, state, config, effectConfig, cooldownRuleSt
 				SCM:StartCustomGlow(child, glowTypeOptions, glowType, key, true, true)
 				activeStateGlow = {
 					glowType = glowType,
-					glowTypeOptions = glowTypeOptions,
 				}
 				activeStateGlows[key] = activeStateGlow
 			end
@@ -189,7 +189,7 @@ local function ShowStateBorder(child, key, borderOptions, refreshID)
 	if not shouldShow and border.SCMStateBorderShown ~= false then
 		border:Hide()
 		border.SCMStateBorderShown = false
-	elseif shouldShow and border.SCMStateBorderShown ~= true then
+	elseif shouldShow and not border.SCMStateBorderShown then
 		border:Show()
 		border.SCMStateBorderShown = true
 	end
@@ -251,7 +251,7 @@ local function ApplyBorderRules(child, state, config, effectConfig, cooldownRule
 	end
 end
 
-local function ApplyStateOptions(child, skipLayoutRefresh, state)
+local function ApplyStateOptions(child, skipLayoutRefresh, state, refreshGlowOptions)
 	state = state or States.GetState(child)
 	local config = child.SCMConfig
 	local effectRules = config.effectRules
@@ -259,15 +259,8 @@ local function ApplyStateOptions(child, skipLayoutRefresh, state)
 	state.UpdateRequired = false
 
 	if not effectRules then
-		if state.Visibility == false then
-			state.Visibility = true
-			state.UpdateRequired = true
-			if child.SCMShouldBeVisible ~= true then
-				SetChildVisibilityState(child, true, true)
-			end
-		else
-			state.Visibility = true
-		end
+		state.UpdateRequired = not state.Visibility
+		state.Visibility = true
 
 		if state.Desaturate ~= nil then
 			state.Desaturate = nil
@@ -300,17 +293,8 @@ local function ApplyStateOptions(child, skipLayoutRefresh, state)
 
 		state.UpdateRequired = state.Visibility ~= shouldShow
 		state.Visibility = shouldShow
-		if child.SCMShouldBeVisible ~= shouldShow then
-			SetChildVisibilityState(child, shouldShow, true)
-			state.UpdateRequired = true
-		end
-	elseif state.Visibility == false then
-		state.Visibility = true
-		state.UpdateRequired = true
-		if child.SCMShouldBeVisible ~= true then
-			SetChildVisibilityState(child, true, true)
-		end
 	else
+		state.UpdateRequired = not state.Visibility
 		state.Visibility = true
 	end
 
@@ -334,7 +318,7 @@ local function ApplyStateOptions(child, skipLayoutRefresh, state)
 	end
 
 	if effectRules.glow then
-		ApplyGlowRules(child, state, config, effectRules.glow, cooldownRuleState, activeRuleState)
+		ApplyGlowRules(child, state, config, effectRules.glow, cooldownRuleState, activeRuleState, refreshGlowOptions)
 	elseif state.ActiveStateGlows then
 		States.StopStateGlows(child)
 	end
@@ -351,56 +335,46 @@ local function ApplyStateOptions(child, skipLayoutRefresh, state)
 	SCM:ApplyAnchorGroupCDManagerConfig(child.SCMGroup, nil, child.viewerFrame and child.viewerFrame.SCMUpdateScope)
 end
 
-function States.RefreshStateOptions(child)
+function States.RefreshStateOptions(child, refreshGlowOptions)
 	if child and child.SCMConfig then
-		ApplyStateOptions(child, true)
+		ApplyStateOptions(child, false, nil, refreshGlowOptions)
 	end
 end
 
-local function UpdateState(child, updateActive, isActive, updateCooldown, cooldownState, skipLayoutRefresh, forceRefresh)
+local function UpdateState(child, updateActive, isActive, updateCooldown, cooldownState, skipLayoutRefresh, refreshOptions, refreshGlowOptions)
 	local config = child and child.SCMConfig
 	if not config then
 		return false
 	end
 
 	local effectRules = config.effectRules
-	local state = child.SCMState
-	if not effectRules and not (state and (state.Visibility == false or state.Desaturate ~= nil or state.ActiveStateGlows or child.SCMActiveStateBorders)) then
+	local state = States.GetState(child)
+	if not effectRules and not (state and (not state.Visibility or state.Desaturate ~= nil or state.ActiveStateGlows or child.SCMActiveStateBorders)) then
 		return false
 	end
 
-	state = state or States.GetState(child)
-	local changed = (forceRefresh or not effectRules)
+	local changed = (refreshOptions or not effectRules)
 
-	if updateActive then
-		local active
-		if isActive ~= nil then
-			active = isActive
-		end
-
-		if state.Active ~= active then
-			state.Active = active
-			changed = true
-		end
+	if updateActive and state.Active ~= isActive then
+		state.Active = isActive
+		changed = true
 	end
 
-	if updateCooldown then
-		if state.CooldownState ~= cooldownState then
-			state.CooldownState = cooldownState
-			changed = true
-		end
+	if updateCooldown and state.CooldownState ~= cooldownState then
+		state.CooldownState = cooldownState
+		changed = true
 	end
 
 	if not changed then
 		return false
 	end
-
-	ApplyStateOptions(child, skipLayoutRefresh, state)
+	
+	ApplyStateOptions(child, skipLayoutRefresh, state, refreshGlowOptions)
 	return true
 end
 
-function States.SyncState(child, isActive, cooldownState, skipLayoutRefresh, forceRefresh)
-	return UpdateState(child, isActive ~= nil, isActive, cooldownState ~= nil, cooldownState, skipLayoutRefresh, forceRefresh)
+function States.SyncState(child, isActive, cooldownState, skipLayoutRefresh, refreshOptions, refreshGlowOptions)
+	return UpdateState(child, isActive ~= nil, isActive, cooldownState ~= nil, cooldownState, skipLayoutRefresh, refreshOptions, refreshGlowOptions)
 end
 
 function States.SetCooldownState(child, cooldownState)

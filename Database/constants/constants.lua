@@ -93,10 +93,15 @@ Constants.States = {
 	["inactive"] = "Inactive",
 	["ready"] = "Ready",
 	["cooldown"] = "On Cooldown",
+	["noitem"] = "No Item",
 	["recharging"] = "Recharging",
 }
 
 Constants.StatesSorted = {
+	["buffBar"] = {
+		"active",
+		"inactive",
+	},
 	["spell"] = {
 		"ready",
 		"cooldown",
@@ -104,9 +109,14 @@ Constants.StatesSorted = {
 		"inactive",
 		"recharging",
 	},
+	["timer"] = {
+		"active",
+		"inactive",
+	},
 	["item"] = {
 		"ready",
 		"cooldown",
+		"noitem",
 	},
 	["slot"] = {
 		"ready",

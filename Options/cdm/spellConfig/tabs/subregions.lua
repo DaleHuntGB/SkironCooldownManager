@@ -30,7 +30,7 @@ local function BuildSubregionTabs(iconConfig)
 	return subregionTabs
 end
 
-local function AddGlowOffsetOptions(dynamicGlowSettingsGroup, glowTypeOptions)
+local function AddGlowOffsetOptions(dynamicGlowSettingsGroup, glowTypeOptions, buttonFrame, buttonData, anchorIndex, mode, isGlobal, isBuffBar)
 	local xOffset = AceGUI:Create("Slider")
 	xOffset:SetRelativeWidth(0.33)
 	xOffset:SetValue(glowTypeOptions.xOffset or 0)
@@ -38,6 +38,7 @@ local function AddGlowOffsetOptions(dynamicGlowSettingsGroup, glowTypeOptions)
 	xOffset:SetSliderValues(-30, 30, 0.1)
 	xOffset:SetCallback("OnValueChanged", function(_, _, value)
 		glowTypeOptions.xOffset = value
+		CDMOptions.ApplyIconConfigUpdate(buttonFrame, buttonData, anchorIndex, mode, isGlobal, isBuffBar, true, true)
 	end)
 	dynamicGlowSettingsGroup:AddChild(xOffset)
 
@@ -48,11 +49,12 @@ local function AddGlowOffsetOptions(dynamicGlowSettingsGroup, glowTypeOptions)
 	yOffset:SetSliderValues(-30, 30, 0.1)
 	yOffset:SetCallback("OnValueChanged", function(_, _, value)
 		glowTypeOptions.yOffset = value
+		CDMOptions.ApplyIconConfigUpdate(buttonFrame, buttonData, anchorIndex, mode, isGlobal, isBuffBar, true, true)
 	end)
 	dynamicGlowSettingsGroup:AddChild(yOffset)
 end
 
-local function AddGlowColorOption(dynamicGlowSettingsGroup, glowTypeOptions)
+local function AddGlowColorOption(dynamicGlowSettingsGroup, glowTypeOptions, buttonFrame, buttonData, anchorIndex, mode, isGlobal, isBuffBar)
 	local glowColor = AceGUI:Create("ColorPicker")
 	glowColor:SetRelativeWidth(0.33)
 	glowColor:SetLabel("Glow Color")
@@ -61,11 +63,12 @@ local function AddGlowColorOption(dynamicGlowSettingsGroup, glowTypeOptions)
 	glowColor:SetColor(unpack(glowTypeOptions.glowColor))
 	glowColor:SetCallback("OnValueChanged", function(_, _, r, g, b, a)
 		glowTypeOptions.glowColor = { r, g, b, a }
+		CDMOptions.ApplyIconConfigUpdate(buttonFrame, buttonData, anchorIndex, mode, isGlobal, isBuffBar, true, true)
 	end)
 	dynamicGlowSettingsGroup:AddChild(glowColor)
 end
 
-local function AddCustomGlowOptions(dynamicGlowSettingsGroup, glowTypeOptions, glowType)
+local function AddCustomGlowOptions(dynamicGlowSettingsGroup, glowTypeOptions, glowType, buttonFrame, buttonData, anchorIndex, mode, isGlobal, isBuffBar)
 	dynamicGlowSettingsGroup:ReleaseChildren()
 
 	if glowType == "Proc" then
@@ -75,11 +78,12 @@ local function AddCustomGlowOptions(dynamicGlowSettingsGroup, glowTypeOptions, g
 		startAnim:SetLabel("Start Animation")
 		startAnim:SetCallback("OnValueChanged", function(self, event, value)
 			glowTypeOptions.startAnim = value
+			CDMOptions.ApplyIconConfigUpdate(buttonFrame, buttonData, anchorIndex, mode, isGlobal, isBuffBar, true, true)
 		end)
 		dynamicGlowSettingsGroup:AddChild(startAnim)
 
-		AddGlowOffsetOptions(dynamicGlowSettingsGroup, glowTypeOptions)
-		AddGlowColorOption(dynamicGlowSettingsGroup, glowTypeOptions)
+		AddGlowOffsetOptions(dynamicGlowSettingsGroup, glowTypeOptions, buttonFrame, buttonData, anchorIndex, mode, isGlobal, isBuffBar)
+		AddGlowColorOption(dynamicGlowSettingsGroup, glowTypeOptions, buttonFrame, buttonData, anchorIndex, mode, isGlobal, isBuffBar)
 	elseif glowType == "Autocast" then
 		--color,numParticles,frequency,scale,xOffset,yOffset
 
@@ -90,6 +94,7 @@ local function AddCustomGlowOptions(dynamicGlowSettingsGroup, glowTypeOptions, g
 		numParticles:SetSliderValues(1, 30, 1)
 		numParticles:SetCallback("OnValueChanged", function(self, event, value)
 			glowTypeOptions.numParticles = value
+			CDMOptions.ApplyIconConfigUpdate(buttonFrame, buttonData, anchorIndex, mode, isGlobal, isBuffBar, true, true)
 		end)
 		dynamicGlowSettingsGroup:AddChild(numParticles)
 
@@ -100,6 +105,7 @@ local function AddCustomGlowOptions(dynamicGlowSettingsGroup, glowTypeOptions, g
 		frequency:SetSliderValues(-3, 3, 0.05)
 		frequency:SetCallback("OnValueChanged", function(self, event, value)
 			glowTypeOptions.frequency = value
+			CDMOptions.ApplyIconConfigUpdate(buttonFrame, buttonData, anchorIndex, mode, isGlobal, isBuffBar, true, true)
 		end)
 		dynamicGlowSettingsGroup:AddChild(frequency)
 
@@ -111,11 +117,12 @@ local function AddCustomGlowOptions(dynamicGlowSettingsGroup, glowTypeOptions, g
 		scale:SetIsPercent(true)
 		scale:SetCallback("OnValueChanged", function(self, event, value)
 			glowTypeOptions.scale = value
+			CDMOptions.ApplyIconConfigUpdate(buttonFrame, buttonData, anchorIndex, mode, isGlobal, isBuffBar, true, true)
 		end)
 		dynamicGlowSettingsGroup:AddChild(scale)
 
-		AddGlowOffsetOptions(dynamicGlowSettingsGroup, glowTypeOptions)
-		AddGlowColorOption(dynamicGlowSettingsGroup, glowTypeOptions)
+		AddGlowOffsetOptions(dynamicGlowSettingsGroup, glowTypeOptions, buttonFrame, buttonData, anchorIndex, mode, isGlobal, isBuffBar)
+		AddGlowColorOption(dynamicGlowSettingsGroup, glowTypeOptions, buttonFrame, buttonData, anchorIndex, mode, isGlobal, isBuffBar)
 	elseif glowType == "Pixel" then
 		--color,numLines,frequency,length,thickness,xOffset,yOffset,border
 
@@ -126,6 +133,7 @@ local function AddCustomGlowOptions(dynamicGlowSettingsGroup, glowTypeOptions, g
 		numLines:SetSliderValues(1, 30, 1)
 		numLines:SetCallback("OnValueChanged", function(self, event, value)
 			glowTypeOptions.numLines = value
+			CDMOptions.ApplyIconConfigUpdate(buttonFrame, buttonData, anchorIndex, mode, isGlobal, isBuffBar, true, true)
 		end)
 		dynamicGlowSettingsGroup:AddChild(numLines)
 
@@ -136,6 +144,7 @@ local function AddCustomGlowOptions(dynamicGlowSettingsGroup, glowTypeOptions, g
 		frequency:SetSliderValues(-3, 3, 0.05)
 		frequency:SetCallback("OnValueChanged", function(self, event, value)
 			glowTypeOptions.frequency = value
+			CDMOptions.ApplyIconConfigUpdate(buttonFrame, buttonData, anchorIndex, mode, isGlobal, isBuffBar, true, true)
 		end)
 		dynamicGlowSettingsGroup:AddChild(frequency)
 
@@ -146,6 +155,7 @@ local function AddCustomGlowOptions(dynamicGlowSettingsGroup, glowTypeOptions, g
 		length:SetSliderValues(1, 15, 0.05)
 		length:SetCallback("OnValueChanged", function(self, event, value)
 			glowTypeOptions.length = value
+			CDMOptions.ApplyIconConfigUpdate(buttonFrame, buttonData, anchorIndex, mode, isGlobal, isBuffBar, true, true)
 		end)
 		dynamicGlowSettingsGroup:AddChild(length)
 
@@ -156,11 +166,12 @@ local function AddCustomGlowOptions(dynamicGlowSettingsGroup, glowTypeOptions, g
 		thickness:SetSliderValues(1, 15, 0.05)
 		thickness:SetCallback("OnValueChanged", function(self, event, value)
 			glowTypeOptions.thickness = value
+			CDMOptions.ApplyIconConfigUpdate(buttonFrame, buttonData, anchorIndex, mode, isGlobal, isBuffBar, true, true)
 		end)
 		dynamicGlowSettingsGroup:AddChild(thickness)
 
-		AddGlowOffsetOptions(dynamicGlowSettingsGroup, glowTypeOptions)
-		AddGlowColorOption(dynamicGlowSettingsGroup, glowTypeOptions)
+		AddGlowOffsetOptions(dynamicGlowSettingsGroup, glowTypeOptions, buttonFrame, buttonData, anchorIndex, mode, isGlobal, isBuffBar)
+		AddGlowColorOption(dynamicGlowSettingsGroup, glowTypeOptions, buttonFrame, buttonData, anchorIndex, mode, isGlobal, isBuffBar)
 
 		local border = AceGUI:Create("CheckBox")
 		border:SetRelativeWidth(0.33)
@@ -168,6 +179,7 @@ local function AddCustomGlowOptions(dynamicGlowSettingsGroup, glowTypeOptions, g
 		border:SetLabel("Border")
 		border:SetCallback("OnValueChanged", function(self, event, value)
 			glowTypeOptions.border = value
+			CDMOptions.ApplyIconConfigUpdate(buttonFrame, buttonData, anchorIndex, mode, isGlobal, isBuffBar, true, true)
 		end)
 		dynamicGlowSettingsGroup:AddChild(border)
 	elseif glowType == "Button" then
@@ -178,14 +190,32 @@ local function AddCustomGlowOptions(dynamicGlowSettingsGroup, glowTypeOptions, g
 		frequency:SetSliderValues(-3, 3, 0.05)
 		frequency:SetCallback("OnValueChanged", function(self, event, value)
 			glowTypeOptions.frequency = value
+			CDMOptions.ApplyIconConfigUpdate(buttonFrame, buttonData, anchorIndex, mode, isGlobal, isBuffBar, true, true)
 		end)
 		dynamicGlowSettingsGroup:AddChild(frequency)
 
-		AddGlowColorOption(dynamicGlowSettingsGroup, glowTypeOptions)
+		AddGlowColorOption(dynamicGlowSettingsGroup, glowTypeOptions, buttonFrame, buttonData, anchorIndex, mode, isGlobal, isBuffBar)
 	end
 end
 
-local function AddSubregionOptions(subregionData, subregionTabs, iconConfig)
+local function RemoveSubregionRules(iconConfig, subregionType, removedIndex)
+	local effectConfig = iconConfig.effectRules and iconConfig.effectRules[subregionType]
+	local rules = effectConfig and effectConfig.rules
+	if not rules then
+		return
+	end
+
+	for ruleIndex = #rules, 1, -1 do
+		local rule = rules[ruleIndex]
+		if rule.subregion == removedIndex then
+			tremove(rules, ruleIndex)
+		elseif type(rule.subregion) == "number" and rule.subregion > removedIndex then
+			rule.subregion = rule.subregion - 1
+		end
+	end
+end
+
+local function AddSubregionOptions(subregionData, subregionTabs, iconConfig, buttonFrame, buttonData, anchorIndex, mode, isGlobal, isBuffBar)
 	if subregionData.type == "glow" then
 		subregionData.glowType = subregionData.glowType or "Pixel"
 		subregionData.glowTypeOptions = subregionData.glowTypeOptions or {}
@@ -206,12 +236,12 @@ local function AddSubregionOptions(subregionData, subregionTabs, iconConfig)
 			subregionData.glowType = value
 			subregionData.glowTypeOptions[value] = subregionData.glowTypeOptions[value] or {}
 
-			SCM:RefreshAllGlows()
+			CDMOptions.ApplyIconConfigUpdate(buttonFrame, buttonData, anchorIndex, mode, isGlobal, isBuffBar, true, true)
 			subregionTabs:SetTabs(BuildSubregionTabs(iconConfig))
 			subregionTabs:SelectTab(subregionData.globalIndex)
 		end)
 		glowType:SetValue(subregionData.glowType)
-		AddCustomGlowOptions(dynamicGlowSettingsGroup, subregionData.glowTypeOptions[subregionData.glowType], subregionData.glowType)
+		AddCustomGlowOptions(dynamicGlowSettingsGroup, subregionData.glowTypeOptions[subregionData.glowType], subregionData.glowType, buttonFrame, buttonData, anchorIndex, mode, isGlobal, isBuffBar)
 	elseif subregionData.type == "border" then
 		local borderSize = AceGUI:Create("Slider")
 		borderSize:SetRelativeWidth(0.5)
@@ -220,6 +250,7 @@ local function AddSubregionOptions(subregionData, subregionTabs, iconConfig)
 		borderSize:SetValue(subregionData.borderSize or 1)
 		borderSize:SetCallback("OnValueChanged", function(_, _, value)
 			subregionData.borderSize = value
+			CDMOptions.ApplyIconConfigUpdate(buttonFrame, buttonData, anchorIndex, mode, isGlobal, isBuffBar, true)
 		end)
 		subregionTabs:AddChild(borderSize)
 
@@ -233,6 +264,7 @@ local function AddSubregionOptions(subregionData, subregionTabs, iconConfig)
 		borderColor:SetColor(color.r, color.g, color.b, color.a)
 		borderColor:SetCallback("OnValueChanged", function(_, _, r, g, b, a)
 			subregionData.borderColor = { r = r, g = g, b = b, a = a }
+			CDMOptions.ApplyIconConfigUpdate(buttonFrame, buttonData, anchorIndex, mode, isGlobal, isBuffBar, true)
 		end)
 		subregionTabs:AddChild(borderColor)
 	elseif subregionData.type == "text" then
@@ -247,6 +279,7 @@ local function AddSubregionOptions(subregionData, subregionTabs, iconConfig)
 
 		tremove(iconConfig.subregions, removedIndex)
 		tremove(iconConfig.subregionOptions[removedType], subregionData.typeIndex)
+		RemoveSubregionRules(iconConfig, removedType, subregionData.typeIndex)
 
 		for index, subregionData in ipairs(iconConfig.subregions) do
 			subregionData.globalIndex = index
@@ -255,6 +288,8 @@ local function AddSubregionOptions(subregionData, subregionTabs, iconConfig)
 		for index, subregionData in ipairs(iconConfig.subregionOptions[removedType]) do
 			subregionData.typeIndex = index
 		end
+
+		CDMOptions.ApplyIconConfigUpdate(buttonFrame, buttonData, anchorIndex, mode, isGlobal, isBuffBar, true)
 
 		local tabs = BuildSubregionTabs(iconConfig)
 		local selectedTab = tabs[removedIndex] or tabs[removedIndex - 1]
@@ -270,89 +305,88 @@ local function AddSubregionOptions(subregionData, subregionTabs, iconConfig)
 end
 
 function CDMOptions.CreateSubregionTabSettings(iconSettingsTabs, iconSettings, parentScrollFrame, buttonFrame, buttonData, iconConfig, anchorIndex, mode, isGlobal, isBuffBar)
-	if not isBuffBar then
-		iconConfig.subregions = iconConfig.subregions or {}
-		iconConfig.subregionOptions = iconConfig.subregionOptions or {}
+	iconConfig.subregions = iconConfig.subregions or {}
+	iconConfig.subregionOptions = iconConfig.subregionOptions or {}
 
-		local rootGroup = AceGUI:Create("SimpleGroup")
-		rootGroup:SetLayout("fill")
-		rootGroup:SetFullWidth(true)
-		rootGroup:SetFullHeight(true)
-		iconSettingsTabs:AddChild(rootGroup)
+	local rootGroup = AceGUI:Create("SimpleGroup")
+	rootGroup:SetLayout("fill")
+	rootGroup:SetFullWidth(true)
+	rootGroup:SetFullHeight(true)
+	iconSettingsTabs:AddChild(rootGroup)
 
-		local scrollFrame = AceGUI:Create("ScrollFrame")
-		scrollFrame:SetLayout("flow")
-		scrollFrame:SetFullWidth(true)
-		scrollFrame:SetFullHeight(true)
-		rootGroup:AddChild(scrollFrame)
+	local scrollFrame = AceGUI:Create("ScrollFrame")
+	scrollFrame:SetLayout("flow")
+	scrollFrame:SetFullWidth(true)
+	scrollFrame:SetFullHeight(true)
+	rootGroup:AddChild(scrollFrame)
 
-		local generalSettings = AceGUI:Create("InlineGroup")
-		generalSettings:SetLayout("flow")
-		generalSettings:SetFullWidth(true)
-		scrollFrame:AddChild(generalSettings)
+	local generalSettings = AceGUI:Create("InlineGroup")
+	generalSettings:SetLayout("flow")
+	generalSettings:SetFullWidth(true)
+	scrollFrame:AddChild(generalSettings)
 
-		local selectedSubregion
-		local subregionDropdown = AceGUI:Create("Dropdown")
-		subregionDropdown:SetLabel("Subregion")
-		subregionDropdown:SetRelativeWidth(0.75)
-		generalSettings:AddChild(subregionDropdown)
+	local selectedSubregion
+	local subregionDropdown = AceGUI:Create("Dropdown")
+	subregionDropdown:SetLabel("Subregion")
+	subregionDropdown:SetRelativeWidth(0.75)
+	generalSettings:AddChild(subregionDropdown)
 
-		local addSubregionButton = AceGUI:Create("Button")
-		addSubregionButton:SetText("Add")
-		addSubregionButton:SetRelativeWidth(0.2)
-		generalSettings:AddChild(addSubregionButton)
+	local addSubregionButton = AceGUI:Create("Button")
+	addSubregionButton:SetText("Add")
+	addSubregionButton:SetRelativeWidth(0.2)
+	generalSettings:AddChild(addSubregionButton)
 
-		subregionDropdown:SetList(Constants.Subregions, Constants.SubregionsSorted)
-		subregionDropdown:SetValue(selectedSubregion)
-		addSubregionButton:SetDisabled(selectedSubregion == nil)
+	subregionDropdown:SetList(Constants.Subregions, Constants.SubregionsSorted)
+	subregionDropdown:SetValue(selectedSubregion)
+	addSubregionButton:SetDisabled(selectedSubregion == nil)
 
-		subregionDropdown:SetCallback("OnValueChanged", function(_, _, value)
-			selectedSubregion = value
-			addSubregionButton:SetDisabled(value == nil)
-		end)
+	subregionDropdown:SetCallback("OnValueChanged", function(_, _, value)
+		selectedSubregion = value
+		addSubregionButton:SetDisabled(value == nil)
+	end)
 
-		local subregionTabs = AceGUI:Create("TabGroup")
-		local tabs = BuildSubregionTabs(iconConfig)
-		subregionTabs:SetLayout("flow")
-		subregionTabs:SetFullWidth(true)
-		subregionTabs:SetTabs(tabs)
-		subregionTabs:SetCallback("OnGroupSelected", function(self, _, selectedTab)
-			self:ReleaseChildren()
-			if not selectedTab or not iconConfig.subregions[selectedTab] then
-				return
-			end
-			AddSubregionOptions(iconConfig.subregions[selectedTab], self, iconConfig)
-		end)
-		scrollFrame:AddChild(subregionTabs)
-
-		addSubregionButton:SetCallback("OnClick", function()
-			if not selectedSubregion then
-				return
-			end
-			iconConfig.subregionOptions[selectedSubregion] = iconConfig.subregionOptions[selectedSubregion] or {}
-
-			local subregionData = {
-				type = selectedSubregion,
-			}
-
-			if selectedSubregion == "glow" then
-				subregionData.glowTypeOptions = {}
-			end
-
-			tinsert(iconConfig.subregionOptions[selectedSubregion], subregionData)
-			tinsert(iconConfig.subregions, subregionData)
-
-			subregionData.globalIndex = #iconConfig.subregions
-			subregionData.typeIndex = #iconConfig.subregionOptions[selectedSubregion]
-
-			subregionTabs:SetTabs(BuildSubregionTabs(iconConfig))
-			subregionTabs:SelectTab(subregionData.globalIndex)
-			selectedSubregion = nil
-			subregionDropdown:SetValue(selectedSubregion)
-		end)
-
-		if tabs[1] then
-			subregionTabs:SelectTab(tabs[1].value)
+	local subregionTabs = AceGUI:Create("TabGroup")
+	local tabs = BuildSubregionTabs(iconConfig)
+	subregionTabs:SetLayout("flow")
+	subregionTabs:SetFullWidth(true)
+	subregionTabs:SetTabs(tabs)
+	subregionTabs:SetCallback("OnGroupSelected", function(self, _, selectedTab)
+		self:ReleaseChildren()
+		if not selectedTab or not iconConfig.subregions[selectedTab] then
+			return
 		end
+		AddSubregionOptions(iconConfig.subregions[selectedTab], self, iconConfig, buttonFrame, buttonData, anchorIndex, mode, isGlobal, isBuffBar)
+	end)
+	scrollFrame:AddChild(subregionTabs)
+
+	addSubregionButton:SetCallback("OnClick", function()
+		if not selectedSubregion then
+			return
+		end
+		iconConfig.subregionOptions[selectedSubregion] = iconConfig.subregionOptions[selectedSubregion] or {}
+
+		local subregionData = {
+			type = selectedSubregion,
+		}
+
+		if selectedSubregion == "glow" then
+			subregionData.glowTypeOptions = {}
+		end
+
+		tinsert(iconConfig.subregionOptions[selectedSubregion], subregionData)
+		tinsert(iconConfig.subregions, subregionData)
+
+		subregionData.globalIndex = #iconConfig.subregions
+		subregionData.typeIndex = #iconConfig.subregionOptions[selectedSubregion]
+		CDMOptions.ApplyIconConfigUpdate(buttonFrame, buttonData, anchorIndex, mode, isGlobal, isBuffBar, true)
+
+		subregionTabs:SetTabs(BuildSubregionTabs(iconConfig))
+		subregionTabs:SelectTab(subregionData.globalIndex)
+		selectedSubregion = nil
+		subregionDropdown:SetValue(selectedSubregion)
+	end)
+
+	if tabs[1] then
+		subregionTabs:SelectTab(tabs[1].value)
 	end
 end

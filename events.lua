@@ -23,7 +23,7 @@ function SCM:PLAYER_ENTERING_WORLD(isInitialLogin, isReload)
 		SCM:ApplyOptions()
 
 		SCM:CreateAllCustomIcons()
-		SCM:ApplyAllCDManagerConfigs()
+		SCM:ApplyAllCDManagerConfigs(true)
 		SCM:SetHooks()
 		SCM:InitializeResourceBars()
 		SCM:CreateCastBar()
@@ -181,11 +181,8 @@ function SCM:PLAYER_REGEN_ENABLED()
 end
 
 function SCM:EDIT_MODE_LAYOUTS_UPDATED()
-	SCM:UpdateDB()
-	SCM:ApplyOptions()
+	SCM.RefreshCooldownViewerData()
 end
-
-
 
 function SCM:TRAIT_CONFIG_UPDATED()
 	C_Timer.After(0.5, function()

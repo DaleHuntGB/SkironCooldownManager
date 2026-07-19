@@ -615,7 +615,7 @@ local function UpdateAnchorChain(changedGroups, config)
 	SCM:ReleaseScopedGroupCache(visitedGroups)
 end
 
-local function OrderCDManagerSpells_Actual(updateScope, scopedAnchorGroupsOverride, refreshStates)
+local function OrderCDManagerSpells_Actual(updateScope, scopedAnchorGroupsOverride, refreshOptions, refreshGlowOptions)
 	Cache.cachedViewerScale = 1
 
 	wipe(Cache.cachedChildrenTbl)
@@ -644,7 +644,7 @@ local function OrderCDManagerSpells_Actual(updateScope, scopedAnchorGroupsOverri
 
 	for i = 1, #viewerProcessOrder do
 		local viewerData = viewerProcessOrder[i]
-		Icons.ProcessChildren(_G[viewerData.frameName], Cache.cachedChildrenTbl, viewerData, refreshStates)
+		Icons.ProcessChildren(_G[viewerData.frameName], Cache.cachedChildrenTbl, viewerData, refreshOptions, refreshGlowOptions)
 	end
 
 	for group, children in pairs(Cache.cachedChildrenTbl) do
@@ -664,10 +664,10 @@ local function OrderCDManagerSpells_Actual(updateScope, scopedAnchorGroupsOverri
 	if updateScope ~= UPDATE_SCOPE.BUFF_BAR then
 		if scopedAnchorGroups then
 			for group in pairs(scopedAnchorGroups) do
-				CustomIcons.ProcessGroupIcons(group, Cache.cachedCooldownFrameTbl, refreshStates)
+				CustomIcons.ProcessGroupIcons(group, Cache.cachedCooldownFrameTbl, refreshOptions, refreshGlowOptions)
 			end
 		else
-			CustomIcons.ProcessGroupIcons(nil, Cache.cachedCooldownFrameTbl, refreshStates)
+			CustomIcons.ProcessGroupIcons(nil, Cache.cachedCooldownFrameTbl, refreshOptions, refreshGlowOptions)
 		end
 	end
 
@@ -739,7 +739,7 @@ CDM.OrderSpellsActual = OrderCDManagerSpells_Actual
 
 local pendingUpdateScopes = {}
 
-local function OrderCDManagerSpells(updateScope, applyNow, refreshStates)
+local function OrderCDManagerSpells(updateScope, applyNow, refreshOptions, refreshGlowOptions)
 	updateScope = updateScope or UPDATE_SCOPE.ALL
 
 	if applyNow then
@@ -748,9 +748,10 @@ local function OrderCDManagerSpells(updateScope, applyNow, refreshStates)
 		else
 			pendingUpdateScopes[updateScope] = nil
 		end
-		OrderCDManagerSpells_Actual(updateScope, nil, refreshStates)
+		OrderCDManagerSpells_Actual(updateScope, nil, refreshOptions, refreshGlowOptions)
 		return
 	end
+	
 	if pendingUpdateScopes[updateScope] then
 		return
 	end

@@ -271,11 +271,7 @@ function Cooldowns.SetNormalCooldown(self, parent)
 	if durationObject then
 		local isSpellCooldown = cooldownType == "spell"
 		local isChargeCooldown = cooldownType == "charge"
-		local cooldownState = isSpellCooldown and "cooldown" or isChargeCooldown and "recharging" or "ready"
 
-		if childConfig.effectRules then
-			States.SyncState(parent, useAuraDisplayTime, cooldownState, true, true)
-		end
 		if not (childConfig.effectRules and childConfig.effectRules.desaturate) then
 			Icons.UpdateChildDesaturation(parent, isSpellCooldown and not useAuraDisplayTime, true)
 		end
@@ -284,9 +280,6 @@ function Cooldowns.SetNormalCooldown(self, parent)
 		self:SetDrawSwipe(not isChargeCooldown)
 		self:SetCooldownFromDurationObject(durationObject)
 	else
-		if childConfig.effectRules then
-			States.SyncState(parent, useAuraDisplayTime, "ready", true, true)
-		end
 		if not (childConfig.effectRules and childConfig.effectRules.desaturate) then
 			Icons.UpdateChildDesaturation(parent, false)
 		end
@@ -315,6 +308,7 @@ local function SetRegularChildCooldown(child, cooldownInfo)
 	end
 
 	Cooldowns.SetNormalCooldown(cooldownFrame, child)
+	States.SyncState(child, cooldownFrame:GetUseAuraDisplayTime(), Cooldowns.GetChildCooldown(child))
 end
 
 local function OverwriteViewerChildCooldown(viewer, spellID, cooldownInfo)
@@ -356,15 +350,10 @@ local function OnRegularCooldownChanged(self, changeType)
 		parent.Icon:SetDesaturated(false)
 	end
 
-	if config.effectRules then
-		RunNextFrame(function()
-			States.SyncState(parent, useAuraDisplayTime, (Cooldowns.GetChildCooldown(parent)))
-		end)
-	end
+	RunNextFrame(function()
+		States.SyncState(parent, useAuraDisplayTime, Cooldowns.GetChildCooldown(parent))
+	end)
 
-	if not (config.effectRules and config.effectRules.glow) then
-		Icons.UpdateChildGlow(parent, not useAuraDisplayTime)
-	end
 end
 
 function Cooldowns.SetupCooldownHooks(child, options)

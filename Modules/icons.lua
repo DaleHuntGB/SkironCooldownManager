@@ -129,30 +129,6 @@ function Icons.UpdateChildDesaturation(child, shouldDesaturate, forceDesaturatio
 	end
 end
 
-function Icons.UpdateChildGlow(child, isInactive)
-	if child.SCMConfig then
-		if child.SCMConfig.glowWhileActive then
-			if not isInactive and child.SCMShouldBeVisible then
-				SCM:StartCustomGlow(child)
-				return
-			end
-
-			if child.SCMGlow then
-				SCM:StopCustomGlow(child)
-			end
-		elseif child.SCMConfig.glowWhileInactive then
-			if isInactive and child.SCMShouldBeVisible then
-				SCM:StartCustomGlow(child)
-				return
-			end
-
-			if child.SCMGlow then
-				SCM:StopCustomGlow(child)
-			end
-		end
-	end
-end
-
 local function OnShow(child)
 	UIParent.SetAlpha(child, child.SCMHidden and 0 or 1)
 
@@ -357,6 +333,7 @@ function Icons.ExpandScopedAnchorGroups(viewer, viewerData, scopedAnchorGroups)
 					end
 				elseif oldCooldownID ~= cooldownID or oldGroup ~= group then
 					child.SCMCooldownID = nil
+					child.SCMState = nil
 
 					if oldGroup then
 						Cache.cachedAnchorStates[oldGroup].layoutSignature = nil
@@ -370,7 +347,7 @@ function Icons.ExpandScopedAnchorGroups(viewer, viewerData, scopedAnchorGroups)
 	end
 end
 
-local function ProcessBuffIcon(child, childData, options, refreshStates)
+local function ProcessBuffIcon(child, options, refreshOptions, refreshGlowOptions)
 	Cooldowns.SetupBuffIconHooks(child, options)
 	child.SCMBuffOptions = options
 
@@ -383,64 +360,47 @@ local function ProcessBuffIcon(child, childData, options, refreshStates)
 		isInactive = not child.auraInstanceID or not child.auraDataUnit
 	end
 
-	if not child.SCMState then
-		States.SyncState(child, not isInactive, nil, true, true)
-	end
+	States.SyncState(child, not isInactive, nil, true, refreshOptions, refreshGlowOptions)
 
-
-	local forceShow = SCM.simulateBuffs or (not SCM.isHideWhenInactiveEnabled and (childData.alwaysShow or (child.SCMState and child.SCMState.Visibility)))
-	local shouldHide = (childData.showWhileInactive and not isInactive) or (isInactive and not (forceShow or childData.showWhileInactive))
+	local canShowInactive = not SCM.isHideWhenInactiveEnabled
+	local stateVisible = child.SCMState.Visibility
+	local shouldShow = SCM.simulateBuffs or ((not isInactive or canShowInactive) and stateVisible)
 	local wasVisible = child.SCMShouldBeVisible
 
-	if shouldHide then
-		child.SCMChanged = child.SCMChanged or wasVisible
-		Icons.SetChildVisibilityState(child, false, true)
-		return
-	end
-
-	child.SCMChanged = child.SCMChanged or not wasVisible
-	Icons.SetChildVisibilityState(child, true, true)
-	Icons.UpdateChildDesaturation(child, isInactive)
-	Icons.UpdateChildGlow(child, isInactive)
+	child.SCMChanged = child.SCMChanged or wasVisible ~= shouldShow
+	Icons.SetChildVisibilityState(child, shouldShow, true)
 end
 
-local function ProcessRegularIcon(child, childData, options, refreshStates)
+local function ProcessRegularIcon(child, options, refreshOptions, refreshGlowOptions)
 	Icons.SetupRegularIconHooks(child, options)
-
-	if not child.SCMState then
-		local isActive = (child.Cooldown and child.Cooldown:GetUseAuraDisplayTime()) or false
-		States.SyncState(child, isActive, Cooldowns.GetChildCooldown(child), true, true)
-	end
-
-	local state = child.SCMState
-	local shouldShow = not state or state.Visibility
-	local applyNow = child.SCMShouldBeVisible ~= shouldShow
-	child.SCMChanged = child.SCMChanged or applyNow
-	Icons.SetChildVisibilityState(child, shouldShow, applyNow)
-	child.SCMIconOptions = options
-
 	Cooldowns.OverrideRegularAuraCooldown(child.Cooldown, child, options)
+
+	local isActive = (child.Cooldown and child.Cooldown:GetUseAuraDisplayTime()) or false
+	States.SyncState(child, isActive, Cooldowns.GetChildCooldown(child), true, refreshOptions, refreshGlowOptions)
+
+	local shouldShow = child.SCMState.Visibility
+	child.SCMChanged = child.SCMChanged or child.SCMShouldBeVisible ~= shouldShow
+	Icons.SetChildVisibilityState(child, shouldShow, true)
+	child.SCMIconOptions = options
 end
 
-local function ProcessBuffBar(child, childData, options)
+local function ProcessBuffBar(child, options, refreshOptions, refreshGlowOptions)
 	Icons.SetupBuffBarHooks(child)
 	child.SCMBuffBarOptions = options
 
 	local isInactive = not child.auraInstanceID and not child.SCMFakeAuraInstanceID
-	local forceShow = SCM.simulateBuffs or (not SCM.isHideWhenInactiveEnabled and childData.alwaysShow)
-	local shouldHide = isInactive and not forceShow
+	States.SyncState(child, not isInactive, nil, true, refreshOptions, refreshGlowOptions)
 
-	if shouldHide then
-		child.SCMChanged = child.SCMChanged or not child.SCMHidden
-		Icons.SetChildVisibilityState(child, false, true)
-		return
-	end
+	local forceShow = options.disableBuffBarHideWhenInactive
+	local stateVisible = child.SCMState.Visibility
+	local shouldShow = SCM.simulateBuffs or ((not isInactive or forceShow) and stateVisible)
+	local wasVisible = child.SCMShouldBeVisible
 
-	child.SCMChanged = child.SCMChanged or child.SCMHidden
-	Icons.SetChildVisibilityState(child, true, true)
+	child.SCMChanged = child.SCMChanged or wasVisible ~= shouldShow
+	Icons.SetChildVisibilityState(child, shouldShow, true)
 end
 
-local function ProcessSingleChild(child, validChildren, categoryIndex, isBuffIcon, options, refreshStates)
+local function ProcessSingleChild(child, validChildren, categoryIndex, isBuffIcon, options, refreshOptions, refreshGlowOptions)
 	if not child.Icon then
 		return
 	end
@@ -495,9 +455,9 @@ local function ProcessSingleChild(child, validChildren, categoryIndex, isBuffIco
 	end
 
 	if isBuffIcon then
-		ProcessBuffIcon(child, groupConfig, options, refreshStates)
+		ProcessBuffIcon(child, options, refreshOptions, refreshGlowOptions)
 	else
-		ProcessRegularIcon(child, groupConfig, options, refreshStates)
+		ProcessRegularIcon(child, options, refreshOptions, refreshGlowOptions)
 	end
 
 	if not InCombatLockdown() then
@@ -505,7 +465,7 @@ local function ProcessSingleChild(child, validChildren, categoryIndex, isBuffIco
 	end
 end
 
-local function ProcessSingleBuffBarChild(child, validChildren, categoryIndex, options)
+local function ProcessSingleBuffBarChild(child, validChildren, categoryIndex, options, refreshOptions, refreshGlowOptions)
 	if not child.GetCooldownID then
 		return
 	end
@@ -558,10 +518,10 @@ local function ProcessSingleBuffBarChild(child, validChildren, categoryIndex, op
 		return
 	end
 
-	ProcessBuffBar(child, groupConfig, options)
+	ProcessBuffBar(child, options, refreshOptions, refreshGlowOptions)
 end
 
-function Icons.ProcessChildren(viewer, validChildren, viewerData, refreshStates)
+function Icons.ProcessChildren(viewer, validChildren, viewerData, refreshOptions, refreshGlowOptions)
 	if not (viewer and viewerData) then
 		return
 	end
@@ -573,13 +533,13 @@ function Icons.ProcessChildren(viewer, validChildren, viewerData, refreshStates)
 
 	if viewerData.isBuffBar then
 		for _, child in ipairs(children) do
-			ProcessSingleBuffBarChild(child, validChildren, categoryIndex, options)
+			ProcessSingleBuffBarChild(child, validChildren, categoryIndex, options, refreshOptions, refreshGlowOptions)
 		end
 		return
 	end
 
 	local isBuffIcon = viewerData.isBuffIcon
 	for _, child in ipairs(children) do
-		ProcessSingleChild(child, validChildren, categoryIndex, isBuffIcon, options, refreshStates)
+		ProcessSingleChild(child, validChildren, categoryIndex, isBuffIcon, options, refreshOptions, refreshGlowOptions)
 	end
 end
