@@ -77,7 +77,7 @@ EventUtil.ContinueOnAddOnLoaded(addonName, function()
 end)
 
 function SCM:Print(...)
-	print("[|cFF4080FFSkiron|rCooldownManager:]", ...)
+	print("[|cFF4080FFSkiron|rCooldownManager]:", ...)
 end
 
 if IsTestBuild() and not SetDesaturation then
