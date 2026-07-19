@@ -17,8 +17,15 @@ local delayedHideSeconds = 0.03
 local function OnSetAlpha(self)
 	UIParent.SetAlpha(self, self.SCMHidden and 0 or 1)
 end
+function Icons.HideChild(child)
+	if child.SCMHidden then
+		return
+	elseif not child.viewerFrame then
+		child.SCMHidden = true
+		UIParent.SetAlpha(child, 0)
+		return
+	end
 
-local function ApplyHideChildNow(child)
 	child.SCMHidden = true
 	UIParent.SetAlpha(child, 0)
 	child:EnableMouse(false)
@@ -31,32 +38,6 @@ local function ApplyHideChildNow(child)
 		child.SCMAlphaHook = true
 		hooksecurefunc(child, "SetAlpha", OnSetAlpha)
 	end
-end
-
-local function DelayedHideChildCallback(child)
-	child.SCMHideTimer = nil
-	if child.viewerFrame and not child.SCMHidden then
-		ApplyHideChildNow(child)
-	end
-end
-
-function Icons.HideChild(child)
-	if not child.viewerFrame or child.SCMHidden then
-		return
-	end
-
-	if delayedHideSpellIDs[child.SCMSpellID] then
-		if child.SCMHideTimer then
-			return
-		end
-
-		child.SCMHideTimer = C_Timer.NewTimer(delayedHideSeconds, function()
-			DelayedHideChildCallback(child)
-		end)
-		return
-	end
-
-	ApplyHideChildNow(child)
 end
 
 local function CancelChildHideTimer(child)
