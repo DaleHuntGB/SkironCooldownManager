@@ -138,20 +138,26 @@ local function MigrateVisibilityRules(config, isAura, isCustom, isTimer, isItem)
 	config.showWhileInactive = nil
 end
 
-local function MigrateDesaturateRules(config, isAura)
+local function MigrateDesaturateRules(config, isAura, desaturateOnCooldown)
 	local hasDesaturateRules = config.effectRules.desaturate ~= nil
-	if not hasDesaturateRules and isAura then
-		local rules = {
-			{ state = "active", enabled = false },
-		}
+	if not hasDesaturateRules then
+		if isAura then
+			local rules = {
+				{ state = "active", enabled = false },
+			}
 
-		if config.desaturate then
-			rules[2] = { state = "inactive", enabled = true }
-		elseif config.alwaysShow or config.showWhileInactive then
-			rules[2] = { state = "inactive", enabled = false }
+			if config.desaturate then
+				rules[2] = { state = "inactive", enabled = true }
+			elseif config.alwaysShow or config.showWhileInactive then
+				rules[2] = { state = "inactive", enabled = false }
+			end
+
+			SetEffectRules(config, "desaturate", rules)
+		elseif desaturateOnCooldown then
+			SetEffectRules(config, "desaturate", {
+				{ state = "cooldown", enabled = true },
+			})
 		end
-
-		SetEffectRules(config, "desaturate", rules)
 	end
 
 	config.desaturate = nil
@@ -181,7 +187,7 @@ local function MigrateLegacyIconOptions(spellConfig)
 			for anchorGroup, anchorGroupConfig in pairs(anchorGroups) do
 				local isAura = anchorGroup == buffIconGroup or IsBuffBarGroup(anchorGroup)
 				anchorGroupConfig.effectRules = anchorGroupConfig.effectRules or {}
-				MigrateDesaturateRules(anchorGroupConfig, isAura)
+				MigrateDesaturateRules(anchorGroupConfig, isAura, not isAura)
 				MigrateVisibilityRules(anchorGroupConfig, isAura, false)
 				MigrateGlowRules(anchorGroupConfig)
 			end
@@ -197,9 +203,10 @@ local function MigrateLegacyCustomOptions(customConfig)
 	for configKey, configTable in pairs(customConfig) do
 		local isTimer = configKey == "timerConfig"
 		local isItem = configKey == "itemConfig"
+		local desaturateOnCooldown = configKey == "spellConfig" or isItem or configKey == "slotConfig"
 		for _, config in pairs(configTable) do
 			config.effectRules = config.effectRules or {}
-			MigrateDesaturateRules(config, false)
+			MigrateDesaturateRules(config, false, desaturateOnCooldown)
 			MigrateVisibilityRules(config, false, true, isTimer, isItem)
 			MigrateGlowRules(config)
 		end
