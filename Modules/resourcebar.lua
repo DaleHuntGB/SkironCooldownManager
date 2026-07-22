@@ -438,16 +438,11 @@ local function UpdateRechargeSegment(bar)
 end
 
 local function GetSegmentBarSize(bar, segmentCount)
-	local segmentWidth = bar:GetWidth() / segmentCount
-	local segmentHeight = bar:GetHeight()
-	local borderSize = 0
-	local barOptions = bar.barOptions
+	local inset = CalculateResourceBarPixelInset(bar)
+	local innerWidth = max(0, bar:GetWidth() - (inset * 2))
+	local innerHeight = max(0, bar:GetHeight() - (inset * 2))
 
-	if barOptions and barOptions.showBorder then
-		borderSize = (barOptions.backdropSize or 0) * 2
-	end
-
-	return segmentWidth, max(0, segmentHeight - borderSize)
+	return innerWidth / segmentCount, innerHeight
 end
 
 local function UpdateSpellChargeRecharge(bar, chargeInfo)
@@ -1014,11 +1009,6 @@ local function BarNeedsContinuousRefresh(bar)
 		return hasRuneValues and displayValue < maxValue
 	end
 
-	if bar.resourceKind == "spellCharges" then
-		local chargeInfo = bar.spellID and C_Spell.GetSpellCharges(bar.spellID)
-		return chargeInfo ~= nil and chargeInfo.isActive
-	end
-
 	if bar.powerType == Enum.PowerType.Essence then
 		local currentValue = UnitPower("player", Enum.PowerType.Essence) or 0
 		local maxValue = UnitPowerMax("player", Enum.PowerType.Essence) or 0
@@ -1185,7 +1175,7 @@ function SCMResourceBarControllerMixin:HookAnchorWidthRefresh(anchor)
 	end)
 end
 
-function SCMResourceBarControllerMixin:ApplyFrameWidthOptions(bar)
+function SCMResourceBarControllerMixin:ApplyFrameWidthOptions(bar, forcePositionUpdate)
 	local specificBarOptions = bar.barOptions
 	local generalBarOptions = self.barOptions
 	local oldAnchor = self.SCMActiveAnchorFrame
@@ -1206,7 +1196,7 @@ function SCMResourceBarControllerMixin:ApplyFrameWidthOptions(bar)
 			self:HookAnchorWidthRefresh(anchor)
 		end
 
-		if anchor ~= oldAnchor then
+		if forcePositionUpdate or anchor ~= oldAnchor then
 			--No idea whats going in with these fucking pixels. BRB taking a math class
 			self:ClearAllPoints()
 			PixelUtil.SetPoint(self, generalBarOptions.point, anchor, generalBarOptions.relativePoint, generalBarOptions.xOffset, generalBarOptions.yOffset)
@@ -1712,10 +1702,10 @@ function SCMResourceBarControllerMixin:RefreshResourceBars(refreshTicks, options
 		local primaryWidthChanged = false
 		local secondaryWidthChanged = false
 		if primaryBarOptions.enabled then
-			primaryWidthChanged = self:ApplyFrameWidthOptions(self.PrimaryBar)
+			primaryWidthChanged = self:ApplyFrameWidthOptions(self.PrimaryBar, optionsChanged)
 		end
 		if secondaryBarOptions.enabled then
-			secondaryWidthChanged = self:ApplyFrameWidthOptions(self.SecondaryBar)
+			secondaryWidthChanged = self:ApplyFrameWidthOptions(self.SecondaryBar, optionsChanged)
 		end
 
 		local primaryHeightChanged, secondaryHeightChanged = self:UpdateBarLayout()
@@ -1750,6 +1740,10 @@ function SCMResourceBarControllerMixin:Initialize()
 	self:RegisterResourceBarEvents()
 	EventRegistry:RegisterCallback(ANCHOR_PROXY_SIZE_CHANGED_EVENT, function(_, proxyGroup, proxy, width, height, selectedAnchorRef, isActiveProxy)
 		local barOptions = SCM.resourceBarConfig
+		if not barOptions then
+			return
+		end
+
 		local primaryBarOptions = barOptions.primaryBar
 		local secondaryBarOptions = barOptions.secondaryBar
 		local primaryMatchesAnchor = primaryBarOptions.enabled and primaryBarOptions.matchAnchorWidth
@@ -1770,7 +1764,7 @@ end
 function SCM:InitializeResourceBars()
 	local container = _G[RESOURCE_BAR_FRAME_NAME]
 	local barOptions = self.resourceBarConfig
-	if not container or container.SCMResourceBarInitialized or not barOptions.enabled then
+	if not container or container.SCMResourceBarInitialized or not (barOptions and barOptions.enabled) then
 		return
 	end
 
@@ -1833,7 +1827,7 @@ end
 
 function SCM:RefreshResourceBarConfig(refreshTicks, optionsChanged)
 	local container = _G[RESOURCE_BAR_FRAME_NAME]
-	if not container then
+	if not container or not self.resourceBarConfig then
 		return
 	end
 

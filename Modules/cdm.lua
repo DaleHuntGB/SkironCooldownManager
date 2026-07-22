@@ -615,25 +615,7 @@ local function UpdateAnchorChain(changedGroups, config)
 	SCM:ReleaseScopedGroupCache(visitedGroups)
 end
 
-local function MergeUpdateScope(currentScope, newScope)
-	if not currentScope or currentScope == newScope then
-		return newScope
-	end
-
-	if currentScope == UPDATE_SCOPE.ALL or newScope == UPDATE_SCOPE.ALL then
-		return UPDATE_SCOPE.ALL
-	end
-
-	local currentIsEssentialUtility = currentScope == UPDATE_SCOPE.ESSENTIAL or currentScope == UPDATE_SCOPE.UTILITY or currentScope == UPDATE_SCOPE.ESSENTIAL_UTILITY
-	local newIsEssentialUtility = newScope == UPDATE_SCOPE.ESSENTIAL or newScope == UPDATE_SCOPE.UTILITY or newScope == UPDATE_SCOPE.ESSENTIAL_UTILITY
-	if currentIsEssentialUtility and newIsEssentialUtility then
-		return UPDATE_SCOPE.ESSENTIAL_UTILITY
-	end
-
-	return UPDATE_SCOPE.ALL
-end
-
-local function OrderCDManagerSpells_Actual(updateScope, scopedAnchorGroupsOverride)
+local function OrderCDManagerSpells_Actual(updateScope, scopedAnchorGroupsOverride, refreshOptions, refreshGlowOptions)
 	Cache.cachedViewerScale = 1
 
 	wipe(Cache.cachedChildrenTbl)
@@ -662,7 +644,7 @@ local function OrderCDManagerSpells_Actual(updateScope, scopedAnchorGroupsOverri
 
 	for i = 1, #viewerProcessOrder do
 		local viewerData = viewerProcessOrder[i]
-		Icons.ProcessChildren(_G[viewerData.frameName], Cache.cachedChildrenTbl, viewerData)
+		Icons.ProcessChildren(_G[viewerData.frameName], Cache.cachedChildrenTbl, viewerData, refreshOptions, refreshGlowOptions)
 	end
 
 	for group, children in pairs(Cache.cachedChildrenTbl) do
@@ -682,10 +664,10 @@ local function OrderCDManagerSpells_Actual(updateScope, scopedAnchorGroupsOverri
 	if updateScope ~= UPDATE_SCOPE.BUFF_BAR then
 		if scopedAnchorGroups then
 			for group in pairs(scopedAnchorGroups) do
-				CustomIcons.ProcessGroupIcons(group, Cache.cachedCooldownFrameTbl)
+				CustomIcons.ProcessGroupIcons(group, Cache.cachedCooldownFrameTbl, refreshOptions, refreshGlowOptions)
 			end
 		else
-			CustomIcons.ProcessGroupIcons(nil, Cache.cachedCooldownFrameTbl)
+			CustomIcons.ProcessGroupIcons(nil, Cache.cachedCooldownFrameTbl, refreshOptions, refreshGlowOptions)
 		end
 	end
 
@@ -752,37 +734,34 @@ local function OrderCDManagerSpells_Actual(updateScope, scopedAnchorGroupsOverri
 	SCM:ReleaseScopedGroupCache(changedGroups)
 	Cache.activeScopedAnchorGroups = nil
 end
+
 CDM.OrderSpellsActual = OrderCDManagerSpells_Actual
 
-local isThrottled = false
-local pendingUpdateScope
+local pendingUpdateScopes = {}
 
-local function OnOrderThrottleTick()
-	isThrottled = false
-	if pendingUpdateScope then
-		local updateScope = pendingUpdateScope
-		pendingUpdateScope = nil
-		OrderCDManagerSpells_Actual(updateScope)
-	end
-end
-
-local function OrderCDManagerSpells(updateScope, applyNow)
+local function OrderCDManagerSpells(updateScope, applyNow, refreshOptions, refreshGlowOptions)
 	updateScope = updateScope or UPDATE_SCOPE.ALL
 
-	if updateScope == UPDATE_SCOPE.BUFF or updateScope == UPDATE_SCOPE.BUFF_BAR or applyNow then
-		if applyNow or updateScope == UPDATE_SCOPE.ALL then
-			pendingUpdateScope = nil
+	if applyNow then
+		if updateScope == UPDATE_SCOPE.ALL then
+			wipe(pendingUpdateScopes)
+		else
+			pendingUpdateScopes[updateScope] = nil
 		end
-		OrderCDManagerSpells_Actual(updateScope)
+		OrderCDManagerSpells_Actual(updateScope, nil, refreshOptions, refreshGlowOptions)
 		return
 	end
-	if isThrottled then
-		pendingUpdateScope = MergeUpdateScope(pendingUpdateScope, updateScope)
+	
+	if pendingUpdateScopes[updateScope] then
 		return
 	end
 
-	pendingUpdateScope = updateScope
-	isThrottled = true
-	C_Timer.After(0.1, OnOrderThrottleTick)
+	pendingUpdateScopes[updateScope] = true
+	C_Timer.After(0.1, function()
+		if pendingUpdateScopes[updateScope] then
+			pendingUpdateScopes[updateScope] = nil
+			OrderCDManagerSpells_Actual(updateScope)
+		end
+	end)
 end
 CDM.OrderSpells = OrderCDManagerSpells

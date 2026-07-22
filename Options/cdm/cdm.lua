@@ -9,6 +9,40 @@ local Utils = SCM.Utils
 
 SCM.MainTabs.CDM = { value = "CDM", text = "Cooldown Manager", order = 2, subgroups = {} }
 
+local function GetSpellAnchorGroupConfig(order, sourceIndex)
+	if sourceIndex ~= Enum.CooldownViewerCategory.TrackedBuff and sourceIndex ~= Enum.CooldownViewerCategory.TrackedBar then
+		return {
+			order = order,
+		}
+	end
+
+	return {
+		order = order,
+		effectRules = {
+			visibility = {
+				rules = {
+					{
+						state = "active",
+						value = "show",
+					},
+					{
+						state = "inactive",
+						value = "hide",
+					},
+				},
+			},
+			desaturate = {
+				rules = {
+					{
+						state = "active",
+						enabled = false,
+					},
+				},
+			},
+		},
+	}
+end
+
 function SCM:AddSpellToConfig(anchorGroup, order, info, displayData, sourceIndex)
 	local spellID = displayData.spellID
 	if displayData.linkedSpellIDs and #displayData.linkedSpellIDs == 1 then
@@ -37,18 +71,14 @@ function SCM:AddSpellToConfig(anchorGroup, order, info, displayData, sourceIndex
 				[sourceIndex] = effectiveAnchorGroup,
 			},
 			anchorGroup = {
-				[effectiveAnchorGroup] = {
-					order = order,
-				},
+				[effectiveAnchorGroup] = GetSpellAnchorGroupConfig(order, sourceIndex),
 			},
 		}
 	else
 		self.spellConfig[configID].spellID = spellID
 		self.spellConfig[configID].cooldownID = cooldownID or self.spellConfig[configID].cooldownID
 		self.spellConfig[configID].source[sourceIndex] = effectiveAnchorGroup
-		self.spellConfig[configID].anchorGroup[effectiveAnchorGroup] = {
-			order = order,
-		}
+		self.spellConfig[configID].anchorGroup[effectiveAnchorGroup] = GetSpellAnchorGroupConfig(order, sourceIndex)
 	end
 end
 
@@ -114,8 +144,8 @@ local function CDM(self, frame, group)
 			CDMOptions.CreateAnchorTabGroup(widget, frame, mode)
 		end
 	end)
-	modeTabs:SelectTab("spec")
 	self:AddChild(modeTabs)
+	modeTabs:SelectTab("spec")
 
 	self.typeTab = modeTabs
 end

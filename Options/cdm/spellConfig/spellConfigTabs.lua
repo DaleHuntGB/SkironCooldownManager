@@ -4,21 +4,44 @@ local CDMOptions = Options.CDM
 local Utils = SCM.Utils
 local AceGUI = LibStub("AceGUI-3.0")
 
+local stateTypeTree = {
+	{ value = "visibility", text = "Visibility" },
+	{ value = "desaturate", text = "Desaturate" },
+	{ value = "glow", text = "Glow" },
+	{ value = "border", text = "Border" },
+}
+
+local buffBarTabs = {
+	{ value = "general", text = "General" },
+	{ value = "subregion", text = "Subregions (Alpha)" },
+	{
+		value = "state",
+		text = "States (Alpha)",
+		children = {
+			{ value = "visibility", text = "Visibility" },
+			{ value = "glow", text = "Glow" },
+			{ value = "border", text = "Border" },
+		},
+	},
+}
+
 local iconTypeTabs = {
 	all = {
 		{ value = "general", text = "General" },
-		{ value = "visibility", text = "Visibility" },
-		{ value = "display", text = "Display" },
+		{ value = "subregion", text = "Subregions (Alpha)" },
+		{ value = "state", text = "States (Alpha)", children = stateTypeTree },
 		{ value = "cooldown", text = "Cooldown" },
-		{ value = "glow", text = "Glow" },
 		{ value = "load", text = "Load Conditions" },
 	},
-	spell = {},
+	spell = {
+		{ value = "display", text = "Display" },
+	},
 	item = {
+		{ value = "display", text = "Display" },
 		{ value = "items", text = "Items" },
 	},
 	timer = {},
-	bloodlust = { { value = "glow", text = "Glow" } },
+	bloodlust = {},
 	slot = {
 		{ value = "filter", text = "Filter" },
 	},
@@ -48,42 +71,48 @@ function CDMOptions.CreateSpellConfigTabs(parentScrollFrame, iconSettings, butto
 
 	buttonFrame:SetBackdropBorderColor(0, 1, 0, 1)
 
-	-- if buttonData.iconType == "bloodlust" then
-	-- 	iconSettings:SetTitle("Bloodlust")
-	-- elseif buttonData.spellID and buttonData.spellID > 0 then
-	-- 	iconSettings:SetTitle(C_Spell.GetSpellName(buttonData.spellID))
-	-- elseif buttonData.itemID then
-	-- 	iconSettings:SetTitle(C_Item.GetItemNameByID(buttonData.itemID))
-	-- elseif buttonData.slotID then
-	-- 	iconSettings:SetTitle("Slot ID " .. buttonData.slotID)
-	-- end
-
 	if iconConfig then
-		local maxHeight
+		local selectedIconText = AceGUI:Create("Heading")
+		selectedIconText:SetRelativeWidth(1)
+		iconSettings:AddChild(selectedIconText)
+
+		if buttonData.iconType == "bloodlust" then
+			selectedIconText:SetText("Bloodlust")
+		elseif buttonData.spellID and buttonData.spellID > 0 then
+			selectedIconText:SetText(string.format("|T%d:0|t%s", buttonData.texture, C_Spell.GetSpellName(buttonData.spellID)))
+		elseif buttonData.itemID then
+			selectedIconText:SetText(string.format("|T%d:0|t%s", buttonData.texture, C_Item.GetItemNameByID(buttonData.itemID)))
+		elseif buttonData.slotID then
+			selectedIconText:SetText("Slot ID " .. buttonData.slotID)
+		end
 
 		local iconSettingsTabs = AceGUI:Create("TreeGroup")
 		iconSettingsTabs:SetLayout("flow")
 		iconSettingsTabs:SetFullWidth(true)
 		iconSettingsTabs:SetHeight(410)
 		iconSettingsTabs:SetAutoAdjustHeight(false)
-		iconSettingsTabs:SetTree(isBuffBar and { { value = "general", text = "General" } } or iconTypeTabs[buttonData.iconType])
+		iconSettingsTabs:SetTree(isBuffBar and buffBarTabs or iconTypeTabs[buttonData.iconType])
 		iconSettingsTabs:SetCallback("OnGroupSelected", function(self, _, group)
 			self:ReleaseChildren()
+			local stateType = group:match("%c([^%c]+)$")
 
 			if group == "general" then
 				CDMOptions.CreateGeneralTabSettings(self, iconSettings, parentScrollFrame, buttonFrame, buttonData, iconConfig, anchorIndex, mode, isGlobal, isBuffBar)
 			elseif group == "cooldown" then
 				CDMOptions.CreateCooldownTabSettings(self, iconSettings, parentScrollFrame, buttonFrame, buttonData, iconConfig, anchorIndex, mode, isGlobal, isBuffBar)
-			elseif group == "visibility" then
-				CDMOptions.CreateVisibilityTabSettings(self, iconSettings, parentScrollFrame, buttonFrame, buttonData, iconConfig, anchorIndex, mode, isGlobal, isBuffBar)
 			elseif group == "display" then
 				CDMOptions.CreateDisplayTabSettings(self, iconSettings, parentScrollFrame, buttonFrame, buttonData, iconConfig, anchorIndex, mode, isGlobal, isBuffBar)
 			elseif group == "load" then
 				CDMOptions.CreateLoadTabSettings(self, iconSettings, parentScrollFrame, buttonFrame, buttonData, iconConfig, anchorIndex, mode, isGlobal, isBuffBar)
-			elseif group == "glow" then
-				CDMOptions.CreateGlowTabSettings(self, iconSettings, parentScrollFrame, buttonFrame, buttonData, iconConfig, anchorIndex, mode, isGlobal, isBuffBar)
 			elseif group == "state" then
-				CDMOptions.CreateStateTabSettings(self, iconSettings, parentScrollFrame, buttonFrame, buttonData, iconConfig, anchorIndex, mode, isGlobal, isBuffBar)
+				self:SelectByPath("state", "visibility")
+				return
+			elseif stateType then
+				CDMOptions.ShowIconSettingsMessage(self, iconSettingsTabs, "|TInterface\\common\\help-i:40:40:0:0|tThese options are subject to change.")
+				CDMOptions.CreateStateTabSettings(self, iconSettings, parentScrollFrame, buttonFrame, buttonData, iconConfig, anchorIndex, mode, isGlobal, isBuffBar, stateType)
+			elseif group == "subregion" then
+				CDMOptions.ShowIconSettingsMessage(self, iconSettingsTabs, "|TInterface\\common\\help-i:40:40:0:0|tThese options are subject to change.")
+				CDMOptions.CreateSubregionTabSettings(self, iconSettings, parentScrollFrame, buttonFrame, buttonData, iconConfig, anchorIndex, mode, isGlobal, isBuffBar)
 			elseif group == "items" then
 				CDMOptions.CreateItemsTabSettings(self, iconSettings, parentScrollFrame, buttonFrame, buttonData, iconConfig, anchorIndex, mode, isGlobal, isBuffBar)
 			elseif group == "filter" then

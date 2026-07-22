@@ -27,7 +27,7 @@ function SCM.RefreshCooldownViewerData(releaseCustomIcons)
 		SCM.CustomIcons.ReleaseAllIcons()
 	end
 	SCM:CreateAllCustomIcons()
-	SCM:ApplyAllCDManagerConfigs(true)
+	SCM:ApplyAllCDManagerConfigs(true, true)
 	SCM:UpdateCastBar()
 	SCM:RefreshResourceBarConfig()
 end
@@ -76,6 +76,9 @@ EventUtil.ContinueOnAddOnLoaded(addonName, function()
 	SCM.InitializeEventFrame()
 end)
 
+function SCM:Print(...)
+	print("[|cFF4080FFSkiron|rCooldownManager]:", ...)
+end
 
 if IsTestBuild() and not SetDesaturation then
 	SetDesaturation = function(frame, desaturate)

@@ -171,6 +171,10 @@ local function SelectAdvancedRowSettings(self, tabGroup, rowConfig, rowIndex, an
 		local chargeColour = AceGUI:Create("ColorPicker")
 		chargeColour:SetLabel("Colour")
 		chargeColour:SetRelativeWidth(0.33)
+		if not rowConfig.chargeColour then
+			local optionsChargeColour = options.chargeColour
+			rowConfig.chargeColour = {r = optionsChargeColour.r or 1, g = optionsChargeColour.g or 1, b = optionsChargeColour.b or 1, a = optionsChargeColour.a or 1}
+		end
 		chargeColour:SetColor(rowConfig.chargeColour.r, rowConfig.chargeColour.g, rowConfig.chargeColour.b, rowConfig.chargeColour.a or 1)
 		chargeColour:SetCallback("OnValueChanged", function(_, _, r, g, b, a)
 			rowConfig.chargeColour = { r = r, g = g, b = b, a = a }
@@ -323,7 +327,7 @@ function CDMOptions.SelectRow(widget, rowWidget, parentWidget, scrollFrame, data
 
 	local iconWidth = AceGUI:Create("Slider")
 	iconWidth:SetRelativeWidth(0.33)
-	iconWidth:SetSliderValues(10, isBuffBar and 500 or 200, 0.1)
+	iconWidth:SetSliderValues(3, isBuffBar and 500 or 200, 0.1)
 	iconWidth:SetLabel(widthLabel)
 	iconWidth:SetDisabled(data.matchAnchorWidth)
 	iconWidth:SetValue(rowConfig.iconWidth or rowConfig.size)
@@ -332,7 +336,7 @@ function CDMOptions.SelectRow(widget, rowWidget, parentWidget, scrollFrame, data
 
 	local iconHeight = AceGUI:Create("Slider")
 	iconHeight:SetRelativeWidth(0.33)
-	iconHeight:SetSliderValues(10, 200, 0.1)
+	iconHeight:SetSliderValues(3, 200, 0.1)
 	iconHeight:SetLabel(heightLabel)
 	iconHeight:SetValue(rowConfig.iconHeight or rowConfig.size)
 	iconHeight:SetCallback("OnValueChanged", function(self, event, value)

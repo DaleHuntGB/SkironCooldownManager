@@ -204,7 +204,7 @@ local function GetCooldownBreakpointComponents(displayStyle, minValue)
 	end
 end
 
-local function SelectGlobalSettingsTab(tabWidget, group, options)
+local function SelectGlobalSettingsTab(tabWidget, scrollFrame, group, options)
 	tabWidget:ReleaseChildren()
 
 	if group == "General" then
@@ -214,14 +214,33 @@ local function SelectGlobalSettingsTab(tabWidget, group, options)
 		skinningSettings:SetTitle("General")
 		tabWidget:AddChild(skinningSettings)
 
-		local enableSkinning = AceGUI:Create("CheckBox")
-		enableSkinning:SetRelativeWidth(0.33)
-		enableSkinning:SetLabel("Enable Skinning")
-		enableSkinning:SetValue(options.enableSkinning)
-		enableSkinning:SetCallback("OnValueChanged", function(_, _, value)
-			options.enableSkinning = value
+		local enableIconSkinning = AceGUI:Create("CheckBox")
+		enableIconSkinning:SetRelativeWidth(0.33)
+		enableIconSkinning:SetLabel("Enable Icon Skinning")
+		enableIconSkinning:SetValue(options.enableIconSkinning)
+		enableIconSkinning:SetCallback("OnValueChanged", function(_, _, value)
+			SCM.ShowReloadPopup({
+				checkbox = enableIconSkinning,
+				options = options,
+				key = "enableIconSkinning",
+				value = value,
+			})
 		end)
-		skinningSettings:AddChild(enableSkinning)
+		skinningSettings:AddChild(enableIconSkinning)
+
+		local enableBuffBarSkinning = AceGUI:Create("CheckBox")
+		enableBuffBarSkinning:SetRelativeWidth(0.33)
+		enableBuffBarSkinning:SetLabel("Enable Buff Bar Skinning")
+		enableBuffBarSkinning:SetValue(options.enableBuffBarSkinning)
+		enableBuffBarSkinning:SetCallback("OnValueChanged", function(_, _, value)
+			SCM.ShowReloadPopup({
+				checkbox = enableBuffBarSkinning,
+				options = options,
+				key = "enableBuffBarSkinning",
+				value = value,
+			})
+		end)
+		skinningSettings:AddChild(enableBuffBarSkinning)
 
 		local showAnchorHighlight = AceGUI:Create("CheckBox")
 		showAnchorHighlight:SetValue(options.showAnchorHighlight)
@@ -384,6 +403,7 @@ local function SelectGlobalSettingsTab(tabWidget, group, options)
 			SCM:CreateAllCustomIcons()
 		end)
 
+	elseif group == "Auras" then
 		local auraSettings = AceGUI:Create("InlineGroup")
 		auraSettings:SetLayout("flow")
 		auraSettings:SetFullWidth(true)
@@ -391,8 +411,8 @@ local function SelectGlobalSettingsTab(tabWidget, group, options)
 		tabWidget:AddChild(auraSettings)
 
 		local hideBuffsWhenInactive = AceGUI:Create("CheckBox")
-		hideBuffsWhenInactive:SetRelativeWidth(0.33)
-		hideBuffsWhenInactive:SetLabel('Disable "Hide When Inactive"')
+		hideBuffsWhenInactive:SetRelativeWidth(0.5)
+		hideBuffsWhenInactive:SetLabel('Disable "Hide When Inactive" (Buff Icons)')
 		hideBuffsWhenInactive:SetValue(options.hideBuffsWhenInactive)
 		hideBuffsWhenInactive:SetDisabled(not LibEditModeOverride:CanEditActiveLayout())
 		SCM.Utils.SetDisabledTooltip(hideBuffsWhenInactive, "Enable a custom edit mode profile first, then reopen options.")
@@ -404,12 +424,12 @@ local function SelectGlobalSettingsTab(tabWidget, group, options)
 			options.hideBuffsWhenInactive = value
 
 			SCM:SetHideWhenInactive(value)
-			SCM.RefreshCooldownViewerData(true)
+			SCM:ApplyBuffIconCDManagerConfig()
 		end)
 		hideBuffsWhenInactive:SetCallback("OnEnter", function(self)
 			GameTooltip:SetOwner(self.frame, "ANCHOR_CURSOR")
 			GameTooltip:AddLine(
-				'This will disable the checkbox "Hide When Inactive" in the Blizzard CDM settings. SCM will still hide all buffs that are not tracked but this allows you to show buffs at all times.',
+				'Disables "Hide When Inactive" only for Blizzard buff icons. Untracked buffs remain hidden.',
 				1,
 				1,
 				1,
@@ -421,6 +441,38 @@ local function SelectGlobalSettingsTab(tabWidget, group, options)
 			GameTooltip:Hide()
 		end)
 		auraSettings:AddChild(hideBuffsWhenInactive)
+
+		local hideBuffBarsWhenInactive = AceGUI:Create("CheckBox")
+		hideBuffBarsWhenInactive:SetRelativeWidth(0.5)
+		hideBuffBarsWhenInactive:SetLabel('Disable "Hide When Inactive" (Buff Bars)')
+		hideBuffBarsWhenInactive:SetValue(options.disableBuffBarHideWhenInactive)
+		hideBuffBarsWhenInactive:SetDisabled(not LibEditModeOverride:CanEditActiveLayout())
+		SCM.Utils.SetDisabledTooltip(hideBuffBarsWhenInactive, "Enable a custom edit mode profile first, then reopen options.")
+		hideBuffBarsWhenInactive:SetCallback("OnValueChanged", function(_, _, value)
+			if InCombatLockdown() then
+				return
+			end
+
+			options.disableBuffBarHideWhenInactive = value
+
+			SCM:SetBuffBarHideWhenInactive(value)
+			SCM:ApplyBuffBarCDManagerConfig()
+		end)
+		hideBuffBarsWhenInactive:SetCallback("OnEnter", function(self)
+			GameTooltip:SetOwner(self.frame, "ANCHOR_CURSOR")
+			GameTooltip:AddLine(
+				'Disables "Hide When Inactive" only for Blizzard buff bars. Configured bars remain visible while inactive.',
+				1,
+				1,
+				1,
+				true
+			)
+			GameTooltip:Show()
+		end)
+		hideBuffBarsWhenInactive:SetCallback("OnLeave", function()
+			GameTooltip:Hide()
+		end)
+		auraSettings:AddChild(hideBuffBarsWhenInactive)
 
 		if not LibEditModeOverride:CanEditActiveLayout() then
 			AddInfoText(auraSettings, "Enable a custom edit mode profile to use this feature. Reopen the opens once you did")
@@ -616,7 +668,7 @@ local function SelectGlobalSettingsTab(tabWidget, group, options)
 		chargeSettings:AddChild(chargeFontOutline)
 
 		local chargeRelativePoint = AceGUI:Create("Dropdown")
-		chargeRelativePoint:SetRelativeWidth(0.5)
+		chargeRelativePoint:SetRelativeWidth(0.25)
 		chargeRelativePoint:SetLabel("Point")
 		chargeRelativePoint:SetList(SCM.Constants.AnchorPoints)
 		chargeRelativePoint:SetValue(options.chargePoint)
@@ -627,7 +679,7 @@ local function SelectGlobalSettingsTab(tabWidget, group, options)
 		chargeSettings:AddChild(chargeRelativePoint)
 
 		local chargeRelativePoint = AceGUI:Create("Dropdown")
-		chargeRelativePoint:SetRelativeWidth(0.5)
+		chargeRelativePoint:SetRelativeWidth(0.25)
 		chargeRelativePoint:SetLabel("Relative Point")
 		chargeRelativePoint:SetList(SCM.Constants.AnchorPoints)
 		chargeRelativePoint:SetValue(options.chargeRelativePoint)
@@ -638,7 +690,7 @@ local function SelectGlobalSettingsTab(tabWidget, group, options)
 		chargeSettings:AddChild(chargeRelativePoint)
 
 		local xOffset = AceGUI:Create("Slider")
-		xOffset:SetRelativeWidth(0.33)
+		xOffset:SetRelativeWidth(0.25)
 		xOffset:SetSliderValues(-50, 50, 0.1)
 		xOffset:SetLabel("X Offset")
 		xOffset:SetValue(options.chargeXOffset)
@@ -649,7 +701,7 @@ local function SelectGlobalSettingsTab(tabWidget, group, options)
 		chargeSettings:AddChild(xOffset)
 
 		local yOffset = AceGUI:Create("Slider")
-		yOffset:SetRelativeWidth(0.33)
+		yOffset:SetRelativeWidth(0.25)
 		yOffset:SetSliderValues(-50, 50, 0.1)
 		yOffset:SetLabel("Y Offset")
 		yOffset:SetValue(options.chargeYOffset)
@@ -659,9 +711,20 @@ local function SelectGlobalSettingsTab(tabWidget, group, options)
 		end)
 		chargeSettings:AddChild(yOffset)
 
+		local chargeFrameLevel = AceGUI:Create("Slider")
+		chargeFrameLevel:SetRelativeWidth(0.5)
+		chargeFrameLevel:SetLabel("Frame Level")
+		chargeFrameLevel:SetSliderValues(0, 10, 1)
+		chargeFrameLevel:SetValue(options.chargeFrameLevel or 1)
+		chargeFrameLevel:SetCallback("OnValueChanged", function(_, _, value)
+			options.chargeFrameLevel = value
+			SCM:ApplyAllCDManagerConfigs()
+		end)
+		chargeSettings:AddChild(chargeFrameLevel)
+
 		local chargeColour = AceGUI:Create("ColorPicker")
 		chargeColour:SetLabel("Colour")
-		chargeColour:SetRelativeWidth(0.33)
+		chargeColour:SetRelativeWidth(0.5)
 		chargeColour:SetColor(options.chargeColour.r, options.chargeColour.g, options.chargeColour.b, options.chargeColour.a or 1)
 		chargeColour:SetCallback("OnValueChanged", function(_, _, r, g, b, a)
 			options.chargeColour = { r = r, g = g, b = b, a = a }
@@ -669,6 +732,7 @@ local function SelectGlobalSettingsTab(tabWidget, group, options)
 		end)
 		chargeSettings:AddChild(chargeColour)
 
+	elseif group == "Cooldowns" then
 		local cooldownTextSettings = AceGUI:Create("InlineGroup")
 		cooldownTextSettings:SetLayout("flow")
 		cooldownTextSettings:SetFullWidth(true)
@@ -745,6 +809,97 @@ local function SelectGlobalSettingsTab(tabWidget, group, options)
 			options.cooldownYOffset = value
 		end)
 		cooldownTextSettings:AddChild(cooldownYOffset)
+
+		local cooldownFrameLevel = AceGUI:Create("Slider")
+		cooldownFrameLevel:SetRelativeWidth(0.33)
+		cooldownFrameLevel:SetLabel("Frame Level")
+		cooldownFrameLevel:SetSliderValues(0, 10, 1)
+		cooldownFrameLevel:SetValue(options.cooldownFrameLevel or 1)
+		cooldownFrameLevel:SetCallback("OnValueChanged", function(_, _, value)
+			options.cooldownFrameLevel = value
+			SCM:ApplyAllCDManagerConfigs()
+		end)
+		cooldownTextSettings:AddChild(cooldownFrameLevel)
+
+		local cooldownPositionSettings = AceGUI:Create("InlineGroup")
+		cooldownPositionSettings:SetLayout("flow")
+		cooldownPositionSettings:SetFullWidth(true)
+		cooldownPositionSettings:SetTitle("Cooldown Frame Position")
+		tabWidget:AddChild(cooldownPositionSettings)
+
+		local cooldownMoveTL = AceGUI:Create("CheckBox")
+		cooldownMoveTL:SetRelativeWidth(0.33)
+		cooldownMoveTL:SetValue(options.cooldownMoveTL)
+		cooldownMoveTL:SetLabel("Offset TOPLEFT")
+		cooldownPositionSettings:AddChild(cooldownMoveTL)
+
+		local cooldownXOffsetTL = AceGUI:Create("Slider")
+		cooldownXOffsetTL:SetRelativeWidth(0.33)
+		cooldownXOffsetTL:SetSliderValues(-50, 50, 0.1)
+		cooldownXOffsetTL:SetLabel("X Offset TOPLEFT")
+		cooldownXOffsetTL:SetValue(options.cooldownXOffsetTL or 0)
+		cooldownXOffsetTL:SetDisabled(not options.cooldownMoveTL)
+		cooldownXOffsetTL:SetCallback("OnValueChanged", function(_, _, value)
+			options.cooldownXOffsetTL = value
+			SCM:ApplyAllCDManagerConfigs()
+		end)
+		cooldownPositionSettings:AddChild(cooldownXOffsetTL)
+
+		local cooldownYOffsetTL = AceGUI:Create("Slider")
+		cooldownYOffsetTL:SetRelativeWidth(0.33)
+		cooldownYOffsetTL:SetSliderValues(-50, 50, 0.1)
+		cooldownYOffsetTL:SetLabel("Y Offset TOPLEFT")
+		cooldownYOffsetTL:SetValue(options.cooldownYOffsetTL or 0)
+		cooldownYOffsetTL:SetDisabled(not options.cooldownMoveTL)
+		cooldownYOffsetTL:SetCallback("OnValueChanged", function(_, _, value)
+			options.cooldownYOffsetTL = value
+			SCM:ApplyAllCDManagerConfigs()
+		end)
+		cooldownPositionSettings:AddChild(cooldownYOffsetTL)
+
+		cooldownMoveTL:SetCallback("OnValueChanged", function(_, _, value)
+			options.cooldownMoveTL = value
+			cooldownXOffsetTL:SetDisabled(not value)
+			cooldownYOffsetTL:SetDisabled(not value)
+			SCM:ApplyAllCDManagerConfigs()
+		end)
+
+		local cooldownMoveBR = AceGUI:Create("CheckBox")
+		cooldownMoveBR:SetRelativeWidth(0.33)
+		cooldownMoveBR:SetValue(options.cooldownMoveBR)
+		cooldownMoveBR:SetLabel("Offset BOTTOMRIGHT")
+		cooldownPositionSettings:AddChild(cooldownMoveBR)
+
+		local cooldownXOffsetBR = AceGUI:Create("Slider")
+		cooldownXOffsetBR:SetRelativeWidth(0.33)
+		cooldownXOffsetBR:SetSliderValues(-50, 50, 0.1)
+		cooldownXOffsetBR:SetLabel("X Offset BOTTOMRIGHT")
+		cooldownXOffsetBR:SetValue(options.cooldownXOffsetBR or -SCM:PixelPerfectSize(1))
+		cooldownXOffsetBR:SetDisabled(not options.cooldownMoveBR)
+		cooldownXOffsetBR:SetCallback("OnValueChanged", function(_, _, value)
+			options.cooldownXOffsetBR = value
+			SCM:ApplyAllCDManagerConfigs()
+		end)
+		cooldownPositionSettings:AddChild(cooldownXOffsetBR)
+
+		local cooldownYOffsetBR = AceGUI:Create("Slider")
+		cooldownYOffsetBR:SetRelativeWidth(0.33)
+		cooldownYOffsetBR:SetSliderValues(-50, 50, 0.1)
+		cooldownYOffsetBR:SetLabel("Y Offset BOTTOMRIGHT")
+		cooldownYOffsetBR:SetValue(options.cooldownYOffsetBR or SCM:PixelPerfectSize(1))
+		cooldownYOffsetBR:SetDisabled(not options.cooldownMoveBR)
+		cooldownYOffsetBR:SetCallback("OnValueChanged", function(_, _, value)
+			options.cooldownYOffsetBR = value
+			SCM:ApplyAllCDManagerConfigs()
+		end)
+		cooldownPositionSettings:AddChild(cooldownYOffsetBR)
+
+		cooldownMoveBR:SetCallback("OnValueChanged", function(_, _, value)
+			options.cooldownMoveBR = value
+			cooldownXOffsetBR:SetDisabled(not value)
+			cooldownYOffsetBR:SetDisabled(not value)
+			SCM:ApplyAllCDManagerConfigs()
+		end)
 
 		local cooldownTimerSettings = AceGUI:Create("InlineGroup")
 		cooldownTimerSettings:SetLayout("flow")
@@ -1180,8 +1335,18 @@ local function SelectGlobalSettingsTab(tabWidget, group, options)
 		end)
 		fontSettings:AddChild(fontOutline)
 
+		local hideSpellName = AceGUI:Create("CheckBox")
+		hideSpellName:SetRelativeWidth(0.25)
+		hideSpellName:SetLabel("Hide Text")
+		hideSpellName:SetValue(buffBarOptions.hideSpellName)
+		hideSpellName:SetCallback("OnValueChanged", function(_, _, value)
+			buffBarOptions.hideSpellName = value
+			SCM:SkinBuffBars()
+		end)
+		fontSettings:AddChild(hideSpellName)
+
 		local nameColor = AceGUI:Create("ColorPicker")
-		nameColor:SetRelativeWidth(0.33)
+		nameColor:SetRelativeWidth(0.25)
 		nameColor:SetLabel("Name Color")
 		nameColor:SetHasAlpha(true)
 
@@ -1194,7 +1359,7 @@ local function SelectGlobalSettingsTab(tabWidget, group, options)
 		fontSettings:AddChild(nameColor)
 
 		local nameXOffset = AceGUI:Create("Slider")
-		nameXOffset:SetRelativeWidth(0.33)
+		nameXOffset:SetRelativeWidth(0.25)
 		nameXOffset:SetValue(buffBarOptions.nameXOffset or 0)
 		nameXOffset:SetLabel("Name X Offset")
 		nameXOffset:SetSliderValues(-100, 100, 0.1)
@@ -1205,7 +1370,7 @@ local function SelectGlobalSettingsTab(tabWidget, group, options)
 		fontSettings:AddChild(nameXOffset)
 
 		local nameYOffset = AceGUI:Create("Slider")
-		nameYOffset:SetRelativeWidth(0.33)
+		nameYOffset:SetRelativeWidth(0.25)
 		nameYOffset:SetValue(buffBarOptions.nameYOffset or 0)
 		nameYOffset:SetLabel("Name Y Offset")
 		nameYOffset:SetSliderValues(-100, 100, 0.1)
@@ -1215,8 +1380,18 @@ local function SelectGlobalSettingsTab(tabWidget, group, options)
 		end)
 		fontSettings:AddChild(nameYOffset)
 
+		local hideDuration = AceGUI:Create("CheckBox")
+		hideDuration:SetRelativeWidth(0.25)
+		hideDuration:SetLabel("Hide Duration")
+		hideDuration:SetValue(buffBarOptions.hideDuration)
+		hideDuration:SetCallback("OnValueChanged", function(_, _, value)
+			buffBarOptions.hideDuration = value
+			SCM:SkinBuffBars()
+		end)
+		fontSettings:AddChild(hideDuration)
+
 		local durationColor = AceGUI:Create("ColorPicker")
-		durationColor:SetRelativeWidth(0.33)
+		durationColor:SetRelativeWidth(0.25)
 		durationColor:SetLabel("Duration Color")
 		durationColor:SetHasAlpha(true)
 
@@ -1229,7 +1404,7 @@ local function SelectGlobalSettingsTab(tabWidget, group, options)
 		fontSettings:AddChild(durationColor)
 
 		local durationXOffset = AceGUI:Create("Slider")
-		durationXOffset:SetRelativeWidth(0.33)
+		durationXOffset:SetRelativeWidth(0.25)
 		durationXOffset:SetValue(buffBarOptions.durationXOffset or 0)
 		durationXOffset:SetLabel("Duration X Offset")
 		durationXOffset:SetSliderValues(-100, 100, 0.1)
@@ -1240,7 +1415,7 @@ local function SelectGlobalSettingsTab(tabWidget, group, options)
 		fontSettings:AddChild(durationXOffset)
 
 		local durationYOffset = AceGUI:Create("Slider")
-		durationYOffset:SetRelativeWidth(0.33)
+		durationYOffset:SetRelativeWidth(0.25)
 		durationYOffset:SetValue(buffBarOptions.durationYOffset or 0)
 		durationYOffset:SetLabel("Duration Y Offset")
 		durationYOffset:SetSliderValues(-100, 100, 0.1)
@@ -1251,6 +1426,7 @@ local function SelectGlobalSettingsTab(tabWidget, group, options)
 		fontSettings:AddChild(durationYOffset)
 	end
 
+	scrollFrame:DoLayout()
 	tabWidget:DoLayout()
 end
 
@@ -1284,7 +1460,7 @@ local function General(self, frame, group)
 	--globalSettingsTabs:SetFullHeight(true)
 	globalSettingsTabs:SetLayout("flow")
 	globalSettingsTabs:SetCallback("OnGroupSelected", function(self, event, group)
-		SelectGlobalSettingsTab(self, group, options)
+		SelectGlobalSettingsTab(self, scrollFrame, group, options)
 	end)
 	globalSettingsTabs:SelectTab("General")
 	scrollFrame:AddChild(globalSettingsTabs)

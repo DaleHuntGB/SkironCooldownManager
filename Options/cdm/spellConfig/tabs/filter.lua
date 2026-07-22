@@ -68,14 +68,14 @@ function CDMOptions.CreateFilterTabSettings(iconSettingsTabs, iconSettings, scro
 					buttonConfig.filterItems[itemID] = nil
 					table.remove(buttonConfig.filterItemsArray, i)
 					RefreshList()
-					ApplyIconConfigUpdate()
+					CDMOptions.ApplyIconConfigUpdate(buttonFrame, buttonData, anchorIndex, mode, isGlobal, isBuffBar)
 				end)
 				row:AddChild(removeBtn)
 			end
 		end
 
 		listContainer:DoLayout()
-		parentWidget:DoLayout()
+		iconSettingsTabs:DoLayout()
 		scrollFrame:DoLayout()
 	end
 
@@ -93,8 +93,8 @@ function CDMOptions.CreateFilterTabSettings(iconSettingsTabs, iconSettings, scro
 			CDMOptions.ApplyIconConfigUpdate(buttonFrame, buttonData, anchorIndex, mode, isGlobal, isBuffBar)
 		end
 	end)
-	parentWidget:AddChild(addItemButton)
-	parentWidget:AddChild(listContainer)
+	iconSettingsTabs:AddChild(addItemButton)
+	iconSettingsTabs:AddChild(listContainer)
 
 	RefreshList()
 end

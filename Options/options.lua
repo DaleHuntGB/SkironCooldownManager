@@ -61,14 +61,110 @@ function Options.GetEffectiveAnchorGroup(anchorIndex, mode)
 	return anchorIndex
 end
 
-function Options.ApplyModeConfigUpdate(anchorIndex, mode)
+function Options.ApplyModeConfigUpdate(anchorIndex, mode, refreshOptions, refreshGlowOptions)
 	if mode == "global" then
-		SCM:ApplyAnchorGroupCDManagerConfig(anchorIndex, true)
+		SCM:ApplyAnchorGroupCDManagerConfig(anchorIndex, true, nil, refreshOptions, refreshGlowOptions)
 	elseif mode == "buffbars" then
-		SCM:ApplyAnchorGroupCDManagerConfig(anchorIndex, false, UPDATE_SCOPE.BUFF_BAR)
+		SCM:ApplyAnchorGroupCDManagerConfig(anchorIndex, false, UPDATE_SCOPE.BUFF_BAR, refreshOptions, refreshGlowOptions)
 	else
-		SCM:ApplyAllCDManagerConfigs(true)
+		SCM:ApplyAllCDManagerConfigs(true, refreshOptions, refreshGlowOptions)
 	end
+end
+
+function Options.AddAnchorParentAutocomplete(_, editBox, onValueSelected)
+	local suggestionFrame = CreateFrame("Frame", nil, UIParent, "BackdropTemplate")
+	suggestionFrame:SetPoint("TOPLEFT", editBox.editbox, "BOTTOMLEFT", 0, -2)
+	suggestionFrame:SetPoint("TOPRIGHT", editBox.editbox, "BOTTOMRIGHT", 0, -2)
+	suggestionFrame:SetFrameStrata("TOOLTIP")
+	suggestionFrame:SetFrameLevel(10000)
+	suggestionFrame:SetToplevel(true)
+	suggestionFrame:SetBackdrop({ bgFile = "Interface\\Buttons\\WHITE8x8", edgeFile = "Interface\\Buttons\\WHITE8x8", edgeSize = 1, })
+	suggestionFrame:SetBackdropColor(26/255, 26/255, 26/255, 1)
+	suggestionFrame:SetBackdropBorderColor(0, 0, 0, 1)
+	suggestionFrame:SetScript("OnUpdate", function(self) if not editBox.frame:IsShown() or (not editBox.editbox:HasFocus() and not self:IsMouseOver()) then self:Hide() end end)
+	suggestionFrame:Hide()
+
+	local rows = {}
+
+	local function SelectSuggestion(anchor)
+		local text = editBox:GetText() or ""
+		local prefix = text:match("^(.*,%s*)[^,]*$") or ""
+		local newText = prefix .. anchor
+		editBox:SetText(newText)
+		suggestionFrame:Hide()
+		if onValueSelected then
+			onValueSelected(newText)
+		end
+	end
+
+	local function SetSuggestions(text)
+		local token = strtrim((text or ""):match("([^,]*)$") or "")
+		local tokenLower = strlower(token)
+		local suggestions = {}
+
+		if token == "" then suggestionFrame:Hide() return end
+
+		for _, anchorList in pairs(SCM.Constants.SCMAnchors) do
+			if anchorList then
+				for label, value in pairs(anchorList) do
+					if value then
+						local count = (label == "Anchor" and #(SCM.anchorConfig or {})) or (label == "Buff Bar Anchor" and #(SCM.buffBarsAnchorConfig or {})) or (label == "Global Anchor" and #(SCM.globalAnchorConfig or {})) or 1
+						for i = 1, count do
+							local anchor = label == "Global Anchor" and value:gsub("10#", tostring(SCM.Utils.ToGlobalGroup(i))) or value:gsub("#", i)
+							local display = (label == "Anchor" or label == "Global Anchor" or label == "Buff Bar Anchor") and (label .. " #" .. i) or label
+							if strfind(strlower(anchor), tokenLower, 1, true) or strfind(strlower(display), tokenLower, 1, true) then
+								tinsert(suggestions, { anchor, display })
+							end
+						end
+					end
+				end
+			end
+		end
+
+		if #suggestions == 0 then suggestionFrame:Hide() return end
+
+		for i = 1, #suggestions do
+			local row = rows[i]
+			if not row then
+				row = CreateFrame("Button", nil, suggestionFrame)
+				row:SetHeight(18)
+				row:SetPoint("LEFT", 2, 0)
+				row:SetPoint("RIGHT", -2, 0)
+				row.highlight = row:CreateTexture(nil, "OVERLAY")
+				row.highlight:SetAllPoints()
+				row.highlight:SetColorTexture(204/255, 204/255, 204/255, 0.5)
+				row.highlight:SetBlendMode("BLEND")
+				row.highlight:Hide()
+				row.text = row:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
+				row.text:SetPoint("LEFT", 4, 0)
+				row.text:SetPoint("RIGHT", -4, 0)
+				row.text:SetJustifyH("LEFT")
+				row:SetScript("OnEnter", function(self) self.highlight:Show() end)
+				row:SetScript("OnLeave", function(self) self.highlight:Hide() end)
+				row:SetScript("OnClick", function(self) SelectSuggestion(self.anchor) end)
+				rows[i] = row
+			end
+
+			local anchor, display = suggestions[i][1], suggestions[i][2]
+			local startIndex, endIndex = strfind(strlower(display), tokenLower, 1, true)
+			row.anchor = anchor
+			row.text:SetText((startIndex and ("|cFF4080FF" .. strsub(display, 1, startIndex - 1) .. "|cFFCCCCCC" .. strsub(display, startIndex, endIndex) .. "|cFF4080FF" .. strsub(display, endIndex + 1) .. "|r")) or ("|cFF4080FF" .. display .. "|r"))
+			row:ClearAllPoints()
+			row:SetPoint("TOPLEFT", 2, -2 - ((i - 1) * 18))
+			row:SetPoint("TOPRIGHT", -2, -2 - ((i - 1) * 18))
+			row:Show()
+		end
+
+		for i = #suggestions + 1, #rows do
+			rows[i]:Hide()
+		end
+
+		suggestionFrame:SetHeight(4 + (#suggestions * 18))
+		suggestionFrame:SetFrameLevel(10000)
+		suggestionFrame:Show()
+	end
+
+	editBox:SetCallback("OnTextChanged", function(_, _, text) SetSuggestions(text) end)
 end
 
 function Options.SetAnchorHighlight(anchorFrame, state, color)
@@ -111,16 +207,33 @@ function SCM:GetShowTooltip()
 	return LibEditModeOverride:GetFrameSetting(BuffIconCooldownViewer, Enum.EditModeCooldownViewerSetting.ShowTooltips)
 end
 
-function SCM:SetHideWhenInactive(value)
+local function SetViewerHideWhenInactive(viewer, value)
 	LibEditModeOverride:LoadLayouts()
 
-	if LibEditModeOverride:CanEditActiveLayout() then
-		local currentSetting = LibEditModeOverride:GetFrameSetting(BuffIconCooldownViewer, Enum.EditModeCooldownViewerSetting.HideWhenInactive)
-		if (value and currentSetting == 1) or (not value and currentSetting == 0) then
-			LibEditModeOverride:SetFrameSetting(BuffIconCooldownViewer, Enum.EditModeCooldownViewerSetting.HideWhenInactive, value and 0 or 1)
-			LibEditModeOverride:SaveOnly()
-			LibEditModeOverride:ApplyChanges()
-		end
+	if not LibEditModeOverride:CanEditActiveLayout() then
+		return false
+	end
+
+	local targetSetting = value and 0 or 1
+	local currentSetting = LibEditModeOverride:GetFrameSetting(viewer, Enum.EditModeCooldownViewerSetting.HideWhenInactive)
+	if currentSetting ~= targetSetting then
+		LibEditModeOverride:SetFrameSetting(viewer, Enum.EditModeCooldownViewerSetting.HideWhenInactive, targetSetting)
+		LibEditModeOverride:SaveOnly()
+		LibEditModeOverride:ApplyChanges()
+	end
+
+	return true
+end
+
+function SCM:SetHideWhenInactive(value)
+	if SetViewerHideWhenInactive(BuffIconCooldownViewer, value) then
+		self.isHideWhenInactiveEnabled = not value
+	end
+end
+
+function SCM:SetBuffBarHideWhenInactive(value)
+	if SetViewerHideWhenInactive(BuffBarCooldownViewer, value) then
+		self.isHideWhenInactiveBarsEnabled = not value
 	end
 end
 
@@ -193,12 +306,18 @@ function SCM:ApplyOptions()
 
 	local options = self.db.profile.options
 	self:SetHideWhenInactive(options.hideBuffsWhenInactive)
+	self:SetBuffBarHideWhenInactive(options.disableBuffBarHideWhenInactive)
 	self:SetBuffBarContent(options.buffBarContent)
 	self:ApplyAttributeDriver(options.hideWhileMounted)
 	self.Cooldowns:ApplyFormatterSettings()
 end
 
 local function OpenOptions()
+	if InCombatLockdown() then
+		SCM:Print("Can't open the options while in combat.")
+		return
+	end
+
 	SCM.isOptionsOpen = true
 	SCM.simulateBuffs = true
 

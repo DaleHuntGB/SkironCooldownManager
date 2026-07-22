@@ -20,6 +20,8 @@ local function ApplyChargeAndApplicationStyle(child, options, fontPath)
 			end
 		end
 
+		child.ChargeCount:SetFrameStrata(child:GetFrameStrata())
+		child.ChargeCount:SetFrameLevel(child:GetFrameLevel() + options.chargeFrameLevel)
 		child.ChargeCount.Current:ClearAllPoints()
 		child.ChargeCount.Current:SetPoint(
 			rowConfig.chargePoint or options.chargePoint,
@@ -30,7 +32,7 @@ local function ApplyChargeAndApplicationStyle(child, options, fontPath)
 		)
 
 		local chargeColour = rowConfig.chargeColour or options.chargeColour
-		child.ChargeCount.Current:SetTextColor(chargeColour.r, chargeColour.g, chargeColour.b, chargeColour.a or 1)
+		child.ChargeCount.Current:SetTextColor(chargeColour.r or 1, chargeColour.g or 1, chargeColour.b or 1, chargeColour.a or 1)
 
 		child.ChargeCount.Current.SCMRowConfig = rowConfig
 
@@ -68,6 +70,8 @@ local function ApplyChargeAndApplicationStyle(child, options, fontPath)
 			end
 		end
 
+		child.Applications:SetFrameStrata(child:GetFrameStrata())
+		child.Applications:SetFrameLevel(child:GetFrameLevel() + options.chargeFrameLevel)
 		child.Applications.Applications:ClearAllPoints()
 		child.Applications.Applications:SetPoint(
 			rowConfig.applicationsPoint or options.chargePoint,
@@ -162,10 +166,9 @@ local function ApplyCooldownSwipe(cooldownFrame, options)
 		return
 	end
 
-	local forceActiveSwipe = parent.SCMConfig and parent.SCMConfig.forceActiveSwipe
-
-	if parent.auraInstanceID or parent.SCMFakeAuraInstanceID or parent.SCMBuffOptions then
-		if options.disableRegularIconActiveSwipe and not forceActiveSwipe then
+	local childConfig = parent.SCMConfig or {}
+	if cooldownFrame:GetUseAuraDisplayTime() or parent.SCMFakeAuraInstanceID or parent.SCMBuffOptions then
+		if (options.disableRegularIconActiveSwipe or childConfig.hideActiveSwipe) and not childConfig.forceActiveSwipe then
 			if options.recolorNormalSwipe then
 				cooldownFrame:SetSwipeColor(unpack(options.normalSwipeColor))
 			else
@@ -193,45 +196,66 @@ end
 local function OnSetCooldown(self)
 	local options = SCM.db.profile.options
 
-	SCM.Cooldowns.ApplyNumericRuleFormatter(self)
-
 	ApplyCooldownSwipe(self, options)
-	ApplyCooldownFont(self, options)
+	if not self.SCMCooldownFontString then
+		ApplyCooldownFont(self, options)
+	end
 end
 
-local function ApplyCooldownStyle(child, options, childConfig)
+local function ApplyCooldownPoints(cooldownFrame, child, options, childConfig, isOptionsOpen)
+	if child.SCMCooldownSkinHook and not isOptionsOpen then
+		return
+	end
+
+	local pixel = SCM:PixelPerfectSize(1)
+	local topLeftX, topLeftY = 0, 0
+	local bottomRightX, bottomRightY = -pixel, pixel
+
+	if childConfig and childConfig.cooldownMoveTL then
+		topLeftX = childConfig.cooldownXOffsetTL or 0
+		topLeftY = childConfig.cooldownYOffsetTL or 0
+	elseif options.cooldownMoveTL then
+		topLeftX = options.cooldownXOffsetTL or 0
+		topLeftY = options.cooldownYOffsetTL or 0
+	end
+
+	if childConfig and childConfig.cooldownMoveBR then
+		bottomRightX = childConfig.cooldownXOffsetBR or -pixel
+		bottomRightY = childConfig.cooldownYOffsetBR or pixel
+	elseif options.cooldownMoveBR then
+		bottomRightX = options.cooldownXOffsetBR or -pixel
+		bottomRightY = options.cooldownYOffsetBR or pixel
+	end
+
+	cooldownFrame:ClearAllPoints()
+	cooldownFrame:SetPoint("TOPLEFT", child, "TOPLEFT", topLeftX, topLeftY)
+	cooldownFrame:SetPoint("BOTTOMRIGHT", child, "BOTTOMRIGHT", bottomRightX, bottomRightY)
+end
+
+local function ApplyCooldownStyle(child, options, childConfig, isOptionsOpen)
 	local cooldownFrame = child.GetCooldownFrame and child:GetCooldownFrame() or child.Cooldown
 	if cooldownFrame then
+		if cooldownFrame.SCMCooldownSkinHook and not isOptionsOpen then
+			return
+		end
+
+		if child.CooldownFlash then
+			child.CooldownFlash:SetAlpha(0)
+		end
+
+		cooldownFrame:SetFrameStrata(child:GetFrameStrata())
+		cooldownFrame:SetFrameLevel(child:GetFrameLevel() + (options.cooldownFrameLevel or 1))
+		cooldownFrame:SetSwipeTexture("Interface\\Buttons\\WHITE8x8")
+		cooldownFrame.SCMParent = child
+		ApplyCooldownPoints(cooldownFrame, child, options, childConfig, isOptionsOpen)
+		SCM.Cooldowns.ApplyNumericRuleFormatter(cooldownFrame)
+		ApplyCooldownFont(cooldownFrame, options)
+
 		if child.SCMCooldownSkinHook then
 			return
 		end
 
 		child.SCMCooldownSkinHook = true
-		if child.CooldownFlash then
-			child.CooldownFlash:SetAlpha(0)
-		end
-
-		cooldownFrame:SetSwipeTexture("Interface\\Buttons\\WHITE8x8")
-		cooldownFrame:ClearAllPoints()
-
-		if childConfig then
-			if childConfig.cooldownMoveTL then
-				cooldownFrame:SetPoint("TOPLEFT", child, "TOPLEFT", childConfig.cooldownXOffsetTL, childConfig.cooldownYOffsetTL)
-			else
-				cooldownFrame:SetPoint("TOPLEFT", child, "TOPLEFT", 0, 0)
-			end
-
-			if childConfig.cooldownMoveBR then
-				cooldownFrame:SetPoint("BOTTOMRIGHT", child, "BOTTOMRIGHT", childConfig.cooldownXOffsetBR, childConfig.cooldownYOffsetBR)
-			else
-				cooldownFrame:SetPoint("BOTTOMRIGHT", child, "BOTTOMRIGHT", -SCM:PixelPerfectSize(1), SCM:PixelPerfectSize(1))
-			end
-		else
-			cooldownFrame:SetPoint("TOPLEFT", child, "TOPLEFT", 0, 0)
-			cooldownFrame:SetPoint("BOTTOMRIGHT", child, "BOTTOMRIGHT", -SCM:PixelPerfectSize(1), SCM:PixelPerfectSize(1))
-		end
-
-		cooldownFrame.SCMParent = child
 
 		hooksecurefunc(cooldownFrame, "SetCooldown", OnSetCooldown)
 		OnSetCooldown(cooldownFrame)
@@ -271,7 +295,7 @@ function SCM:SkinChild(child, childConfig)
 		return
 	end
 
-	if not options.enableSkinning or child.SCMIconType == "empty" then
+	if not options.enableIconSkinning or child.SCMIconType == "empty" then
 		return
 	end
 
@@ -280,7 +304,8 @@ function SCM:SkinChild(child, childConfig)
 		child:SetFrameStrata(frameStrata)
 	end
 
-	if not child.SCMSkinned or (child.SCMSkinned and self.OptionsFrame and self.OptionsFrame:IsShown()) then
+	local isOptionsOpen = self.OptionsFrame and self.OptionsFrame:IsShown()
+	if not child.SCMSkinned or isOptionsOpen then
 		child.SCMSkinned = true
 
 		local borderSize = options.borderSize
@@ -355,7 +380,7 @@ function SCM:SkinChild(child, childConfig)
 
 		ApplyZoomSettings(child, options)
 		ApplyChargeAndApplicationStyle(child, options, LSM:Fetch("font", options.chargeFont))
-		ApplyCooldownStyle(child, options, childConfig)
+		ApplyCooldownStyle(child, options, childConfig, isOptionsOpen)
 	end
 
 	for _, customSkin in ipairs(SCM.Skins) do
@@ -372,16 +397,6 @@ function SCM:SkinBuffBar(child, config)
 		child:SetFrameStrata(frameStrata)
 	end
 
-	local buffBarOptions = options.buffBarOptions
-	local borderSize = buffBarOptions.borderSize
-	local borderColor = buffBarOptions.borderColor
-	local backgroundColor = buffBarOptions.backgroundColor
-	local foregroundColor = buffBarOptions.foregroundColor
-
-	if config and config.customColor then
-		foregroundColor = config.customColor
-	end
-
 	local iconFrame, bar
 
 	if child.GetIconFrame then
@@ -392,165 +407,185 @@ function SCM:SkinBuffBar(child, config)
 		bar = child.Bar
 	end
 
+	if not bar or not iconFrame then
+		return
+	end
+
+	local buffBarOptions = options.buffBarOptions
+	local skinningEnabled = options.enableBuffBarSkinning
+
+	if not skinningEnabled then
+		return
+	end
+
+	local borderSize = buffBarOptions.borderSize
+	if options.buffBarContent == 2 then
+		bar:SetPoint("TOPLEFT", iconFrame, "TOPLEFT", 0, 0)
+		bar.BarBG:SetPoint("TOPLEFT", iconFrame, "TOPLEFT", 0, 0)
+	else
+		bar:SetPoint("TOPLEFT", iconFrame, "TOPRIGHT", -borderSize, 0)
+		bar.BarBG:SetPoint("TOPLEFT", iconFrame, "TOPRIGHT", -borderSize, 0)
+	end
+
+	bar:SetPoint("BOTTOMLEFT", iconFrame, "BOTTOMRIGHT", -borderSize, 0)
+	bar:SetHeight(iconFrame:GetHeight())
+	bar.BarBG:SetPoint("BOTTOMLEFT", iconFrame, "BOTTOMRIGHT", -borderSize, 0)
+	bar.BarBG:SetPoint("RIGHT", bar, "RIGHT", 0, 0)
+
+	local borderColor = buffBarOptions.borderColor
+	local backgroundColor = buffBarOptions.backgroundColor
+	local foregroundColor = buffBarOptions.foregroundColor
+
+	if config and config.customColor then
+		foregroundColor = config.customColor
+	end
+
 	if child.DebuffBorder then
 		child.DebuffBorder:SetAlpha(0)
 	end
 
-	if bar and iconFrame then
-		local statusBarTexture = bar:GetStatusBarTexture()
-		if statusBarTexture then
-			statusBarTexture:SetTexture(LSM:Fetch("statusbar", buffBarOptions.barTexture))
-			statusBarTexture:SetTexelSnappingBias(0)
-			statusBarTexture:SetSnapToPixelGrid(false)
-		end
+	local statusBarTexture = bar:GetStatusBarTexture()
+	if statusBarTexture then
+		statusBarTexture:SetTexture(LSM:Fetch("statusbar", buffBarOptions.barTexture))
+		statusBarTexture:SetTexelSnappingBias(0)
+		statusBarTexture:SetSnapToPixelGrid(false)
+	end
 
-		for _, region in ipairs({ bar:GetRegions() }) do
-			if region:IsObjectType("Texture") then
-				region:SetTexelSnappingBias(0)
-				region:SetSnapToPixelGrid(false)
-				--if region:GetAtlas() == "UI-HUD-CoolDownManager-Bar-Pip" or region:GetAtlas() == "UI-HUD-CoolDownManager-Bar-BG" then
-				if region:GetAtlas() == "UI-HUD-CoolDownManager-Bar-Pip" then
-					region:Hide()
-				end
-			end
-		end
-
-		if options.buffBarContent == 2 then
-			bar:SetPoint("TOPLEFT", iconFrame, "TOPLEFT", 0, 0)
-			bar.BarBG:SetPoint("TOPLEFT", iconFrame, "TOPLEFT", 0, 0)
-		else
-			bar:SetPoint("TOPLEFT", iconFrame, "TOPRIGHT", -borderSize, 0)
-			bar.BarBG:SetPoint("TOPLEFT", iconFrame, "TOPRIGHT", -borderSize, 0)
-		end
-
-		bar:SetPoint("BOTTOMLEFT", iconFrame, "BOTTOMRIGHT", -borderSize, 0)
-		bar:SetHeight(iconFrame:GetHeight())
-		bar:SetStatusBarColor(foregroundColor.r, foregroundColor.g, foregroundColor.b, foregroundColor.a)
-		bar.Pip:SetAlpha(0)
-		bar.BarBG:SetPoint("BOTTOMLEFT", iconFrame, "BOTTOMRIGHT", -borderSize, 0)
-		bar.BarBG:SetPoint("RIGHT", bar, "RIGHT", 0, 0)
-		bar.BarBG:SetColorTexture(backgroundColor.r, backgroundColor.g, backgroundColor.b, backgroundColor.a)
-		bar.BarBG:SetTexelSnappingBias(0)
-		bar.BarBG:SetSnapToPixelGrid(false)
-		local fontOutline = buffBarOptions.fontOutline or "OUTLINE"
-		bar.Name:SetFont(LSM:Fetch("font", buffBarOptions.font), buffBarOptions.fontSize, fontOutline)
-		bar.Duration:SetFont(LSM:Fetch("font", buffBarOptions.font), buffBarOptions.fontSize, fontOutline)
-
-		local nameColor = buffBarOptions.nameColor
-		bar.Name:ClearPointsOffset()
-		bar.Name:AdjustPointsOffset(buffBarOptions.nameXOffset, buffBarOptions.nameYOffset)
-		bar.Name:SetTextColor(nameColor.r, nameColor.g, nameColor.b, nameColor.a)
-
-		local durationColor = buffBarOptions.durationColor
-		bar.Duration:ClearPointsOffset()
-		bar.Duration:AdjustPointsOffset(buffBarOptions.durationXOffset, buffBarOptions.durationYOffset)
-		bar.Duration:SetTextColor(durationColor.r, durationColor.g, durationColor.b, durationColor.a)
-
-		bar.customBorder = bar.customBorder or CreateFrame("Frame", nil, bar, "BackdropTemplate")
-		bar.customBorder:SetFrameLevel(bar:GetFrameLevel() + 1)
-		bar.customBorder:SetAllPoints(bar)
-		bar.customBorder:SetBackdrop({
-			edgeFile = "Interface\\Buttons\\WHITE8x8",
-			edgeSize = borderSize,
-		})
-		bar.customBorder:SetBackdropBorderColor(borderColor.r, borderColor.g, borderColor.b, borderColor.a)
-
-		if borderSize == 0 then
-			bar.customBorder:Hide()
-		else
-			bar.customBorder:Show()
-		end
-
-		for _, region in ipairs({ bar.customBorder:GetRegions() }) do
+	for _, region in ipairs({ bar:GetRegions() }) do
+		if region:IsObjectType("Texture") then
 			region:SetTexelSnappingBias(0)
 			region:SetSnapToPixelGrid(false)
-		end
-
-		iconFrame.Icon:ClearAllPoints()
-		iconFrame.Icon:SetPoint("TOPLEFT", iconFrame, "TOPLEFT", borderSize, -borderSize)
-		iconFrame.Icon:SetPoint("BOTTOMRIGHT", iconFrame, "BOTTOMRIGHT", -borderSize, borderSize)
-		iconFrame.Icon:SetTexCoord(0.12, 0.88, 0.12, 0.88)
-		iconFrame.Icon:SetTexelSnappingBias(0)
-		iconFrame.Icon:SetSnapToPixelGrid(false)
-
-		iconFrame.customBorder = iconFrame.customBorder or CreateFrame("Frame", nil, iconFrame, "BackdropTemplate")
-		iconFrame.customBorder:SetFrameLevel(iconFrame:GetFrameLevel() + 1)
-		iconFrame.customBorder:SetAllPoints(iconFrame)
-		iconFrame.customBorder:SetBackdrop({
-			edgeFile = "Interface\\Buttons\\WHITE8x8",
-			edgeSize = borderSize,
-		})
-		iconFrame.customBorder:SetBackdropBorderColor(borderColor.r, borderColor.g, borderColor.b, borderColor.a)
-
-		if borderSize == 0 then
-			iconFrame.customBorder:Hide()
-		else
-			iconFrame.customBorder:Show()
-		end
-
-		for _, region in ipairs({ iconFrame.customBorder:GetRegions() }) do
-			region:SetTexelSnappingBias(0)
-			region:SetSnapToPixelGrid(false)
-		end
-
-		for _, region in ipairs({ iconFrame:GetRegions() }) do
-			if region:IsObjectType("Texture") then
-				region:SetTexelSnappingBias(0)
-				region:SetSnapToPixelGrid(false)
-			end
-
-			if region.GetMaskTexture and region:GetMaskTexture(1) then
-				region:RemoveMaskTexture(region:GetMaskTexture(1))
-			elseif region:IsObjectType("Texture") and region.GetAtlas and region:GetAtlas() == "UI-HUD-CoolDownManager-IconOverlay" then
+			if region:GetAtlas() == "UI-HUD-CoolDownManager-Bar-Pip" then
 				region:Hide()
 			end
 		end
+	end
 
-		local rowConfig = child.SCMRowConfig or {}
-		local fontPath = LSM:Fetch("font", options.chargeFont)
-		if iconFrame.Applications then
-			local applications = iconFrame.Applications
-			applications:SetWordWrap(false)
-			applications:SetNonSpaceWrap(false)
-			applications:SetMaxLines(1)
+	bar:SetStatusBarColor(foregroundColor.r, foregroundColor.g, foregroundColor.b, foregroundColor.a)
+	bar.Pip:SetAlpha(0)
+	bar.BarBG:SetColorTexture(backgroundColor.r, backgroundColor.g, backgroundColor.b, backgroundColor.a)
+	bar.BarBG:SetTexelSnappingBias(0)
+	bar.BarBG:SetSnapToPixelGrid(false)
+	local fontOutline = buffBarOptions.fontOutline or "OUTLINE"
+	bar.Name:SetFont(LSM:Fetch("font", buffBarOptions.font), buffBarOptions.fontSize, fontOutline)
+	bar.Duration:SetFont(LSM:Fetch("font", buffBarOptions.font), buffBarOptions.fontSize, fontOutline)
 
-			local size = rowConfig.applicationsFontSize or options.chargeFontSize
-			local outline = rowConfig.applicationsFontOutline or options.chargeFontOutline or "OUTLINE"
+	local nameColor = buffBarOptions.nameColor
+	bar.Name:ClearPointsOffset()
+	bar.Name:AdjustPointsOffset(buffBarOptions.nameXOffset, buffBarOptions.nameYOffset)
+	bar.Name:SetTextColor(nameColor.r, nameColor.g, nameColor.b, nameColor.a)
+	bar.Name:SetShown(not buffBarOptions.hideSpellName)
 
-			if fontPath then
-				applications:SetFont(fontPath, size, outline)
-			end
+	local durationColor = buffBarOptions.durationColor
+	bar.Duration:ClearPointsOffset()
+	bar.Duration:AdjustPointsOffset(buffBarOptions.durationXOffset, buffBarOptions.durationYOffset)
+	bar.Duration:SetTextColor(durationColor.r, durationColor.g, durationColor.b, durationColor.a)
+	bar.Duration:SetShown(not buffBarOptions.hideDuration)
 
-			applications:SetSize(iconFrame:GetHeight(), iconFrame:GetHeight())
-			if not applications.SCMFitTextHooked then
-				applications.SCMFitTextHooked = true
-				hooksecurefunc(applications, "SetText", function()
-					applications:SetSize(iconFrame:GetHeight(), iconFrame:GetHeight())
-				end)
-			end
+	bar.customBorder = bar.customBorder or CreateFrame("Frame", nil, bar, "BackdropTemplate")
+	bar.customBorder:SetFrameLevel(bar:GetFrameLevel() + 1)
+	bar.customBorder:SetAllPoints(bar)
+	bar.customBorder:SetBackdrop({
+		edgeFile = "Interface\\Buttons\\WHITE8x8",
+		edgeSize = borderSize,
+	})
+	bar.customBorder:SetBackdropBorderColor(borderColor.r, borderColor.g, borderColor.b, borderColor.a)
 
-			local point = rowConfig.applicationsPoint or options.chargePoint
-			local overlay = iconFrame.SCMApplicationsOverlay
-			if not overlay then
-				overlay = CreateFrame("Frame", nil, iconFrame)
-				overlay:SetAllPoints(iconFrame)
-				iconFrame.SCMApplicationsOverlay = overlay
-			end
+	if borderSize == 0 then
+		bar.customBorder:Hide()
+	else
+		bar.customBorder:Show()
+	end
 
-			overlay:SetFrameLevel(iconFrame.customBorder:GetFrameLevel() + 1)
-			applications:SetParent(overlay)
-			applications:SetDrawLayer("OVERLAY", 7)
-			applications:SetJustifyH("CENTER")
-			applications:SetJustifyV("MIDDLE")
-			applications:ClearAllPoints()
-			applications:SetPoint(
-				point,
-				child.Icon,
-				rowConfig.applicationsRelativePoint or options.chargeRelativePoint,
-				rowConfig.applicationsXOffset or options.chargeXOffset,
-				rowConfig.applicationsYOffset or options.chargeYOffset
-			)
+	for _, region in ipairs({ bar.customBorder:GetRegions() }) do
+		region:SetTexelSnappingBias(0)
+		region:SetSnapToPixelGrid(false)
+	end
+
+	iconFrame.Icon:ClearAllPoints()
+	iconFrame.Icon:SetPoint("TOPLEFT", iconFrame, "TOPLEFT", borderSize, -borderSize)
+	iconFrame.Icon:SetPoint("BOTTOMRIGHT", iconFrame, "BOTTOMRIGHT", -borderSize, borderSize)
+	iconFrame.Icon:SetTexCoord(0.12, 0.88, 0.12, 0.88)
+	iconFrame.Icon:SetTexelSnappingBias(0)
+	iconFrame.Icon:SetSnapToPixelGrid(false)
+
+	iconFrame.customBorder = iconFrame.customBorder or CreateFrame("Frame", nil, iconFrame, "BackdropTemplate")
+	iconFrame.customBorder:SetFrameLevel(iconFrame:GetFrameLevel() + 1)
+	iconFrame.customBorder:SetAllPoints(iconFrame)
+	iconFrame.customBorder:SetBackdrop({
+		edgeFile = "Interface\\Buttons\\WHITE8x8",
+		edgeSize = borderSize,
+	})
+	iconFrame.customBorder:SetBackdropBorderColor(borderColor.r, borderColor.g, borderColor.b, borderColor.a)
+
+	if borderSize == 0 then
+		iconFrame.customBorder:Hide()
+	else
+		iconFrame.customBorder:Show()
+	end
+
+	for _, region in ipairs({ iconFrame.customBorder:GetRegions() }) do
+		region:SetTexelSnappingBias(0)
+		region:SetSnapToPixelGrid(false)
+	end
+
+	for _, region in ipairs({ iconFrame:GetRegions() }) do
+		if region:IsObjectType("Texture") then
+			region:SetTexelSnappingBias(0)
+			region:SetSnapToPixelGrid(false)
 		end
+
+		if region.GetMaskTexture and region:GetMaskTexture(1) then
+			region:RemoveMaskTexture(region:GetMaskTexture(1))
+		elseif region:IsObjectType("Texture") and region.GetAtlas and region:GetAtlas() == "UI-HUD-CoolDownManager-IconOverlay" then
+			region:Hide()
+		end
+	end
+
+	local rowConfig = child.SCMRowConfig or {}
+	local fontPath = LSM:Fetch("font", options.chargeFont)
+	if iconFrame.Applications then
+		local applications = iconFrame.Applications
+		applications:SetWordWrap(false)
+		applications:SetNonSpaceWrap(false)
+		applications:SetMaxLines(1)
+
+		local size = rowConfig.applicationsFontSize or options.chargeFontSize
+		local outline = rowConfig.applicationsFontOutline or options.chargeFontOutline or "OUTLINE"
+
+		if fontPath then
+			applications:SetFont(fontPath, size, outline)
+		end
+
+		applications:SetSize(iconFrame:GetHeight(), iconFrame:GetHeight())
+		if not applications.SCMFitTextHooked then
+			applications.SCMFitTextHooked = true
+			hooksecurefunc(applications, "SetText", function()
+				applications:SetSize(iconFrame:GetHeight(), iconFrame:GetHeight())
+			end)
+		end
+
+		local point = rowConfig.applicationsPoint or options.chargePoint
+		local overlay = iconFrame.SCMApplicationsOverlay
+		if not overlay then
+			overlay = CreateFrame("Frame", nil, iconFrame)
+			overlay:SetAllPoints(iconFrame)
+			iconFrame.SCMApplicationsOverlay = overlay
+		end
+
+		overlay:SetFrameLevel(iconFrame.customBorder:GetFrameLevel() + 1)
+		applications:SetParent(overlay)
+		applications:SetDrawLayer("OVERLAY", 7)
+		applications:SetJustifyH("CENTER")
+		applications:SetJustifyV("MIDDLE")
+		applications:ClearAllPoints()
+		applications:SetPoint(
+			point,
+			child.Icon,
+			rowConfig.applicationsRelativePoint or options.chargeRelativePoint,
+			rowConfig.applicationsXOffset or options.chargeXOffset,
+			rowConfig.applicationsYOffset or options.chargeYOffset
+		)
 	end
 end
 

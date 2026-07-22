@@ -172,6 +172,10 @@ function CDMOptions.SelectAnchor(widget, parentWidget, anchorIndex, anchorTabsTb
 		Options.ApplyModeConfigUpdate(anchorIndex, mode)
 	end)
 	anchorOptions:AddChild(relativeTo)
+	Options.AddAnchorParentAutocomplete(anchorOptions, relativeTo, function(text)
+		data.anchor[2] = text
+		Options.ApplyModeConfigUpdate(anchorIndex, mode)
+	end)
 
 	local relativePoint = AceGUI:Create("Dropdown")
 	relativePoint:SetRelativeWidth(isBuffBar and 0.25 or 0.33)
@@ -230,11 +234,13 @@ function CDMOptions.SelectAnchor(widget, parentWidget, anchorIndex, anchorTabsTb
 	end)
 	anchorOptions:AddChild(spacing)
 
+	data.frameStrata = data.frameStrata or "MEDIUM"
+
 	local frameStrata = AceGUI:Create("Dropdown")
 	frameStrata:SetRelativeWidth(0.25)
 	frameStrata:SetList(SCM.Constants.FrameStrata, SCM.Constants.FrameStrataSorted)
 	frameStrata:SetLabel("Frame Strata")
-	frameStrata:SetValue(data.frameStrata or "")
+	frameStrata:SetValue(data.frameStrata)
 	frameStrata:SetCallback("OnValueChanged", function(self, event, value)
 		data.frameStrata = value ~= "" and value or nil
 		Options.ApplyModeConfigUpdate(anchorIndex, mode)
@@ -278,8 +284,8 @@ function CDMOptions.SelectAnchor(widget, parentWidget, anchorIndex, anchorTabsTb
 		end
 		anchorOptions:DoLayout()
 	end)
-	advancedConfigTabs:SelectTab("spellConfig")
 	anchorOptions:AddChild(advancedConfigTabs)
+	advancedConfigTabs:SelectTab("spellConfig")
 
 	scrollFrame:DoLayout()
 	--scrollFrame:FixScroll()

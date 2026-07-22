@@ -33,7 +33,6 @@ Constants.SecondaryGrowthDirections = {
 }
 
 Constants.FrameStrata = {
-	[""] = "Default",
 	BACKGROUND = "Background",
 	LOW = "Low",
 	MEDIUM = "Medium",
@@ -45,7 +44,6 @@ Constants.FrameStrata = {
 }
 
 Constants.FrameStrataSorted = {
-	"",
 	"BACKGROUND",
 	"LOW",
 	"MEDIUM",
@@ -90,6 +88,89 @@ Constants.BlendModeSorted = {
 	"MOD",
 }
 
+Constants.States = {
+	["active"] = "Active",
+	["inactive"] = "Inactive",
+	["ready"] = "Ready",
+	["cooldown"] = "On Cooldown",
+	["noitem"] = "No Item",
+	["recharging"] = "Recharging",
+}
+
+Constants.StatesSorted = {
+	["buffBar"] = {
+		"active",
+		"inactive",
+	},
+	["spell"] = {
+		"ready",
+		"cooldown",
+		"active",
+		"inactive",
+		"recharging",
+	},
+	["timer"] = {
+		"active",
+		"inactive",
+	},
+	["item"] = {
+		"ready",
+		"cooldown",
+		"noitem",
+	},
+	["slot"] = {
+		"ready",
+		"cooldown",
+	},
+	["custom"] = {
+		"ready",
+		"cooldown",
+	},
+	-- "nocharges",
+	-- "maxcharges",
+	-- "recharging",
+	-- "ongcd",
+	-- "mounted",
+}
+
+Constants.Visibility = {
+	["show"] = "Show",
+	["hide"] = "Hide",
+}
+
+Constants.VisibilitySorted = {
+	"show",
+	"hide",
+}
+
+Constants.GlobalGlowSubregion = "global"
+
+Constants.Subregions = {
+	["glow"] = "Glow",
+	["border"] = "Border",
+	--["text"] = "Text"
+}
+
+Constants.SubregionsSorted = {
+	"glow",
+	"border",
+}
+
+Constants.GlowTypes = {
+	["Pixel"] = "Pixel",
+	["Autocast"] = "Autocast",
+	["Proc"] = "Proc",
+	["Button"] = "Button",
+}
+
+Constants.GlowTypesSorted = {
+	"Pixel",
+	"Proc",
+	"Autocast",
+	"Button",
+	"Button",
+}
+
 Constants.ResourceBarGrowthDirection = {
 	UP = "Up",
 	DOWN = "Down",
@@ -104,3 +185,15 @@ Constants.SatedDebuffs = {
 	[264689] = true,
 	[390435] = true,
 }
+
+Constants.SCMAnchors = {
+	["SkironCooldownManager"] = {
+		["Cast Bar"] = "SCM_CastBar",
+		["Primary Resource Bar"] = "SCM_PrimaryResourceBar",
+		["Secondary Resource Bar"] = "SCM_SecondaryResourceBar",
+		["Anchor"] = "SCM_GroupAnchor_#",
+		["Global Anchor"] = "SCM_GroupAnchor_10#",
+		["Buff Bar Anchor"] = "SCM_GroupAnchor_20#"
+	},
+}
+
