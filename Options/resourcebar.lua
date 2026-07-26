@@ -340,7 +340,7 @@ local function AddSpecialColorSettings(parent, settings)
 end
 
 local function AddBarSettings(parent, title, settings, includeManaRoleSettings, globalSettings)
-	local isSpecConfigActive = SCM.resourceBarConfig.active
+	local isSpecConfigActive = SCM.specResourceBarConfig.active
 
 	local generalSettings = AceGUI:Create("InlineGroup")
 	generalSettings:SetLayout("flow")
@@ -892,7 +892,7 @@ local function ResourceBar(self)
 	currentStatus:SetFontObject("Game15Font")
 	statusGroup:AddChild(currentStatus)
 
-	if SCM.resourceBarConfig.active then
+	if SCM.specResourceBarConfig.active then
 		currentStatus:SetText(string.format("Status: |cffea00ffSpecialization|r (%s)", (select(2, SCM.Utils.GetSpec()))))
 	else
 		currentStatus:SetText("Status: |cfffcf803Profile|r")
@@ -901,13 +901,13 @@ local function ResourceBar(self)
 	local modifyCurrentSpecialization = AceGUI:Create("CheckBox")
 	modifyCurrentSpecialization:SetRelativeWidth(0.33)
 	modifyCurrentSpecialization:SetLabel("Use Specialization Config")
-	modifyCurrentSpecialization:SetValue(SCM.resourceBarConfig.active)
+	modifyCurrentSpecialization:SetValue(SCM.specResourceBarConfig.active)
 	statusGroup:AddChild(modifyCurrentSpecialization)
 
 	local resetCurrentSpecialization = AceGUI:Create("Button")
 	resetCurrentSpecialization:SetText("Clear Spec Config")
 	resetCurrentSpecialization:SetRelativeWidth(0.33)
-	resetCurrentSpecialization:SetDisabled(not SCM.resourceBarConfig.active)
+	resetCurrentSpecialization:SetDisabled(not SCM.specResourceBarConfig.active)
 	resetCurrentSpecialization:SetCallback("OnEnter", function()
 		GameTooltip:SetOwner(self.frame, "ANCHOR_CURSOR")
 		GameTooltip:SetText("Clear Spec Config", nil, nil, nil, nil, true)
@@ -938,13 +938,15 @@ local function ResourceBar(self)
 
 		wipe(specResourceBarConfig)
 		specResourceBarConfig.active = isActive
+		SCM:UpdateCastAndResourceBarConfigs()
 
 		resourceBarTabs:SelectTab(currentTab)
 		RefreshResourceBars()
 	end)
 
 	modifyCurrentSpecialization:SetCallback("OnValueChanged", function(_, _, value)
-		SCM.resourceBarConfig.active = value
+		SCM.specResourceBarConfig.active = value
+		SCM:UpdateCastAndResourceBarConfigs()
 
 		if value then
 			currentStatus:SetText(string.format("Status: |cffea00ffSpecialization|r (%s)", (select(2, SCM.Utils.GetSpec()))))

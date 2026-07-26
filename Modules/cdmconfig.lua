@@ -43,73 +43,72 @@ local function CreateAnchorConfigTables(customConfig)
 	return customConfig
 end
 
-local function CreateSpecFallbackConfig(config, specConfig, isActive, setSpecConfig)
-	config = config or {}
-	setSpecConfig = setSpecConfig or nop
-
-	isActive = isActive or function()
-		return specConfig and specConfig.active
+local function SetSpecConfigMetatables(specConfig, profileConfig, defaultConfig)
+	if not defaultConfig then
+		defaultConfig = {}
 	end
 
-	local function SaveSpecConfig()
-		specConfig = specConfig or {}
-		setSpecConfig(specConfig)
-		setSpecConfig = nop
-		return specConfig
-	end
-
-	local function CreateChildConfig(key)
-		local function SaveChildConfig(childConfig)
-			SaveSpecConfig()[key] = childConfig
+	for key, value in pairs(specConfig) do
+		local profileValue = profileConfig[key]
+		if type(value) == "table" and type(profileValue) == "table" then
+			SetSpecConfigMetatables(value, profileValue, defaultConfig[key])
 		end
-
-		return CreateSpecFallbackConfig(config[key], specConfig and specConfig[key], isActive, SaveChildConfig)
 	end
 
-	local metatable = {
-		__index = function(_, key)
-			if key == "active" then
-				return isActive()
+	if type(defaultConfig[1]) == "table" then
+		for index, defaultValue in ipairs(defaultConfig) do
+			if rawget(specConfig, index) == nil then
+				local profileValue = profileConfig[index]
+				if type(profileValue) == "table" then
+					specConfig[index] = SetSpecConfigMetatables({}, profileValue, defaultValue)
+				end
 			end
+		end
+	end
 
-			if not isActive() then
-				return config[key]
-			end
-
-			local value = specConfig and specConfig[key]
-			if value == nil then
-				value = config[key]
-			end
-
+	return setmetatable(specConfig, {
+		__index = function(self, key)
+			local value = profileConfig[key]
 			if type(value) == "table" then
-				return CreateChildConfig(key)
+				value = SetSpecConfigMetatables({}, value, defaultConfig[key])
+				rawset(self, key, value)
 			end
 
 			return value
 		end,
-		__newindex = function(_, key, value)
-			if key == "active" then
-				SaveSpecConfig()[key] = value
-			elseif isActive() then
-				if IsShiftKeyDown() then
-					if specConfig then
-						specConfig[key] = nil
-					end
-				else
-					SaveSpecConfig()[key] = value
-				end
-			else
-				config[key] = value
-			end
-		end,
-	}
+	})
+end
 
-	return setmetatable({}, metatable)
+function SCM:UpdateCastAndResourceBarConfigs()
+	local options = self.db.profile.options
+	local defaultOptions = SCM.DefaultDB.profile.options
+
+	if self.specResourceBarConfig.active then
+		self.resourceBarConfig = SetSpecConfigMetatables(
+			self.specResourceBarConfig,
+			options.resourceBar,
+			defaultOptions.resourceBar
+		)
+	else
+		self.resourceBarConfig = options.resourceBar
+	end
+
+	if self.specCastBarConfig.active then
+		self.castBarConfig = SetSpecConfigMetatables(
+			self.specCastBarConfig,
+			options.castBar,
+			defaultOptions.castBar
+		)
+	else
+		self.castBarConfig = options.castBar
+	end
+
+	if self.CastBar then
+		self.CastBar.barOptions = self.castBarConfig
+	end
 end
 
 function SCM:UpdateDB()
-	local options = self.db.profile.options
-
 	local firstGlobalGroup = SCM.Utils.ToGlobalGroup(1)
 	local firstBuffBarGroup = SCM.Utils.ToBuffBarGroup(1)
 	local class = Utils.GetClass()
@@ -146,14 +145,10 @@ function SCM:UpdateDB()
 
 	self.currentConfig.resourceBarConfig = self.currentConfig.resourceBarConfig or {}
 	self.specResourceBarConfig = self.currentConfig.resourceBarConfig
-	self.resourceBarConfig = CreateSpecFallbackConfig(options.resourceBar, self.currentConfig.resourceBarConfig)
 
 	self.currentConfig.castBarConfig = self.currentConfig.castBarConfig or {}
 	self.specCastBarConfig = self.currentConfig.castBarConfig
-	self.castBarConfig = CreateSpecFallbackConfig(options.castBar, self.currentConfig.castBarConfig)
-	if self.CastBar then
-		self.CastBar.barOptions = self.castBarConfig
-	end
+	self:UpdateCastAndResourceBarConfigs()
 
 	self.currentConfig.buffBarsAnchorConfig = self.currentConfig.buffBarsAnchorConfig or {}
 	self.buffBarsAnchorConfig = CreateAnchorConfigTables(self.currentConfig.buffBarsAnchorConfig)

@@ -1276,7 +1276,7 @@ function SCMResourceBarControllerMixin:ConfigurePrimaryBar()
 	local powerType, powerToken, altR, altG, altB = UnitPowerType("player")
 
 	local forceMana = false
-	if SCM.resourceBarConfig.active then
+	if SCM.specResourceBarConfig.active then
 		if UnitClassBase("player") == "DRUID" then
 			local shapeshiftFormID = GetShapeshiftFormID()
 			local customPowerType
@@ -1363,7 +1363,7 @@ function SCMResourceBarControllerMixin:ConfigureSecondaryBar()
 	end
 
 	local forceMana = false
-	if SCM.resourceBarConfig.active then
+	if SCM.specResourceBarConfig.active then
 		if UnitClassBase("player") == "DRUID" then
 			local shapeshiftFormID = GetShapeshiftFormID()
 			local customSecondaryResource
