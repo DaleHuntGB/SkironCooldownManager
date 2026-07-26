@@ -18,12 +18,9 @@ end
 
 function SCM:PLAYER_ENTERING_WORLD(isInitialLogin, isReload)
 	if isInitialLogin or isReload then
-		SCM:UpdateCooldownInfo(true)
-		SCM:UpdateDB()
+		SCM.RefreshCooldownViewerData()
 		SCM:ApplyOptions()
 
-		SCM:CreateAllCustomIcons()
-		SCM:ApplyAllCDManagerConfigs(true)
 		SCM:SetHooks()
 		SCM:InitializeResourceBars()
 		SCM:CreateCastBar()
@@ -177,7 +174,10 @@ end
 
 function SCM:PLAYER_REGEN_DISABLED() end
 function SCM:PLAYER_REGEN_ENABLED()
-	SCM.RefreshCooldownViewerData()
+	if not self.appliedOptions then
+		self:ApplyOptions()
+		SCM.RefreshCooldownViewerData()
+	end
 end
 
 function SCM:EDIT_MODE_LAYOUTS_UPDATED()

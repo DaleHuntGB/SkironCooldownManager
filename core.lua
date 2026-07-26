@@ -40,9 +40,6 @@ local function OnProfileChanged(_, _, _, skipReset)
 		SCM.DB:ResetData()
 	end
 
-	SCM:InvalidateAnchorLinks()
-	SCM:UpdateDB()
-
 	SCM.appliedOptions = nil
 	SCM:ApplyOptions()
 
