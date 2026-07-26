@@ -450,18 +450,19 @@ local function LayoutAnchorGroup(group, visibleChildren, anchorConfig, options, 
 		Cache.cachedAnchorLinksDirty = true
 	end
 
-	if state.appliedWidth == nil then
+	local anchorSizeApplied = groupAnchor and (not InCombatLockdown() or not groupAnchor:IsProtected())
+	if anchorSizeApplied or not state.appliedWidth then
 		state.appliedWidth = effectiveWidth
 	end
-	if state.appliedHeight == nil then
+	if anchorSizeApplied or not state.appliedHeight then
 		state.appliedHeight = effectiveHeight
 	end
-	if state.appliedAnchorOffsetY == nil then
+	if anchorSizeApplied or not state.appliedAnchorOffsetY then
 		state.appliedAnchorOffsetY = anchorOffsetY
 	end
 
 	local childAnchor, useProxyAnchor =
-		SCM:GetManagedAnchorChildAnchor(group, groupAnchor, point, anchor, relativePoint, xOffset, yOffset, growDir, firstRowWidth, effectiveWidth, effectiveHeight, anchorOffsetY, lockGroupSize)
+		SCM:GetManagedAnchorChildAnchor(group, groupAnchor, point, anchor, relativePoint, xOffset, yOffset, growDir, firstRowWidth, effectiveWidth, effectiveHeight, anchorOffsetY)
 	local anchorOffsetChanged = SCM:UpdateAnchorOffset(group, true)
 	if useProxyAnchor and changedGroups and anchorOffsetChanged then
 		changedGroups[group] = true
@@ -525,23 +526,16 @@ local function LayoutAnchorGroup(group, visibleChildren, anchorConfig, options, 
 		end
 	end
 
-	if not InCombatLockdown() and groupAnchor then
-		groupAnchor:SetSize(effectiveWidth, effectiveHeight)
-		state.appliedWidth = effectiveWidth
-		state.appliedHeight = effectiveHeight
-		state.appliedAnchorOffsetY = anchorOffsetY
-
-		if group == 1 then
-			if options.adjustResourceWidth and C_AddOns.IsAddOnLoaded("SenseiClassResourceBar") then
-				if SCRB and SCRB.registerCustomFrame then
-					SCRB.registerCustomFrame(SCM:GetAnchor(1))
-				else
-					SCM:UpdateResourceBarWidth(effectiveWidth)
-				end
+	if not InCombatLockdown() and group == 1 then
+		if options.adjustResourceWidth and C_AddOns.IsAddOnLoaded("SenseiClassResourceBar") then
+			if SCRB and SCRB.registerCustomFrame then
+				SCRB.registerCustomFrame(SCM:GetAnchor(1))
+			else
+				SCM:UpdateResourceBarWidth(effectiveWidth)
 			end
-
-			SCM:UpdateUFValues(options, effectiveWidth, rowConfig)
 		end
+
+		SCM:UpdateUFValues(options, effectiveWidth, rowConfig)
 	end
 
 	if group == 1 then
