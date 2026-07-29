@@ -138,7 +138,7 @@ local function MigrateVisibilityRules(config, isAura, isCustom, isTimer, isItem)
 	config.showWhileInactive = nil
 end
 
-local function MigrateDesaturateRules(config, isAura, desaturateOnCooldown)
+local function MigrateDesaturateRules(config, isAura, desaturateOnCooldown, disableRegularIconActiveSwipe)
 	local hasDesaturateRules = config.effectRules.desaturate ~= nil
 	if not hasDesaturateRules then
 		if isAura then
@@ -154,9 +154,16 @@ local function MigrateDesaturateRules(config, isAura, desaturateOnCooldown)
 
 			SetEffectRules(config, "desaturate", rules)
 		elseif desaturateOnCooldown then
-			SetEffectRules(config, "desaturate", {
-				{ state = "cooldown", enabled = true },
-			})
+			if not disableRegularIconActiveSwipe then
+				SetEffectRules(config, "desaturate", {
+					{ state = "active", enabled = false },
+					{ state = "cooldown", enabled = true, elseIf = true },
+				})
+			else
+				SetEffectRules(config, "desaturate", {
+					{ state = "cooldown", enabled = true, elseIf = true },
+				})
+			end
 		end
 	end
 
@@ -178,7 +185,7 @@ local function MigrateGlowRules(config)
 	config.glowWhileInactive = nil
 end
 
-local function MigrateLegacyIconOptions(spellConfig)
+local function MigrateLegacyIconOptions(spellConfig, disableRegularIconActiveSwipe)
 	for _, config in pairs(spellConfig) do
 		local source = config.source
 		local anchorGroups = config.anchorGroup
@@ -187,7 +194,7 @@ local function MigrateLegacyIconOptions(spellConfig)
 			for anchorGroup, anchorGroupConfig in pairs(anchorGroups) do
 				local isAura = anchorGroup == buffIconGroup or IsBuffBarGroup(anchorGroup)
 				anchorGroupConfig.effectRules = anchorGroupConfig.effectRules or {}
-				MigrateDesaturateRules(anchorGroupConfig, isAura, not isAura)
+				MigrateDesaturateRules(anchorGroupConfig, isAura, not isAura, disableRegularIconActiveSwipe)
 				MigrateVisibilityRules(anchorGroupConfig, isAura, false)
 				MigrateGlowRules(anchorGroupConfig)
 			end
@@ -195,7 +202,7 @@ local function MigrateLegacyIconOptions(spellConfig)
 	end
 end
 
-local function MigrateLegacyCustomOptions(customConfig)
+local function MigrateLegacyCustomOptions(customConfig, disableRegularIconActiveSwipe)
 	if not customConfig then
 		return
 	end
@@ -206,7 +213,7 @@ local function MigrateLegacyCustomOptions(customConfig)
 		local desaturateOnCooldown = configKey == "spellConfig" or isItem or configKey == "slotConfig"
 		for _, config in pairs(configTable) do
 			config.effectRules = config.effectRules or {}
-			MigrateDesaturateRules(config, false, desaturateOnCooldown)
+			MigrateDesaturateRules(config, false, desaturateOnCooldown, disableRegularIconActiveSwipe)
 			MigrateVisibilityRules(config, false, true, isTimer, isItem)
 			MigrateGlowRules(config)
 		end
@@ -392,8 +399,8 @@ function SCM:MigrateDB()
 	CreateCooldownBreakpoints(options)
 	MigrateLegacySpellConfigKeys(self.spellConfig, self.defaultCooldownViewerConfig)
 	CreateTrackedBarSpellConfig(self.spellConfig)
-	MigrateLegacyIconOptions(self.spellConfig)
-	MigrateLegacyCustomOptions(self.currentConfig.customConfig)
-	MigrateLegacyCustomOptions(self.db.profile.globalCustomConfig)
+	MigrateLegacyIconOptions(self.spellConfig, options.disableRegularIconActiveSwipe)
+	MigrateLegacyCustomOptions(self.currentConfig.customConfig, options.disableRegularIconActiveSwipe)
+	MigrateLegacyCustomOptions(self.db.profile.globalCustomConfig, options.disableRegularIconActiveSwipe)
 	RemoveOldAnchorConfigs(self.currentConfig, self.db.profile.globalAnchorConfig, self.db.profile.globalCustomConfig)
 end
