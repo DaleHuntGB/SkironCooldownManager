@@ -123,6 +123,72 @@ function CDMOptions.ShowIconSettingsMessage(parentWidget, scrollFrame, message)
 	scrollFrame:DoLayout()
 end
 
+function CDMOptions.GetItemIconData(info, category, activeColor, trinketIndex)
+	local texture, buttonName
+
+	if info.equipSlot and (info.equipSlot == 13 or info.equipSlot == 14) then
+		texture = GetInventoryItemTexture("player", info.equipSlot)
+		local trinketName = "Trinket " .. ((info.equipSlot == 13 and 1) or 2)
+		if category == Enum.CooldownViewerCategory.EquipSlotTracked then
+			trinketName = trinketName .. " - Aura " .. trinketIndex
+			if info.spellID then
+				texture = C_Spell.GetSpellTexture(info.spellID)
+			end
+		end
+
+		buttonName = string.format("|T%d:0|t |cff%s%s|r", texture, activeColor, trinketName)
+	elseif info.spellCategoryID then
+		local itemName
+		if info.spellCategoryID == 4 then
+			texture = "Interface/ICONS/INV_POTION_114"
+			itemName = "Combat Potion"
+			info.tooltipTitle = COOLDOWN_VIEWER_TOOLTIP_POTION_COMBAT_TITLE
+			info.tooltipDescription = COOLDOWN_VIEWER_TOOLTIP_POTION_COMBAT_DESCRIPTION
+
+			if category == 6 then
+				itemName = itemName .. " Aura"
+			end
+		elseif info.spellCategoryID == 30 then
+			texture = "Interface/ICONS/INV_POTION_54"
+			itemName = "Health Potion"
+			info.tooltipTitle = COOLDOWN_VIEWER_TOOLTIP_POTION_HEALTH_TITLE
+			info.tooltipDescription = COOLDOWN_VIEWER_TOOLTIP_POTION_HEALTH_DESCRIPTION
+		elseif info.spellCategoryID == 1711 then
+			texture = "Interface/ICONS/Warlock_ Healthstone"
+			itemName = "Healthstone"
+			info.tooltipItemID = 5512
+		end
+
+		buttonName = string.format("|T%s:0|t |cff%s%s|r", texture, activeColor, itemName)
+	end
+
+	return buttonName, texture
+end
+
+function CDMOptions.GetItemIconDataFromData(data, category)
+	local texture
+
+	if data.equipSlot and (data.equipSlot == 13 or data.equipSlot == 14) then
+		texture = GetInventoryItemTexture("player", data.equipSlot)
+		if category == Enum.CooldownViewerCategory.EquipSlotTracked then
+			if data.spellID or #data.linkedSpellIDs > 0 then
+				texture = C_Spell.GetSpellTexture(data.spellID or data.linkedSpellIDs[1])
+			end
+		end
+
+	elseif data.spellCategoryID then
+		if data.spellCategoryID == 4 then
+			texture = "Interface/ICONS/INV_POTION_114"
+		elseif data.spellCategoryID == 30 then
+			texture = "Interface/ICONS/INV_POTION_54"
+		elseif data.spellCategoryID == 1711 then
+			texture = "Interface/ICONS/Warlock_ Healthstone"
+		end
+	end
+
+	return texture
+end
+
 local function CDM(self, frame, group)
 	local modeTabs = AceGUI:Create("TabGroup")
 	modeTabs:SetLayout("fill")

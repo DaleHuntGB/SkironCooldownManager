@@ -41,6 +41,7 @@ local function AddCDMIcons(spells, currentAnchorIndex)
 					local data = GetDisplayDataForSpellConfig(defaultCooldownViewerConfig, sourceIndex, configID, config)
 					if data then
 						spells[#spells + 1] = {
+							texture = CDMOptions.GetItemIconDataFromData(data, sourceIndex),
 							order = anchorConfig.order,
 							spellID = data.spellID,
 							linkedSpellIDs = data.linkedSpellIDs,
@@ -48,7 +49,7 @@ local function AddCDMIcons(spells, currentAnchorIndex)
 							category = data.category,
 							cooldownID = data.cooldownID,
 							configID = configID,
-							isBuffIcon = sourceIndex >= 2,
+							isBuffIcon = (sourceIndex == 2 or sourceIndex == 3 or sourceIndex == 6 or sourceIndex == 8),
 						}
 						break
 					end
@@ -125,7 +126,7 @@ function CDMOptions.CreateSpellConfigScrollFrame(anchorIndex, mode, spellConfigT
 		if spellInfo.isCustom then
 			scrollFrame:AddCustomIcon(spellInfo)
 		else
-			scrollFrame:AddSpellBySpellID(spellInfo, spellInfo.order, spellInfo.isBuffIcon)
+			scrollFrame:AddSpellBySpellID(spellInfo, spellInfo.order, spellInfo.isBuffIcon, spellInfo.texture)
 		end
 	end
 
