@@ -78,6 +78,11 @@ SCM.DefaultDB = {
 				["DAMAGER"] = true,
 				["TANK"] = true,
 			},
+			anchorEUIRoles = {
+				["HEALER"] = false,
+				["DAMAGER"] = true,
+				["TANK"] = true,
+			},
 			elvUIAnchors = {},
 			anchorConfig = {},
 			showAnchorHighlight = true,
