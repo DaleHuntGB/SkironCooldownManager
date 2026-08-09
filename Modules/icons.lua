@@ -353,7 +353,7 @@ local function ProcessBuffIcon(child, options, refreshOptions, refreshGlowOption
 		isInactive = not child.auraInstanceID or not child.auraDataUnit
 	end
 
-	States.SyncState(child, not isInactive, nil, true, refreshOptions, refreshGlowOptions)
+	States.SetActiveState(child, not isInactive, true, refreshOptions, refreshGlowOptions)
 
 	local canShowInactive = not SCM.isHideWhenInactiveEnabled
 	local stateVisible = child.SCMState.Visibility
@@ -366,9 +366,9 @@ end
 
 local function ProcessRegularIcon(child, options, refreshOptions, refreshGlowOptions)
 	Icons.SetupRegularIconHooks(child, options)
+	local isActive = (child.Cooldown and child.Cooldown:GetUseAuraDisplayTime()) or false
 	Cooldowns.OverrideRegularAuraCooldown(child.Cooldown, child, options)
 
-	local isActive = (child.Cooldown and child.Cooldown:GetUseAuraDisplayTime()) or false
 	States.SyncState(child, isActive, Cooldowns.GetChildCooldown(child), true, refreshOptions, refreshGlowOptions)
 
 	local shouldShow = child.SCMState.Visibility
@@ -382,7 +382,7 @@ local function ProcessBuffBar(child, options, refreshOptions, refreshGlowOptions
 	child.SCMBuffBarOptions = options
 
 	local isInactive = not child.auraInstanceID and not child.SCMFakeAuraInstanceID
-	States.SyncState(child, not isInactive, nil, true, refreshOptions, refreshGlowOptions)
+	States.SetActiveState(child, not isInactive, true, refreshOptions, refreshGlowOptions)
 
 	local forceShow = options.disableBuffBarHideWhenInactive
 	local stateVisible = child.SCMState.Visibility

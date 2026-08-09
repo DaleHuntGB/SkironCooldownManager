@@ -114,8 +114,9 @@ local function RemoveProxy(state)
 	state.currentProxyRequired = nil
 	state.currentProxyActive = nil
 
-	if state.currentProxyFrame then
-		state.currentProxyFrame:Hide()
+	local proxy = state.currentProxyFrame
+	if proxy and not (InCombatLockdown() and proxy:IsProtected()) then
+		proxy:Hide()
 	end
 end
 
