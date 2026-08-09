@@ -18,6 +18,8 @@ end
 
 function SCM:PLAYER_ENTERING_WORLD(isInitialLogin, isReload)
 	if isInitialLogin or isReload then
+		SCM.build = select(4, GetBuildInfo())
+
 		SCM.RefreshCooldownViewerData()
 		SCM:ApplyOptions()
 
@@ -46,7 +48,7 @@ function SCM:PLAYER_ENTERING_WORLD(isInitialLogin, isReload)
 		eventFrame:RegisterEvent("CVAR_UPDATE")
 		eventFrame:RegisterUnitEvent("UNIT_SPELLCAST_SUCCEEDED", "player")
 	elseif self.isInInstance ~= IsInInstance() then
-		SCM.RefreshCooldownViewerData()
+		SCM.RefreshCooldownViewerData(false, true)
 	end
 
 	self.isInInstance = IsInInstance()
@@ -181,7 +183,7 @@ function SCM:PLAYER_REGEN_ENABLED()
 end
 
 function SCM:EDIT_MODE_LAYOUTS_UPDATED()
-	SCM.RefreshCooldownViewerData()
+	SCM.RefreshCooldownViewerData(false, true)
 end
 
 function SCM:TRAIT_CONFIG_UPDATED()
@@ -250,4 +252,5 @@ function SCM.InitializeEventFrame()
 		if SCM[event] then
 			SCM[event](SCM, ...)
 		end
-	en
+	end)
+end
