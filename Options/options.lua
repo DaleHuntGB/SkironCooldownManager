@@ -8,7 +8,6 @@ local Options = SCM.Options
 local Utils = SCM.Utils
 local ToGlobalGroup = Utils.ToGlobalGroup
 local ToBuffBarGroup = Utils.ToBuffBarGroup
-local GetCooldownConfigKey = Utils.GetCooldownConfigKey
 local UPDATE_SCOPE = SCM.CDM.UPDATE_SCOPE
 
 StaticPopupDialogs["SCM_FORCE_RELOAD_POPUP"] = {
@@ -110,7 +109,7 @@ function Options.AddAnchorParentAutocomplete(_, editBox, onValueSelected)
 					if value then
 						local count = (label == "Anchor" and #(SCM.anchorConfig or {})) or (label == "Buff Bar Anchor" and #(SCM.buffBarsAnchorConfig or {})) or (label == "Global Anchor" and #(SCM.globalAnchorConfig or {})) or 1
 						for i = 1, count do
-							local anchor = label == "Global Anchor" and value:gsub("10#", tostring(SCM.Utils.ToGlobalGroup(i))) or value:gsub("#", i)
+							local anchor = value:gsub("#", i)
 							local display = (label == "Anchor" or label == "Global Anchor" or label == "Buff Bar Anchor") and (label .. " #" .. i) or label
 							if strfind(strlower(anchor), tokenLower, 1, true) or strfind(strlower(display), tokenLower, 1, true) then
 								tinsert(suggestions, { anchor, display })

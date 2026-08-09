@@ -208,9 +208,9 @@ Constants.SCMAnchors = {
 		["Cast Bar"] = "SCM_CastBar",
 		["Primary Resource Bar"] = "SCM_PrimaryResourceBar",
 		["Secondary Resource Bar"] = "SCM_SecondaryResourceBar",
-		["Anchor"] = "SCM_GroupAnchor_#",
-		["Global Anchor"] = "SCM_GroupAnchor_10#",
-		["Buff Bar Anchor"] = "SCM_GroupAnchor_20#"
+		["Anchor"] = "ANCHOR:#",
+		["Global Anchor"] = "ANCHOR:G:#",
+		["Buff Bar Anchor"] = "ANCHOR:BB:#"
 	},
 }
 
