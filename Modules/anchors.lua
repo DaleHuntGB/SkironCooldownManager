@@ -39,7 +39,7 @@ local function SetEUIAnchor(frame, point, anchor, relativePoint, xOffset, yOffse
 end
 
 local function RestoreEUIAnchor(frame)
-	if not frame or not frame.SCMEUIHook then
+	if not frame or not frame.SCMHook then
 		return
 	end
 

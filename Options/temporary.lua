@@ -54,7 +54,7 @@ local function Temporary(self, frame, group)
 	local anchorEUI = AceGUI:Create("CheckBox")
 	anchorEUI:SetRelativeWidth(0.5)
 	anchorEUI:SetLabel("Reanchor EUI")
-	anchorEUI:SetValue(options.anchorElvUI)
+	anchorEUI:SetValue(options.anchorEUI)
 	anchorEUI:SetCallback("OnValueChanged", function(_, _, value)
 		options.anchorEUI = value
 		SCM:ApplyAllCDManagerConfigs()
