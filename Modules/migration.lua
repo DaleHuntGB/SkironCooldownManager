@@ -5,6 +5,44 @@ local GetCooldownConfigKey = Utils.GetCooldownConfigKey
 local ToBuffBarGroup = Utils.ToBuffBarGroup
 local IsBuffBarGroup = Utils.IsBuffBarGroup
 local GlobalGlowSubregion = SCM.Constants.GlobalGlowSubregion
+local PROFILE_VERSION = 1
+
+local function CreateCustomConfigTables(customConfig)
+	customConfig = customConfig or {}
+	customConfig.spellConfig = GetOrCreateTableEntry(customConfig, "spellConfig")
+	customConfig.itemConfig = GetOrCreateTableEntry(customConfig, "itemConfig")
+	customConfig.slotConfig = GetOrCreateTableEntry(customConfig, "slotConfig")
+	customConfig.timerConfig = GetOrCreateTableEntry(customConfig, "timerConfig")
+	customConfig.bloodlustConfig = GetOrCreateTableEntry(customConfig, "bloodlustConfig")
+
+	local allowedKeys = SCM.DefaultDB.profile.globalCustomConfig
+	for key in pairs(customConfig) do
+		if not allowedKeys[key] then
+			customConfig[key] = nil
+		end
+	end
+
+	return customConfig
+end
+
+local function CreateAnchorConfigTables(anchorConfig)
+	anchorConfig = anchorConfig or {}
+
+	if not anchorConfig[1] then
+		anchorConfig[1] = {
+			anchor = { "CENTER", "UIParent", "CENTER", 0, 0 },
+			rowConfig = {
+				[1] = {
+					iconWidth = 150,
+					iconHeight = 40,
+					limit = 8,
+				},
+			},
+		}
+	end
+
+	return anchorConfig
+end
 
 local function CreateCooldownBreakpoints(options)
 	if not options.cooldownBreakpoints or #options.cooldownBreakpoints == 0 then
@@ -98,7 +136,9 @@ local function MigrateVisibilityRules(config, isAura, isCustom, isTimer, isItem)
 			end
 		elseif isItem then
 			if config.alwaysShow then
-				rules = {}
+				rules = {
+					{ state = "always", value = "show" },
+				}
 			elseif config.hideWhenNotOnCooldown then
 				rules = {
 					{ state = "cooldown", value = "show" },
@@ -116,7 +156,9 @@ local function MigrateVisibilityRules(config, isAura, isCustom, isTimer, isItem)
 				{ state = "active", value = "hide", elseIf = true },
 			}
 		elseif config.alwaysShow and isCustom then
-			rules = {}
+			rules = {
+				{ state = "always", value = "show" },
+			}
 		elseif config.hideWhenNotOnCooldown then
 			rules = {
 				{ state = "cooldown", value = "show" },
@@ -138,7 +180,7 @@ local function MigrateVisibilityRules(config, isAura, isCustom, isTimer, isItem)
 	config.showWhileInactive = nil
 end
 
-local function MigrateDesaturateRules(config, isAura, desaturateOnCooldown, disableRegularIconActiveSwipe)
+local function MigrateDesaturateRules(config, isAura, canBeActive, desaturateOnCooldown)
 	local hasDesaturateRules = config.effectRules.desaturate ~= nil
 	if not hasDesaturateRules then
 		if isAura then
@@ -154,14 +196,14 @@ local function MigrateDesaturateRules(config, isAura, desaturateOnCooldown, disa
 
 			SetEffectRules(config, "desaturate", rules)
 		elseif desaturateOnCooldown then
-			if not disableRegularIconActiveSwipe then
+			if canBeActive then
 				SetEffectRules(config, "desaturate", {
 					{ state = "active", enabled = false },
 					{ state = "cooldown", enabled = true, elseIf = true },
 				})
 			else
 				SetEffectRules(config, "desaturate", {
-					{ state = "cooldown", enabled = true, elseIf = true },
+					{ state = "cooldown", enabled = true },
 				})
 			end
 		end
@@ -193,8 +235,9 @@ local function MigrateLegacyIconOptions(spellConfig, disableRegularIconActiveSwi
 			local buffIconGroup = source[Enum.CooldownViewerCategory.TrackedBuff]
 			for anchorGroup, anchorGroupConfig in pairs(anchorGroups) do
 				local isAura = anchorGroup == buffIconGroup or IsBuffBarGroup(anchorGroup)
+				local canBeActive = not isAura and not disableRegularIconActiveSwipe
 				anchorGroupConfig.effectRules = anchorGroupConfig.effectRules or {}
-				MigrateDesaturateRules(anchorGroupConfig, isAura, not isAura, disableRegularIconActiveSwipe)
+				MigrateDesaturateRules(anchorGroupConfig, isAura, canBeActive, not isAura)
 				MigrateVisibilityRules(anchorGroupConfig, isAura, false)
 				MigrateGlowRules(anchorGroupConfig)
 			end
@@ -208,13 +251,13 @@ local function MigrateLegacyCustomOptions(customConfig, disableRegularIconActive
 	end
 
 	for configKey, configTable in pairs(customConfig) do
-		local isTimer = configKey == "timerConfig"
+		local isTimer = configKey == "timerConfig" or configKey == "bloodlustConfig"
 		local isItem = configKey == "itemConfig"
 		local desaturateOnCooldown = configKey == "spellConfig" or isItem or configKey == "slotConfig"
 		for _, config in pairs(configTable) do
 			config.effectRules = config.effectRules or {}
-			MigrateDesaturateRules(config, false, desaturateOnCooldown, disableRegularIconActiveSwipe)
-			MigrateVisibilityRules(config, false, true, isTimer, isItem)
+			MigrateDesaturateRules(config, false, isTimer, desaturateOnCooldown)
+			MigrateVisibilityRules(config, false, true, isTimer and not disableRegularIconActiveSwipe, isItem)
 			MigrateGlowRules(config)
 		end
 	end
@@ -386,21 +429,38 @@ function SCM:MigrateLegacyProfileOptions()
 end
 
 function SCM:MigrateDB()
-	MigrateLegacyGlobalConfigToProfiles(self)
+	local profileVersion = self.currentConfig.profileVersion
 
-	local options = self.db.profile.options
-	if options.enableIconSkinning == nil then
-		options.enableIconSkinning = options.enableSkinning
-	end
-	if options.enableBuffBarSkinning == nil then
-		options.enableBuffBarSkinning = options.enableSkinning
+	if not profileVersion then
+		MigrateLegacyGlobalConfigToProfiles(self)
+
+		local options = self.db.profile.options
+		if options.enableIconSkinning == nil then
+			options.enableIconSkinning = options.enableSkinning
+		end
+		if options.enableBuffBarSkinning == nil then
+			options.enableBuffBarSkinning = options.enableSkinning
+		end
+
+		CreateCooldownBreakpoints(options)
+		MigrateLegacySpellConfigKeys(self.spellConfig, self.defaultCooldownViewerConfig)
+		CreateTrackedBarSpellConfig(self.spellConfig)
+		MigrateLegacyIconOptions(self.spellConfig, options.disableRegularIconActiveSwipe)
+		MigrateLegacyCustomOptions(self.currentConfig.customConfig, options.disableRegularIconActiveSwipe)
+		MigrateLegacyCustomOptions(self.db.profile.globalCustomConfig, options.disableRegularIconActiveSwipe)
+		RemoveOldAnchorConfigs(self.currentConfig, self.db.profile.globalAnchorConfig, self.db.profile.globalCustomConfig)
+
+		profileVersion = 1
 	end
 
-	CreateCooldownBreakpoints(options)
-	MigrateLegacySpellConfigKeys(self.spellConfig, self.defaultCooldownViewerConfig)
-	CreateTrackedBarSpellConfig(self.spellConfig)
-	MigrateLegacyIconOptions(self.spellConfig, options.disableRegularIconActiveSwipe)
-	MigrateLegacyCustomOptions(self.currentConfig.customConfig, options.disableRegularIconActiveSwipe)
-	MigrateLegacyCustomOptions(self.db.profile.globalCustomConfig, options.disableRegularIconActiveSwipe)
-	RemoveOldAnchorConfigs(self.currentConfig, self.db.profile.globalAnchorConfig, self.db.profile.globalCustomConfig)
+	-- if profileVersion < 2 then
+	-- end
+
+	self.currentConfig.customConfig = CreateCustomConfigTables(self.currentConfig.customConfig)
+	self.currentConfig.resourceBarConfig = self.currentConfig.resourceBarConfig or {}
+	self.currentConfig.castBarConfig = self.currentConfig.castBarConfig or {}
+	self.currentConfig.buffBarsAnchorConfig = CreateAnchorConfigTables(self.currentConfig.buffBarsAnchorConfig)
+	self.db.profile.globalCustomConfig = CreateCustomConfigTables(self.db.profile.globalCustomConfig)
+
+	self.currentConfig.profileVersion = PROFILE_VERSION
 end

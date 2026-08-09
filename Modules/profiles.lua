@@ -184,6 +184,7 @@ local function MergeConfig(destDB, sourceData, defaultAnchor)
 		return
 	end
 
+	destDB.profileVersion = sourceData.profileVersion
 	destDB.spellConfig = sourceData.spellConfig
 	destDB.itemConfig = sourceData.itemConfig
 	destDB.customConfig = sourceData.customConfig or {}

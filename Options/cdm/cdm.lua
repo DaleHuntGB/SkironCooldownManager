@@ -10,9 +10,25 @@ local Utils = SCM.Utils
 SCM.MainTabs.CDM = { value = "CDM", text = "Cooldown Manager", order = 2, subgroups = {} }
 
 local function GetSpellAnchorGroupConfig(order, sourceIndex)
-	if sourceIndex ~= Enum.CooldownViewerCategory.TrackedBuff and sourceIndex ~= Enum.CooldownViewerCategory.TrackedBar then
+	if sourceIndex ~= Enum.CooldownViewerCategory.TrackedBuff and sourceIndex ~= Enum.CooldownViewerCategory.TrackedBar
+	and sourceIndex ~= Enum.CooldownViewerCategory.SpecAgnosticTracked and sourceIndex ~= Enum.CooldownViewerCategory.EquipSlotTracked then
 		return {
 			order = order,
+			effectRules = {
+				desaturate = {
+					rules = {
+						{
+							state = "active",
+							enabled = false,
+						},
+						{
+							state = "cooldown",
+							enabled = true,
+							elseIf = true,
+						},
+					},
+				},
+			},
 		}
 	end
 
