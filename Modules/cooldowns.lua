@@ -444,7 +444,10 @@ function Cooldowns.SetupCooldownHooks(child, options)
 	child.Cooldown.SCMParent = child
 	child.Cooldown:HookScript("OnCooldownDone", function(self, ...)
 		local parent = self.SCMParent or self:GetParent()
-		parent.Icon.SCMDesaturated = nil
+		local config = parent.SCMConfig
+		if not (config and config.effectRules and config.effectRules.desaturate) then
+			parent.Icon.SCMDesaturated = nil
+		end
 		OnRegularCooldownChanged(self, "DONE")
 	end)
 	child.SCMRegularCooldownHook = true

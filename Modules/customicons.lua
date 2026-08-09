@@ -13,6 +13,7 @@ local ToGlobalGroup = Utils.ToGlobalGroup
 local CustomItemFrames = {}
 local CustomSpellFrames = {}
 local BloodlustTimerEntries = {}
+local CustomIconAlwaysVisibilityConfigs = {}
 local CustomIconFramePool
 local BloodlustTimerEventFrame
 
@@ -345,11 +346,10 @@ local function UpdateCustomIconCooldown(frame, iconType, config)
 
 	if iconType == "spell" then
 		local isOnCooldown = false
+		local isChargeCooldown = false
 		local spellCooldown = C_Spell.GetSpellCooldown(config.spellID)
 		if spellCooldown.isActive and not spellCooldown.isOnGCD then
 			local durationObject = C_Spell.GetSpellCooldownDuration(config.spellID, true)
-			frame.Cooldown:SetDrawEdge(false)
-			frame.Cooldown:SetSwipeColor(0, 0, 0, 0.7)
 			frame.Cooldown:Clear()
 			frame.Cooldown:SetCooldownFromDurationObject(durationObject)
 			if not (config.effectRules and config.effectRules.desaturate) then
@@ -367,9 +367,8 @@ local function UpdateCustomIconCooldown(frame, iconType, config)
 			if not (config.effectRules and config.effectRules.desaturate) then
 				frame.Icon:SetDesaturated(false)
 			end
-			frame.Cooldown:SetDrawEdge(true)
-			frame.Cooldown:SetSwipeColor(0, 0, 0, 0)
 			isOnCooldown = true
+			isChargeCooldown = true
 		end
 
 		if not isOnCooldown then
@@ -392,7 +391,7 @@ local function UpdateCustomIconCooldown(frame, iconType, config)
 			frame.GCDCooldown:Hide()
 		end
 
-		return isOnCooldown
+		return isOnCooldown, isChargeCooldown
 	end
 
 	if iconType == "item" then
@@ -565,27 +564,39 @@ function CustomIcons.UpdateItemCountForItemID(itemID)
 	end
 end
 
-local function DoesItemOrSpellExists(config)
+local function HasAlwaysVisibilityRule(config)
+	local visibilityRules = config.effectRules and config.effectRules.visibility
+	local rules = visibilityRules and visibilityRules.rules
+	if not rules then
+		return
+	end
+
+	for i = 1, #rules do
+		if rules[i].state == "always" then
+			return true
+		end
+	end
+end
+
+local function ShouldCreateCustomIcon(config)
 	local iconType = GetIconType(config)
 	if iconType == "empty" then
 		return true
 	end
 
+	local hasAlwaysVisibility = CustomIconAlwaysVisibilityConfigs[config]
+
 	if iconType == "spell" or iconType == "timer" or iconType == "bloodlust" then
-		return config.spellID and C_Spell.DoesSpellExist(config.spellID)
+		return config.spellID and (hasAlwaysVisibility or C_Spell.DoesSpellExist(config.spellID))
 	end
 
 	if iconType == "item" then
-		return config.itemID and C_Item.DoesItemExistByID(config.itemID)
+		return config.itemID and (hasAlwaysVisibility or C_Item.DoesItemExistByID(config.itemID))
 	end
 
-	if iconType == "slot" then
-		if config.slotID then
-			local itemID = GetInventoryItemID("player", config.slotID)
-			if itemID and (not config.filterItems or not config.filterItems[itemID]) then
-				return C_Item.DoesItemExistByID(itemID) and C_Item.GetItemSpell(itemID)
-			end
-		end
+	if iconType == "slot" and config.slotID then
+		local itemID = GetInventoryItemID("player", config.slotID)
+		return itemID and (not config.filterItems or not config.filterItems[itemID]) and C_Item.DoesItemExistByID(itemID) and (hasAlwaysVisibility or C_Item.GetItemSpell(itemID))
 	end
 end
 
@@ -681,9 +692,13 @@ local function IsCustomIconActive(config, iconType, isOnCooldown)
 	return iconType == "spell" or iconType == "empty"
 end
 
-local function GetCustomIconCooldownState(iconType, hasCount, isOnCooldown)
+local function GetCustomIconCooldownState(iconType, hasCount, isOnCooldown, isChargeCooldown)
 	if iconType == "item" and not hasCount then
 		return "noitem"
+	end
+
+	if isChargeCooldown then
+		return "recharging"
 	end
 
 	return isOnCooldown and "cooldown" or "ready"
@@ -893,6 +908,7 @@ local function RebuildCustomIconLoadCache()
 	wipe(Cache.cachedCustomItemEntriesByItemID)
 	wipe(Cache.cachedCustomSlotEntriesByItemID)
 	wipe(BloodlustTimerEntries)
+	wipe(CustomIconAlwaysVisibilityConfigs)
 	for _, entries in pairs(Cache.cachedCustomIconsByGroup) do
 		wipe(entries)
 	end
@@ -903,6 +919,9 @@ local function RebuildCustomIconLoadCache()
 		end
 
 		for id, config in pairs(customConfig) do
+			if HasAlwaysVisibilityRule(config) then
+				CustomIconAlwaysVisibilityConfigs[config] = true
+			end
 			local slotItemID = config.slotID and GetInventoryItemID("player", config.slotID) or nil
 			local group = isGlobal and ToGlobalGroup(config.anchorGroup or 1) or (config.anchorGroup or 1)
 			local groupEntries = Cache.cachedCustomIconsByGroup[group]
@@ -944,7 +963,7 @@ local function CreateCustomIcon(id, config, isGlobal, skipExisting)
 			return
 		end
 
-		if DoesItemOrSpellExists(config) and (not isGlobal or ShouldLoadCustomIcon(config)) then
+		if ShouldCreateCustomIcon(config) and (not isGlobal or ShouldLoadCustomIcon(config)) then
 			local frame = AcquireCustomIconFrame(customFrames, id)
 			ConfigureCustomIconFrame(frame, id, config, 1, config.anchorGroup or 1, isGlobal)
 			UpdateCustomIconFrameState(frame, config)
@@ -1008,7 +1027,7 @@ local function ProcessCustomIcon(id, config, validChildren, refreshOptions, refr
 	end
 
 	local frame = customFrames[id]
-	if frame and DoesItemOrSpellExists(config) and (not frame.SCMGlobal or ShouldLoadCustomIcon(config)) then
+	if frame and ShouldCreateCustomIcon(config) and (not frame.SCMGlobal or ShouldLoadCustomIcon(config)) then
 		local iconType = frame.SCMIconType
 		if iconType == "empty" then
 			States.SyncState(frame, true, "ready", true, refreshOptions, refreshGlowOptions)
@@ -1032,9 +1051,9 @@ local function ProcessCustomIcon(id, config, validChildren, refreshOptions, refr
 				UpdateCustomIconCraftQuality(frame, iconType, config)
 			end
 			local hasCount = SetCustomIconCountText(frame, iconType, config)
-			local isOnCooldown = UpdateCustomIconCooldown(frame, iconType, config)
+			local isOnCooldown, isChargeCooldown = UpdateCustomIconCooldown(frame, iconType, config)
 			local isActive = IsCustomIconActive(config, iconType, isOnCooldown)
-			local cooldownState = GetCustomIconCooldownState(iconType, hasCount, isOnCooldown)
+			local cooldownState = GetCustomIconCooldownState(iconType, hasCount, isOnCooldown, isChargeCooldown)
 			States.SyncState(frame, isActive, cooldownState, true, refreshOptions, refreshGlowOptions)
 
 			local shouldShow = SCM.isOptionsOpen or frame.SCMState.Visibility
@@ -1180,10 +1199,10 @@ local function UpdateCountTextForConfigTable(customConfig)
 				end
 
 				local hasCount = SetCustomIconCountText(frame, iconType, config)
-				local isOnCooldown = UpdateCustomIconCooldown(frame, iconType, config)
+				local isOnCooldown, isChargeCooldown = UpdateCustomIconCooldown(frame, iconType, config)
 				local wasVisible = frame.SCMShouldBeVisible
 				local isActive = IsCustomIconActive(config, iconType, isOnCooldown)
-				local cooldownState = GetCustomIconCooldownState(iconType, hasCount, isOnCooldown)
+				local cooldownState = GetCustomIconCooldownState(iconType, hasCount, isOnCooldown, isChargeCooldown)
 				States.SyncState(frame, isActive, cooldownState, true)
 
 				local shouldShow = SCM.isOptionsOpen or frame.SCMState.Visibility
@@ -1273,6 +1292,18 @@ function SCM:AddCustomIcon(anchorGroup, iconType, configID, order, uniqueID, isG
 		}
 	end
 
+	local desaturateRules
+	if iconType == "timer" or iconType == "bloodlust" then
+		desaturateRules = {
+			{ state = "active", enabled = false },
+			{ state = "cooldown", enabled = true, elseIf = true },
+		}
+	else
+		desaturateRules = {
+			{ state = "cooldown", enabled = true },
+		}
+	end
+
 	configTable[uniqueID] = {
 		id = uniqueID,
 		iconType = iconType,
@@ -1290,6 +1321,9 @@ function SCM:AddCustomIcon(anchorGroup, iconType, configID, order, uniqueID, isG
 		effectRules = {
 			visibility = {
 				rules = visibilityRules,
+			},
+			desaturate = {
+				rules = desaturateRules,
 			},
 		},
 	}

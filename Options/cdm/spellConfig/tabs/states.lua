@@ -23,6 +23,9 @@ local effectOptions = {
 		allowsMultiple = true,
 		subregionType = "border",
 	},
+	cooldown = {
+		name = "Cooldown Swipe",
+	},
 }
 
 local function SetDefaultRuleValues(rule, effectKey, iconConfig)
@@ -34,6 +37,18 @@ local function SetDefaultRuleValues(rule, effectKey, iconConfig)
 		if rule.enabled == nil then
 			rule.enabled = option.defaultEnabled
 		end
+	elseif effectKey == "cooldown" then
+		if rule.drawEdge == nil then
+			rule.drawEdge = false
+		end
+		if rule.drawSwipe == nil then
+			rule.drawSwipe = true
+		end
+		if rule.reverse == nil then
+			rule.reverse = false
+		end
+		rule.edgeColor = rule.edgeColor or { r = 1, g = 0.7, b = 0, a = 1 }
+		rule.swipeColor = rule.swipeColor or { r = 0, g = 0, b = 0, a = 0.7 }
 	elseif effectKey == "glow" and not rule.subregion then
 		rule.subregion = Constants.GlobalGlowSubregion
 	elseif option.subregionType and not rule.subregion then
@@ -65,7 +80,9 @@ local function GetRuleStateList(rules, currentRule, buttonData, isBuffBar)
 
 	local iconType = buttonData.iconType
 	local constantStatesSorted = isBuffBar and Constants.StatesSorted.buffBar or Constants.StatesSorted[iconType] or Constants.StatesSorted.spell
-	if not isBuffBar and buttonData.isCustom and iconType == "spell" then
+	if buttonData.isBuffIcon then
+		constantStatesSorted = Constants.StatesSorted.buffIcon
+	elseif not isBuffBar and buttonData.isCustom and iconType == "spell" then
 		constantStatesSorted = Constants.StatesSorted.custom
 	end
 
@@ -79,10 +96,12 @@ local function GetRuleStateList(rules, currentRule, buttonData, isBuffBar)
 	return states, statesSorted
 end
 
-local function GetFirstUnusedRuleState(rules, buttonData, isBuffBar)
+local function GetAvailableRuleState(rules, buttonData, isBuffBar)
 	local iconType = buttonData.iconType
 	local constantStatesSorted = isBuffBar and Constants.StatesSorted.buffBar or Constants.StatesSorted[iconType] or Constants.StatesSorted.spell
-	if not isBuffBar and buttonData.isCustom and iconType == "spell" then
+	if buttonData.isBuffIcon then
+		constantStatesSorted = Constants.StatesSorted.buffIcon
+	elseif not isBuffBar and buttonData.isCustom and iconType == "spell" then
 		constantStatesSorted = Constants.StatesSorted.custom
 	end
 
@@ -143,6 +162,58 @@ local function AddRuleValueControl(effectTabGroup, effectKey, iconConfig, rule, 
 			applyConfigUpdate()
 		end)
 		effectTabGroup:AddChild(enabled)
+	elseif effectKey == "cooldown" then
+		local drawSwipe = AceGUI:Create("CheckBox")
+		drawSwipe:SetLabel("Draw Swipe")
+		drawSwipe:SetRelativeWidth(0.25)
+		drawSwipe:SetValue(rule.drawSwipe)
+		drawSwipe:SetCallback("OnValueChanged", function(_, _, value)
+			rule.drawSwipe = value and true or false
+			applyConfigUpdate()
+		end)
+		effectTabGroup:AddChild(drawSwipe)
+
+		local swipeColor = AceGUI:Create("ColorPicker")
+		swipeColor:SetLabel("Swipe Color")
+		swipeColor:SetRelativeWidth(0.33)
+		swipeColor:SetHasAlpha(true)
+		swipeColor:SetColor(rule.swipeColor.r, rule.swipeColor.g, rule.swipeColor.b, rule.swipeColor.a)
+		swipeColor:SetCallback("OnValueChanged", function(_, _, r, g, b, a)
+			rule.swipeColor = { r = r, g = g, b = b, a = a }
+			applyConfigUpdate()
+		end)
+		effectTabGroup:AddChild(swipeColor)
+
+		local drawEdge = AceGUI:Create("CheckBox")
+		drawEdge:SetLabel("Draw Edge")
+		drawEdge:SetRelativeWidth(0.25)
+		drawEdge:SetValue(rule.drawEdge)
+		drawEdge:SetCallback("OnValueChanged", function(_, _, value)
+			rule.drawEdge = value and true or false
+			applyConfigUpdate()
+		end)
+		effectTabGroup:AddChild(drawEdge)
+
+		local reverse = AceGUI:Create("CheckBox")
+		reverse:SetLabel("Reverse")
+		reverse:SetRelativeWidth(0.25)
+		reverse:SetValue(rule.reverse)
+		reverse:SetCallback("OnValueChanged", function(_, _, value)
+			rule.reverse = value and true or false
+			applyConfigUpdate()
+		end)
+		effectTabGroup:AddChild(reverse)
+
+		local edgeColor = AceGUI:Create("ColorPicker")
+		edgeColor:SetLabel("Edge Color")
+		edgeColor:SetRelativeWidth(0.25)
+		edgeColor:SetHasAlpha(true)
+		edgeColor:SetColor(rule.edgeColor.r, rule.edgeColor.g, rule.edgeColor.b, rule.edgeColor.a)
+		edgeColor:SetCallback("OnValueChanged", function(_, _, r, g, b, a)
+			rule.edgeColor = { r = r, g = g, b = b, a = a }
+			applyConfigUpdate()
+		end)
+		effectTabGroup:AddChild(edgeColor)
 	elseif option.subregionType then
 		local subregionDropdown = AceGUI:Create("Dropdown")
 		subregionDropdown:SetLabel(option.name)
@@ -174,7 +245,7 @@ local function AddEffectRule(iconSettingsTabs, stateType, container, rules, butt
 
 	local elseIf = AceGUI:Create("CheckBox")
 	elseIf:SetLabel("Else If")
-	elseIf:SetRelativeWidth(0.33)
+	elseIf:SetRelativeWidth(stateType == "cooldown" and 0.25 or 0.33)
 	elseIf:SetValue(rule.elseIf)
 	elseIf:SetDisabled(ruleIndex == 1)
 	elseIf:SetCallback("OnValueChanged", function(_, _, value)
@@ -241,13 +312,13 @@ local function AddEffectOptions(iconSettingsTabs, stateType, container, buttonDa
 		container:AddChild(separator)
 	end
 
-	local firstUnusedRuleState = GetFirstUnusedRuleState(rules, buttonData, isBuffBar)
+	local ruleState = GetAvailableRuleState(rules, buttonData, isBuffBar)
 	local addRule = AceGUI:Create("Button")
 	addRule:SetText("Add Rule")
 	addRule:SetRelativeWidth(0.33)
-	addRule:SetDisabled(firstUnusedRuleState == nil)
+	addRule:SetDisabled(ruleState == nil)
 	addRule:SetCallback("OnClick", function()
-		if not firstUnusedRuleState then
+		if not ruleState then
 			return
 		end
 
@@ -268,11 +339,9 @@ local function AddEffectOptions(iconSettingsTabs, stateType, container, buttonDa
 		end
 
 		local rule = {
-			state = firstUnusedRuleState,
+			state = ruleState,
 		}
-		if #rules > 0 and not effectOptions[stateType].allowsMultiple then
-			rule.elseIf = true
-		end
+
 		SetDefaultRuleValues(rule, stateType, iconConfig)
 		tinsert(rules, rule)
 		ApplyConfigUpdate()

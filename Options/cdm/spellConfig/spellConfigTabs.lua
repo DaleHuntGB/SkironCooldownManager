@@ -9,6 +9,7 @@ local stateTypeTree = {
 	{ value = "desaturate", text = "Desaturate" },
 	{ value = "glow", text = "Glow" },
 	{ value = "border", text = "Border" },
+	{ value = "cooldown", text = "Cooldown" },
 }
 
 local buffBarTabs = {

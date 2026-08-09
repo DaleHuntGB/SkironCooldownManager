@@ -221,9 +221,11 @@ end
 function SCM:COOLDOWN_VIEWER_SPELL_OVERRIDE_UPDATED(baseSpellID, overrideSpellID)
 	local options = SCM.db.profile.options
 	local cooldown = C_Spell.GetSpellCooldown(baseSpellID)
-	if cooldown and cooldown.isActive and options.disableRegularIconActiveSwipe then
-		SCM.Cooldowns.OverwriteRegularChildCooldownBySpellID(baseSpellID, overrideSpellID, cooldown)
+	if not (cooldown and cooldown.isActive and options.disableRegularIconActiveSwipe) then
+		cooldown = nil
 	end
+
+	SCM.Cooldowns.UpdateRegularChildrenForSpellOverride(baseSpellID, overrideSpellID, cooldown)
 end
 
 function SCM:SPELL_DATA_LOAD_RESULT(spellID, success)
@@ -248,5 +250,4 @@ function SCM.InitializeEventFrame()
 		if SCM[event] then
 			SCM[event](SCM, ...)
 		end
-	end)
-end
+	en

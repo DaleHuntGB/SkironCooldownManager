@@ -89,8 +89,10 @@ Constants.BlendModeSorted = {
 }
 
 Constants.States = {
+	["always"] = "Always",
 	["active"] = "Active",
 	["inactive"] = "Inactive",
+	["overridden"] = "Overridden",
 	["ready"] = "Ready",
 	["cooldown"] = "On Cooldown",
 	["noitem"] = "No Item",
@@ -99,10 +101,21 @@ Constants.States = {
 
 Constants.StatesSorted = {
 	["buffBar"] = {
+		"always",
 		"active",
 		"inactive",
 	},
 	["spell"] = {
+		"always",
+		"ready",
+		"cooldown",
+		"active",
+		"inactive",
+		"overridden",
+		"recharging",
+	},
+	["buffIcon"] = {
+		"always",
 		"ready",
 		"cooldown",
 		"active",
@@ -110,19 +123,23 @@ Constants.StatesSorted = {
 		"recharging",
 	},
 	["timer"] = {
+		"always",
 		"active",
 		"inactive",
 	},
 	["item"] = {
+		"always",
 		"ready",
 		"cooldown",
 		"noitem",
 	},
 	["slot"] = {
+		"always",
 		"ready",
 		"cooldown",
 	},
 	["custom"] = {
+		"always",
 		"ready",
 		"cooldown",
 	},
