@@ -61,6 +61,7 @@ Modules\profiles.lua
 Modules\resourcebar.lua
 Modules\castbar.lua
 Modules\states.lua
+Modules\auras.lua
 
 api.lua
 

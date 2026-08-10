@@ -50,6 +50,19 @@ SCM.DB = {
 			},
 		},
 	},
+
+	defaultAurasAnchorConfig = {
+		[3] = {
+			anchor = { "CENTER", "UIParent", "CENTER", 0, 0 },
+			rowConfig = {
+				[1] = {
+					iconHeight = 40,
+					iconWidth = 40,
+					limit = 8,
+				},
+			},
+		},
+	},
 }
 
 SCM.DefaultDB = {
@@ -59,7 +72,8 @@ SCM.DefaultDB = {
 				anchor = { "CENTER", "UIParent", "CENTER", 0, -360 },
 				rowConfig = {
 					[1] = {
-						size = 40,
+						iconHeight = 40,
+						iconWidth = 40,
 						limit = 8,
 					},
 				},
@@ -71,6 +85,18 @@ SCM.DefaultDB = {
 			slotConfig = {},
 			timerConfig = {},
 			bloodlustConfig = {},
+		},
+		globalAurasAnchorConfig = {
+			[1] = {
+				anchor = { "CENTER", "UIParent", "CENTER", 0, 250 },
+				rowConfig = {
+					[1] = {
+						iconHeight = 40,
+						iconWidth = 40,
+						limit = 8,
+					},
+				},
+			},
 		},
 		options = {
 			anchorElvUIRoles = {

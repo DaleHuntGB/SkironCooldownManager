@@ -25,20 +25,15 @@ local function CreateCustomConfigTables(customConfig)
 	return customConfig
 end
 
-local function CreateAnchorConfigTables(anchorConfig)
+local function CreateAnchorConfigTables(anchorConfig, isBuffBar, isAuras)
 	anchorConfig = anchorConfig or {}
 
 	if not anchorConfig[1] then
-		anchorConfig[1] = {
-			anchor = { "CENTER", "UIParent", "CENTER", 0, 0 },
-			rowConfig = {
-				[1] = {
-					iconWidth = 150,
-					iconHeight = 40,
-					limit = 8,
-				},
-			},
-		}
+		if isBuffBar then
+			anchorConfig[1] = SCM.DB.defaultBuffBarsAnchorConfig[1]
+		elseif isAuras then
+			anchorConfig[1] = SCM.DB.defaultAurasAnchorConfig[1]
+		end
 	end
 
 	return anchorConfig
@@ -453,13 +448,14 @@ function SCM:MigrateDB()
 		profileVersion = 1
 	end
 
-	-- if profileVersion < 2 then
-	-- end
+	if profileVersion < 2 then
+	end
 
 	self.currentConfig.customConfig = CreateCustomConfigTables(self.currentConfig.customConfig)
 	self.currentConfig.resourceBarConfig = self.currentConfig.resourceBarConfig or {}
 	self.currentConfig.castBarConfig = self.currentConfig.castBarConfig or {}
-	self.currentConfig.buffBarsAnchorConfig = CreateAnchorConfigTables(self.currentConfig.buffBarsAnchorConfig)
+	self.currentConfig.buffBarsAnchorConfig = CreateAnchorConfigTables(self.currentConfig.buffBarsAnchorConfig, true)
+	self.currentConfig.aurasAnchorConfig = CreateAnchorConfigTables(self.currentConfig.aurasAnchorConfig, false, true)
 	self.db.profile.globalCustomConfig = CreateCustomConfigTables(self.db.profile.globalCustomConfig)
 
 	self.currentConfig.profileVersion = PROFILE_VERSION

@@ -214,8 +214,9 @@ local function CDM(self, frame, group)
 	local tabs = {
 		{ value = "spec", text = "|cFFFFFFFFSpecialization|r: Icons" },
 		{ value = "buffbars", text = "|cFFFFFFFFSpecialization|r: Bars" },
+		{ value = "auras", text = "|cFFFFFFFFSpecialization|r: Auras (SoonTM)"},
 		{ value = "global", text = "|cFFFFFFFFGlobal|r: Icons" },
-		{ value = "auras", text = "|cFFFFFFFFGlobal|r: Auras (SoonTM)"},
+		{ value = "globalauras", text = "|cFFFFFFFFGlobal|r: Auras (SoonTM)"},
 		{ value = "copy", text = "|cFFFFFFFFCopy|r Anchors" },
 	}
 
@@ -223,7 +224,7 @@ local function CDM(self, frame, group)
 	modeTabs:SetCallback("OnGroupSelected", function(widget, event, mode)
 		if mode == "copy" then
 			CDMOptions.CreateCopyAnchorTab(widget, frame, modeTabs)
-		elseif mode ~= "auras" then
+		elseif mode ~= "auras" and mode ~= "globalauras" then
 			CDMOptions.CreateAnchorTabGroup(widget, frame, mode)
 		end
 	end)

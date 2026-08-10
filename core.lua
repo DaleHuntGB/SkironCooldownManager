@@ -34,6 +34,7 @@ function SCM.RefreshCooldownViewerData(releaseCustomIcons, skipCustomIconRebuild
 	SCM:ApplyAllCDManagerConfigs(true, true)
 	SCM:UpdateCastBar()
 	SCM:RefreshResourceBarConfig()
+	SCM:RefreshAuraContainers()
 end
 
 local function OnProfileChanged(_, _, _, skipReset)

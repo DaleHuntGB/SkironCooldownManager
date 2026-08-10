@@ -47,21 +47,13 @@ function SCM:UpdateCastAndResourceBarConfigs()
 	local defaultOptions = SCM.DefaultDB.profile.options
 
 	if self.specResourceBarConfig.active then
-		self.resourceBarConfig = SetSpecConfigMetatables(
-			self.specResourceBarConfig,
-			options.resourceBar,
-			defaultOptions.resourceBar
-		)
+		self.resourceBarConfig = SetSpecConfigMetatables(self.specResourceBarConfig, options.resourceBar, defaultOptions.resourceBar)
 	else
 		self.resourceBarConfig = options.resourceBar
 	end
 
 	if self.specCastBarConfig.active then
-		self.castBarConfig = SetSpecConfigMetatables(
-			self.specCastBarConfig,
-			options.castBar,
-			defaultOptions.castBar
-		)
+		self.castBarConfig = SetSpecConfigMetatables(self.specCastBarConfig, options.castBar, defaultOptions.castBar)
 	else
 		self.castBarConfig = options.castBar
 	end
@@ -82,6 +74,7 @@ function SCM:UpdateDB()
 
 	local specAnchorConfig = self.DB.defaultAnchorConfig
 	local specBuffBarsAnchorConfig = self.DB.defaultBuffBarsAnchorConfig
+	local specAurasAnchorConfig = self.DB.defaultAurasAnchorConfig
 	local specSpellConfig = {}
 	local specCustomConfig = {}
 	local specResourceBarConfig = {}
@@ -90,6 +83,7 @@ function SCM:UpdateDB()
 	if currentConfig then
 		specAnchorConfig = currentConfig.anchorConfig[specID] or specAnchorConfig
 		specBuffBarsAnchorConfig = (currentConfig.buffBarsAnchorConfig and currentConfig.buffBarsAnchorConfig[specID]) or specBuffBarsAnchorConfig
+		specAurasAnchorConfig = (currentConfig.aurasAnchorConfig and currentConfig.aurasAnchorConfig[specID]) or specAurasAnchorConfig
 		specSpellConfig = currentConfig.spellConfig[specID] or specSpellConfig
 		specCustomConfig = (currentConfig.customConfig and currentConfig.customConfig[specID]) or specCustomConfig
 		specResourceBarConfig = (currentConfig.resourceBarConfig and currentConfig.resourceBarConfig[specID]) or specResourceBarConfig
@@ -101,6 +95,7 @@ function SCM:UpdateDB()
 		or {
 			anchorConfig = CopyTable(specAnchorConfig),
 			buffBarsAnchorConfig = CopyTable(specBuffBarsAnchorConfig),
+			aurasAnchorConfig = CopyTable(specAurasAnchorConfig),
 			spellConfig = specSpellConfig,
 			customConfig = specCustomConfig,
 			resourceBarConfig = specResourceBarConfig,
@@ -108,18 +103,22 @@ function SCM:UpdateDB()
 		}
 
 	self.currentConfig = self.db.profile[class][specID]
+
 	self.anchorConfig = self.currentConfig.anchorConfig
+	self.buffBarsAnchorConfig = self.currentConfig.buffBarsAnchorConfig
+	self.aurasAnchorConfig = self.currentConfig.aurasAnchorConfig
 	self.spellConfig = self.currentConfig.spellConfig
+
 	self:MigrateDB()
+
+	self.globalAnchorConfig = self.db.profile.globalAnchorConfig
+	self.globalCustomConfig = self.db.profile.globalCustomConfig
+	self.globalAurasAnchorConfig = self.db.profile.globalAurasAnchorConfig
 
 	self.customConfig = self.currentConfig.customConfig
 	self.specResourceBarConfig = self.currentConfig.resourceBarConfig
 	self.specCastBarConfig = self.currentConfig.castBarConfig
 	self:UpdateCastAndResourceBarConfigs()
-
-	self.buffBarsAnchorConfig = self.currentConfig.buffBarsAnchorConfig
-	self.globalAnchorConfig = self.db.profile.globalAnchorConfig
-	self.globalCustomConfig = self.db.profile.globalCustomConfig
 
 	self.isHideWhenInactiveEnabled = self:GetHideWhenInactive() == 1
 	self.showTooltips = self:GetShowTooltip() == 1
