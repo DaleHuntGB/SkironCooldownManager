@@ -436,7 +436,8 @@ local function LayoutAnchorGroup(group, visibleChildren, anchorConfig, options, 
 	local heightDelta = max(effectiveHeight - firstRowHeight, 0)
 	local anchorOffsetY = secondaryGrowDir == "UP" and ((pivot:find("TOP") and heightDelta) or (not pivot:find("BOTTOM") and heightDelta / 2) or 0)
 		or ((pivot:find("BOTTOM") and -heightDelta) or (not pivot:find("TOP") and -heightDelta / 2) or 0)
-	local boundsChanged = state.effectiveWidth ~= effectiveWidth or state.effectiveHeight ~= effectiveHeight or state.anchorOffsetY ~= anchorOffsetY
+	local anchorResized = state.effectiveWidth ~= effectiveWidth or state.effectiveHeight ~= effectiveHeight
+	local boundsChanged = anchorResized or state.anchorOffsetY ~= anchorOffsetY
 	local parentChanged = state.parentGroup ~= parentGroup
 
 	state.relativePoint = relativePoint
@@ -447,6 +448,7 @@ local function LayoutAnchorGroup(group, visibleChildren, anchorConfig, options, 
 	state.effectiveHeight = effectiveHeight
 	state.anchorOffsetY = anchorOffsetY
 
+	local wasUsingProxy = state.currentProxyActive and true or false
 	local groupAnchor = SCM:GetAnchor(group, point, anchor, relativePoint, xOffset, yOffset, growDir, firstRowWidth, effectiveWidth, effectiveHeight, anchorOffsetY)
 
 	if parentChanged then
@@ -466,6 +468,10 @@ local function LayoutAnchorGroup(group, visibleChildren, anchorConfig, options, 
 
 	local childAnchor, useProxyAnchor =
 		SCM:GetManagedAnchorChildAnchor(group, groupAnchor, point, anchor, relativePoint, xOffset, yOffset, growDir, firstRowWidth, effectiveWidth, effectiveHeight, anchorOffsetY)
+	if SCM.initialized and (anchorResized or wasUsingProxy ~= useProxyAnchor) then
+		SCM.Callbacks:Fire("SCM_AnchorChanged", group, childAnchor, effectiveWidth, effectiveHeight, useProxyAnchor)
+	end
+
 	local anchorOffsetChanged = SCM:UpdateAnchorOffset(group, true)
 	if useProxyAnchor and changedGroups and anchorOffsetChanged then
 		changedGroups[group] = true

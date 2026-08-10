@@ -47,6 +47,9 @@ function SCM:PLAYER_ENTERING_WORLD(isInitialLogin, isReload)
 		eventFrame:RegisterEvent("ACTIONBAR_SLOT_CHANGED")
 		eventFrame:RegisterEvent("CVAR_UPDATE")
 		eventFrame:RegisterUnitEvent("UNIT_SPELLCAST_SUCCEEDED", "player")
+
+		SCM.initialized = true
+		SCM.Callbacks:Fire("SCM_Ready")
 	elseif self.isInInstance ~= IsInInstance() then
 		SCM.RefreshCooldownViewerData(false, true)
 	end
