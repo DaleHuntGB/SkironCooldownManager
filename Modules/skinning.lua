@@ -196,14 +196,14 @@ SCM.ApplyCooldownSwipe = ApplyCooldownSwipe
 
 local ApplyCooldownRule
 
-local function OnSetCooldown(self)
+local function ApplyCooldownSkin(self)
 	local parent = self.SCMParent or self:GetParent()
 	local state = parent and parent.SCMState
 	local rule = parent and parent.SCMConfig and not parent.SCMReleased and state and state.CooldownRule
 
 	if self.SCMApplyCooldownSkin then
 		local options = SCM.db.profile.options
-		if not rule and not (parent and (parent.SCMCustom or parent.SCMIconOptions)) then
+		if not rule and not (parent and parent.SCMCustom) then
 			ApplyCooldownSwipe(self, options)
 		end
 		if not self.SCMCooldownFontString then
@@ -215,18 +215,9 @@ local function OnSetCooldown(self)
 		ApplyCooldownRule(self, rule)
 	end
 end
-
-local function SetupCooldownSetHook(cooldownFrame)
-	if cooldownFrame.SCMSetCooldownHook then
-		return
-	end
-
-	hooksecurefunc(cooldownFrame, "SetCooldown", OnSetCooldown)
-	cooldownFrame.SCMSetCooldownHook = true
-end
+SCM.ApplyCooldownSkin = ApplyCooldownSkin
 
 ApplyCooldownRule = function(cooldownFrame, rule)
-	SetupCooldownSetHook(cooldownFrame)
 	cooldownFrame:SetDrawEdge(rule.drawEdge and true or false)
 	cooldownFrame:SetDrawSwipe(rule.drawSwipe == nil or rule.drawSwipe)
 	cooldownFrame:SetReverse(rule.reverse and true or false)
@@ -299,8 +290,8 @@ local function ApplyCooldownStyle(child, options, childConfig, isOptionsOpen)
 		child.SCMCooldownSkinHook = true
 		cooldownFrame.SCMApplyCooldownSkin = true
 
-		SetupCooldownSetHook(cooldownFrame)
-		OnSetCooldown(cooldownFrame)
+		SCM.Cooldowns.SetupCooldownHook(cooldownFrame)
+		ApplyCooldownSkin(cooldownFrame)
 	end
 end
 

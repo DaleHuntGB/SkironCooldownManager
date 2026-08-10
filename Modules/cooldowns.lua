@@ -140,6 +140,28 @@ local function SetupPandemicHooks(child, options)
 	end
 end
 
+local function OnCooldownSet(self, ...)
+	local handler = self.SCMCooldownCallback
+	if handler then
+		handler(self, ...)
+	end
+
+	SCM.ApplyCooldownSkin(self)
+end
+
+function Cooldowns.SetupCooldownHook(cooldownFrame, callback)
+	if callback then
+		cooldownFrame.SCMCooldownCallback = callback
+	end
+
+	if cooldownFrame.SCMCooldownHook then
+		return
+	end
+
+	hooksecurefunc(cooldownFrame, "SetCooldown", OnCooldownSet)
+	cooldownFrame.SCMCooldownHook = true
+end
+
 function Cooldowns.SetupBuffIconHooks(child, options)
 	local checkCooldownFrame = (child.SCMSpellID and (Constants.FakeAuras[child.SCMSpellID] or Constants.TargetAuras[child.SCMSpellID]))
 	child.SCMBuffOptions = options
@@ -155,7 +177,7 @@ function Cooldowns.SetupBuffIconHooks(child, options)
 
 	if checkCooldownFrame then
 		if not child.SCMCooldownHooked then
-			hooksecurefunc(child.Cooldown, "SetCooldown", OnBuffCooldownSet)
+			Cooldowns.SetupCooldownHook(child.Cooldown, OnBuffCooldownSet)
 			hooksecurefunc(child, "OnAuraInstanceInfoSet", OnBuffCooldownSet)
 			hooksecurefunc(child.Cooldown, "Clear", OnBuffCooldownEnd)
 			child.Cooldown:HookScript("OnCooldownDone", OnBuffCooldownEnd)
@@ -434,7 +456,7 @@ function Cooldowns.SetupCooldownHooks(child, options)
 		return
 	end
 
-	hooksecurefunc(child.Cooldown, "SetCooldown", function(self)
+	Cooldowns.SetupCooldownHook(child.Cooldown, function(self)
 		OnRegularCooldownChanged(self, "SET")
 	end)
 	hooksecurefunc(child.Cooldown, "Clear", function(self)
