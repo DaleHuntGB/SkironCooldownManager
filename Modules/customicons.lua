@@ -704,8 +704,8 @@ local function GetCustomIconCooldownState(iconType, hasCount, isOnCooldown, isCh
 	return isOnCooldown and "cooldown" or "ready"
 end
 
-local function ConfigureCustomIconFrame(frame, id, config, viewerScale, anchorGroup, isGlobal)
-	frame:SetScale(viewerScale)
+local function ConfigureCustomIconFrame(frame, id, config, anchorGroup, isGlobal)
+	frame:SetScale(Cache.cachedViewerScale or 1)
 
 	frame.SCMConfig = config
 	frame.SCMOrder = config.order
@@ -965,7 +965,7 @@ local function CreateCustomIcon(id, config, isGlobal, skipExisting)
 
 		if ShouldCreateCustomIcon(config) and (not isGlobal or ShouldLoadCustomIcon(config)) then
 			local frame = AcquireCustomIconFrame(customFrames, id)
-			ConfigureCustomIconFrame(frame, id, config, 1, config.anchorGroup or 1, isGlobal)
+			ConfigureCustomIconFrame(frame, id, config, config.anchorGroup or 1, isGlobal)
 			UpdateCustomIconFrameState(frame, config)
 			ApplyGlobalSettings(frame)
 			Icons.SetChildVisibilityState(frame, frame.SCMIconType == "empty", true)

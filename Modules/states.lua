@@ -16,14 +16,14 @@ function States.GetState(child)
 	return child.SCMState
 end
 
-local function GetNextMatchedRule(rules, index, cooldownRuleState, activeRuleState, overriddenRuleState)
+local function GetNextMatchedRule(rules, index, cooldownRuleState, activeRuleState, overriddenRuleState, skipActiveFalse)
 	local ruleCount = #rules
 
 	while index <= ruleCount do
 		local rule = rules[index]
 		while rule do
 			local ruleState = rule.state
-			if ruleState and (ruleState == "always" or ruleState == cooldownRuleState or ruleState == activeRuleState or ruleState == overriddenRuleState) then
+			if ruleState and (ruleState == "always" or ruleState == cooldownRuleState or ruleState == activeRuleState or ruleState == overriddenRuleState) and not (skipActiveFalse and ruleState == "active" and rule.enabled == false) then
 				index = index + 1
 				while index <= ruleCount and rules[index].elseIf do
 					index = index + 1
@@ -329,7 +329,7 @@ local function ApplyStateOptions(child, skipLayoutRefresh, state, refreshGlowOpt
 	local desaturateRules = effectRules.desaturate and effectRules.desaturate.rules
 	local shouldDesaturate
 	if desaturateRules and desaturateRules[1] then
-		local rule = GetNextMatchedRule(desaturateRules, 1, cooldownRuleState, activeRuleState, overriddenRuleState)
+		local rule = GetNextMatchedRule(desaturateRules, 1, cooldownRuleState, activeRuleState, overriddenRuleState, SCM.db.profile.options.disableRegularIconActiveSwipe and not child.SCMConfig.forceActiveSwipe and not child.SCMBuffOptions and not child.SCMBuffBar)
 		if rule and rule.enabled ~= nil then
 			shouldDesaturate = rule.enabled and true or false
 		end
