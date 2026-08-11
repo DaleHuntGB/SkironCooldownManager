@@ -214,10 +214,10 @@ local function CDM(self, frame, group)
 	local tabs = {
 		{ value = "spec", text = "|cFFFFFFFFSpecialization|r: Icons" },
 		{ value = "buffbars", text = "|cFFFFFFFFSpecialization|r: Bars" },
-		{ value = "auras", text = "|cFFFFFFFFSpecialization|r: Auras (SoonTM)"},
 		{ value = "global", text = "|cFFFFFFFFGlobal|r: Icons" },
-		{ value = "globalauras", text = "|cFFFFFFFFGlobal|r: Auras (SoonTM)"},
 		{ value = "copy", text = "|cFFFFFFFFCopy|r Anchors" },
+		{ value = "auras", text = "|cFFFFFFFFSpecialization|r: Auras (SoonTM)"},
+		{ value = "globalauras", text = "|cFFFFFFFFGlobal|r: Auras (SoonTM)"},
 	}
 
 	modeTabs:SetTabs(tabs)
