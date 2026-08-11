@@ -173,6 +173,16 @@ Constants.SubregionsSorted = {
 	"border",
 }
 
+Constants.SubregionTargets = {
+	["self"] = "Self",
+	["custom"] = "Custom"
+}
+
+Constants.SubregionTargetsSorted = {
+	"self",
+	"custom"
+}
+
 Constants.GlowTypes = {
 	["Pixel"] = "Pixel",
 	["Autocast"] = "Autocast",

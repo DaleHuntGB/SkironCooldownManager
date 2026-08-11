@@ -14,12 +14,12 @@ local effectOptions = {
 		defaultEnabled = true,
 	},
 	glow = {
-		name = "Glow",
+		name = "Glow Settings",
 		allowsMultiple = true,
 		subregionType = "glow",
 	},
 	border = {
-		name = "Border",
+		name = "Border Settings",
 		allowsMultiple = true,
 		subregionType = "border",
 	},
@@ -225,6 +225,35 @@ local function AddRuleValueControl(effectTabGroup, effectKey, iconConfig, rule, 
 			applyConfigUpdate()
 		end)
 		effectTabGroup:AddChild(subregionDropdown)
+
+		local subregionTargetDropdown = AceGUI:Create("Dropdown")
+		subregionTargetDropdown:SetLabel("Target")
+		subregionTargetDropdown:SetRelativeWidth(0.33)
+		subregionTargetDropdown:SetList(Constants.SubregionTargets, Constants.SubregionTargetsSorted)
+		subregionTargetDropdown:SetValue(rule.subregionTargetType or "self")
+		effectTabGroup:AddChild(subregionTargetDropdown)
+
+		local targetEditBox = AceGUI:Create("EditBox")
+		targetEditBox:SetLabel("Frame")
+		targetEditBox:SetRelativeWidth(0.66)
+		targetEditBox:SetText(rule.subregionTargetCustom or "")
+		targetEditBox:SetCallback("OnEnterPressed", function(_, _, value)
+			rule.subregionTargetCustom = value
+			applyConfigUpdate()
+		end)
+		targetEditBox:SetDisabled(not ((rule.subregionTargetType or "self") == "custom"))
+		effectTabGroup:AddChild(targetEditBox)
+		Options.AddAnchorParentAutocomplete(effectTabGroup, targetEditBox, function(value)
+			rule.subregionTargetCustom = value
+			applyConfigUpdate()
+		end)
+
+		subregionTargetDropdown:SetCallback("OnValueChanged", function(_, _, value)
+			rule.subregionTargetType = value
+
+			targetEditBox:SetDisabled(not (value == "custom"))
+			applyConfigUpdate()
+		end)
 	end
 end
 

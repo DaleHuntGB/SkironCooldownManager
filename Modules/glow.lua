@@ -3,10 +3,11 @@ local LibCustomGlow = LibStub("LibCustomGlow-1.0")
 
 local activeGlows = {}
 
-function SCM:StartCustomGlow(child, glowTypeOptions, glowType, key, forceUpdate, skipGlowState)
+function SCM:StartCustomGlow(child, glowTypeOptions, glowType, key, forceUpdate, skipGlowState, targetFrame)
 	if not child then
 		return
 	end
+	targetFrame = targetFrame or child
 
 	local options = self.db.profile.options
 	if not skipGlowState and child.SCMGlow and options.glowType == child.SCMGlow then
@@ -37,14 +38,14 @@ function SCM:StartCustomGlow(child, glowTypeOptions, glowType, key, forceUpdate,
 	end
 
 	if glowType == "Proc" then
-		LibCustomGlow.ProcGlow_Start(child, { key = key, frameLevel = 1, color = color, startAnim = glowTypeOptions.startAnim, xOffset = glowTypeOptions.xOffset, yOffset = glowTypeOptions.yOffset })
+		LibCustomGlow.ProcGlow_Start(targetFrame, { key = key, frameLevel = 1, color = color, startAnim = glowTypeOptions.startAnim, xOffset = glowTypeOptions.xOffset, yOffset = glowTypeOptions.yOffset })
 	elseif glowType == "Autocast" then
 		-- color,N,frequency,scale,xOffset,yOffset,key,frameLevel
-		LibCustomGlow.AutoCastGlow_Start(child, color, glowTypeOptions.numParticles, glowTypeOptions.frequency, glowTypeOptions.scale, glowTypeOptions.xOffset, glowTypeOptions.yOffset, key, 1)
+		LibCustomGlow.AutoCastGlow_Start(targetFrame, color, glowTypeOptions.numParticles, glowTypeOptions.frequency, glowTypeOptions.scale, glowTypeOptions.xOffset, glowTypeOptions.yOffset, key, 1)
 	elseif glowType == "Pixel" then
 		-- N,frequency,length,th,xOffset,yOffset,border
 		LibCustomGlow.PixelGlow_Start(
-			child,
+			targetFrame,
 			color,
 			glowTypeOptions.numLines,
 			glowTypeOptions.frequency,
@@ -58,11 +59,11 @@ function SCM:StartCustomGlow(child, glowTypeOptions, glowType, key, forceUpdate,
 		)
 
 		-- Why do I have to do this?
-		local glowFrame = child["_PixelGlow" .. key]
+		local glowFrame = targetFrame["_PixelGlow" .. key]
 		if glowFrame then
 			glowFrame:ClearAllPoints()
-			glowFrame:SetPoint("TOPLEFT", child, "TOPLEFT", -(glowTypeOptions.xOffset or 0), glowTypeOptions.yOffset or 0)
-			glowFrame:SetPoint("BOTTOMRIGHT", child, "BOTTOMRIGHT", glowTypeOptions.xOffset or 0, -(glowTypeOptions.yOffset or 0))
+			glowFrame:SetPoint("TOPLEFT", targetFrame, "TOPLEFT", -(glowTypeOptions.xOffset or 0), glowTypeOptions.yOffset or 0)
+			glowFrame:SetPoint("BOTTOMRIGHT", targetFrame, "BOTTOMRIGHT", glowTypeOptions.xOffset or 0, -(glowTypeOptions.yOffset or 0))
 
 			for _, texture in pairs(glowFrame.textures) do
 				texture:SetTexelSnappingBias(0)
@@ -79,7 +80,7 @@ function SCM:StartCustomGlow(child, glowTypeOptions, glowType, key, forceUpdate,
 			end
 		end
 	elseif glowType == "Button" then
-		LibCustomGlow.ButtonGlow_Start(child, color, glowTypeOptions.frequency)
+		LibCustomGlow.ButtonGlow_Start(targetFrame, color, glowTypeOptions.frequency)
 	end
 
 	if not skipGlowState then

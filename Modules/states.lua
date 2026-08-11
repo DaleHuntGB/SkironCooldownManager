@@ -48,7 +48,7 @@ function States.StopStateGlows(child)
 	end
 
 	for key, activeStateGlow in pairs(activeStateGlows) do
-		SCM:StopCustomGlow(child, key, activeStateGlow.glowType)
+		SCM:StopCustomGlow(activeStateGlow.frame, key, activeStateGlow.glowType)
 		activeStateGlows[key] = nil
 	end
 	state.ActiveStateGlows = nil
@@ -85,29 +85,35 @@ local function ApplyGlowRules(child, state, config, effectConfig, cooldownRuleSt
 	local rule, index = GetNextMatchedRule(rules, 1, cooldownRuleState, activeRuleState, overriddenRuleState)
 	while rule do
 		local glowType, glowTypeOptions = GetGlowOptions(config, rule.subregion)
-		if glowTypeOptions then
+		local glowFrame = child
+		if rule.subregionTargetType == "custom" then
+			glowFrame = _G[rule.subregionTargetCustom]
+		end
+
+		if glowTypeOptions and glowFrame then
 			local key = "SCMStateGlow_" .. tostring(rule.state) .. "_" .. tostring(rule.subregion)
 			activeStateGlows = activeStateGlows or {}
 			state.ActiveStateGlows = activeStateGlows
 
 			local activeStateGlow = activeStateGlows[key]
-			if refreshGlowOptions or not activeStateGlow or activeStateGlow.glowType ~= glowType then
+			if refreshGlowOptions or not activeStateGlow or activeStateGlow.glowType ~= glowType or activeStateGlow.frame ~= glowFrame then
 				if activeStateGlow then
-					SCM:StopCustomGlow(child, key, activeStateGlow.glowType)
+					SCM:StopCustomGlow(activeStateGlow.frame, key, activeStateGlow.glowType)
 				end
 
 				if glowType == "Button" then
 					for activeKey, currentStateGlow in pairs(activeStateGlows) do
-						if activeKey ~= key and currentStateGlow.glowType == "Button" then
-							SCM:StopCustomGlow(child, activeKey, currentStateGlow.glowType)
+						if activeKey ~= key and currentStateGlow.glowType == "Button" and currentStateGlow.frame == glowFrame then
+							SCM:StopCustomGlow(currentStateGlow.frame, activeKey, currentStateGlow.glowType)
 							activeStateGlows[activeKey] = nil
 						end
 					end
 				end
 
-				SCM:StartCustomGlow(child, glowTypeOptions, glowType, key, true, true)
+				SCM:StartCustomGlow(child, glowTypeOptions, glowType, key, true, true, glowFrame)
 				activeStateGlow = {
 					glowType = glowType,
+					frame = glowFrame,
 				}
 				activeStateGlows[key] = activeStateGlow
 			end
@@ -123,7 +129,7 @@ local function ApplyGlowRules(child, state, config, effectConfig, cooldownRuleSt
 
 	for key, activeStateGlow in pairs(activeStateGlows) do
 		if activeStateGlow.RefreshID ~= refreshID then
-			SCM:StopCustomGlow(child, key, activeStateGlow.glowType)
+			SCM:StopCustomGlow(activeStateGlow.frame, key, activeStateGlow.glowType)
 			activeStateGlows[key] = nil
 		end
 	end
@@ -148,7 +154,7 @@ local function HideAllStateBorders(child)
 end
 States.HideAllStateBorders = HideAllStateBorders
 
-local function ShowStateBorder(child, key, borderOptions, refreshID)
+local function ShowStateBorder(child, targetFrame, key, borderOptions, refreshID)
 	local borders = child.SCMStateBorders
 	if not borders then
 		borders = {}
@@ -157,10 +163,15 @@ local function ShowStateBorder(child, key, borderOptions, refreshID)
 
 	local border = borders[key]
 	if not border then
-		border = CreateFrame("Frame", nil, child, "BackdropTemplate")
-		border:SetFrameLevel(child:GetFrameLevel() + 3)
-		border:SetAllPoints(child)
+		border = CreateFrame("Frame", nil, targetFrame, "BackdropTemplate")
+		border:SetFrameLevel(targetFrame:GetFrameLevel() + 3)
+		border:SetAllPoints(targetFrame)
 		borders[key] = border
+	elseif border:GetParent() ~= targetFrame then
+		border:SetParent(targetFrame)
+		border:SetFrameLevel(targetFrame:GetFrameLevel() + 3)
+		border:ClearAllPoints()
+		border:SetAllPoints(targetFrame)
 	end
 
 	local options = SCM.db.profile.options
@@ -226,9 +237,14 @@ local function ApplyBorderRules(child, state, config, effectConfig, cooldownRule
 	local rule, index = GetNextMatchedRule(rules, 1, cooldownRuleState, activeRuleState, overriddenRuleState)
 	while rule do
 		local borderOptions = subregionOptions[rule.subregion]
-		if borderOptions then
+		local targetFrame = child
+		if rule.subregionTargetType == "custom" then
+			targetFrame = _G[rule.subregionTargetCustom]
+		end
+
+		if borderOptions and targetFrame then
 			local key = "SCMStateBorder_" .. tostring(rule.state) .. "_" .. tostring(rule.subregion)
-			ShowStateBorder(child, key, borderOptions, refreshID)
+			ShowStateBorder(child, targetFrame, key, borderOptions, refreshID)
 		end
 		rule, index = GetNextMatchedRule(rules, index, cooldownRuleState, activeRuleState, overriddenRuleState)
 	end
