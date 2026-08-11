@@ -264,7 +264,10 @@ local function ApplyCooldownRules(child, state, effectConfig, cooldownRuleState,
 		return
 	end
 
-	local isRecharging = cooldownRuleState == "recharging"
+	local options = SCM.db.profile.options
+	local hideActiveSwipe = (options.disableRegularIconActiveSwipe or child.SCMConfig.hideActiveSwipe) and not child.SCMConfig.forceActiveSwipe
+	local showActiveSwipe = child.Cooldown:GetUseAuraDisplayTime() and not hideActiveSwipe
+	local isRecharging = cooldownRuleState == "recharging" and not showActiveSwipe
 	child.Cooldown:SetDrawEdge(isRecharging)
 	child.Cooldown:SetDrawSwipe(not isRecharging or (child.SCMCustom and true or false))
 	child.Cooldown:SetEdgeColor(1, 0.7, 0, 1)
@@ -276,7 +279,7 @@ local function ApplyCooldownRules(child, state, effectConfig, cooldownRuleState,
 	if isRecharging and child.SCMCustom then
 		child.Cooldown:SetSwipeColor(0, 0, 0, 0)
 	else
-		SCM.ApplyCooldownSwipe(child.Cooldown, SCM.db.profile.options)
+		SCM.ApplyCooldownSwipe(child.Cooldown, options)
 	end
 end
 
