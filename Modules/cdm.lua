@@ -229,7 +229,7 @@ local function LayoutManagedAnchorChild(child, row, anchorConfig, childAnchor, s
 	if not child.SCMBuffBar then
 		local frameStrata = SCM.db.profile.options.iconFrameStrata
 		child:SetFrameStrata(frameStrata and frameStrata ~= "" and frameStrata or "MEDIUM")
-		child:SetFrameLevel(childAnchor:GetFrameLevel())
+		child:SetFrameLevel(childAnchor:GetFrameLevel() - 1)
 		SCM:SkinChild(child, child.SCMConfig)
 	else
 		SCM:SkinBuffBar(child, child.SCMConfig)
