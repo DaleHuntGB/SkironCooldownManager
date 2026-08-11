@@ -118,8 +118,8 @@ local function BuildProfileExportPayload(self, exportType, classFileName, specID
 
 	if exportOptions.includeGlobalAnchors then
 		payload.globalAnchors = {
-			globalAnchorConfig = self.db.profile.globalAnchorConfig,
-			globalCustomConfig = self.db.profile.globalCustomConfig,
+			globalAnchorConfig = CopyTable(self.db.profile.globalAnchorConfig),
+			globalCustomConfig = CopyTable(self.db.profile.globalCustomConfig),
 		}
 	end
 
@@ -150,8 +150,8 @@ end
 function SCM:ExportGlobalAnchors()
 	local prefix = string.format("!SCM:%d:%d!", dataVersion, EXPORT_TYPE_GLOBAL_ANCHORS)
 	return prefix .. SCM.Encode({
-		globalAnchorConfig = self.db.profile.globalAnchorConfig,
-		globalCustomConfig = self.db.profile.globalCustomConfig,
+		globalAnchorConfig = CopyTable(self.db.profile.globalAnchorConfig),
+		globalCustomConfig = CopyTable(self.db.profile.globalCustomConfig),
 	})
 end
 
@@ -184,6 +184,7 @@ local function MergeConfig(destDB, sourceData, defaultAnchor)
 		return
 	end
 
+	destDB.profileVersion = sourceData.profileVersion
 	destDB.spellConfig = sourceData.spellConfig
 	destDB.itemConfig = sourceData.itemConfig
 	destDB.customConfig = sourceData.customConfig or {}
@@ -303,7 +304,7 @@ function SCM:ImportProfile(profileName, importString, importSettings)
 	end
 
 	local importedSections
-	if type(data) == "table" then
+	if data then
 		if data.profileData or data.resourceBarSettings or data.castBarSettings or data.globalSettings or data.globalAnchors then
 			importedSections = data
 			data = type(data.profileData) == "table" and data.profileData or {}

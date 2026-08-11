@@ -1,7 +1,7 @@
 local SCM = select(2, ...)
 local AceGUI = LibStub("AceGUI-3.0")
 
-SCM.MainTabs.Temporary = { value = "Temporary", text = "Temporary", order = 8, subgroups = {} }
+SCM.MainTabs.Temporary = { value = "Temporary", text = "Custom Anchoring", order = 8, subgroups = {} }
 
 local function Temporary(self, frame, group)
 	local options = SCM.db.profile.options
@@ -21,11 +21,11 @@ local function Temporary(self, frame, group)
 	label:SetFontObject("Game12Font")
 	generalFrame:AddChild(label)
 
-	local uufSettings = AceGUI:Create("InlineGroup")
-	uufSettings:SetFullWidth(true)
-	uufSettings:SetLayout("flow")
-	uufSettings:SetTitle("Unit Frames")
-	generalFrame:AddChild(uufSettings)
+	local ufSettings = AceGUI:Create("InlineGroup")
+	ufSettings:SetFullWidth(true)
+	ufSettings:SetLayout("flow")
+	ufSettings:SetTitle("Unit Frames")
+	generalFrame:AddChild(ufSettings)
 
 	local anchorElvUI = AceGUI:Create("CheckBox")
 	anchorElvUI:SetRelativeWidth(0.5)
@@ -35,7 +35,7 @@ local function Temporary(self, frame, group)
 		options.anchorElvUI = value
 		SCM:ApplyAllCDManagerConfigs()
 	end)
-	uufSettings:AddChild(anchorElvUI)
+	ufSettings:AddChild(anchorElvUI)
 
 	local anchorElvUIRoles = AceGUI:Create("Dropdown")
 	anchorElvUIRoles:SetRelativeWidth(0.5)
@@ -49,7 +49,31 @@ local function Temporary(self, frame, group)
 	for key, value in pairs(options.anchorElvUIRoles) do
 		anchorElvUIRoles:SetItemValue(key, value)
 	end
-	uufSettings:AddChild(anchorElvUIRoles)
+	ufSettings:AddChild(anchorElvUIRoles)
+
+	local anchorEUI = AceGUI:Create("CheckBox")
+	anchorEUI:SetRelativeWidth(0.5)
+	anchorEUI:SetLabel("Reanchor EUI")
+	anchorEUI:SetValue(options.anchorEUI)
+	anchorEUI:SetCallback("OnValueChanged", function(_, _, value)
+		options.anchorEUI = value
+		SCM:ApplyAllCDManagerConfigs()
+	end)
+	ufSettings:AddChild(anchorEUI)
+
+	local anchorEUIRoles = AceGUI:Create("Dropdown")
+	anchorEUIRoles:SetRelativeWidth(0.5)
+	anchorEUIRoles:SetLabel("Reanchor EUI Roles")
+	anchorEUIRoles:SetList(SCM.Constants.Roles)
+	anchorEUIRoles:SetMultiselect(true)
+	anchorEUIRoles:SetCallback("OnValueChanged", function(_, _, key, value)
+		options.anchorEUIRoles[key] = value
+		SCM:ApplyAllCDManagerConfigs()
+	end)
+	for key, value in pairs(options.anchorEUIRoles) do
+		anchorEUIRoles:SetItemValue(key, value)
+	end
+	ufSettings:AddChild(anchorEUIRoles)
 
 	local space = AceGUI:Create("Slider")
 	space:SetRelativeWidth(0.5)
@@ -60,37 +84,37 @@ local function Temporary(self, frame, group)
 		options.temporaryPadding = value
 		SCM:ApplyAllCDManagerConfigs()
 	end)
-	uufSettings:AddChild(space)
+	ufSettings:AddChild(space)
 
-	local adjustHeight = AceGUI:Create("CheckBox")
-	adjustHeight:SetRelativeWidth(0.5)
-	adjustHeight:SetLabel("Adjust Height")
-	adjustHeight:SetValue(options.adjustHeight)
-	adjustHeight:SetCallback("OnValueChanged", function(_, _, value)
-		options.adjustHeight = value
-		SCM:ApplyAllCDManagerConfigs()
-	end)
-	adjustHeight:SetCallback("OnEnter", function()
-		GameTooltip:SetOwner(self.frame, "ANCHOR_CURSOR")
-		GameTooltip:SetText("Adjust Height", nil, nil, nil, nil, true)
-		GameTooltip:AddLine("Disabling this options requires a reload. ElvUI users probably have to manually set their old height again.", 1, 1, 1, true)
-		GameTooltip:Show()
-	end)
-	adjustHeight:SetCallback("OnLeave", function()
-		GameTooltip:Hide()
-	end)
-	uufSettings:AddChild(adjustHeight)
-
-	local heightOffset = AceGUI:Create("Slider")
-	heightOffset:SetRelativeWidth(0.5)
-	heightOffset:SetValue(options.anchorsHeightOffset)
-	heightOffset:SetLabel("Height Offset")
-	heightOffset:SetSliderValues(-50, 50, 0.1)
-	heightOffset:SetCallback("OnValueChanged", function(_, _, value)
-		options.anchorsHeightOffset = value
-		SCM:ApplyAllCDManagerConfigs()
-	end)
-	uufSettings:AddChild(heightOffset)
+	-- local adjustHeight = AceGUI:Create("CheckBox")
+	-- adjustHeight:SetRelativeWidth(0.5)
+	-- adjustHeight:SetLabel("Adjust Height")
+	-- adjustHeight:SetValue(options.adjustHeight)
+	-- adjustHeight:SetCallback("OnValueChanged", function(_, _, value)
+	-- 	options.adjustHeight = value
+	-- 	SCM:ApplyAllCDManagerConfigs()
+	-- end)
+	-- adjustHeight:SetCallback("OnEnter", function()
+	-- 	GameTooltip:SetOwner(self.frame, "ANCHOR_CURSOR")
+	-- 	GameTooltip:SetText("Adjust Height", nil, nil, nil, nil, true)
+	-- 	GameTooltip:AddLine("Disabling this options requires a reload. ElvUI users probably have to manually set their old height again.", 1, 1, 1, true)
+	-- 	GameTooltip:Show()
+	-- end)
+	-- adjustHeight:SetCallback("OnLeave", function()
+	-- 	GameTooltip:Hide()
+	-- end)
+	-- uufSettings:AddChild(adjustHeight)
+-- 
+	-- local heightOffset = AceGUI:Create("Slider")
+	-- heightOffset:SetRelativeWidth(0.5)
+	-- heightOffset:SetValue(options.anchorsHeightOffset)
+	-- heightOffset:SetLabel("Height Offset")
+	-- heightOffset:SetSliderValues(-50, 50, 0.1)
+	-- heightOffset:SetCallback("OnValueChanged", function(_, _, value)
+	-- 	options.anchorsHeightOffset = value
+	-- 	SCM:ApplyAllCDManagerConfigs()
+	-- end)
+	-- uufSettings:AddChild(heightOffset)
 
 	local xOffset = AceGUI:Create("Slider")
 	xOffset:SetRelativeWidth(0.5)
@@ -101,7 +125,7 @@ local function Temporary(self, frame, group)
 		options.anchorsYOffset = value
 		SCM:ApplyAllCDManagerConfigs()
 	end)
-	uufSettings:AddChild(xOffset)
+	ufSettings:AddChild(xOffset)
 
 	local resourceBarSettings = AceGUI:Create("InlineGroup")
 	resourceBarSettings:SetLayout("flow")

@@ -221,7 +221,7 @@ local methods = {
 		self.frame:SetHeight(height)
 	end,
 
-	["AddSpellBySpellID"] = function(self, info, dataIndex, isBuffIcon)
+	["AddSpellBySpellID"] = function(self, info, dataIndex, isBuffIcon, texture)
 		if not dataIndex then
 			local highestIndex = 0
 			for _, data in self.dataProvider:Enumerate() do
@@ -245,11 +245,11 @@ local methods = {
 		self.dataProvider:Insert({
 			id = configID,
 			dataIndex = dataIndex,
-			texture = C_Spell.GetSpellTexture(spellID),
+			texture = texture or (spellID and C_Spell.GetSpellTexture(spellID)) or 134400,
 			spellID = spellID,
 			isKnown = info.isKnown,
 			iconType = "spell",
-			isDisabled = info.isDisabled or (info.category and (info.category < 0)),
+			isDisabled = info.isDisabled or (info.category and (info.category < 0 or info.category >= 4)),
 			isBuffIcon = isBuffIcon or info.category >= 2,
 			cooldownID = info.cooldownID,
 		})

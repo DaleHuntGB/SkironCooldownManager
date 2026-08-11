@@ -23,6 +23,42 @@ function SCM:UpdateResourceBarWidth(maxGroupWidth)
 	end
 end
 
+local function SetEUIAnchor(frame, point, anchor, relativePoint, xOffset, yOffset)
+	if not frame.SCMHook then
+		frame.SCMHook = true
+		frame.SCMClearAllPoints = frame.ClearAllPoints
+		frame.SCMSetPoint = frame.SetPoint
+		frame.SCMPoint, frame.SCMRelativeTo, frame.SCMRelativePoint, frame.SCMXOffset, frame.SCMYOffset = frame:GetPoint()
+
+		frame.ClearAllPoints = nop
+		frame.SetPoint = nop
+	end
+
+	frame:SCMClearAllPoints()
+	frame:SCMSetPoint(point, anchor, relativePoint, xOffset, yOffset)
+end
+
+local function RestoreEUIAnchor(frame)
+	if not frame or not frame.SCMHook then
+		return
+	end
+
+	frame.ClearAllPoints = frame.SCMClearAllPoints
+	frame.SetPoint = frame.SCMSetPoint
+
+	frame:ClearAllPoints()
+	frame:SetPoint(frame.SCMPoint, frame.SCMRelativeTo, frame.SCMRelativePoint, frame.SCMXOffset, frame.SCMYOffset)
+
+	frame.SCMHook = nil
+	frame.SCMClearAllPoints = nil
+	frame.SCMSetPoint = nil
+	frame.SCMPoint = nil
+	frame.SCMRelativeTo = nil
+	frame.SCMRelativePoint = nil
+	frame.SCMXOffset = nil
+	frame.SCMYOffset = nil
+end
+
 function SCM:UpdateUFValues(options, maxGroupWidth, rowConfig)
 	if ElvUI then
 		local E = ElvUI[1]
@@ -82,6 +118,25 @@ function SCM:UpdateUFValues(options, maxGroupWidth, rowConfig)
 				UF:Update_AllFrames()
 				wipe(SCM.db.profile.options.elvUIAnchors)
 			end
+		end
+	end
+
+	if (EllesmereUIUnitFrames_Player or EllesmereUIUnitFrames_Target) and not InCombatLockdown() then
+		if options.anchorEUI and options.anchorEUIRoles[(select(5, Utils.GetSpec()))] then
+			local xOffset = min((maxGroupWidth - 150), 0)
+			local padding = options.temporaryPadding
+			local yOffset = options.anchorsYOffset
+			local mainAnchor = SCM:GetAnchor(1)
+
+			if EllesmereUIUnitFrames_Player then
+				SetEUIAnchor(EllesmereUIUnitFrames_Player, "TOPRIGHT", mainAnchor, "TOPLEFT", -xOffset - padding, yOffset)
+			end
+			if EllesmereUIUnitFrames_Target then
+				SetEUIAnchor(EllesmereUIUnitFrames_Target, "TOPLEFT", mainAnchor, "TOPRIGHT", xOffset + padding, yOffset)
+			end
+		else
+			RestoreEUIAnchor(EllesmereUIUnitFrames_Player)
+			RestoreEUIAnchor(EllesmereUIUnitFrames_Target)
 		end
 	end
 end

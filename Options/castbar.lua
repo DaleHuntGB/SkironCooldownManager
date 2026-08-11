@@ -205,7 +205,7 @@ local function CastBar(self)
 	currentStatus:SetFontObject("Game15Font")
 	statusGroup:AddChild(currentStatus)
 
-	if SCM.castBarConfig.active then
+	if SCM.specCastBarConfig.active then
 		currentStatus:SetText(string.format("Status: |cffea00ffSpecialization|r (%s)", (select(2, SCM.Utils.GetSpec()))))
 	else
 		currentStatus:SetText("Status: |cfffcf803Profile|r")
@@ -214,13 +214,13 @@ local function CastBar(self)
 	local modifyCurrentSpecialization = AceGUI:Create("CheckBox")
 	modifyCurrentSpecialization:SetRelativeWidth(0.33)
 	modifyCurrentSpecialization:SetLabel("Use Specialization Config")
-	modifyCurrentSpecialization:SetValue(SCM.castBarConfig.active)
+	modifyCurrentSpecialization:SetValue(SCM.specCastBarConfig.active)
 	statusGroup:AddChild(modifyCurrentSpecialization)
 
 	local resetCurrentSpecialization = AceGUI:Create("Button")
 	resetCurrentSpecialization:SetText("Clear Spec Config")
 	resetCurrentSpecialization:SetRelativeWidth(0.33)
-	resetCurrentSpecialization:SetDisabled(not SCM.castBarConfig.active)
+	resetCurrentSpecialization:SetDisabled(not SCM.specCastBarConfig.active)
 	resetCurrentSpecialization:SetCallback("OnEnter", function()
 		GameTooltip:SetOwner(self.frame, "ANCHOR_CURSOR")
 		GameTooltip:SetText("Clear Spec Config", nil, nil, nil, nil, true)
@@ -238,13 +238,15 @@ local function CastBar(self)
 
 		wipe(specCastBarConfig)
 		specCastBarConfig.active = isActive
+		SCM:UpdateCastAndResourceBarConfigs()
 
-		CastBar(self)
+		self:SelectTab("CastBar")
 		RefreshCastBar()
 	end)
 
 	modifyCurrentSpecialization:SetCallback("OnValueChanged", function(_, _, value)
-		SCM.castBarConfig.active = value
+		SCM.specCastBarConfig.active = value
+		SCM:UpdateCastAndResourceBarConfigs()
 
 		if value then
 			currentStatus:SetText(string.format("Status: |cffea00ffSpecialization|r (%s)", (select(2, SCM.Utils.GetSpec()))))
@@ -252,8 +254,8 @@ local function CastBar(self)
 			currentStatus:SetText("Status: |cfffcf803Profile|r")
 		end
 
-		CastBar(self)
 		resetCurrentSpecialization:SetDisabled(not value)
+		self:SelectTab("CastBar")
 		RefreshCastBar()
 	end)
 

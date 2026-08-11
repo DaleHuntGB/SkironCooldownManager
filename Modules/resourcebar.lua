@@ -138,8 +138,8 @@ end
 local function SetRegionPoint(region, bar)
 	local inset = CalculateResourceBarPixelInset(bar)
 	region:ClearAllPoints()
-	PixelUtil.SetPoint(region, "TOPLEFT", bar, "TOPLEFT", inset, -inset)
-	PixelUtil.SetPoint(region, "BOTTOMRIGHT", bar, "BOTTOMRIGHT", -inset, inset)
+	region:SetPoint("TOPLEFT", bar, "TOPLEFT", inset, -inset)
+	region:SetPoint("BOTTOMRIGHT", bar, "BOTTOMRIGHT", -inset, inset)
 	return inset
 end
 
@@ -438,11 +438,21 @@ local function UpdateRechargeSegment(bar)
 end
 
 local function GetSegmentBarSize(bar, segmentCount)
+	if bar.SCMSegmentCount == segmentCount then
+		return bar.SCMSegmentWidth, bar.SCMSegmentHeight, bar.SCMSegmentInset
+	end
+
 	local inset = CalculateResourceBarPixelInset(bar)
 	local innerWidth = max(0, bar:GetWidth() - (inset * 2))
 	local innerHeight = max(0, bar:GetHeight() - (inset * 2))
+	local segmentWidth = innerWidth / segmentCount
 
-	return innerWidth / segmentCount, innerHeight
+	bar.SCMSegmentInset = inset
+	bar.SCMSegmentWidth = segmentWidth
+	bar.SCMSegmentHeight = innerHeight
+	bar.SCMSegmentCount = segmentCount
+
+	return segmentWidth, innerHeight, inset
 end
 
 local function UpdateSpellChargeRecharge(bar, chargeInfo)
@@ -480,7 +490,11 @@ local function UpdateSpellChargeRecharge(bar, chargeInfo)
 	segment:SetWidth(segmentWidth)
 	segment:SetHeight(segmentHeight)
 	UpdateRechargeSegment(bar)
-	segment:SetTimerDuration(duration, bar.barOptions.useSmoothPowerUpdates and Enum.StatusBarInterpolation.ExponentialEaseOut or Enum.StatusBarInterpolation.Immediate, Enum.StatusBarTimerDirection.ElapsedTime)
+	segment:SetTimerDuration(
+		duration,
+		bar.barOptions.useSmoothPowerUpdates and Enum.StatusBarInterpolation.ExponentialEaseOut or Enum.StatusBarInterpolation.Immediate,
+		Enum.StatusBarTimerDirection.ElapsedTime
+	)
 	segment:SetAlpha(C_CurveUtil.EvaluateColorValueFromBoolean(duration:IsZero(), 0, 1))
 	segment:Show()
 end
@@ -552,6 +566,10 @@ local function ResetResourceBar(bar)
 	bar.SCMSegmentedDisplay = nil
 	bar.SCMConfiguredSegmentCount = nil
 	bar.SCMActiveSegmentCount = nil
+	bar.SCMSegmentInset = nil
+	bar.SCMSegmentWidth = nil
+	bar.SCMSegmentHeight = nil
+	bar.SCMSegmentCount = nil
 
 	bar:GetStatusBarTexture():SetAlpha(1)
 
@@ -576,12 +594,17 @@ local function ConfigureBarForResource(bar, resource, altR, altG, altB)
 		segmentCount = 10
 	end
 
+	local segmentCountChanged = bar.SCMConfiguredSegmentCount ~= segmentCount
 	local resourceChanged = bar.resourceKind ~= resourceKind
 		or bar.powerType ~= powerType
 		or bar.powerToken ~= powerToken
 		or bar.spellID ~= spellID
 		or bar.SCMRegisterUnitAura ~= registerUnitAura
-		or bar.SCMConfiguredSegmentCount ~= segmentCount
+		or segmentCountChanged
+
+	if segmentCountChanged then
+		bar.SCMSegmentCount = nil
+	end
 
 	bar.resourceKind = resourceKind
 	bar.powerType = powerType
@@ -662,8 +685,7 @@ local function UpdateTicks(bar, maxValue)
 	local tickCount = segmentCount - 1
 	local tickColor = barOptions.tickColor
 	local tickTextures = CreateTicks(bar, tickCount, tickColor)
-	local barHeight = bar:GetHeight()
-	local offset = bar:GetWidth() / segmentCount
+	local segmentWidth, segmentHeight, inset = GetSegmentBarSize(bar, segmentCount)
 
 	for tickIndex = 1, tickCount do
 		local tick = tickTextures[tickIndex]
@@ -671,9 +693,9 @@ local function UpdateTicks(bar, maxValue)
 		tick:SetColorTexture(tickColor.r, tickColor.g, tickColor.b, tickColor.a)
 		tick:SetTexelSnappingBias(0)
 		tick:SetSnapToPixelGrid(false)
-		tick:SetPoint("LEFT", tickIndex * offset, 0)
+		tick:SetPoint("LEFT", inset + (tickIndex * segmentWidth), 0)
 		tick:SetWidth(tickWidth)
-		tick:SetHeight(barHeight)
+		tick:SetHeight(segmentHeight)
 		tick:Show()
 	end
 
@@ -755,7 +777,7 @@ local function CreateSegments(bar, segmentCount)
 		if not segmentBar then
 			segmentBar = CreateFrame("StatusBar", nil, bar)
 			segmentBar:SetMinMaxValues(0, 1)
-			segmentBar:SetFrameLevel(2)
+			segmentBar:SetFrameLevel(bar:GetFrameLevel() + 1)
 			segmentBars[segmentIndex] = segmentBar
 		end
 	end
@@ -860,7 +882,7 @@ local function UpdateSegments(bar, maxValue, currentValue, resourceSegmentValues
 	local barOptions = bar.barOptions
 	local segmentBars = CreateSegments(bar, segmentCount)
 	local texturePath = bar.SCMTexturePath or LSM:Fetch("statusbar", barOptions.texture)
-	local segmentWidth, segmentHeight = GetSegmentBarSize(bar, segmentCount)
+	local segmentWidth, segmentHeight, inset = GetSegmentBarSize(bar, segmentCount)
 
 	for segmentIndex = 1, segmentCount do
 		local segmentBar = segmentBars[segmentIndex]
@@ -869,7 +891,7 @@ local function UpdateSegments(bar, maxValue, currentValue, resourceSegmentValues
 		segmentBar:SetStatusBarTexture(texturePath)
 		segmentBar:GetStatusBarTexture():SetTexelSnappingBias(0)
 		segmentBar:GetStatusBarTexture():SetSnapToPixelGrid(false)
-		segmentBar:SetPoint("LEFT", (segmentIndex - 1) * segmentWidth, 0)
+		segmentBar:SetPoint("LEFT", inset + ((segmentIndex - 1) * segmentWidth), 0)
 		segmentBar:SetWidth(segmentWidth)
 		segmentBar:SetHeight(segmentHeight)
 		segmentBar:GetStatusBarTexture():Show()
@@ -887,6 +909,7 @@ local function ApplyBarAppearance(bar, barOptions)
 	end
 
 	bar.barOptions = barOptions
+	bar.SCMSegmentCount = nil
 
 	if not barOptions.textOnly then
 		local texturePath = LSM:Fetch("statusbar", barOptions.texture)
@@ -898,6 +921,7 @@ local function ApplyBarAppearance(bar, barOptions)
 
 		if bar.SegmentFillBars then
 			for _, segmentBar in ipairs(bar.SegmentFillBars) do
+				segmentBar:SetFrameLevel(bar:GetFrameLevel() + 1)
 				segmentBar:SetStatusBarTexture(texturePath)
 				segmentBar:GetStatusBarTexture():SetTexelSnappingBias(0)
 				segmentBar:GetStatusBarTexture():SetSnapToPixelGrid(false)
@@ -986,8 +1010,13 @@ local function InitializeBarSkin(bar)
 
 	-- If anyone wants to explain to me how to fix this then I'm all ears
 	bar.BorderFrame:ClearAllPoints()
-	PixelUtil.SetPoint(bar.BorderFrame, "TOPLEFT", bar, "TOPLEFT", 0, 0)
-	PixelUtil.SetPoint(bar.BorderFrame, "BOTTOMRIGHT", bar, "BOTTOMRIGHT", 0, 0)
+	bar.BorderFrame:SetPoint("TOPLEFT", bar, "TOPLEFT", 0, 0)
+	bar.BorderFrame:SetPoint("BOTTOMRIGHT", bar, "BOTTOMRIGHT", 0, 0)
+
+	for _, region in ipairs({ bar.BorderFrame:GetRegions() }) do
+		region:SetTexelSnappingBias(0)
+		region:SetSnapToPixelGrid(false)
+	end
 
 	local barOptions = bar.barOptions or SCM.resourceBarConfig
 	UpdateResourceBarBorder(bar, barOptions)
@@ -1098,8 +1127,13 @@ end
 local function SetBarHeight(bar, height)
 	local previousHeight = bar:GetHeight() or 0
 	bar:SetHeight(height)
+	local heightChanged = previousHeight ~= (bar:GetHeight() or 0)
 
-	return previousHeight ~= (bar:GetHeight() or 0)
+	if heightChanged then
+		bar.SCMSegmentCount = nil
+	end
+
+	return heightChanged
 end
 
 function SCMResourceBarControllerMixin:ApplyResourceBarOptions()
@@ -1108,6 +1142,10 @@ function SCMResourceBarControllerMixin:ApplyResourceBarOptions()
 	self.primaryBarOptions = barOptions.primaryBar
 	self.secondaryBarOptions = barOptions.secondaryBar
 
+	self.PrimaryBar:SetFrameStrata(self.primaryBarOptions.frameStrata or barOptions.frameStrata or "BACKGROUND")
+	self.PrimaryBar:SetFrameLevel(self.primaryBarOptions.frameLevel or 1)
+	self.SecondaryBar:SetFrameStrata(self.secondaryBarOptions.frameStrata or barOptions.frameStrata or "BACKGROUND")
+	self.SecondaryBar:SetFrameLevel(self.secondaryBarOptions.frameLevel or 1)
 	ApplyBarAppearance(self.PrimaryBar, self.primaryBarOptions)
 	ApplyBarAppearance(self.SecondaryBar, self.secondaryBarOptions)
 
@@ -1191,6 +1229,9 @@ function SCMResourceBarControllerMixin:ApplyFrameWidthOptions(bar, forcePosition
 		local previousWidth = bar:GetWidth() or 0
 		bar:SetWidth(desiredWidth)
 		local widthChanged = previousWidth ~= (bar:GetWidth() or 0)
+		if widthChanged then
+			bar.SCMSegmentCount = nil
+		end
 
 		if specificBarOptions.matchAnchorWidth then
 			self:HookAnchorWidthRefresh(anchor)
@@ -1240,7 +1281,7 @@ function SCMResourceBarControllerMixin:ConfigurePrimaryBar()
 	local powerType, powerToken, altR, altG, altB = UnitPowerType("player")
 
 	local forceMana = false
-	if SCM.resourceBarConfig.active then
+	if SCM.specResourceBarConfig.active then
 		if UnitClassBase("player") == "DRUID" then
 			local shapeshiftFormID = GetShapeshiftFormID()
 			local customPowerType
@@ -1327,7 +1368,7 @@ function SCMResourceBarControllerMixin:ConfigureSecondaryBar()
 	end
 
 	local forceMana = false
-	if SCM.resourceBarConfig.active then
+	if SCM.specResourceBarConfig.active then
 		if UnitClassBase("player") == "DRUID" then
 			local shapeshiftFormID = GetShapeshiftFormID()
 			local customSecondaryResource
@@ -1572,7 +1613,7 @@ function SCMResourceBarControllerMixin:UpdateSpecificBarLayout(bar)
 	local bothShown = primaryShown and secondaryShown
 	local spacing = barOptions.spacing
 	local growsUp = barOptions.growDirection == "UP"
-	local frameStrata = barOptions.frameStrata or "BACKGROUND"
+	local anchorPoint = growsUp and "BOTTOM" or "TOP"
 	local height = 0
 
 	bar:ClearAllPoints()
@@ -1582,10 +1623,9 @@ function SCMResourceBarControllerMixin:UpdateSpecificBarLayout(bar)
 
 	height = bothShown and specificBarOptions.heightAlternative or specificBarOptions.height
 	local heightChanged = SetBarHeight(bar, height)
-	bar:SetFrameStrata(frameStrata)
 
 	if isPrimary or not primaryShown then
-		bar:SetPoint("BOTTOM", self, "BOTTOM")
+		bar:SetPoint(anchorPoint, self, anchorPoint)
 	else
 		if growsUp then
 			bar:SetPoint("BOTTOM", self.PrimaryBar, "TOP", 0, spacing)

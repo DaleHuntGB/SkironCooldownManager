@@ -17,7 +17,7 @@ SCM.CustomEntries = {}
 SCM.Templates = {}
 SCM.States = {}
 
-function SCM.RefreshCooldownViewerData(releaseCustomIcons)
+function SCM.RefreshCooldownViewerData(releaseCustomIcons, skipCustomIconRebuild)
 	SCM:InvalidateAnchorLinks()
 	SCM:UpdateCooldownInfo(true)
 	SCM:UpdateDB()
@@ -26,10 +26,15 @@ function SCM.RefreshCooldownViewerData(releaseCustomIcons)
 		SCM:ResetCooldownViewerRuntimeState()
 		SCM.CustomIcons.ReleaseAllIcons()
 	end
-	SCM:CreateAllCustomIcons()
+
+	if not skipCustomIconRebuild then
+		SCM:CreateAllCustomIcons()
+	end
+
 	SCM:ApplyAllCDManagerConfigs(true, true)
 	SCM:UpdateCastBar()
 	SCM:RefreshResourceBarConfig()
+	SCM:RefreshAuraContainers()
 end
 
 local function OnProfileChanged(_, _, _, skipReset)
@@ -40,13 +45,10 @@ local function OnProfileChanged(_, _, _, skipReset)
 		SCM.DB:ResetData()
 	end
 
-	SCM:InvalidateAnchorLinks()
-	SCM:UpdateDB()
+	SCM.RefreshCooldownViewerData(true)
 
 	SCM.appliedOptions = nil
 	SCM:ApplyOptions()
-
-	SCM.RefreshCooldownViewerData(true)
 
 	local options = SCM.db.profile.options
 	if SCM.OptionsFrame and SCM.OptionsFrame:IsShown() and options and options.showAnchorHighlight then
@@ -78,12 +80,4 @@ end)
 
 function SCM:Print(...)
 	print("[|cFF4080FFSkiron|rCooldownManager]:", ...)
-end
-
-if IsTestBuild() and not SetDesaturation then
-	SetDesaturation = function(frame, desaturate)
-		if frame.SetDesaturation then
-			frame:SetDesaturation(desaturate and 1 or 0)
-		end
-	end
 end

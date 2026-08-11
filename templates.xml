@@ -1,29 +1,31 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<Ui xmlns="http://www.blizzard.com/wow/ui/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.blizzard.com/wow/ui/ ..\FrameXML\UI.xsd">
+<Ui xmlns="http://www.blizzard.com/wow/ui/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://www.blizzard.com/wow/ui/ ..\FrameXML\UI.xsd">
 	<Frame name="SCMItemIconTemplate" virtual="true">
 		<Size>
-			<AbsDimension x="35" y="35"/>
+			<AbsDimension x="35" y="35" />
 		</Size>
 		<KeyValues>
-			<KeyValue key="cooldownFont" value="GameFontHighlightHugeOutline" type="string"/>
+			<KeyValue key="cooldownFont" value="GameFontHighlightHugeOutline" type="string" />
 		</KeyValues>
 		<Layers>
 			<Layer level="ARTWORK">
-				<Texture name="$parentIcon" parentKey="Icon" >
+				<Texture name="$parentIcon" parentKey="Icon">
 					<Anchors>
-						<Anchor point="TOPLEFT" x="0" y="0"/>
-						<Anchor point="BOTTOMRIGHT" x="0" y="0"/>
+						<Anchor point="TOPLEFT" x="0" y="0" />
+						<Anchor point="BOTTOMRIGHT" x="0" y="0" />
 					</Anchors>
 				</Texture>
 			</Layer>
 			<Layer level="OVERLAY">
-				<Texture parentKey="OutOfRange" setAllPoints="true" atlas="UI-CooldownManager-OORshadow" hidden="true">
-					<Color r="1" g="1" b="1" a="0.5"/>
+				<Texture parentKey="OutOfRange" setAllPoints="true"
+					atlas="UI-CooldownManager-OORshadow" hidden="true">
+					<Color r="1" g="1" b="1" a="0.5" />
 				</Texture>
 				<Texture parentKey="CraftQuality" hidden="true">
 					<Anchors>
-						<Anchor point="TOPLEFT" relativeKey="$parentIcon"/>
-						<Anchor point="BOTTOMRIGHT" relativeKey="$parentIcon"/>
+						<Anchor point="TOPLEFT" relativeKey="$parentIcon" />
+						<Anchor point="BOTTOMRIGHT" relativeKey="$parentIcon" />
 					</Anchors>
 				</Texture>
 			</Layer>
@@ -31,31 +33,32 @@
 		<Frames>
 			<Cooldown parentKey="Cooldown" drawEdge="false" drawBling="true">
 				<Anchors>
-					<Anchor point="TOPLEFT" x="0" y="0"/>
-					<Anchor point="BOTTOMRIGHT" x="0" y="0"/>
+					<Anchor point="TOPLEFT" x="0" y="0" />
+					<Anchor point="BOTTOMRIGHT" x="0" y="0" />
 				</Anchors>
 				<SwipeTexture file="Interface\HUD\UI-HUD-CoolDownManager-Icon-Swipe">
-					<Color r="0" g="0" b="0" a="0.7"/>
+					<Color r="0" g="0" b="0" a="0.7" />
 				</SwipeTexture>
-				<EdgeTexture file="Interface\Cooldown\UI-HUD-ActionBar-SecondaryCooldown"/>
+				<EdgeTexture file="Interface\Cooldown\UI-HUD-ActionBar-SecondaryCooldown" />
 			</Cooldown>
-			<Cooldown parentKey="GCDCooldown" drawEdge="false" hideCountdownNumbers="true" reverse="true">
+			<Cooldown parentKey="GCDCooldown" drawEdge="false" hideCountdownNumbers="true"
+				reverse="true">
 				<Anchors>
-					<Anchor point="TOPLEFT" x="0" y="0"/>
-					<Anchor point="BOTTOMRIGHT" x="0" y="0"/>
+					<Anchor point="TOPLEFT" x="0" y="0" />
+					<Anchor point="BOTTOMRIGHT" x="0" y="0" />
 				</Anchors>
 				<SwipeTexture file="Interface\HUD\UI-HUD-CoolDownManager-Icon-Swipe">
-					<Color r="0" g="0" b="0" a="0.7"/>
+					<Color r="0" g="0" b="0" a="0.7" />
 				</SwipeTexture>
-				<EdgeTexture file="Interface\Cooldown\UI-HUD-ActionBar-SecondaryCooldown"/>
+				<EdgeTexture file="Interface\Cooldown\UI-HUD-ActionBar-SecondaryCooldown" />
 			</Cooldown>
 			<Frame parentKey="ChargeCount" setAllPoints="true">
 				<Layers>
 					<Layer level="OVERLAY">
 						<FontString parentKey="Current" inherits="NumberFontNormalLarge">
-							<FontHeight val="10"/>
+							<FontHeight val="10" />
 							<Anchors>
-								<Anchor point="BOTTOMRIGHT" x="-2" y="2"/>
+								<Anchor point="BOTTOMRIGHT" x="-2" y="2" />
 							</Anchors>
 						</FontString>
 					</Layer>
@@ -68,20 +71,22 @@
 
 	<Frame name="PermokOptionsWindowTemplate" inherits="DefaultPanelTemplate" virtual="true">
 		<Frames>
-			<Frame name="$parentInset" parentKey="Inset" useParentLevel="true" inherits="InsetFrameTemplate">
+			<Frame name="$parentInset" parentKey="Inset" useParentLevel="true"
+				inherits="InsetFrameTemplate">
 				<Anchors>
 					<Anchor point="TOPLEFT" x="6" y="-58" />
 					<Anchor point="BOTTOMRIGHT" x="-3" y="26" />
 				</Anchors>
 			</Frame>
-			<Button name="$parentCloseButton" parentKey="CloseButton" inherits="UIPanelCloseButtonDefaultAnchors"/>
+			<Button name="$parentCloseButton" parentKey="CloseButton"
+				inherits="UIPanelCloseButtonDefaultAnchors" />
 		</Frames>
 		<Layers>
 			<Layer level="BACKGROUND">
 				<Texture parentKey="Background" atlas="character-panel-background">
 					<Anchors>
-						<Anchor point="TOPLEFT" relativeKey="$parent.Inset"/>
-						<Anchor point="BOTTOMRIGHT" relativeKey="$parent.Inset"/>
+						<Anchor point="TOPLEFT" relativeKey="$parent.Inset" />
+						<Anchor point="BOTTOMRIGHT" relativeKey="$parent.Inset" />
 					</Anchors>
 				</Texture>
 			</Layer>
@@ -90,21 +95,21 @@
 
 	<Button name="PermokScrollIconTemplate" inherits="BackdropTemplate" virtual="true">
 		<Size>
-			<AbsDimension x="45" y="45"/>
+			<AbsDimension x="45" y="45" />
 		</Size>
 		<KeyValues>
-			<KeyValue key="cooldownFont" value="Permok_Expressway_Medium" type="string"/>
-			<KeyValue key="backdropInfo" value="BACKDROP_SCM_PIXEL" type="global"/>
-			<KeyValue key="backdropBorderColor" value="BLACK_FONT_COLOR" type="global"/>
+			<KeyValue key="cooldownFont" value="Permok_Expressway_Medium" type="string" />
+			<KeyValue key="backdropInfo" value="BACKDROP_SCM_PIXEL" type="global" />
+			<KeyValue key="backdropBorderColor" value="BLACK_FONT_COLOR" type="global" />
 		</KeyValues>
 		<Layers>
 			<Layer level="ARTWORK">
-				<Texture name="$parentIcon" parentKey="Icon" >
+				<Texture name="$parentIcon" parentKey="Icon">
 					<Anchors>
-						<Anchor point="TOPLEFT" x="2" y="-2"/>
-						<Anchor point="BOTTOMRIGHT" x="-2" y="2"/>
+						<Anchor point="TOPLEFT" x="2" y="-2" />
+						<Anchor point="BOTTOMRIGHT" x="-2" y="2" />
 					</Anchors>
-					<TexCoords left="0.12" right="0.88" top="0.12" bottom="0.88"/>
+					<TexCoords left="0.12" right="0.88" top="0.12" bottom="0.88" />
 				</Texture>
 			</Layer>
 		</Layers>
@@ -113,9 +118,9 @@
 				<Layers>
 					<Layer level="OVERLAY">
 						<FontString parentKey="Text" inherits="NumberFontNormalLarge">
-							<FontHeight val="10"/>
+							<FontHeight val="10" />
 							<Anchors>
-								<Anchor point="BOTTOM" x="0" y="0"/>
+								<Anchor point="BOTTOM" x="0" y="0" />
 							</Anchors>
 						</FontString>
 					</Layer>
@@ -128,23 +133,24 @@
 
 	<StatusBar name="SCMResourceBarTemplate" inherits="BackdropTemplate" virtual="true">
 		<Size>
-			<AbsDimension x="240" y="14"/>
+			<AbsDimension x="240" y="14" />
 		</Size>
 		<KeyValues>
-			<KeyValue key="backdropInfo" value="BACKDROP_SCM_PIXEL" type="global"/>
-			<KeyValue key="backdropBorderColor" value="BLACK_FONT_COLOR" type="global"/>
+			<KeyValue key="backdropInfo" value="BACKDROP_SCM_PIXEL" type="global" />
+			<KeyValue key="backdropBorderColor" value="BLACK_FONT_COLOR" type="global" />
 		</KeyValues>
-		<BarTexture file="Interface\TargetingFrame\UI-StatusBar"/>
+		<BarTexture file="Interface\TargetingFrame\UI-StatusBar" />
 		<Layers>
 			<Layer level="BACKGROUND">
-				<Texture name="$parentBackground" parentKey="Background" setAllPoints="true"/>
+				<Texture name="$parentBackground" parentKey="Background" setAllPoints="true" />
 			</Layer>
 		</Layers>
 		<Frames>
 			<Frame parentKey="Text" setAllPoints="true">
 				<Layers>
 					<Layer level="OVERLAY">
-						<FontString parentKey="Value" inherits="GameFontHighlightSmall" justifyH="CENTER" justifyV="MIDDLE" setAllPoints="true"/>
+						<FontString parentKey="Value" inherits="GameFontHighlightSmall"
+							justifyH="CENTER" justifyV="MIDDLE" setAllPoints="true" />
 					</Layer>
 				</Layers>
 			</Frame>
@@ -153,17 +159,20 @@
 
 	<Frame name="SCM_ResourceBarContainer" hidden="true" parent="UIParent" frameStrata="BACKGROUND">
 		<Size>
-			<AbsDimension x="1" y="30"/>
+			<AbsDimension x="1" y="30" />
 		</Size>
 		<Frames>
-			<StatusBar name="SCM_PrimaryResourceBar" parentKey="PrimaryBar" inherits="SCMResourceBarTemplate">
+			<StatusBar name="SCM_PrimaryResourceBar" parentKey="PrimaryBar"
+				inherits="SCMResourceBarTemplate">
 				<Anchors>
-					<Anchor point="BOTTOM"/>
+					<Anchor point="BOTTOM" />
 				</Anchors>
 			</StatusBar>
-			<StatusBar name="SCM_SecondaryResourceBar" parentKey="SecondaryBar" inherits="SCMResourceBarTemplate">
+			<StatusBar name="SCM_SecondaryResourceBar" parentKey="SecondaryBar"
+				inherits="SCMResourceBarTemplate">
 				<Anchors>
-					<Anchor point="BOTTOM" relativeTo="SCM_PrimaryResourceBar" relativePoint="TOP" x="0" y="2"/>
+					<Anchor point="BOTTOM" relativeTo="SCM_PrimaryResourceBar" relativePoint="TOP"
+						x="0" y="2" />
 				</Anchors>
 			</StatusBar>
 		</Frames>

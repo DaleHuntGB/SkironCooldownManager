@@ -227,6 +227,9 @@ local function LayoutManagedAnchorChild(child, row, anchorConfig, childAnchor, s
 	end
 
 	if not child.SCMBuffBar then
+		local frameStrata = SCM.db.profile.options.iconFrameStrata
+		child:SetFrameStrata(frameStrata and frameStrata ~= "" and frameStrata or "MEDIUM")
+		child:SetFrameLevel(childAnchor:GetFrameLevel() - 1)
 		SCM:SkinChild(child, child.SCMConfig)
 	else
 		SCM:SkinBuffBar(child, child.SCMConfig)
@@ -433,7 +436,8 @@ local function LayoutAnchorGroup(group, visibleChildren, anchorConfig, options, 
 	local heightDelta = max(effectiveHeight - firstRowHeight, 0)
 	local anchorOffsetY = secondaryGrowDir == "UP" and ((pivot:find("TOP") and heightDelta) or (not pivot:find("BOTTOM") and heightDelta / 2) or 0)
 		or ((pivot:find("BOTTOM") and -heightDelta) or (not pivot:find("TOP") and -heightDelta / 2) or 0)
-	local boundsChanged = state.effectiveWidth ~= effectiveWidth or state.effectiveHeight ~= effectiveHeight or state.anchorOffsetY ~= anchorOffsetY
+	local anchorResized = state.effectiveWidth ~= effectiveWidth or state.effectiveHeight ~= effectiveHeight
+	local boundsChanged = anchorResized or state.anchorOffsetY ~= anchorOffsetY
 	local parentChanged = state.parentGroup ~= parentGroup
 
 	state.relativePoint = relativePoint
@@ -444,24 +448,30 @@ local function LayoutAnchorGroup(group, visibleChildren, anchorConfig, options, 
 	state.effectiveHeight = effectiveHeight
 	state.anchorOffsetY = anchorOffsetY
 
+	local wasUsingProxy = state.currentProxyActive and true or false
 	local groupAnchor = SCM:GetAnchor(group, point, anchor, relativePoint, xOffset, yOffset, growDir, firstRowWidth, effectiveWidth, effectiveHeight, anchorOffsetY)
 
 	if parentChanged then
 		Cache.cachedAnchorLinksDirty = true
 	end
 
-	if state.appliedWidth == nil then
+	local anchorSizeApplied = groupAnchor and (not InCombatLockdown() or not groupAnchor:IsProtected())
+	if anchorSizeApplied or not state.appliedWidth then
 		state.appliedWidth = effectiveWidth
 	end
-	if state.appliedHeight == nil then
+	if anchorSizeApplied or not state.appliedHeight then
 		state.appliedHeight = effectiveHeight
 	end
-	if state.appliedAnchorOffsetY == nil then
+	if anchorSizeApplied or not state.appliedAnchorOffsetY then
 		state.appliedAnchorOffsetY = anchorOffsetY
 	end
 
 	local childAnchor, useProxyAnchor =
-		SCM:GetManagedAnchorChildAnchor(group, groupAnchor, point, anchor, relativePoint, xOffset, yOffset, growDir, firstRowWidth, effectiveWidth, effectiveHeight, anchorOffsetY, lockGroupSize)
+		SCM:GetManagedAnchorChildAnchor(group, groupAnchor, point, anchor, relativePoint, xOffset, yOffset, growDir, firstRowWidth, effectiveWidth, effectiveHeight, anchorOffsetY)
+	if SCM.initialized and (anchorResized or wasUsingProxy ~= useProxyAnchor) then
+		SCM.Callbacks:Fire("SCM_AnchorChanged", group, childAnchor, effectiveWidth, effectiveHeight, useProxyAnchor)
+	end
+
 	local anchorOffsetChanged = SCM:UpdateAnchorOffset(group, true)
 	if useProxyAnchor and changedGroups and anchorOffsetChanged then
 		changedGroups[group] = true
@@ -525,23 +535,16 @@ local function LayoutAnchorGroup(group, visibleChildren, anchorConfig, options, 
 		end
 	end
 
-	if not InCombatLockdown() and groupAnchor then
-		groupAnchor:SetSize(effectiveWidth, effectiveHeight)
-		state.appliedWidth = effectiveWidth
-		state.appliedHeight = effectiveHeight
-		state.appliedAnchorOffsetY = anchorOffsetY
-
-		if group == 1 then
-			if options.adjustResourceWidth and C_AddOns.IsAddOnLoaded("SenseiClassResourceBar") then
-				if SCRB and SCRB.registerCustomFrame then
-					SCRB.registerCustomFrame(SCM:GetAnchor(1))
-				else
-					SCM:UpdateResourceBarWidth(effectiveWidth)
-				end
+	if not InCombatLockdown() and group == 1 then
+		if options.adjustResourceWidth and C_AddOns.IsAddOnLoaded("SenseiClassResourceBar") then
+			if SCRB and SCRB.registerCustomFrame then
+				SCRB.registerCustomFrame(SCM:GetAnchor(1))
+			else
+				SCM:UpdateResourceBarWidth(effectiveWidth)
 			end
-
-			SCM:UpdateUFValues(options, effectiveWidth, rowConfig)
 		end
+
+		SCM:UpdateUFValues(options, effectiveWidth, rowConfig)
 	end
 
 	if group == 1 then

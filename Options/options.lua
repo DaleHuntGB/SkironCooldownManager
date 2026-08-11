@@ -8,7 +8,6 @@ local Options = SCM.Options
 local Utils = SCM.Utils
 local ToGlobalGroup = Utils.ToGlobalGroup
 local ToBuffBarGroup = Utils.ToBuffBarGroup
-local GetCooldownConfigKey = Utils.GetCooldownConfigKey
 local UPDATE_SCOPE = SCM.CDM.UPDATE_SCOPE
 
 StaticPopupDialogs["SCM_FORCE_RELOAD_POPUP"] = {
@@ -78,10 +77,14 @@ function Options.AddAnchorParentAutocomplete(_, editBox, onValueSelected)
 	suggestionFrame:SetFrameStrata("TOOLTIP")
 	suggestionFrame:SetFrameLevel(10000)
 	suggestionFrame:SetToplevel(true)
-	suggestionFrame:SetBackdrop({ bgFile = "Interface\\Buttons\\WHITE8x8", edgeFile = "Interface\\Buttons\\WHITE8x8", edgeSize = 1, })
-	suggestionFrame:SetBackdropColor(26/255, 26/255, 26/255, 1)
+	suggestionFrame:SetBackdrop({ bgFile = "Interface\\Buttons\\WHITE8x8", edgeFile = "Interface\\Buttons\\WHITE8x8", edgeSize = 1 })
+	suggestionFrame:SetBackdropColor(26 / 255, 26 / 255, 26 / 255, 1)
 	suggestionFrame:SetBackdropBorderColor(0, 0, 0, 1)
-	suggestionFrame:SetScript("OnUpdate", function(self) if not editBox.frame:IsShown() or (not editBox.editbox:HasFocus() and not self:IsMouseOver()) then self:Hide() end end)
+	suggestionFrame:SetScript("OnUpdate", function(self)
+		if not editBox.frame:IsShown() or (not editBox.editbox:HasFocus() and not self:IsMouseOver()) then
+			self:Hide()
+		end
+	end)
 	suggestionFrame:Hide()
 
 	local rows = {}
@@ -102,15 +105,21 @@ function Options.AddAnchorParentAutocomplete(_, editBox, onValueSelected)
 		local tokenLower = strlower(token)
 		local suggestions = {}
 
-		if token == "" then suggestionFrame:Hide() return end
+		if token == "" then
+			suggestionFrame:Hide()
+			return
+		end
 
 		for _, anchorList in pairs(SCM.Constants.SCMAnchors) do
 			if anchorList then
 				for label, value in pairs(anchorList) do
 					if value then
-						local count = (label == "Anchor" and #(SCM.anchorConfig or {})) or (label == "Buff Bar Anchor" and #(SCM.buffBarsAnchorConfig or {})) or (label == "Global Anchor" and #(SCM.globalAnchorConfig or {})) or 1
+						local count = (label == "Anchor" and #(SCM.anchorConfig or {}))
+							or (label == "Buff Bar Anchor" and #(SCM.buffBarsAnchorConfig or {}))
+							or (label == "Global Anchor" and #(SCM.globalAnchorConfig or {}))
+							or 1
 						for i = 1, count do
-							local anchor = label == "Global Anchor" and value:gsub("10#", tostring(SCM.Utils.ToGlobalGroup(i))) or value:gsub("#", i)
+							local anchor = value:gsub("#", i)
 							local display = (label == "Anchor" or label == "Global Anchor" or label == "Buff Bar Anchor") and (label .. " #" .. i) or label
 							if strfind(strlower(anchor), tokenLower, 1, true) or strfind(strlower(display), tokenLower, 1, true) then
 								tinsert(suggestions, { anchor, display })
@@ -121,7 +130,10 @@ function Options.AddAnchorParentAutocomplete(_, editBox, onValueSelected)
 			end
 		end
 
-		if #suggestions == 0 then suggestionFrame:Hide() return end
+		if #suggestions == 0 then
+			suggestionFrame:Hide()
+			return
+		end
 
 		for i = 1, #suggestions do
 			local row = rows[i]
@@ -132,23 +144,32 @@ function Options.AddAnchorParentAutocomplete(_, editBox, onValueSelected)
 				row:SetPoint("RIGHT", -2, 0)
 				row.highlight = row:CreateTexture(nil, "OVERLAY")
 				row.highlight:SetAllPoints()
-				row.highlight:SetColorTexture(204/255, 204/255, 204/255, 0.5)
+				row.highlight:SetColorTexture(204 / 255, 204 / 255, 204 / 255, 0.5)
 				row.highlight:SetBlendMode("BLEND")
 				row.highlight:Hide()
 				row.text = row:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
 				row.text:SetPoint("LEFT", 4, 0)
 				row.text:SetPoint("RIGHT", -4, 0)
 				row.text:SetJustifyH("LEFT")
-				row:SetScript("OnEnter", function(self) self.highlight:Show() end)
-				row:SetScript("OnLeave", function(self) self.highlight:Hide() end)
-				row:SetScript("OnClick", function(self) SelectSuggestion(self.anchor) end)
+				row:SetScript("OnEnter", function(self)
+					self.highlight:Show()
+				end)
+				row:SetScript("OnLeave", function(self)
+					self.highlight:Hide()
+				end)
+				row:SetScript("OnClick", function(self)
+					SelectSuggestion(self.anchor)
+				end)
 				rows[i] = row
 			end
 
 			local anchor, display = suggestions[i][1], suggestions[i][2]
 			local startIndex, endIndex = strfind(strlower(display), tokenLower, 1, true)
 			row.anchor = anchor
-			row.text:SetText((startIndex and ("|cFF4080FF" .. strsub(display, 1, startIndex - 1) .. "|cFFCCCCCC" .. strsub(display, startIndex, endIndex) .. "|cFF4080FF" .. strsub(display, endIndex + 1) .. "|r")) or ("|cFF4080FF" .. display .. "|r"))
+			row.text:SetText(
+				(startIndex and ("|cFF4080FF" .. strsub(display, 1, startIndex - 1) .. "|cFFCCCCCC" .. strsub(display, startIndex, endIndex) .. "|cFF4080FF" .. strsub(display, endIndex + 1) .. "|r"))
+					or ("|cFF4080FF" .. display .. "|r")
+			)
 			row:ClearAllPoints()
 			row:SetPoint("TOPLEFT", 2, -2 - ((i - 1) * 18))
 			row:SetPoint("TOPRIGHT", -2, -2 - ((i - 1) * 18))
@@ -164,7 +185,9 @@ function Options.AddAnchorParentAutocomplete(_, editBox, onValueSelected)
 		suggestionFrame:Show()
 	end
 
-	editBox:SetCallback("OnTextChanged", function(_, _, text) SetSuggestions(text) end)
+	editBox:SetCallback("OnTextChanged", function(_, _, text)
+		SetSuggestions(text)
+	end)
 end
 
 function Options.SetAnchorHighlight(anchorFrame, state, color)
@@ -198,13 +221,17 @@ function SCM:AddTab(tab)
 end
 
 function SCM:GetHideWhenInactive()
-	LibEditModeOverride:LoadLayouts()
-	return LibEditModeOverride:GetFrameSetting(BuffIconCooldownViewer, Enum.EditModeCooldownViewerSetting.HideWhenInactive)
+	if LibEditModeOverride:IsReady() then
+		LibEditModeOverride:LoadLayouts()
+		return LibEditModeOverride:GetFrameSetting(BuffIconCooldownViewer, Enum.EditModeCooldownViewerSetting.HideWhenInactive)
+	end
 end
 
 function SCM:GetShowTooltip()
-	LibEditModeOverride:LoadLayouts()
-	return LibEditModeOverride:GetFrameSetting(BuffIconCooldownViewer, Enum.EditModeCooldownViewerSetting.ShowTooltips)
+	if LibEditModeOverride:IsReady() then
+		LibEditModeOverride:LoadLayouts()
+		return LibEditModeOverride:GetFrameSetting(BuffIconCooldownViewer, Enum.EditModeCooldownViewerSetting.ShowTooltips)
+	end
 end
 
 local function SetViewerHideWhenInactive(viewer, value)

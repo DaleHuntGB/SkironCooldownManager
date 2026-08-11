@@ -18,12 +18,11 @@ end
 
 function SCM:PLAYER_ENTERING_WORLD(isInitialLogin, isReload)
 	if isInitialLogin or isReload then
-		SCM:UpdateCooldownInfo(true)
-		SCM:UpdateDB()
+		SCM.build = select(4, GetBuildInfo())
+
+		SCM.RefreshCooldownViewerData()
 		SCM:ApplyOptions()
 
-		SCM:CreateAllCustomIcons()
-		SCM:ApplyAllCDManagerConfigs(true)
 		SCM:SetHooks()
 		SCM:InitializeResourceBars()
 		SCM:CreateCastBar()
@@ -48,8 +47,11 @@ function SCM:PLAYER_ENTERING_WORLD(isInitialLogin, isReload)
 		eventFrame:RegisterEvent("ACTIONBAR_SLOT_CHANGED")
 		eventFrame:RegisterEvent("CVAR_UPDATE")
 		eventFrame:RegisterUnitEvent("UNIT_SPELLCAST_SUCCEEDED", "player")
+
+		SCM.initialized = true
+		SCM.Callbacks:Fire("SCM_Ready")
 	elseif self.isInInstance ~= IsInInstance() then
-		SCM.RefreshCooldownViewerData()
+		SCM.RefreshCooldownViewerData(false, true)
 	end
 
 	self.isInInstance = IsInInstance()
@@ -177,11 +179,14 @@ end
 
 function SCM:PLAYER_REGEN_DISABLED() end
 function SCM:PLAYER_REGEN_ENABLED()
-	SCM.RefreshCooldownViewerData()
+	if not self.appliedOptions then
+		self:ApplyOptions()
+		SCM.RefreshCooldownViewerData()
+	end
 end
 
 function SCM:EDIT_MODE_LAYOUTS_UPDATED()
-	SCM.RefreshCooldownViewerData()
+	SCM.RefreshCooldownViewerData(false, true)
 end
 
 function SCM:TRAIT_CONFIG_UPDATED()
@@ -221,9 +226,11 @@ end
 function SCM:COOLDOWN_VIEWER_SPELL_OVERRIDE_UPDATED(baseSpellID, overrideSpellID)
 	local options = SCM.db.profile.options
 	local cooldown = C_Spell.GetSpellCooldown(baseSpellID)
-	if cooldown and cooldown.isActive and options.disableRegularIconActiveSwipe then
-		SCM.Cooldowns.OverwriteRegularChildCooldownBySpellID(baseSpellID, overrideSpellID, cooldown)
+	if not (cooldown and cooldown.isActive and options.disableRegularIconActiveSwipe) then
+		cooldown = nil
 	end
+
+	SCM.Cooldowns.UpdateRegularChildrenForSpellOverride(baseSpellID, overrideSpellID, cooldown)
 end
 
 function SCM:SPELL_DATA_LOAD_RESULT(spellID, success)

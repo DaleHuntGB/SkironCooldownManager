@@ -118,7 +118,7 @@ local function OnShow(child)
 	UIParent.SetAlpha(child, child.SCMHidden and 0 or 1)
 
 	if child.SCMGroup and child.SCMChanged then
-		if child.SCMBuffBar and (not SCM.OptionsFrame or not SCM.OptionsFrame:IsShown()) then
+		if child.SCMBuffBar and child.SCMSpellID and (not SCM.OptionsFrame or not SCM.OptionsFrame:IsShown()) then
 			if Constants.FakeAuras[child.SCMSpellID] then
 				child.SCMFakeAuraInstanceID = true
 			end
@@ -142,7 +142,6 @@ local function OnHide(child)
 			end
 
 			child.SCMFixedDuration = nil
-
 			child.SCMFakeAuraInstanceID = nil
 		end
 
@@ -184,7 +183,7 @@ function Icons.SetupBuffBarHooks(child)
 	end
 	child.SCMShowHook = true
 
-	if Constants.FakeAuras[child.SCMSpellID] then
+	if child.SCMSpellID and Constants.FakeAuras[child.SCMSpellID] then
 		child:HookScript("OnShow", OnShow)
 		child:HookScript("OnHide", OnHide)
 
@@ -207,13 +206,22 @@ local function GetOrCacheChildren(viewer)
 	return Cache.cachedViewerChildren[viewer]
 end
 
+--TODO: Yep, this requires a rework
 local function GetConfiguredGroupForCategory(childData, categoryIndex)
 	if not (childData and childData.source and categoryIndex ~= nil) then
 		return
 	end
 
+	if (categoryIndex == Enum.CooldownViewerCategory.Essential or categoryIndex == Enum.CooldownViewerCategory.Utility) then
+		if childData.source[Enum.CooldownViewerCategory.EquipSlotEssential] then
+			return childData.source[Enum.CooldownViewerCategory.EquipSlotEssential]
+		elseif childData.source[Enum.CooldownViewerCategory.SpecAgnosticEssential] then
+			return childData.source[Enum.CooldownViewerCategory.SpecAgnosticEssential]
+		end
+	end
+
 	if categoryIndex == Enum.CooldownViewerCategory.TrackedBuff or categoryIndex == Enum.CooldownViewerCategory.TrackedBar then
-		return childData.source[categoryIndex]
+		return childData.source[Enum.CooldownViewerCategory.EquipSlotTracked] or childData.source[Enum.CooldownViewerCategory.SpecAgnosticTracked] or childData.source[categoryIndex]
 	end
 
 	local pairedCategory = Utils.GetPairedSource(categoryIndex)
@@ -345,7 +353,7 @@ local function ProcessBuffIcon(child, options, refreshOptions, refreshGlowOption
 		isInactive = not child.auraInstanceID or not child.auraDataUnit
 	end
 
-	States.SyncState(child, not isInactive, nil, true, refreshOptions, refreshGlowOptions)
+	States.SetActiveState(child, not isInactive, true, refreshOptions, refreshGlowOptions)
 
 	local canShowInactive = not SCM.isHideWhenInactiveEnabled
 	local stateVisible = child.SCMState.Visibility
@@ -358,9 +366,9 @@ end
 
 local function ProcessRegularIcon(child, options, refreshOptions, refreshGlowOptions)
 	Icons.SetupRegularIconHooks(child, options)
+	local isActive = (child.Cooldown and child.Cooldown:GetUseAuraDisplayTime()) or false
 	Cooldowns.OverrideRegularAuraCooldown(child.Cooldown, child, options)
 
-	local isActive = (child.Cooldown and child.Cooldown:GetUseAuraDisplayTime()) or false
 	States.SyncState(child, isActive, Cooldowns.GetChildCooldown(child), true, refreshOptions, refreshGlowOptions)
 
 	local shouldShow = child.SCMState.Visibility
@@ -374,7 +382,7 @@ local function ProcessBuffBar(child, options, refreshOptions, refreshGlowOptions
 	child.SCMBuffBarOptions = options
 
 	local isInactive = not child.auraInstanceID and not child.SCMFakeAuraInstanceID
-	States.SyncState(child, not isInactive, nil, true, refreshOptions, refreshGlowOptions)
+	States.SetActiveState(child, not isInactive, true, refreshOptions, refreshGlowOptions)
 
 	local forceShow = options.disableBuffBarHideWhenInactive
 	local stateVisible = child.SCMState.Visibility
@@ -395,12 +403,13 @@ local function ProcessSingleChild(child, validChildren, categoryIndex, isBuffIco
 	local categoryConfig = categoryIndex and SCM.defaultCooldownViewerConfig[categoryIndex]
 	local info = categoryConfig and (categoryConfig[cooldownID] or SCM.defaultCooldownViewerConfig.cooldownIDs[cooldownID])
 	local spellID = info and (info.overrideTooltipSpellID or info.overrideSpellID or info.spellID)
+
 	if info and info.linkedSpellIDs and #info.linkedSpellIDs == 1 then
 		child.SCMLinkedSpellID = info.linkedSpellIDs[1]
 	end
 
 	local configID, childData = GetSpellConfigByCooldownID(SCM.spellConfig, cooldownID)
-	if not (cooldownID and spellID and childData) then
+	if not (cooldownID and childData) then
 		if child.SCMConfig then
 			Utils.ResetChildSCMState(child)
 		end
@@ -434,6 +443,8 @@ local function ProcessSingleChild(child, validChildren, categoryIndex, isBuffIco
 	child.SCMCooldownID = cooldownID
 	child.SCMConfigID = configID
 	child.SCMGroup = group
+	child.SCMSpellCategoryID = info.spellCategoryID
+	child.SCMEquipSlot = info.equipSlot
 
 	if activeScopedAnchorGroups and not activeScopedAnchorGroups[group] and (child.SCMBuffOptions or child.SCMIconOptions) then
 		return

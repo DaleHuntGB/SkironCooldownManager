@@ -6,110 +6,64 @@ local function GetSpellAnchorGroupConfig(spellConfig, group)
 	return spellConfig and spellConfig.anchorGroup and spellConfig.anchorGroup[group]
 end
 
-local function CreateCustomConfigTables(customConfig)
-	customConfig = customConfig or {}
-	customConfig.spellConfig = GetOrCreateTableEntry(customConfig, "spellConfig")
-	customConfig.itemConfig = GetOrCreateTableEntry(customConfig, "itemConfig")
-	customConfig.slotConfig = GetOrCreateTableEntry(customConfig, "slotConfig")
-	customConfig.timerConfig = GetOrCreateTableEntry(customConfig, "timerConfig")
-	customConfig.bloodlustConfig = GetOrCreateTableEntry(customConfig, "bloodlustConfig")
+local function SetSpecConfigMetatables(specConfig, profileConfig, defaultConfig)
+	if not defaultConfig then
+		defaultConfig = {}
+	end
 
-	local allowedKeys = SCM.DefaultDB.profile.globalCustomConfig
-	for key in pairs(customConfig) do
-		if not allowedKeys[key] then
-			customConfig[key] = nil
+	for key, value in pairs(specConfig) do
+		local profileValue = profileConfig[key]
+		if type(value) == "table" and type(profileValue) == "table" then
+			SetSpecConfigMetatables(value, profileValue, defaultConfig[key])
 		end
 	end
 
-	return customConfig
-end
-
-local function CreateAnchorConfigTables(customConfig)
-	customConfig = customConfig or {}
-
-	if not customConfig[1] then
-		customConfig[1] = {
-			anchor = { "CENTER", "UIParent", "CENTER", 0, 0 },
-			rowConfig = {
-				[1] = {
-					iconWidth = 150,
-					iconHeight = 40,
-					limit = 8,
-				},
-			},
-		}
-	end
-
-	return customConfig
-end
-
-local function CreateSpecFallbackConfig(config, specConfig, isActive, setSpecConfig)
-	config = config or {}
-	setSpecConfig = setSpecConfig or nop
-
-	isActive = isActive or function()
-		return specConfig and specConfig.active
-	end
-
-	local function SaveSpecConfig()
-		specConfig = specConfig or {}
-		setSpecConfig(specConfig)
-		setSpecConfig = nop
-		return specConfig
-	end
-
-	local function CreateChildConfig(key)
-		local function SaveChildConfig(childConfig)
-			SaveSpecConfig()[key] = childConfig
+	if type(defaultConfig[1]) == "table" then
+		for index, defaultValue in ipairs(defaultConfig) do
+			if rawget(specConfig, index) == nil then
+				local profileValue = profileConfig[index]
+				if type(profileValue) == "table" then
+					specConfig[index] = SetSpecConfigMetatables({}, profileValue, defaultValue)
+				end
+			end
 		end
-
-		return CreateSpecFallbackConfig(config[key], specConfig and specConfig[key], isActive, SaveChildConfig)
 	end
 
-	local metatable = {
-		__index = function(_, key)
-			if key == "active" then
-				return isActive()
-			end
-
-			if not isActive() then
-				return config[key]
-			end
-
-			local value = specConfig and specConfig[key]
-			if value == nil then
-				value = config[key]
-			end
-
+	return setmetatable(specConfig, {
+		__index = function(self, key)
+			local value = profileConfig[key]
 			if type(value) == "table" then
-				return CreateChildConfig(key)
+				value = SetSpecConfigMetatables({}, value, defaultConfig[key])
+				rawset(self, key, value)
 			end
 
 			return value
 		end,
-		__newindex = function(_, key, value)
-			if key == "active" then
-				SaveSpecConfig()[key] = value
-			elseif isActive() then
-				if IsShiftKeyDown() then
-					if specConfig then
-						specConfig[key] = nil
-					end
-				else
-					SaveSpecConfig()[key] = value
-				end
-			else
-				config[key] = value
-			end
-		end,
-	}
+	})
+end
 
-	return setmetatable({}, metatable)
+function SCM:UpdateCastAndResourceBarConfigs()
+	local options = self.db.profile.options
+	local defaultOptions = SCM.DefaultDB.profile.options
+
+	if self.specResourceBarConfig.active then
+		self.resourceBarConfig = SetSpecConfigMetatables(self.specResourceBarConfig, options.resourceBar, defaultOptions.resourceBar)
+	else
+		self.resourceBarConfig = options.resourceBar
+	end
+
+	if self.specCastBarConfig.active then
+		self.castBarConfig = SetSpecConfigMetatables(self.specCastBarConfig, options.castBar, defaultOptions.castBar)
+	else
+		self.castBarConfig = options.castBar
+	end
+
+	if self.CastBar then
+		self.CastBar.barOptions = self.castBarConfig
+	end
 end
 
 function SCM:UpdateDB()
-	local options = self.db.profile.options
-
 	local firstGlobalGroup = SCM.Utils.ToGlobalGroup(1)
 	local firstBuffBarGroup = SCM.Utils.ToBuffBarGroup(1)
 	local class = Utils.GetClass()
@@ -117,49 +71,54 @@ function SCM:UpdateDB()
 	local _, _, raceID = UnitRace("player")
 
 	local currentConfig = self.DB:LoadData()
-	local specAnchorConfig = currentConfig and currentConfig.anchorConfig[specID]
-	local specBuffBarsAnchorConfig = currentConfig and currentConfig.buffBarsAnchorConfig and currentConfig.buffBarsAnchorConfig[specID]
-	local specSpellConfig = currentConfig and currentConfig.spellConfig[specID]
-	local specCustomConfig = currentConfig and currentConfig.customConfig and currentConfig.customConfig[specID]
-	local specResourceBarConfig = currentConfig and currentConfig.resourceBarConfig and currentConfig.resourceBarConfig[specID]
-	local specCastBarConfig = currentConfig and currentConfig.castBarConfig and currentConfig.castBarConfig[specID]
+
+	local specAnchorConfig = self.DB.defaultAnchorConfig
+	local specBuffBarsAnchorConfig = self.DB.defaultBuffBarsAnchorConfig
+	local specAurasAnchorConfig = self.DB.defaultAurasAnchorConfig
+	local specSpellConfig = {}
+	local specCustomConfig = {}
+	local specResourceBarConfig = {}
+	local specCastBarConfig = {}
+
+	if currentConfig then
+		specAnchorConfig = currentConfig.anchorConfig[specID] or specAnchorConfig
+		specBuffBarsAnchorConfig = (currentConfig.buffBarsAnchorConfig and currentConfig.buffBarsAnchorConfig[specID]) or specBuffBarsAnchorConfig
+		specAurasAnchorConfig = (currentConfig.aurasAnchorConfig and currentConfig.aurasAnchorConfig[specID]) or specAurasAnchorConfig
+		specSpellConfig = currentConfig.spellConfig[specID] or specSpellConfig
+		specCustomConfig = (currentConfig.customConfig and currentConfig.customConfig[specID]) or specCustomConfig
+		specResourceBarConfig = (currentConfig.resourceBarConfig and currentConfig.resourceBarConfig[specID]) or specResourceBarConfig
+		specCastBarConfig = (currentConfig.castBarConfig and currentConfig.castBarConfig[specID]) or specCastBarConfig
+	end
 
 	self.db.profile[class] = self.db.profile[class] or {}
 	self.db.profile[class][specID] = self.db.profile[class][specID]
 		or {
-			anchorConfig = CopyTable(specAnchorConfig or self.DB.defaultAnchorConfig),
-			buffBarsAnchorConfig = CopyTable(specBuffBarsAnchorConfig or self.DB.defaultBuffBarsAnchorConfig),
-			spellConfig = specSpellConfig or {},
-			customConfig = specCustomConfig or {},
-			resourceBarConfig = specResourceBarConfig or {},
-			castBarConfig = specCastBarConfig or {},
+			anchorConfig = CopyTable(specAnchorConfig),
+			buffBarsAnchorConfig = CopyTable(specBuffBarsAnchorConfig),
+			aurasAnchorConfig = CopyTable(specAurasAnchorConfig),
+			spellConfig = specSpellConfig,
+			customConfig = specCustomConfig,
+			resourceBarConfig = specResourceBarConfig,
+			castBarConfig = specCastBarConfig,
 		}
 
 	self.currentConfig = self.db.profile[class][specID]
+
 	self.anchorConfig = self.currentConfig.anchorConfig
+	self.buffBarsAnchorConfig = self.currentConfig.buffBarsAnchorConfig
+	self.aurasAnchorConfig = self.currentConfig.aurasAnchorConfig
 	self.spellConfig = self.currentConfig.spellConfig
+
 	self:MigrateDB()
-	self.itemConfig = self.currentConfig.itemConfig
-
-	self.currentConfig.customConfig = self.currentConfig.customConfig or {}
-	self.customConfig = CreateCustomConfigTables(self.currentConfig.customConfig)
-
-	self.currentConfig.resourceBarConfig = self.currentConfig.resourceBarConfig or {}
-	self.specResourceBarConfig = self.currentConfig.resourceBarConfig
-	self.resourceBarConfig = CreateSpecFallbackConfig(options.resourceBar, self.currentConfig.resourceBarConfig)
-
-	self.currentConfig.castBarConfig = self.currentConfig.castBarConfig or {}
-	self.specCastBarConfig = self.currentConfig.castBarConfig
-	self.castBarConfig = CreateSpecFallbackConfig(options.castBar, self.currentConfig.castBarConfig)
-	if self.CastBar then
-		self.CastBar.barOptions = self.castBarConfig
-	end
-
-	self.currentConfig.buffBarsAnchorConfig = self.currentConfig.buffBarsAnchorConfig or {}
-	self.buffBarsAnchorConfig = CreateAnchorConfigTables(self.currentConfig.buffBarsAnchorConfig)
 
 	self.globalAnchorConfig = self.db.profile.globalAnchorConfig
-	self.globalCustomConfig = CreateCustomConfigTables(self.db.profile.globalCustomConfig)
+	self.globalCustomConfig = self.db.profile.globalCustomConfig
+	self.globalAurasAnchorConfig = self.db.profile.globalAurasAnchorConfig
+
+	self.customConfig = self.currentConfig.customConfig
+	self.specResourceBarConfig = self.currentConfig.resourceBarConfig
+	self.specCastBarConfig = self.currentConfig.castBarConfig
+	self:UpdateCastAndResourceBarConfigs()
 
 	self.isHideWhenInactiveEnabled = self:GetHideWhenInactive() == 1
 	self.showTooltips = self:GetShowTooltip() == 1

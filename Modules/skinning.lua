@@ -192,15 +192,47 @@ local function ApplyCooldownSwipe(cooldownFrame, options)
 		cooldownFrame:SetSwipeColor(0, 0, 0, 0.7)
 	end
 end
+SCM.ApplyCooldownSwipe = ApplyCooldownSwipe
 
-local function OnSetCooldown(self)
-	local options = SCM.db.profile.options
+local ApplyCooldownRule
 
-	ApplyCooldownSwipe(self, options)
-	if not self.SCMCooldownFontString then
-		ApplyCooldownFont(self, options)
+local function ApplyCooldownSkin(self)
+	local parent = self.SCMParent or self:GetParent()
+	local state = parent and parent.SCMState
+	local rule = parent and parent.SCMConfig and not parent.SCMReleased and state and state.CooldownRule
+
+	if self.SCMApplyCooldownSkin then
+		local options = SCM.db.profile.options
+		if not rule and not (parent and parent.SCMCustom) then
+			ApplyCooldownSwipe(self, options)
+		end
+		if not self.SCMCooldownFontString then
+			ApplyCooldownFont(self, options)
+		end
+	end
+
+	if rule then
+		ApplyCooldownRule(self, rule)
 	end
 end
+SCM.ApplyCooldownSkin = ApplyCooldownSkin
+
+ApplyCooldownRule = function(cooldownFrame, rule)
+	cooldownFrame:SetDrawEdge(rule.drawEdge and true or false)
+	cooldownFrame:SetDrawSwipe(rule.drawSwipe == nil or rule.drawSwipe)
+	cooldownFrame:SetReverse(rule.reverse and true or false)
+	if rule.edgeColor then
+		cooldownFrame:SetEdgeColor(rule.edgeColor.r, rule.edgeColor.g, rule.edgeColor.b, rule.edgeColor.a)
+	else
+		cooldownFrame:SetEdgeColor(1, 0.7, 0, 1)
+	end
+	if rule.swipeColor then
+		cooldownFrame:SetSwipeColor(rule.swipeColor.r, rule.swipeColor.g, rule.swipeColor.b, rule.swipeColor.a)
+	else
+		cooldownFrame:SetSwipeColor(0, 0, 0, 0.7)
+	end
+end
+SCM.ApplyCooldownRule = ApplyCooldownRule
 
 local function ApplyCooldownPoints(cooldownFrame, child, options, childConfig, isOptionsOpen)
 	if child.SCMCooldownSkinHook and not isOptionsOpen then
@@ -233,7 +265,7 @@ local function ApplyCooldownPoints(cooldownFrame, child, options, childConfig, i
 end
 
 local function ApplyCooldownStyle(child, options, childConfig, isOptionsOpen)
-	local cooldownFrame = child.GetCooldownFrame and child:GetCooldownFrame() or child.Cooldown
+	local cooldownFrame = child.Cooldown
 	if cooldownFrame then
 		if cooldownFrame.SCMCooldownSkinHook and not isOptionsOpen then
 			return
@@ -256,9 +288,10 @@ local function ApplyCooldownStyle(child, options, childConfig, isOptionsOpen)
 		end
 
 		child.SCMCooldownSkinHook = true
+		cooldownFrame.SCMApplyCooldownSkin = true
 
-		hooksecurefunc(cooldownFrame, "SetCooldown", OnSetCooldown)
-		OnSetCooldown(cooldownFrame)
+		SCM.Cooldowns.SetupCooldownHook(cooldownFrame)
+		ApplyCooldownSkin(cooldownFrame)
 	end
 end
 
@@ -297,11 +330,6 @@ function SCM:SkinChild(child, childConfig)
 
 	if not options.enableIconSkinning or child.SCMIconType == "empty" then
 		return
-	end
-
-	local frameStrata = child.SCMAnchorFrameStrata or options.iconFrameStrata
-	if frameStrata and frameStrata ~= "" then
-		child:SetFrameStrata(frameStrata)
 	end
 
 	local isOptionsOpen = self.OptionsFrame and self.OptionsFrame:IsShown()

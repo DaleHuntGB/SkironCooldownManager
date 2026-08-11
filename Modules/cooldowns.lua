@@ -47,26 +47,22 @@ local function OnBuffActiveStateChanged(self)
 	if not self.SCMConfig then
 		return
 	elseif issecretvalue(self.isActive) then
-		-- print("SECRET ACTIVE STATE", self.SCMSpellID, C_Spell.GetSpellName(self.SCMSpellID))
 		return
 	end
 
 	if self.isActive then
-		-- print("NOT SECRET ACTIVE", self.SCMSpellID, C_Spell.GetSpellName(self.SCMSpellID))
 		SetBuffActive(self)
 	else
-		-- print("NOT SECRET INACTIVE", self.SCMSpellID, C_Spell.GetSpellName(self.SCMSpellID))
 		SetBuffInactive(self, true)
 	end
 end
 
 local function OnBuffCooldownSet(self)
 	local parent = (self.SCMConfig and self) or self.SCMParent or self:GetParent()
-	if not parent or not parent.SCMConfig or not issecretvalue(self.isActive) or (not parent.SCMCheckCooldownFrame and not parent.auraInstanceID) then
+	if not parent or not parent.SCMConfig or not issecretvalue(parent.isActive) or (not parent.SCMCheckCooldownFrame and not parent.auraInstanceID) then
 		return
 	end
 
-	-- print("BACKUP ACTIVE", parent.SCMSpellID, C_Spell.GetSpellName(parent.SCMSpellID))
 	SetBuffActive(parent)
 end
 
@@ -75,8 +71,6 @@ local function OnBuffCooldownEnd(self)
 	if not parent or not parent.SCMConfig or not issecretvalue(parent.isActive) then
 		return
 	end
-
-	-- print("BACKUP INACTIVE", parent.SCMSpellID, C_Spell.GetSpellName(parent.SCMSpellID))
 
 	SetBuffInactive(parent)
 end
@@ -146,8 +140,30 @@ local function SetupPandemicHooks(child, options)
 	end
 end
 
+local function OnCooldownSet(self, ...)
+	local handler = self.SCMCooldownCallback
+	if handler then
+		handler(self, ...)
+	end
+
+	SCM.ApplyCooldownSkin(self)
+end
+
+function Cooldowns.SetupCooldownHook(cooldownFrame, callback)
+	if callback then
+		cooldownFrame.SCMCooldownCallback = callback
+	end
+
+	if cooldownFrame.SCMCooldownHook then
+		return
+	end
+
+	hooksecurefunc(cooldownFrame, "SetCooldown", OnCooldownSet)
+	cooldownFrame.SCMCooldownHook = true
+end
+
 function Cooldowns.SetupBuffIconHooks(child, options)
-	local checkCooldownFrame = Constants.FakeAuras[child.SCMSpellID] or Constants.TargetAuras[child.SCMSpellID]
+	local checkCooldownFrame = (child.SCMSpellID and (Constants.FakeAuras[child.SCMSpellID] or Constants.TargetAuras[child.SCMSpellID]))
 	child.SCMBuffOptions = options
 	SetupPandemicHooks(child, options)
 
@@ -161,7 +177,7 @@ function Cooldowns.SetupBuffIconHooks(child, options)
 
 	if checkCooldownFrame then
 		if not child.SCMCooldownHooked then
-			hooksecurefunc(child.Cooldown, "SetCooldown", OnBuffCooldownSet)
+			Cooldowns.SetupCooldownHook(child.Cooldown, OnBuffCooldownSet)
 			hooksecurefunc(child, "OnAuraInstanceInfoSet", OnBuffCooldownSet)
 			hooksecurefunc(child.Cooldown, "Clear", OnBuffCooldownEnd)
 			child.Cooldown:HookScript("OnCooldownDone", OnBuffCooldownEnd)
@@ -170,7 +186,10 @@ function Cooldowns.SetupBuffIconHooks(child, options)
 		end
 
 		child.SCMCheckCooldownFrame = true
-		child.SCMUseFixedDuration = type(Constants.FakeAuras[child.SCMSpellID]) == "number" and Constants.FakeAuras[child.SCMSpellID]
+
+		if child.SCMSpellID then
+			child.SCMUseFixedDuration = type(Constants.FakeAuras[child.SCMSpellID]) == "number" and Constants.FakeAuras[child.SCMSpellID]
+		end
 	else
 		if not child.SCMAuraHooked then
 			hooksecurefunc(child, "OnAuraInstanceInfoSet", OnBuffCooldownSet)
@@ -190,38 +209,61 @@ function Cooldowns.SetupBuffIconHooks(child, options)
 end
 
 function Cooldowns.GetChildCooldown(child)
-	if not child.SCMSpellID then
-		return
-	end
+	if child.SCMEquipSlot then
+		local cooldownState = "ready"
 
-	local cooldownData = SCM.defaultCooldownViewerConfig.cooldownIDs[child.SCMCooldownID]
-
-	local durationObject
-	local cooldownState = "ready"
-
-	local spellCooldown = C_Spell.GetSpellCooldown(child.SCMSpellID)
-	if spellCooldown and spellCooldown.isActive and not spellCooldown.isOnGCD then
-		durationObject = C_Spell.GetSpellCooldownDuration(child.SCMSpellID, true)
-		if durationObject then
-			cooldownState = "cooldown"
-		end
-	end
-
-	if cooldownData.charges and not durationObject then
-		local spellCharges = C_Spell.GetSpellCharges(child.SCMSpellID)
-		if spellCharges and spellCharges.isActive and not spellCharges.isOnGCD then
-			durationObject = C_Spell.GetSpellChargeDuration(child.SCMSpellID, true)
-			if durationObject then
-				cooldownState = "recharging"
+		local now = GetTime()
+		local startTime, duration = GetInventoryItemCooldown("player", child.SCMEquipSlot)
+		if startTime and startTime > 0 and (startTime + duration) - now >= 0.1 then
+			local globalCooldown = C_Spell.GetSpellCooldown(61304)
+			if duration ~= globalCooldown.duration then
+				cooldownState = "cooldown"
 			end
 		end
+
+		return cooldownState
 	end
 
-	if Constants.CheckCooldownFrameSpells[child.SCMSpellID] then
-		return durationObject and child.Cooldown:IsVisible() and cooldownState or "ready", durationObject
-	end
+	if child.SCMSpellID or child.SCMSpellCategoryID then
+		local cooldownData = SCM.defaultCooldownViewerConfig.cooldownIDs[child.SCMCooldownID]
+		local spellID
+		if child.SCMSpellCategoryID then
+			spellID = C_Spell.GetLastCategoryCooldownSource(child.SCMSpellCategoryID)
+		else
+			spellID = FindSpellOverrideByID(child.SCMSpellID) or child.SCMSpellID
+		end
 
-	return cooldownState, durationObject
+		if spellID then
+			local durationObject
+			local cooldownState = "ready"
+
+			local spellCooldown = C_Spell.GetSpellCooldown(spellID)
+			if spellCooldown and spellCooldown.isActive and not spellCooldown.isOnGCD then
+				durationObject = C_Spell.GetSpellCooldownDuration(spellID, true)
+				if durationObject then
+					cooldownState = "cooldown"
+				end
+			end
+
+			if cooldownData.charges and not durationObject then
+				local spellCharges = C_Spell.GetSpellCharges(spellID)
+				if spellCharges and spellCharges.isActive and not spellCharges.isOnGCD then
+					durationObject = C_Spell.GetSpellChargeDuration(spellID, true)
+					if durationObject then
+						cooldownState = "recharging"
+					end
+				end
+			end
+
+			if Constants.CheckCooldownFrameSpells[child.SCMSpellID] then
+				return durationObject and child.Cooldown:IsVisible() and cooldownState or "ready", durationObject
+			end
+
+			return cooldownState, durationObject
+		else
+			return "ready"
+		end
+	end
 end
 
 function Cooldowns.SetNormalCooldown(self, parent)
@@ -239,53 +281,96 @@ function Cooldowns.SetNormalCooldown(self, parent)
 
 	local durationObject
 	local cooldownType
-	local spellID = FindSpellOverrideByID(parent.SCMSpellID) or parent.SCMSpellID
-	local spellCooldown = C_Spell.GetSpellCooldown(spellID)
 
-	if spellCooldown and spellCooldown.isActive and not spellCooldown.isOnGCD then
-		durationObject = C_Spell.GetSpellCooldownDuration(spellID, true)
-		if durationObject then
-			cooldownType = "spell"
+	if parent.SCMEquipSlot then
+		local now = GetTime()
+		local startTime, duration = GetInventoryItemCooldown("player", parent.SCMEquipSlot)
+		local cooldownState = "ready"
+		local isActive = startTime and startTime > 0 and (startTime + duration) - now >= 0.1
+		local isGCD
+
+		if isActive then
+			local globalCooldown = C_Spell.GetSpellCooldown(61304)
+			isGCD = duration == globalCooldown.duration
+			isActive = not isGCD or not options.disableGCD
 		end
-	end
 
-	if not durationObject and cooldownData and cooldownData.charges then
-		local spellCharges = C_Spell.GetSpellCharges(spellID)
-		if spellCharges and spellCharges.isActive and not spellCharges.isOnGCD then
-			durationObject = C_Spell.GetSpellChargeDuration(spellID, true)
-			if durationObject then
-				cooldownType = "charge"
+		self:Clear()
+
+		if isActive then
+			if not isGCD then
+				cooldownState = "cooldown"
+			end
+
+			if not (childConfig.effectRules and childConfig.effectRules.desaturate) then
+				Icons.UpdateChildDesaturation(parent, not isGCD and not useAuraDisplayTime, true)
+			end
+
+			self:SetCooldown(startTime, duration)
+		else
+			if not (childConfig.effectRules and childConfig.effectRules.desaturate) then
+				Icons.UpdateChildDesaturation(parent, false)
 			end
 		end
-	end
 
-	if not durationObject and not options.disableGCD and spellCooldown and spellCooldown.isActive and spellCooldown.isOnGCD then
-		durationObject = C_Spell.GetSpellCooldownDuration(spellID, true)
-		if durationObject then
-			cooldownType = "gcd"
-		end
-	end
-
-	self:Clear()
-
-	if durationObject then
-		local isSpellCooldown = cooldownType == "spell"
-		local isChargeCooldown = cooldownType == "charge"
-
-		if not (childConfig.effectRules and childConfig.effectRules.desaturate) then
-			Icons.UpdateChildDesaturation(parent, isSpellCooldown and not useAuraDisplayTime, true)
+		States.SetCooldownState(parent, cooldownState, true)
+	elseif parent.SCMSpellID or parent.SCMSpellCategoryID then
+		local spellID
+		if parent.SCMSpellCategoryID then
+			spellID = C_Spell.GetLastCategoryCooldownSource(parent.SCMSpellCategoryID)
+		else
+			spellID = FindSpellOverrideByID(parent.SCMSpellID) or parent.SCMSpellID
 		end
 
-		self:SetDrawEdge(isChargeCooldown)
-		self:SetDrawSwipe(not isChargeCooldown)
-		self:SetCooldownFromDurationObject(durationObject)
-	else
-		if not (childConfig.effectRules and childConfig.effectRules.desaturate) then
-			Icons.UpdateChildDesaturation(parent, false)
-		end
+		if spellID then
+			local spellCooldown = C_Spell.GetSpellCooldown(spellID)
+			if spellCooldown and spellCooldown.isActive and not spellCooldown.isOnGCD then
+				durationObject = C_Spell.GetSpellCooldownDuration(spellID, true)
+				if durationObject then
+					cooldownType = "spell"
+				end
+			end
 
-		self:SetDrawEdge(false)
-		self:SetDrawSwipe(true)
+			if not durationObject and cooldownData and cooldownData.charges then
+				local spellCharges = C_Spell.GetSpellCharges(spellID)
+				if spellCharges and spellCharges.isActive and not spellCharges.isOnGCD then
+					durationObject = C_Spell.GetSpellChargeDuration(spellID, true)
+					if durationObject then
+						cooldownType = "charge"
+					end
+				end
+			end
+
+			if not durationObject and not options.disableGCD and spellCooldown and spellCooldown.isActive and spellCooldown.isOnGCD then
+				durationObject = C_Spell.GetSpellCooldownDuration(spellID, true)
+				if durationObject then
+					cooldownType = "gcd"
+				end
+			end
+
+			self:Clear()
+
+			local cooldownState = "ready"
+			if durationObject then
+				local isSpellCooldown = cooldownType == "spell"
+				if isSpellCooldown then
+					cooldownState = "cooldown"
+				elseif cooldownType == "charge" then
+					cooldownState = "recharging"
+				end
+
+				if not (childConfig.effectRules and childConfig.effectRules.desaturate) then
+					Icons.UpdateChildDesaturation(parent, isSpellCooldown and not useAuraDisplayTime, true)
+				end
+
+				self:SetCooldownFromDurationObject(durationObject)
+			else
+				if not (childConfig.effectRules and childConfig.effectRules.desaturate) then
+					Icons.UpdateChildDesaturation(parent, false)
+				end
+			end
+			States.SetCooldownState(parent, cooldownState, true)
+		end
 	end
 
 	self.SCMSettingRegularSpellCooldown = nil
@@ -293,8 +378,10 @@ end
 
 function Cooldowns.OverrideRegularAuraCooldown(self, parent, options)
 	local config = parent.SCMConfig
-	if not parent.SCMSpellID or not self:GetUseAuraDisplayTime() or config.forceActiveSwipe or not (options.disableRegularIconActiveSwipe or config.hideActiveSwipe) then
-		parent.Icon.SCMDesaturated = nil
+	if not self:GetUseAuraDisplayTime() or config.forceActiveSwipe or not (options.disableRegularIconActiveSwipe or config.hideActiveSwipe) then
+		if not (config.effectRules and config.effectRules.desaturate) then
+			parent.Icon.SCMDesaturated = nil
+		end
 		return
 	end
 
@@ -307,11 +394,12 @@ local function SetRegularChildCooldown(child, cooldownInfo)
 		return
 	end
 
+	local isActive = cooldownFrame:GetUseAuraDisplayTime()
 	Cooldowns.SetNormalCooldown(cooldownFrame, child)
-	States.SyncState(child, cooldownFrame:GetUseAuraDisplayTime(), Cooldowns.GetChildCooldown(child))
+	States.SyncState(child, isActive, (Cooldowns.GetChildCooldown(child)))
 end
 
-local function OverwriteViewerChildCooldown(viewer, spellID, cooldownInfo)
+local function UpdateViewerChildrenForSpellOverride(viewer, spellID, overrideSpellID, cooldownInfo)
 	local children = Cache.cachedViewerChildren[viewer]
 	if not children then
 		children = { viewer:GetChildren() }
@@ -320,15 +408,18 @@ local function OverwriteViewerChildCooldown(viewer, spellID, cooldownInfo)
 
 	for i = 1, #children do
 		local child = children[i]
-		if child.SCMConfig and not child.SCMBuffBar and not child.SCMConfig.forceActiveSwipe and child.SCMSpellID == spellID then
-			SetRegularChildCooldown(child, cooldownInfo)
+		if child.SCMConfig and not child.SCMBuffBar and child.SCMSpellID == spellID then
+			States.SetOverriddenState(child, overrideSpellID and true or false)
+			if cooldownInfo and not child.SCMConfig.forceActiveSwipe then
+				SetRegularChildCooldown(child, cooldownInfo)
+			end
 		end
 	end
 end
 
-function Cooldowns.OverwriteRegularChildCooldownBySpellID(spellID, overrideSpellID, cooldownInfo)
-	OverwriteViewerChildCooldown(EssentialCooldownViewer, spellID, cooldownInfo)
-	OverwriteViewerChildCooldown(UtilityCooldownViewer, spellID, cooldownInfo)
+function Cooldowns.UpdateRegularChildrenForSpellOverride(spellID, overrideSpellID, cooldownInfo)
+	UpdateViewerChildrenForSpellOverride(EssentialCooldownViewer, spellID, overrideSpellID, cooldownInfo)
+	UpdateViewerChildrenForSpellOverride(UtilityCooldownViewer, spellID, overrideSpellID, cooldownInfo)
 end
 
 local function OnRegularCooldownChanged(self, changeType)
@@ -343,17 +434,16 @@ local function OnRegularCooldownChanged(self, changeType)
 
 	if (options.disableRegularIconActiveSwipe or config.hideActiveSwipe) and not config.forceActiveSwipe and useAuraDisplayTime then
 		Cooldowns.OverrideRegularAuraCooldown(self, parent, options)
-	elseif options.disableGCD or (changeType == "CLEAR" and Constants.FixBlizzardSpells[parent.SCMSpellID]) then
+	elseif options.disableGCD or (changeType == "CLEAR" and parent.SCMSpellID and Constants.FixBlizzardSpells[parent.SCMSpellID]) then
 		Cooldowns.SetNormalCooldown(self, parent)
-	elseif parent.Icon.SCMDesaturated and not useAuraDisplayTime then
+	elseif not (config.effectRules and config.effectRules.desaturate) and parent.Icon.SCMDesaturated and not useAuraDisplayTime then
 		parent.Icon.SCMDesaturated = nil
 		parent.Icon:SetDesaturated(false)
 	end
 
 	RunNextFrame(function()
-		States.SyncState(parent, useAuraDisplayTime, Cooldowns.GetChildCooldown(parent))
+		States.SyncState(parent, useAuraDisplayTime, (Cooldowns.GetChildCooldown(parent)))
 	end)
-
 end
 
 function Cooldowns.SetupCooldownHooks(child, options)
@@ -366,7 +456,7 @@ function Cooldowns.SetupCooldownHooks(child, options)
 		return
 	end
 
-	hooksecurefunc(child.Cooldown, "SetCooldown", function(self)
+	Cooldowns.SetupCooldownHook(child.Cooldown, function(self)
 		OnRegularCooldownChanged(self, "SET")
 	end)
 	hooksecurefunc(child.Cooldown, "Clear", function(self)
@@ -376,7 +466,10 @@ function Cooldowns.SetupCooldownHooks(child, options)
 	child.Cooldown.SCMParent = child
 	child.Cooldown:HookScript("OnCooldownDone", function(self, ...)
 		local parent = self.SCMParent or self:GetParent()
-		parent.Icon.SCMDesaturated = nil
+		local config = parent.SCMConfig
+		if not (config and config.effectRules and config.effectRules.desaturate) then
+			parent.Icon.SCMDesaturated = nil
+		end
 		OnRegularCooldownChanged(self, "DONE")
 	end)
 	child.SCMRegularCooldownHook = true

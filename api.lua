@@ -1,5 +1,10 @@
 local SCM = select(2, ...)
 SCMAPI = {}
+SCM.Callbacks = LibStub("CallbackHandler-1.0"):New(SCMAPI)
+
+function SCMAPI.IsReady()
+	return SCM.initialized
+end
 
 function SCMAPI.AddTab(tab)
 	SCM:AddTab(tab)
@@ -21,14 +26,26 @@ end
 --   includeGlobalSettings: import global settings.
 --   includeGlobalAnchors: import global anchors.
 function SCMAPI.ImportProfile(profileName, importString, importSettings)
+	if not SCM.initialized then
+		return
+	end
+
 	SCM:ImportProfile(profileName, importString, importSettings)
 end
 
 function SCMAPI.ImportGlobalSettings(importString)
+	if not SCM.initialized then
+		return
+	end
+
 	SCM:ImportGlobalSettings(importString)
 end
 
 function SCMAPI.ImportGlobalAnchors(importString)
+	if not SCM.initialized then
+		return
+	end
+
 	SCM:ImportGlobalAnchors(importString)
 end
 
@@ -43,6 +60,10 @@ function SCMAPI.AddCustomIcon(anchorGroup, iconType, configID, order, uniqueID, 
 end
 
 function SCMAPI.RegisterAndLoadConfig(profileName, classFileName, config, specID)
+	if not SCM.initialized then
+		return
+	end
+
 	SCM.DB:RegisterAndLoadConfig(profileName, classFileName, config, specID)
 end
 

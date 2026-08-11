@@ -114,8 +114,9 @@ local function RemoveProxy(state)
 	state.currentProxyRequired = nil
 	state.currentProxyActive = nil
 
-	if state.currentProxyFrame then
-		state.currentProxyFrame:Hide()
+	local proxy = state.currentProxyFrame
+	if proxy and not (InCombatLockdown() and proxy:IsProtected()) then
+		proxy:Hide()
 	end
 end
 
@@ -422,7 +423,7 @@ local function SetAnchorVisibilityHooks(group, anchor, selectedAnchorFrame, grou
 	end
 end
 
-function SCM:GetManagedAnchorChildAnchor(group, groupAnchor, point, anchor, relativePoint, xOffset, yOffset, growDir, offsetWidth, frameWidth, frameHeight, anchorOffsetY, forceProxyAnchor)
+function SCM:GetManagedAnchorChildAnchor(group, groupAnchor, point, anchor, relativePoint, xOffset, yOffset, growDir, offsetWidth, frameWidth, frameHeight, anchorOffsetY)
 	local state = Cache.cachedAnchorStates[group]
 	if not state then
 		return groupAnchor, false
@@ -433,12 +434,8 @@ function SCM:GetManagedAnchorChildAnchor(group, groupAnchor, point, anchor, rela
 		return groupAnchor, false
 	end
 
-	local useProxy = InCombatLockdown() and (forceProxyAnchor or (state.currentAnchorFrame == anchor and (state.currentProxyRequired or state.currentProxyActive)))
-
-	if not useProxy then
-		if not InCombatLockdown() then
-			RemoveProxy(state)
-		end
+	if not InCombatLockdown() then
+		RemoveProxy(state)
 		return groupAnchor, false
 	end
 
@@ -449,7 +446,7 @@ function SCM:GetManagedAnchorChildAnchor(group, groupAnchor, point, anchor, rela
 
 	local target = anchor
 	if type(target) == "string" then
-		target = Utils.GetAnchorFrame(target)
+		target = Utils.GetActiveAnchorFrame(target)
 	end
 	target = target or UIParent
 

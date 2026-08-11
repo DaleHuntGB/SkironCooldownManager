@@ -5,9 +5,6 @@ local function GetSpecConfigValue(configTable, specID)
 		return
 	end
 
-	-- Support both layouts:
-	-- 1) itemConfig[specID] = { [slotID] = config }
-	-- 2) itemConfig = { [slotID] = config } (shared for all specs)
 	return configTable[specID] or configTable
 end
 

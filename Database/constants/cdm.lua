@@ -10,10 +10,10 @@ SCM.CooldownViewerNameToIndex = {
 }
 
 Constants.SourcePairs = {
-	[0] = 1,
-	[1] = 0,
-	[2] = 3,
-	[3] = 2,
+	[Enum.CooldownViewerCategory.Essential] = Enum.CooldownViewerCategory.Utility,
+	[Enum.CooldownViewerCategory.Utility] = Enum.CooldownViewerCategory.Essential,
+	[Enum.CooldownViewerCategory.TrackedBuff] = Enum.CooldownViewerCategory.TrackedBar,
+	[Enum.CooldownViewerCategory.TrackedBar] = Enum.CooldownViewerCategory.TrackedBuff,
 }
 
 Constants.BuffBarContent = {

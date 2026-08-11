@@ -71,7 +71,6 @@ function CDMOptions.SelectAnchor(widget, parentWidget, anchorIndex, anchorTabsTb
 	local anchorOptions = AceGUI:Create("InlineGroup")
 	anchorOptions:SetLayout("flow")
 	anchorOptions:SetFullWidth(true)
-	anchorOptions:SetFullHeight(true)
 	anchorOptions:SetTitle("Anchor Options")
 	scrollFrame:AddChild(anchorOptions)
 
@@ -273,7 +272,7 @@ function CDMOptions.SelectAnchor(widget, parentWidget, anchorIndex, anchorTabsTb
 	advancedConfigTabs:SetLayout("flow")
 	advancedConfigTabs:SetFullWidth(true)
 	advancedConfigTabs:SetHeight(280)
-	advancedConfigTabs:SetTabs({ { value = "spellConfig", text = "Spell Config" }, { value = "rowConfig", text = "Row Config" } })
+	advancedConfigTabs:SetTabs({ { value = "spellConfig", text = "Spell Config" }, { value = "rowConfig", text = "Icon Config" } })
 	advancedConfigTabs:SetCallback("OnGroupSelected", function(self, _, configType)
 		self:ReleaseChildren()
 
@@ -283,6 +282,7 @@ function CDMOptions.SelectAnchor(widget, parentWidget, anchorIndex, anchorTabsTb
 			CDMOptions.CreateSpellConfig(self, anchorOptions, widget, parentWidget, scrollFrame, data, anchorIndex, mode, options, isProfileConfig)
 		end
 		anchorOptions:DoLayout()
+		scrollFrame:DoLayout()
 	end)
 	anchorOptions:AddChild(advancedConfigTabs)
 	advancedConfigTabs:SelectTab("spellConfig")
