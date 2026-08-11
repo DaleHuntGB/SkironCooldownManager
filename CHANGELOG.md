@@ -6,6 +6,8 @@ Additions:
 - Add "Hide Active Swipe" option
 - Spells now have tooltips in the dropdown menu
 - You can now search for anchors
+- Add option to select a custom frame for the state glow and border
+- Move Frame Strata option to each bar and add a frame level slider
 
 Fixes:
 - Fixes for 12.1 changes
@@ -13,3 +15,4 @@ Fixes:
 - Minor bug and lua error fixes
 - Some performance improvements (maybe not)
 - Migration only runs once per spec if it's outdated
+- Use the correct anchor points for the resource bar depending on the growth direction
