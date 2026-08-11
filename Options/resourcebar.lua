@@ -156,7 +156,7 @@ local function AddLayoutSettings(parent, settings)
 	parent:AddChild(layoutSettings)
 
 	local barMinWidth = AceGUI:Create("Slider")
-	barMinWidth:SetRelativeWidth(0.5)
+	barMinWidth:SetRelativeWidth(0.33)
 	barMinWidth:SetLabel("Min Width")
 	barMinWidth:SetSliderValues(50, 500, 0.1)
 	barMinWidth:SetValue(settings.minWidth)
@@ -167,7 +167,7 @@ local function AddLayoutSettings(parent, settings)
 	layoutSettings:AddChild(barMinWidth)
 
 	local barSpacing = AceGUI:Create("Slider")
-	barSpacing:SetRelativeWidth(0.5)
+	barSpacing:SetRelativeWidth(0.33)
 	barSpacing:SetLabel("Spacing")
 	barSpacing:SetSliderValues(-10, 20, 0.1)
 	barSpacing:SetValue(settings.spacing)
@@ -178,7 +178,7 @@ local function AddLayoutSettings(parent, settings)
 	layoutSettings:AddChild(barSpacing)
 
 	local growDirection = AceGUI:Create("Dropdown")
-	growDirection:SetRelativeWidth(0.5)
+	growDirection:SetRelativeWidth(0.33)
 	growDirection:SetLabel("Grow Direction")
 	growDirection:SetList(RESOURCE_BAR_GROW_DIRECTIONS)
 	growDirection:SetValue(settings.growDirection)
@@ -187,17 +187,6 @@ local function AddLayoutSettings(parent, settings)
 		RefreshResourceBars()
 	end)
 	layoutSettings:AddChild(growDirection)
-
-	local frameStrata = AceGUI:Create("Dropdown")
-	frameStrata:SetRelativeWidth(0.5)
-	frameStrata:SetList(SCM.Constants.FrameStrata, SCM.Constants.FrameStrataSorted)
-	frameStrata:SetLabel("Frame Strata")
-	frameStrata:SetValue(settings.frameStrata or "")
-	frameStrata:SetCallback("OnValueChanged", function(self, event, value)
-		settings.frameStrata = value ~= "" and value or nil
-		RefreshResourceBars()
-	end)
-	layoutSettings:AddChild(frameStrata)
 end
 
 local function AddPositionSettings(parent, settings)
@@ -228,7 +217,10 @@ local function AddPositionSettings(parent, settings)
 		RefreshResourceBars()
 	end)
 	positionSettings:AddChild(anchorFrame)
-	Options.AddAnchorParentAutocomplete(positionSettings, anchorFrame, function(text) settings.anchorFrame = (text and text ~= "" and text) or "ANCHOR:1" RefreshResourceBars() end)
+	Options.AddAnchorParentAutocomplete(positionSettings, anchorFrame, function(text)
+		settings.anchorFrame = (text and text ~= "" and text) or "ANCHOR:1"
+		RefreshResourceBars()
+	end)
 
 	local relativePoint = AceGUI:Create("Dropdown")
 	relativePoint:SetRelativeWidth(0.33)
@@ -380,7 +372,7 @@ local function AddBarSettings(parent, title, settings, includeManaRoleSettings, 
 	textOnly:SetValue(settings.textOnly)
 	textOnly:SetCallback("OnValueChanged", function(_, _, value)
 		settings.textOnly = value
-		RefreshResourceBars()
+		RefreshResourceBars(true)
 	end)
 	generalSettings:AddChild(textOnly)
 
@@ -395,7 +387,7 @@ local function AddBarSettings(parent, title, settings, includeManaRoleSettings, 
 	generalSettings:AddChild(useSmoothPowerUpdates)
 
 	local barHeight = AceGUI:Create("Slider")
-	barHeight:SetRelativeWidth(0.5)
+	barHeight:SetRelativeWidth(0.33)
 	barHeight:SetLabel("Bar Height")
 	barHeight:SetSliderValues(3, 40, 0.1)
 	barHeight:SetValue(settings.height)
@@ -405,21 +397,19 @@ local function AddBarSettings(parent, title, settings, includeManaRoleSettings, 
 	end)
 	generalSettings:AddChild(barHeight)
 
-	if title == "Primary" or title == "Secondary" then
-		local barHeightAlternative = AceGUI:Create("Slider")
-		barHeightAlternative:SetRelativeWidth(0.5)
-		barHeightAlternative:SetLabel(title == "Primary" and "Bar Height (with Secondary)" or "Bar Height (with Primary)")
-		barHeightAlternative:SetSliderValues(3, 40, 0.1)
-		barHeightAlternative:SetValue(settings.heightAlternative)
-		barHeightAlternative:SetCallback("OnValueChanged", function(_, _, value)
-			settings.heightAlternative = value
-			RefreshResourceBars()
-		end)
-		generalSettings:AddChild(barHeightAlternative)
-	end
+	local barHeightAlternative = AceGUI:Create("Slider")
+	barHeightAlternative:SetRelativeWidth(0.33)
+	barHeightAlternative:SetLabel(title == "Primary" and "Bar Height (with Secondary)" or "Bar Height (with Primary)")
+	barHeightAlternative:SetSliderValues(3, 40, 0.1)
+	barHeightAlternative:SetValue(settings.heightAlternative)
+	barHeightAlternative:SetCallback("OnValueChanged", function(_, _, value)
+		settings.heightAlternative = value
+		RefreshResourceBars()
+	end)
+	generalSettings:AddChild(barHeightAlternative)
 
 	widthSlider = AceGUI:Create("Slider")
-	widthSlider:SetRelativeWidth(0.5)
+	widthSlider:SetRelativeWidth(0.33)
 	widthSlider:SetLabel("Fixed Width")
 	widthSlider:SetSliderValues(120, 700, 1)
 	widthSlider:SetValue(settings.width)
@@ -430,10 +420,32 @@ local function AddBarSettings(parent, title, settings, includeManaRoleSettings, 
 	end)
 	generalSettings:AddChild(widthSlider)
 
+	local frameStrata = AceGUI:Create("Dropdown")
+	frameStrata:SetRelativeWidth(0.33)
+	frameStrata:SetList(SCM.Constants.FrameStrata, SCM.Constants.FrameStrataSorted)
+	frameStrata:SetLabel("Frame Strata")
+	frameStrata:SetValue(settings.frameStrata or globalSettings.frameStrata or "BACKGROUND")
+	frameStrata:SetCallback("OnValueChanged", function(_, _, value)
+		settings.frameStrata = value ~= "" and value or nil
+		RefreshResourceBars()
+	end)
+	generalSettings:AddChild(frameStrata)
+
+	local frameLevel = AceGUI:Create("Slider")
+	frameLevel:SetRelativeWidth(0.33)
+	frameLevel:SetLabel("Frame Level")
+	frameLevel:SetSliderValues(0, 10, 1)
+	frameLevel:SetValue(settings.frameLevel or 1)
+	frameLevel:SetCallback("OnValueChanged", function(_, _, value)
+		settings.frameLevel = value
+		RefreshResourceBars()
+	end)
+	generalSettings:AddChild(frameLevel)
+
 	if not isSpecConfigActive then
 		local hideManaRoleSettings = settings.hideManaRoles
 		local hideManaRoles = AceGUI:Create("Dropdown")
-		hideManaRoles:SetRelativeWidth(0.5)
+		hideManaRoles:SetRelativeWidth(0.33)
 		hideManaRoles:SetLabel("Hide Mana For Roles")
 		hideManaRoles:SetList(SCM.Constants.Roles)
 		hideManaRoles:SetMultiselect(true)
@@ -447,7 +459,7 @@ local function AddBarSettings(parent, title, settings, includeManaRoleSettings, 
 		generalSettings:AddChild(hideManaRoles)
 	else
 		local forceMana = AceGUI:Create("CheckBox")
-		forceMana:SetRelativeWidth(0.5)
+		forceMana:SetRelativeWidth(0.33)
 		forceMana:SetLabel("Show Mana (if possible)")
 		forceMana:SetValue(settings.forceMana)
 		forceMana:SetCallback("OnValueChanged", function(_, _, value)

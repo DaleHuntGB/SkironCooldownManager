@@ -309,6 +309,7 @@ SCM.DefaultDB = {
 				},
 				primaryBar = {
 					enabled = true,
+					frameLevel = 1,
 					matchAnchorWidth = true,
 					width = 200,
 					hideManaRoles = {
@@ -381,6 +382,7 @@ SCM.DefaultDB = {
 				},
 				secondaryBar = {
 					enabled = true,
+					frameLevel = 1,
 					matchAnchorWidth = true,
 					width = 200,
 					hideManaRoles = {

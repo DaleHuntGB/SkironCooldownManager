@@ -777,7 +777,7 @@ local function CreateSegments(bar, segmentCount)
 		if not segmentBar then
 			segmentBar = CreateFrame("StatusBar", nil, bar)
 			segmentBar:SetMinMaxValues(0, 1)
-			segmentBar:SetFrameLevel(2)
+			segmentBar:SetFrameLevel(bar:GetFrameLevel() + 1)
 			segmentBars[segmentIndex] = segmentBar
 		end
 	end
@@ -921,6 +921,7 @@ local function ApplyBarAppearance(bar, barOptions)
 
 		if bar.SegmentFillBars then
 			for _, segmentBar in ipairs(bar.SegmentFillBars) do
+				segmentBar:SetFrameLevel(bar:GetFrameLevel() + 1)
 				segmentBar:SetStatusBarTexture(texturePath)
 				segmentBar:GetStatusBarTexture():SetTexelSnappingBias(0)
 				segmentBar:GetStatusBarTexture():SetSnapToPixelGrid(false)
@@ -1141,6 +1142,10 @@ function SCMResourceBarControllerMixin:ApplyResourceBarOptions()
 	self.primaryBarOptions = barOptions.primaryBar
 	self.secondaryBarOptions = barOptions.secondaryBar
 
+	self.PrimaryBar:SetFrameStrata(self.primaryBarOptions.frameStrata or barOptions.frameStrata or "BACKGROUND")
+	self.PrimaryBar:SetFrameLevel(self.primaryBarOptions.frameLevel or 1)
+	self.SecondaryBar:SetFrameStrata(self.secondaryBarOptions.frameStrata or barOptions.frameStrata or "BACKGROUND")
+	self.SecondaryBar:SetFrameLevel(self.secondaryBarOptions.frameLevel or 1)
 	ApplyBarAppearance(self.PrimaryBar, self.primaryBarOptions)
 	ApplyBarAppearance(self.SecondaryBar, self.secondaryBarOptions)
 
