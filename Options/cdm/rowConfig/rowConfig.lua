@@ -22,235 +22,7 @@ function SCM:RemoveRow(anchorIndex, rowIndex)
 	end
 end
 
-local function SelectAdvancedRowSettings(self, tabGroup, rowConfig, rowIndex, anchorIndex, mode, options, data)
-	self:ReleaseChildren()
-
-	if tabGroup == "general" then
-		local keepAspectRatio = AceGUI:Create("CheckBox")
-		keepAspectRatio:SetLabel("Lock Aspect Ratio")
-		keepAspectRatio:SetRelativeWidth(0.5)
-		keepAspectRatio:SetValue(rowConfig.keepAspectRatio)
-		keepAspectRatio:SetCallback("OnValueChanged", function(_, _, value)
-			rowConfig.keepAspectRatio = value
-		end)
-		keepAspectRatio:SetCallback("OnEnter", function()
-			GameTooltip:SetOwner(self.frame, "ANCHOR_CURSOR")
-			GameTooltip:SetText("Lock Aspect Ratio", nil, nil, nil, nil, true)
-			GameTooltip:AddLine("This will lock both Icon Width & Icon Height to be the same value.", 1, 1, 1, true)
-			GameTooltip:Show()
-		end)
-		keepAspectRatio:SetCallback("OnLeave", function()
-			GameTooltip:Hide()
-		end)
-		self:AddChild(keepAspectRatio)
-
-		local hardLimit = AceGUI:Create("CheckBox")
-		hardLimit:SetLabel("Hard Limit")
-		hardLimit:SetRelativeWidth(0.5)
-		hardLimit:SetValue(rowConfig.hardLimit)
-		hardLimit:SetCallback("OnValueChanged", function(_, _, value)
-			rowConfig.hardLimit = value
-			Options.ApplyModeConfigUpdate(anchorIndex, mode)
-		end)
-		hardLimit:SetCallback("OnEnter", function()
-			GameTooltip:SetOwner(self.frame, "ANCHOR_CURSOR")
-			GameTooltip:SetText("Hard Limit", nil, nil, nil, nil, true)
-			GameTooltip:AddLine("This option will ensure that only the set number of icons are displayed.", 1, 1, 1, true)
-			GameTooltip:Show()
-		end)
-		hardLimit:SetCallback("OnLeave", function()
-			GameTooltip:Hide()
-		end)
-		self:AddChild(hardLimit)
-
-		if rowIndex == 1 then
-			local fixedWidth
-			local useFixedWidth = AceGUI:Create("CheckBox")
-			useFixedWidth:SetLabel("Use Fixed Width")
-			useFixedWidth:SetRelativeWidth(0.5)
-			useFixedWidth:SetValue(rowConfig.useFixedWidth)
-			useFixedWidth:SetDisabled(data.matchAnchorWidth)
-			useFixedWidth:SetCallback("OnValueChanged", function(_, _, value)
-				rowConfig.useFixedWidth = value
-				Options.ApplyModeConfigUpdate(anchorIndex, mode)
-
-				if fixedWidth then
-					rowConfig.fixedWidth = rowConfig.fixedWidth or 200
-					fixedWidth:SetDisabled(not value)
-				end
-			end)
-			useFixedWidth:SetCallback("OnEnter", function()
-				GameTooltip:SetOwner(self.frame, "ANCHOR_CURSOR")
-				GameTooltip:SetText("Use Fixed Width", nil, nil, nil, nil, true)
-				GameTooltip:AddLine("This will make the row use a fixed width instead of calculating it based on the number of icons.", 1, 1, 1, true)
-				GameTooltip:Show()
-			end)
-			useFixedWidth:SetCallback("OnLeave", function()
-				GameTooltip:Hide()
-			end)
-			self:AddChild(useFixedWidth)
-
-			fixedWidth = AceGUI:Create("Slider")
-			fixedWidth:SetRelativeWidth(0.5)
-			fixedWidth:SetSliderValues(100, 1000, 0.1)
-			fixedWidth:SetLabel("Fixed Width")
-			fixedWidth:SetValue(rowConfig.fixedWidth or 200)
-			fixedWidth:SetDisabled(not rowConfig.useFixedWidth)
-			fixedWidth:SetCallback("OnValueChanged", function(_, _, value)
-				rowConfig.fixedWidth = value
-				Options.ApplyModeConfigUpdate(anchorIndex, mode)
-			end)
-			self:AddChild(fixedWidth)
-		end
-	elseif tabGroup == "charges" then
-		local chargeRelativePoint = AceGUI:Create("Dropdown")
-		chargeRelativePoint:SetRelativeWidth(0.25)
-		chargeRelativePoint:SetLabel("Point")
-		chargeRelativePoint:SetList(SCM.Constants.AnchorPoints)
-		chargeRelativePoint:SetValue(rowConfig.chargePoint or options.chargePoint)
-		chargeRelativePoint:SetCallback("OnValueChanged", function(_, _, value)
-			rowConfig.chargePoint = value
-			Options.ApplyModeConfigUpdate(anchorIndex, mode)
-		end)
-		self:AddChild(chargeRelativePoint)
-
-		local chargeRelativePoint = AceGUI:Create("Dropdown")
-		chargeRelativePoint:SetRelativeWidth(0.25)
-		chargeRelativePoint:SetLabel("Relative Point")
-		chargeRelativePoint:SetList(SCM.Constants.AnchorPoints)
-		chargeRelativePoint:SetValue(rowConfig.chargeRelativePoint or options.chargeRelativePoint)
-		chargeRelativePoint:SetCallback("OnValueChanged", function(_, _, value)
-			rowConfig.chargeRelativePoint = value
-			Options.ApplyModeConfigUpdate(anchorIndex, mode)
-		end)
-		self:AddChild(chargeRelativePoint)
-
-		local xOffset = AceGUI:Create("Slider")
-		xOffset:SetRelativeWidth(0.25)
-		xOffset:SetSliderValues(-50, 50, 0.1)
-		xOffset:SetLabel("X Offset")
-		xOffset:SetValue(rowConfig.chargeXOffset or options.chargeXOffset)
-		xOffset:SetCallback("OnValueChanged", function(self, event, value)
-			rowConfig.chargeXOffset = value
-			Options.ApplyModeConfigUpdate(anchorIndex, mode)
-		end)
-		self:AddChild(xOffset)
-
-		local yOffset = AceGUI:Create("Slider")
-		yOffset:SetRelativeWidth(0.25)
-		yOffset:SetSliderValues(-50, 50, 0.1)
-		yOffset:SetLabel("Y Offset")
-		yOffset:SetValue(rowConfig.chargeYOffset or options.chargeYOffset)
-		yOffset:SetCallback("OnValueChanged", function(self, event, value)
-			rowConfig.chargeYOffset = value
-			Options.ApplyModeConfigUpdate(anchorIndex, mode)
-		end)
-		self:AddChild(yOffset)
-
-		local chargeFontSize = AceGUI:Create("Slider")
-		chargeFontSize:SetRelativeWidth(0.33)
-		chargeFontSize:SetLabel("Font Size")
-		chargeFontSize:SetSliderValues(1, 50, 1)
-		chargeFontSize:SetValue(rowConfig.chargeFontSize or options.chargeFontSize)
-		chargeFontSize:SetCallback("OnValueChanged", function(self, event, value)
-			rowConfig.chargeFontSize = value
-			Options.ApplyModeConfigUpdate(anchorIndex, mode)
-		end)
-		self:AddChild(chargeFontSize)
-
-		local truncateWhenZero = AceGUI:Create("CheckBox")
-		truncateWhenZero:SetLabel("Truncate When Zero")
-		truncateWhenZero:SetRelativeWidth(0.33)
-		truncateWhenZero:SetValue(rowConfig.chargeTruncateWhenZero)
-		truncateWhenZero:SetCallback("OnValueChanged", function(_, _, value)
-			rowConfig.chargeTruncateWhenZero = value
-			Options.ApplyModeConfigUpdate(anchorIndex, mode)
-		end)
-		self:AddChild(truncateWhenZero)
-
-		local chargeColour = AceGUI:Create("ColorPicker")
-		chargeColour:SetLabel("Colour")
-		chargeColour:SetRelativeWidth(0.33)
-		if not rowConfig.chargeColour then
-			local optionsChargeColour = options.chargeColour
-			rowConfig.chargeColour = {r = optionsChargeColour.r or 1, g = optionsChargeColour.g or 1, b = optionsChargeColour.b or 1, a = optionsChargeColour.a or 1}
-		end
-		chargeColour:SetColor(rowConfig.chargeColour.r, rowConfig.chargeColour.g, rowConfig.chargeColour.b, rowConfig.chargeColour.a or 1)
-		chargeColour:SetCallback("OnValueChanged", function(_, _, r, g, b, a)
-			rowConfig.chargeColour = { r = r, g = g, b = b, a = a }
-			Options.ApplyModeConfigUpdate(anchorIndex, mode)
-		end)
-		self:AddChild(chargeColour)
-	elseif tabGroup == "applications" then
-		local applicationsPoint = AceGUI:Create("Dropdown")
-		applicationsPoint:SetRelativeWidth(0.5)
-		applicationsPoint:SetLabel("Point")
-		applicationsPoint:SetList(SCM.Constants.AnchorPoints)
-		applicationsPoint:SetValue(rowConfig.applicationsPoint or options.chargePoint)
-		applicationsPoint:SetCallback("OnValueChanged", function(_, _, value)
-			rowConfig.applicationsPoint = value
-			Options.ApplyModeConfigUpdate(anchorIndex, mode)
-		end)
-		self:AddChild(applicationsPoint)
-
-		local applicationsRelativePoint = AceGUI:Create("Dropdown")
-		applicationsRelativePoint:SetRelativeWidth(0.5)
-		applicationsRelativePoint:SetLabel("Relative Point")
-		applicationsRelativePoint:SetList(SCM.Constants.AnchorPoints)
-		applicationsRelativePoint:SetValue(rowConfig.applicationsRelativePoint or options.chargeRelativePoint)
-		applicationsRelativePoint:SetCallback("OnValueChanged", function(_, _, value)
-			rowConfig.applicationsRelativePoint = value
-			Options.ApplyModeConfigUpdate(anchorIndex, mode)
-		end)
-		self:AddChild(applicationsRelativePoint)
-
-		local xOffset = AceGUI:Create("Slider")
-		xOffset:SetRelativeWidth(0.33)
-		xOffset:SetSliderValues(-50, 50, 0.1)
-		xOffset:SetLabel("X Offset")
-		xOffset:SetValue(rowConfig.applicationsXOffset or options.chargeXOffset)
-		xOffset:SetCallback("OnValueChanged", function(self, event, value)
-			rowConfig.applicationsXOffset = value
-			Options.ApplyModeConfigUpdate(anchorIndex, mode)
-		end)
-		self:AddChild(xOffset)
-
-		local yOffset = AceGUI:Create("Slider")
-		yOffset:SetRelativeWidth(0.33)
-		yOffset:SetSliderValues(-50, 50, 0.1)
-		yOffset:SetLabel("Y Offset")
-		yOffset:SetValue(rowConfig.applicationsYOffset or options.chargeYOffset)
-		yOffset:SetCallback("OnValueChanged", function(self, event, value)
-			rowConfig.applicationsYOffset = value
-			Options.ApplyModeConfigUpdate(anchorIndex, mode)
-		end)
-		self:AddChild(yOffset)
-
-		local fontSize = AceGUI:Create("Slider")
-		fontSize:SetRelativeWidth(0.33)
-		fontSize:SetLabel("Font Size")
-		fontSize:SetSliderValues(1, 50, 1)
-		fontSize:SetValue(rowConfig.applicationsFontSize or options.chargeFontSize)
-		fontSize:SetCallback("OnValueChanged", function(self, event, value)
-			rowConfig.applicationsFontSize = value
-			Options.ApplyModeConfigUpdate(anchorIndex, mode)
-		end)
-		self:AddChild(fontSize)
-	elseif tabGroup == "cooldowns" then
-		local fontSize = AceGUI:Create("Slider")
-		fontSize:SetRelativeWidth(0.5)
-		fontSize:SetSliderValues(1, 50, 1)
-		fontSize:SetLabel("Font Size")
-		fontSize:SetValue(rowConfig.cooldownFontSize or ((options.cooldownFontSize or 0.6) * (rowConfig.iconWidth or rowConfig.size)))
-		fontSize:SetCallback("OnValueChanged", function(self, event, value)
-			rowConfig.cooldownFontSize = value
-			Options.ApplyModeConfigUpdate(anchorIndex, mode)
-		end)
-		self:AddChild(fontSize)
-	end
-end
-
-function CDMOptions.SelectRow(widget, rowWidget, parentWidget, scrollFrame, data, anchorIndex, rowIndex, rowTabsTbl, mode, options, isProfileConfig)
+function CDMOptions.SelectRow(widget, rowWidget, parentWidget, anchorOptions, scrollFrame, data, anchorIndex, rowIndex, rowTabsTbl, mode, options, isProfileConfig)
 	widget:ReleaseChildren()
 
 	local isGlobal = mode == "global"
@@ -325,6 +97,24 @@ function CDMOptions.SelectRow(widget, rowWidget, parentWidget, scrollFrame, data
 	end)
 	buttonGroup:AddChild(deleteRowButton)
 
+	local keepAspectRatio = AceGUI:Create("CheckBox")
+	keepAspectRatio:SetLabel("Lock Aspect Ratio")
+	keepAspectRatio:SetRelativeWidth(0.33)
+	keepAspectRatio:SetValue(rowConfig.keepAspectRatio)
+	keepAspectRatio:SetCallback("OnValueChanged", function(_, _, value)
+		rowConfig.keepAspectRatio = value
+	end)
+	keepAspectRatio:SetCallback("OnEnter", function(self)
+		GameTooltip:SetOwner(self.frame, "ANCHOR_CURSOR")
+		GameTooltip:SetText("Lock Aspect Ratio", nil, nil, nil, nil, true)
+		GameTooltip:AddLine("This will lock both Icon Width & Icon Height to be the same value.", 1, 1, 1, true)
+		GameTooltip:Show()
+	end)
+	keepAspectRatio:SetCallback("OnLeave", function()
+		GameTooltip:Hide()
+	end)
+	widget:AddChild(keepAspectRatio)
+
 	local iconWidth = AceGUI:Create("Slider")
 	iconWidth:SetRelativeWidth(0.33)
 	iconWidth:SetSliderValues(3, isBuffBar and 500 or 200, 0.1)
@@ -375,8 +165,48 @@ function CDMOptions.SelectRow(widget, rowWidget, parentWidget, scrollFrame, data
 	end)
 	widget:AddChild(iconHeight)
 
+	if rowIndex == 1 then
+		local fixedWidth
+		local useFixedWidth = AceGUI:Create("CheckBox")
+		useFixedWidth:SetLabel("Use Fixed Width")
+		useFixedWidth:SetRelativeWidth(0.25)
+		useFixedWidth:SetValue(rowConfig.useFixedWidth)
+		useFixedWidth:SetDisabled(data.matchAnchorWidth)
+		useFixedWidth:SetCallback("OnValueChanged", function(_, _, value)
+			rowConfig.useFixedWidth = value
+			Options.ApplyModeConfigUpdate(anchorIndex, mode)
+
+			if fixedWidth then
+				rowConfig.fixedWidth = rowConfig.fixedWidth or 200
+				fixedWidth:SetDisabled(not value)
+			end
+		end)
+		useFixedWidth:SetCallback("OnEnter", function(self)
+			GameTooltip:SetOwner(self.frame, "ANCHOR_CURSOR")
+			GameTooltip:SetText("Use Fixed Width", nil, nil, nil, nil, true)
+			GameTooltip:AddLine("This will make the row use a fixed width instead of calculating it based on the number of icons.", 1, 1, 1, true)
+			GameTooltip:Show()
+		end)
+		useFixedWidth:SetCallback("OnLeave", function()
+			GameTooltip:Hide()
+		end)
+		widget:AddChild(useFixedWidth)
+
+		fixedWidth = AceGUI:Create("Slider")
+		fixedWidth:SetRelativeWidth(0.25)
+		fixedWidth:SetSliderValues(100, 1000, 0.1)
+		fixedWidth:SetLabel("Fixed Width")
+		fixedWidth:SetValue(rowConfig.fixedWidth or 200)
+		fixedWidth:SetDisabled(not rowConfig.useFixedWidth)
+		fixedWidth:SetCallback("OnValueChanged", function(_, _, value)
+			rowConfig.fixedWidth = value
+			Options.ApplyModeConfigUpdate(anchorIndex, mode)
+		end)
+		widget:AddChild(fixedWidth)
+	end
+
 	local limit = AceGUI:Create("Slider")
-	limit:SetRelativeWidth(0.33)
+	limit:SetRelativeWidth(rowIndex == 1 and 0.25 or 0.5)
 	limit:SetSliderValues(1, 20, 1)
 	limit:SetLabel("Limit")
 	limit:SetValue(rowConfig.limit)
@@ -386,19 +216,189 @@ function CDMOptions.SelectRow(widget, rowWidget, parentWidget, scrollFrame, data
 	end)
 	widget:AddChild(limit)
 
-	local advancedRowSettings = AceGUI:Create("TabGroup")
-	local advancedTabs = isBuffBar and { { value = "general", text = "General" }, { value = "applications", text = "Stacks (Alpha)" } }
-		or { { value = "general", text = "General" }, { value = "charges", text = "Charges" }, { value = "applications", text = "Stacks" }, { value = "cooldowns", text = "Cooldowns" } }
-	advancedRowSettings:SetAutoAdjustHeight(false)
-	advancedRowSettings:SetHeight(150)
-	advancedRowSettings:SetFullWidth(true)
-	advancedRowSettings:SetLayout("flow")
-	advancedRowSettings:SetTabs(advancedTabs)
-	advancedRowSettings:SetCallback("OnGroupSelected", function(self, event, tabGroup)
-		SelectAdvancedRowSettings(self, tabGroup, rowConfig, rowIndex, anchorIndex, mode, options, data)
+	local hardLimit = AceGUI:Create("CheckBox")
+	hardLimit:SetLabel("Hard Limit")
+	hardLimit:SetRelativeWidth(rowIndex == 1 and 0.25 or 0.5)
+	hardLimit:SetValue(rowConfig.hardLimit)
+	hardLimit:SetCallback("OnValueChanged", function(_, _, value)
+		rowConfig.hardLimit = value
+		Options.ApplyModeConfigUpdate(anchorIndex, mode)
 	end)
-	advancedRowSettings:SelectTab("general")
-	widget:AddChild(advancedRowSettings)
+	hardLimit:SetCallback("OnEnter", function(self)
+		GameTooltip:SetOwner(self.frame, "ANCHOR_CURSOR")
+		GameTooltip:SetText("Hard Limit", nil, nil, nil, nil, true)
+		GameTooltip:AddLine("This option will ensure that only the set number of icons are displayed.", 1, 1, 1, true)
+		GameTooltip:Show()
+	end)
+	hardLimit:SetCallback("OnLeave", function()
+		GameTooltip:Hide()
+	end)
+	widget:AddChild(hardLimit)
+
+	local stacksSettings = AceGUI:Create("InlineGroup")
+	stacksSettings:SetFullWidth(true)
+	stacksSettings:SetLayout("flow")
+	stacksSettings:SetTitle("Stacks")
+	widget:AddChild(stacksSettings)
+
+	local applicationsPoint = AceGUI:Create("Dropdown")
+	applicationsPoint:SetRelativeWidth(0.5)
+	applicationsPoint:SetLabel("Point")
+	applicationsPoint:SetList(SCM.Constants.AnchorPoints)
+	applicationsPoint:SetValue(rowConfig.applicationsPoint or options.chargePoint)
+	applicationsPoint:SetCallback("OnValueChanged", function(_, _, value)
+		rowConfig.applicationsPoint = value
+		Options.ApplyModeConfigUpdate(anchorIndex, mode)
+	end)
+	stacksSettings:AddChild(applicationsPoint)
+
+	local applicationsRelativePoint = AceGUI:Create("Dropdown")
+	applicationsRelativePoint:SetRelativeWidth(0.5)
+	applicationsRelativePoint:SetLabel("Relative Point")
+	applicationsRelativePoint:SetList(SCM.Constants.AnchorPoints)
+	applicationsRelativePoint:SetValue(rowConfig.applicationsRelativePoint or options.chargeRelativePoint)
+	applicationsRelativePoint:SetCallback("OnValueChanged", function(_, _, value)
+		rowConfig.applicationsRelativePoint = value
+		Options.ApplyModeConfigUpdate(anchorIndex, mode)
+	end)
+	stacksSettings:AddChild(applicationsRelativePoint)
+
+	local xOffset = AceGUI:Create("Slider")
+	xOffset:SetRelativeWidth(0.33)
+	xOffset:SetSliderValues(-50, 50, 0.1)
+	xOffset:SetLabel("X Offset")
+	xOffset:SetValue(rowConfig.applicationsXOffset or options.chargeXOffset)
+	xOffset:SetCallback("OnValueChanged", function(self, event, value)
+		rowConfig.applicationsXOffset = value
+		Options.ApplyModeConfigUpdate(anchorIndex, mode)
+	end)
+	stacksSettings:AddChild(xOffset)
+
+	local yOffset = AceGUI:Create("Slider")
+	yOffset:SetRelativeWidth(0.33)
+	yOffset:SetSliderValues(-50, 50, 0.1)
+	yOffset:SetLabel("Y Offset")
+	yOffset:SetValue(rowConfig.applicationsYOffset or options.chargeYOffset)
+	yOffset:SetCallback("OnValueChanged", function(self, event, value)
+		rowConfig.applicationsYOffset = value
+		Options.ApplyModeConfigUpdate(anchorIndex, mode)
+	end)
+	stacksSettings:AddChild(yOffset)
+
+	local fontSize = AceGUI:Create("Slider")
+	fontSize:SetRelativeWidth(0.33)
+	fontSize:SetLabel("Font Size")
+	fontSize:SetSliderValues(1, 50, 1)
+	fontSize:SetValue(rowConfig.applicationsFontSize or options.chargeFontSize)
+	fontSize:SetCallback("OnValueChanged", function(self, event, value)
+		rowConfig.applicationsFontSize = value
+		Options.ApplyModeConfigUpdate(anchorIndex, mode)
+	end)
+	stacksSettings:AddChild(fontSize)
+
+	if not isBuffBar then
+		local chargeSettings = AceGUI:Create("InlineGroup")
+		chargeSettings:SetFullWidth(true)
+		chargeSettings:SetLayout("flow")
+		chargeSettings:SetTitle("Charges")
+		widget:AddChild(chargeSettings)
+
+		local chargeRelativePoint = AceGUI:Create("Dropdown")
+		chargeRelativePoint:SetRelativeWidth(0.25)
+		chargeRelativePoint:SetLabel("Point")
+		chargeRelativePoint:SetList(SCM.Constants.AnchorPoints)
+		chargeRelativePoint:SetValue(rowConfig.chargePoint or options.chargePoint)
+		chargeRelativePoint:SetCallback("OnValueChanged", function(_, _, value)
+			rowConfig.chargePoint = value
+			Options.ApplyModeConfigUpdate(anchorIndex, mode)
+		end)
+		chargeSettings:AddChild(chargeRelativePoint)
+
+		local chargeRelativePoint = AceGUI:Create("Dropdown")
+		chargeRelativePoint:SetRelativeWidth(0.25)
+		chargeRelativePoint:SetLabel("Relative Point")
+		chargeRelativePoint:SetList(SCM.Constants.AnchorPoints)
+		chargeRelativePoint:SetValue(rowConfig.chargeRelativePoint or options.chargeRelativePoint)
+		chargeRelativePoint:SetCallback("OnValueChanged", function(_, _, value)
+			rowConfig.chargeRelativePoint = value
+			Options.ApplyModeConfigUpdate(anchorIndex, mode)
+		end)
+		chargeSettings:AddChild(chargeRelativePoint)
+
+		local xOffset = AceGUI:Create("Slider")
+		xOffset:SetRelativeWidth(0.25)
+		xOffset:SetSliderValues(-50, 50, 0.1)
+		xOffset:SetLabel("X Offset")
+		xOffset:SetValue(rowConfig.chargeXOffset or options.chargeXOffset)
+		xOffset:SetCallback("OnValueChanged", function(self, event, value)
+			rowConfig.chargeXOffset = value
+			Options.ApplyModeConfigUpdate(anchorIndex, mode)
+		end)
+		chargeSettings:AddChild(xOffset)
+
+		local yOffset = AceGUI:Create("Slider")
+		yOffset:SetRelativeWidth(0.25)
+		yOffset:SetSliderValues(-50, 50, 0.1)
+		yOffset:SetLabel("Y Offset")
+		yOffset:SetValue(rowConfig.chargeYOffset or options.chargeYOffset)
+		yOffset:SetCallback("OnValueChanged", function(self, event, value)
+			rowConfig.chargeYOffset = value
+			Options.ApplyModeConfigUpdate(anchorIndex, mode)
+		end)
+		chargeSettings:AddChild(yOffset)
+
+		local chargeFontSize = AceGUI:Create("Slider")
+		chargeFontSize:SetRelativeWidth(0.33)
+		chargeFontSize:SetLabel("Font Size")
+		chargeFontSize:SetSliderValues(1, 50, 1)
+		chargeFontSize:SetValue(rowConfig.chargeFontSize or options.chargeFontSize)
+		chargeFontSize:SetCallback("OnValueChanged", function(self, event, value)
+			rowConfig.chargeFontSize = value
+			Options.ApplyModeConfigUpdate(anchorIndex, mode)
+		end)
+		chargeSettings:AddChild(chargeFontSize)
+
+		local truncateWhenZero = AceGUI:Create("CheckBox")
+		truncateWhenZero:SetLabel("Truncate When Zero")
+		truncateWhenZero:SetRelativeWidth(0.33)
+		truncateWhenZero:SetValue(rowConfig.chargeTruncateWhenZero)
+		truncateWhenZero:SetCallback("OnValueChanged", function(_, _, value)
+			rowConfig.chargeTruncateWhenZero = value
+			Options.ApplyModeConfigUpdate(anchorIndex, mode)
+		end)
+		chargeSettings:AddChild(truncateWhenZero)
+
+		local chargeColour = AceGUI:Create("ColorPicker")
+		chargeColour:SetLabel("Colour")
+		chargeColour:SetRelativeWidth(0.33)
+		if not rowConfig.chargeColour then
+			local optionsChargeColour = options.chargeColour
+			rowConfig.chargeColour = { r = optionsChargeColour.r or 1, g = optionsChargeColour.g or 1, b = optionsChargeColour.b or 1, a = optionsChargeColour.a or 1 }
+		end
+		chargeColour:SetColor(rowConfig.chargeColour.r, rowConfig.chargeColour.g, rowConfig.chargeColour.b, rowConfig.chargeColour.a or 1)
+		chargeColour:SetCallback("OnValueChanged", function(_, _, r, g, b, a)
+			rowConfig.chargeColour = { r = r, g = g, b = b, a = a }
+			Options.ApplyModeConfigUpdate(anchorIndex, mode)
+		end)
+		chargeSettings:AddChild(chargeColour)
+
+		local cooldownSettings = AceGUI:Create("InlineGroup")
+		cooldownSettings:SetFullWidth(true)
+		cooldownSettings:SetLayout("flow")
+		cooldownSettings:SetTitle("Cooldown Font")
+		widget:AddChild(cooldownSettings)
+
+		local fontSize = AceGUI:Create("Slider")
+		fontSize:SetRelativeWidth(0.5)
+		fontSize:SetSliderValues(1, 50, 1)
+		fontSize:SetLabel("Font Size")
+		fontSize:SetValue(rowConfig.cooldownFontSize or ((options.cooldownFontSize or 0.6) * (rowConfig.iconWidth or rowConfig.size)))
+		fontSize:SetCallback("OnValueChanged", function(self, event, value)
+			rowConfig.cooldownFontSize = value
+			Options.ApplyModeConfigUpdate(anchorIndex, mode)
+		end)
+		cooldownSettings:AddChild(fontSize)
+	end
 end
 
 function CDMOptions.CreateRowConfig(self, widget, anchorOptions, parentWidget, scrollFrame, data, anchorIndex, mode, options, isProfileConfig)
@@ -409,13 +409,12 @@ function CDMOptions.CreateRowConfig(self, widget, anchorOptions, parentWidget, s
 
 	local rowTabs = AceGUI:Create("TabGroup")
 	rowTabs:SetLayout("flow")
-	rowTabs:SetAutoAdjustHeight(false)
+	--rowTabs:SetAutoAdjustHeight(false)
 	rowTabs:SetFullWidth(true)
-	rowTabs:SetHeight(280)
+	--rowTabs:SetHeight(280)
 	rowTabs:SetTabs(rowTabsTbl)
 	rowTabs:SetCallback("OnGroupSelected", function(self, event, rowIndex)
-		CDMOptions.SelectRow(self, widget, parentWidget, scrollFrame, data, anchorIndex, rowIndex, rowTabsTbl, mode, options, isProfileConfig)
-		anchorOptions:DoLayout()
+		CDMOptions.SelectRow(self, widget, parentWidget, anchorOptions, scrollFrame, data, anchorIndex, rowIndex, rowTabsTbl, mode, options, isProfileConfig)
 	end)
 	rowTabs:SelectTab(1)
 	self:AddChild(rowTabs)

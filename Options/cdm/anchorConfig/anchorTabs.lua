@@ -282,6 +282,7 @@ function CDMOptions.SelectAnchor(widget, parentWidget, anchorIndex, anchorTabsTb
 			CDMOptions.CreateSpellConfig(self, anchorOptions, widget, parentWidget, scrollFrame, data, anchorIndex, mode, options, isProfileConfig)
 		end
 		anchorOptions:DoLayout()
+		scrollFrame:DoLayout()
 	end)
 	anchorOptions:AddChild(advancedConfigTabs)
 	advancedConfigTabs:SelectTab("spellConfig")
