@@ -30,8 +30,7 @@ function Icons.HideChild(child)
 	UIParent.SetAlpha(child, 0)
 	child:EnableMouse(false)
 	child:SetMouseClickEnabled(false)
-	child.SCMOnEnter = child.SCMOnEnter or child:GetScript("OnEnter")
-	child:SetScript("OnEnter", nil)
+	child:SetMouseMotionEnabled(false)
 	SCM:StopCustomGlow(child)
 
 	if not child.SCMAlphaHook then
@@ -61,7 +60,7 @@ function Icons.ShowChild(child)
 
 		if SCM.showTooltips then
 			child:EnableMouse(true)
-			child:SetScript("OnEnter", child.SCMOnEnter)
+			child:SetMouseMotionEnabled(true)
 		else
 			child:EnableMouse(false)
 		end
