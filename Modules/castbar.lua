@@ -152,12 +152,26 @@ local function UpdateIconTexture(spellTexture)
 	end
 end
 
+local function CalculateCastBarPixelInset(region)
+	local options = region.barOptions or SCM.castBarConfig
+	if not options.showBorder then
+		return 0
+	end
+
+	local borderSize = options.borderSize or 0
+	if borderSize <= 0 then
+		return 0
+	end
+
+	return PixelUtil.GetNearestPixelSize(borderSize * 0.5, region:GetEffectiveScale(), 1)
+end
+
 local function UpdateStatusBarLook(fillColor, bgColor)
 	local castBar = SCM.CastBar
 	local options = castBar.barOptions or SCM.castBarConfig
-	local profileOptions = SCM.db.profile.options
 
-	local borderSize = profileOptions.borderSize
+	local inset = CalculateCastBarPixelInset(castBar)
+	local borderSize = options.showBorder and (options.borderSize or 0) or 0
 	local texturePath = LSM:Fetch("statusbar", options.texture) or "Interface\\TargetingFrame\\UI-StatusBar"
 	local borderColor = options.borderColor
 	local backgroundColor = bgColor or options.bgColor
@@ -187,8 +201,12 @@ local function UpdateStatusBarLook(fillColor, bgColor)
 	castBar:SetPoint(options.anchors[1], anchorFrame or UIParent, options.anchors[3], options.anchors[4], options.anchors[5])
 	castBar:SetFrameStrata(options.frameStrata or "BACKGROUND")
 
-	castBar:SetBackdrop({ edgeFile = "Interface\\Buttons\\WHITE8x8", edgeSize = borderSize })
-	castBar:SetBackdropBorderColor(borderColor.r, borderColor.g, borderColor.b, borderColor.a)
+	if options.showBorder and borderSize > 0 then
+		castBar:SetBackdrop({ edgeFile = "Interface\\Buttons\\WHITE8x8", edgeSize = borderSize })
+		castBar:SetBackdropBorderColor(borderColor.r, borderColor.g, borderColor.b, borderColor.a)
+	else
+		castBar:SetBackdrop(nil)
+	end
 	for _, region in ipairs({ castBar:GetRegions() }) do
 		if region:IsObjectType("Texture") then
 			region:SetTexelSnappingBias(0)
@@ -197,8 +215,8 @@ local function UpdateStatusBarLook(fillColor, bgColor)
 	end
 
 	castBar.Background:ClearAllPoints()
-	castBar.Background:SetPoint("TOPLEFT", castBar, "TOPLEFT", borderSize, -borderSize)
-	castBar.Background:SetPoint("BOTTOMRIGHT", castBar, "BOTTOMRIGHT", -borderSize, borderSize)
+	castBar.Background:SetPoint("TOPLEFT", castBar, "TOPLEFT", inset, -inset)
+	castBar.Background:SetPoint("BOTTOMRIGHT", castBar, "BOTTOMRIGHT", -inset, inset)
 	castBar.Background:SetColorTexture(backgroundColor.r, backgroundColor.g, backgroundColor.b, backgroundColor.a)
 	castBar.Background:SetTexelSnappingBias(0)
 	castBar.Background:SetSnapToPixelGrid(false)
@@ -206,7 +224,7 @@ local function UpdateStatusBarLook(fillColor, bgColor)
 	local iconOptions = options.icon
 	local outerWidth = max(castBar:GetWidth(), 1)
 	local outerHeight = max(castBar:GetHeight(), 1)
-	local innerWidth = max(outerWidth - borderSize * 2, 1)
+	local innerWidth = max(outerWidth - inset * 2, 1)
 	local spacing = iconOptions.enable and min(ICON_SPACING, max(innerWidth - 1, 0)) or 0
 	local iconSize = 0
 	local iconZoom = min(iconOptions.zoom, 0.49)
@@ -219,13 +237,17 @@ local function UpdateStatusBarLook(fillColor, bgColor)
 	castBar.Status:ClearAllPoints()
 	castBar.IconFrame:ClearAllPoints()
 	castBar.IconFrame.Icon:ClearAllPoints()
-	castBar.IconFrame.Icon:SetPoint("TOPLEFT", castBar.IconFrame, "TOPLEFT", borderSize, -borderSize)
-	castBar.IconFrame.Icon:SetPoint("BOTTOMRIGHT", castBar.IconFrame, "BOTTOMRIGHT", -borderSize, borderSize)
+	castBar.IconFrame.Icon:SetPoint("TOPLEFT", castBar.IconFrame, "TOPLEFT", inset, -inset)
+	castBar.IconFrame.Icon:SetPoint("BOTTOMRIGHT", castBar.IconFrame, "BOTTOMRIGHT", -inset, inset)
 	castBar.IconFrame.Icon:SetTexCoord(iconZoom, 1 - iconZoom, iconZoom, 1 - iconZoom)
 	castBar.IconFrame.Icon:SetTexelSnappingBias(0)
 	castBar.IconFrame.Icon:SetSnapToPixelGrid(false)
-	castBar.IconFrame:SetBackdrop({ edgeFile = "Interface\\Buttons\\WHITE8x8", edgeSize = borderSize })
-	castBar.IconFrame:SetBackdropBorderColor(borderColor.r, borderColor.g, borderColor.b, borderColor.a)
+	if options.showBorder and borderSize > 0 then
+		castBar.IconFrame:SetBackdrop({ edgeFile = "Interface\\Buttons\\WHITE8x8", edgeSize = borderSize })
+		castBar.IconFrame:SetBackdropBorderColor(borderColor.r, borderColor.g, borderColor.b, borderColor.a)
+	else
+		castBar.IconFrame:SetBackdrop(nil)
+	end
 	for _, region in ipairs({ castBar.IconFrame:GetRegions() }) do
 		if region:IsObjectType("Texture") then
 			region:SetTexelSnappingBias(0)
@@ -236,17 +258,17 @@ local function UpdateStatusBarLook(fillColor, bgColor)
 	if iconOptions.enable and iconSize > 0 then
 		castBar.IconFrame:SetSize(iconSize, iconSize)
 		if iconOptions.position == "RIGHT" then
-			castBar.IconFrame:SetPoint("RIGHT", castBar, "RIGHT", -borderSize + SCM:PixelPerfect(), 0)
-			castBar.Status:SetPoint("TOPLEFT", castBar, "TOPLEFT", borderSize, -borderSize)
-			castBar.Status:SetPoint("BOTTOMRIGHT", castBar, "BOTTOMRIGHT", -(iconSize + spacing), borderSize)
+			castBar.IconFrame:SetPoint("RIGHT", castBar, "RIGHT", -inset + SCM:PixelPerfect(), 0)
+			castBar.Status:SetPoint("TOPLEFT", castBar, "TOPLEFT", inset, -inset)
+			castBar.Status:SetPoint("BOTTOMRIGHT", castBar, "BOTTOMRIGHT", -(iconSize + spacing), inset)
 		else
-			castBar.IconFrame:SetPoint("LEFT", castBar, "LEFT", borderSize - SCM:PixelPerfect(), 0)
-			castBar.Status:SetPoint("TOPLEFT", castBar, "TOPLEFT", iconSize + spacing, -borderSize)
-			castBar.Status:SetPoint("BOTTOMRIGHT", castBar, "BOTTOMRIGHT", -borderSize, borderSize)
+			castBar.IconFrame:SetPoint("LEFT", castBar, "LEFT", inset - SCM:PixelPerfect(), 0)
+			castBar.Status:SetPoint("TOPLEFT", castBar, "TOPLEFT", iconSize + spacing, -inset)
+			castBar.Status:SetPoint("BOTTOMRIGHT", castBar, "BOTTOMRIGHT", -inset, inset)
 		end
 	else
-		castBar.Status:SetPoint("TOPLEFT", castBar, "TOPLEFT", borderSize, -borderSize)
-		castBar.Status:SetPoint("BOTTOMRIGHT", castBar, "BOTTOMRIGHT", -borderSize, borderSize)
+		castBar.Status:SetPoint("TOPLEFT", castBar, "TOPLEFT", inset, -inset)
+		castBar.Status:SetPoint("BOTTOMRIGHT", castBar, "BOTTOMRIGHT", -inset, inset)
 	end
 
 	UpdateIconTexture(castBar.CurrentSpellTexture)
