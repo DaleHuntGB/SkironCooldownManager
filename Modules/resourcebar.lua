@@ -111,7 +111,7 @@ local function UpdateResourceBarBorder(bar, barOptions)
 	end
 
 	local borderFrame = bar.BorderFrame
-	borderFrame:SetFrameLevel(bar:GetFrameLevel() + 1)
+	borderFrame:SetFrameLevel(bar:GetFrameLevel() + 2)
 
 	local backdropInfo = UpdateResourceBarBackdropInfo(barOptions)
 	if not backdropInfo then
