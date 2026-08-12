@@ -17,30 +17,36 @@ local CustomIconAlwaysVisibilityConfigs = {}
 local CustomIconFramePool
 local BloodlustTimerEventFrame
 
-local function TriggerBloodlustTimers()
+local function TriggerBloodlustTimers(startTime)
 	for i = 1, #BloodlustTimerEntries do
 		local frame = CustomSpellFrames[BloodlustTimerEntries[i]]
-		if frame and not frame.SCMReleased then
-			frame.lastCastStartTime = GetTime()
+		if frame and not frame.SCMReleased and not frame.lastCastStartTime then
+			frame.lastCastStartTime = startTime
 			SCM:ApplyAnchorGroupCDManagerConfig(frame.SCMGroup, frame.SCMGlobal)
 		end
 	end
 end
 
-local function OnBloodlustUnitAura(_, _, unit, updateInfo)
-	if unit ~= "player" or updateInfo.isFullUpdate or not updateInfo.addedAuras then
+local function OnBloodlustUnitAura(self, _, _, updateInfo)
+	if not updateInfo.addedAuras then
 		return
 	end
 
-	for _, auraInfo in pairs(updateInfo.addedAuras) do
-		if auraInfo and auraInfo.auraInstanceID then
-			local auraData = C_UnitAuras.GetAuraDataByAuraInstanceID("player", auraInfo.auraInstanceID)
-			if auraData and auraData.spellId and not issecretvalue(auraData.spellId) and SCM.Constants.SatedDebuffs[auraData.spellId] then
-				TriggerBloodlustTimers()
-				return
+	local auraData
+	local now = GetTime()
+	for spellID in pairs(SCM.Constants.SatedDebuffs) do
+		auraData = C_UnitAuras.GetPlayerAuraBySpellID(spellID)
+		if auraData then
+			if not self.expirationTime or now > self.expirationTime then
+				self.expirationTime = auraData.expirationTime
+
+				TriggerBloodlustTimers(auraData.expirationTime - auraData.duration)
 			end
+			return
 		end
 	end
+
+	self.expirationTime = nil
 end
 
 local function UpdateBloodlustTimerEvent()
