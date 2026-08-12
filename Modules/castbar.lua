@@ -650,7 +650,7 @@ function SCM:CreateCastBar()
 	return castBar
 end
 
-local function HandleEvents(_, event, unit, _, _, castBarID)
+local function HandleEvents(_, event, unit, _, _, castBarID, ...)
 	if CAST_START_EVENTS[event] then
 		local durationObject = UnitCastingDuration(unit)
 		if not durationObject then
@@ -683,6 +683,9 @@ local function HandleEvents(_, event, unit, _, _, castBarID)
 	end
 
 	if CAST_STOP_EVENTS[event] then
+		if event == "UNIT_SPELLCAST_EMPOWER_STOP" then
+			castBarID = select(2, ...)
+		end
 		HideCastBar(castBarID)
 	end
 end
