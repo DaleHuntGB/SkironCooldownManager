@@ -352,8 +352,12 @@ local function UpdateStatusBarLook(fillColor, bgColor)
 	end
 end
 
-local function HideCastBar()
+local function HideCastBar(castBarID)
 	local castBar = SCM.CastBar
+
+	if castBarID and not (castBar.castBarID == castBarID) then
+		return
+	end
 
 	ClearPips()
 	for _, tick in ipairs(castBar.TickLines) do
@@ -377,7 +381,7 @@ local function FormatDurationText(t)
 	return t < 5 and string.format("%.1f", t) or string.format("%.0f", t)
 end
 
-local function HandleCast(durationObject, castType, empoweredStages, isChannelStart)
+local function HandleCast(unit, durationObject, castType, castBarID, empoweredStages, isChannelStart)
 	local castBar = SCM.CastBar
 	local options = castBar.barOptions
 	local spellName, _, spellTexture, notInterruptible, spellID
@@ -385,9 +389,9 @@ local function HandleCast(durationObject, castType, empoweredStages, isChannelSt
 	local fillColor
 
 	if castType == "cast" then
-		spellName, _, spellTexture, _, _, _, _, notInterruptible, spellID = UnitCastingInfo("player")
+		spellName, _, spellTexture, _, _, _, _, notInterruptible, spellID = UnitCastingInfo(unit)
 	else
-		spellName, _, spellTexture, _, _, _, notInterruptible, spellID = UnitChannelInfo("player")
+		spellName, _, spellTexture, _, _, _, notInterruptible, spellID = UnitChannelInfo(unit)
 	end
 
 	if spellID == 1271478 then
@@ -417,6 +421,7 @@ local function HandleCast(durationObject, castType, empoweredStages, isChannelSt
 		return
 	end
 
+	castBar.castBarID = castBarID
 	castBar.CurrentFillColor = fillColor
 	castBar.Status:SetStatusBarColor(fillColor.r or 1, fillColor.g or 1, fillColor.b or 1, fillColor.a or 1)
 
@@ -526,7 +531,8 @@ local function HandleCast(durationObject, castType, empoweredStages, isChannelSt
 		end
 
 		if remaining <= 0 then
-			HideCastBar()
+			HideCastBar(castBarID)
+			castBar:SetScript("OnUpdate", nil)
 		end
 	end)
 
@@ -621,6 +627,8 @@ function SCM:CreateCastBar()
 	castBar.Spark:SetSnapToPixelGrid(false)
 
 	self.CastBar = castBar
+	castBar.playerEvents = CreateFrame("Frame")
+	castBar.vehicleEvents = CreateFrame("Frame")
 	EventRegistry:RegisterCallback(ANCHOR_PROXY_SIZE_CHANGED_EVENT, function(_, proxyGroup, proxy, _width, _height, _selectedAnchorRef, isActiveProxy)
 		local currentOptions = castBar.barOptions or SCM.castBarConfig
 		if not (currentOptions.enable and currentOptions.matchParentWidth and isActiveProxy) then
@@ -642,6 +650,43 @@ function SCM:CreateCastBar()
 	return castBar
 end
 
+local function HandleEvents(_, event, unit, _, _, castBarID)
+	if CAST_START_EVENTS[event] then
+		local durationObject = UnitCastingDuration(unit)
+		if not durationObject then
+			return
+		end
+
+		HandleCast(unit, durationObject, "cast", castBarID)
+		return
+	end
+
+	if event == "UNIT_SPELLCAST_CHANNEL_START" or event == "UNIT_SPELLCAST_CHANNEL_UPDATE" then
+		local durationObject = UnitChannelDuration(unit)
+		if not durationObject then
+			return
+		end
+
+		HandleCast(unit, durationObject, "channel", castBarID, nil, event == "UNIT_SPELLCAST_CHANNEL_START")
+		return
+	end
+
+	if event == "UNIT_SPELLCAST_EMPOWER_START" or event == "UNIT_SPELLCAST_EMPOWER_UPDATE" then
+		local durationObject = UnitEmpoweredChannelDuration(unit)
+		if not durationObject then
+			return
+		end
+
+		local stages = UnitEmpoweredStagePercentages(unit)
+		HandleCast(unit, durationObject, "empower", castBarID, stages)
+		return
+	end
+
+	if CAST_STOP_EVENTS[event] then
+		HideCastBar(castBarID)
+	end
+end
+
 function SCM:UpdateCastBar()
 	local castBar = self.CastBar
 	local options = SCM.castBarConfig
@@ -653,7 +698,8 @@ function SCM:UpdateCastBar()
 	UpdateStatusBarLook(options.fgColor)
 
 	if options.enable then
-		castBar:UnregisterAllEvents()
+		castBar.playerEvents:UnregisterAllEvents()
+		castBar.vehicleEvents:UnregisterAllEvents()
 		HideCastBar()
 
 		local events = {
@@ -672,45 +718,12 @@ function SCM:UpdateCastBar()
 			"UNIT_SPELLCAST_EMPOWER_UPDATE",
 		}
 		for _, event in ipairs(events) do
-			castBar:RegisterUnitEvent(event, "player")
+			castBar.playerEvents:RegisterUnitEvent(event, "player")
+			castBar.vehicleEvents:RegisterUnitEvent(event, "vehicle")
 		end
 
-		castBar:SetScript("OnEvent", function(_, event)
-			if CAST_START_EVENTS[event] then
-				local durationObject = UnitCastingDuration("player")
-				if not durationObject then
-					return
-				end
-
-				HandleCast(durationObject, "cast")
-				return
-			end
-
-			if event == "UNIT_SPELLCAST_CHANNEL_START" or event == "UNIT_SPELLCAST_CHANNEL_UPDATE" then
-				local durationObject = UnitChannelDuration("player")
-				if not durationObject then
-					return
-				end
-
-				HandleCast(durationObject, "channel", nil, event == "UNIT_SPELLCAST_CHANNEL_START")
-				return
-			end
-
-			if event == "UNIT_SPELLCAST_EMPOWER_START" or event == "UNIT_SPELLCAST_EMPOWER_UPDATE" then
-				local durationObject = UnitEmpoweredChannelDuration("player")
-				if not durationObject then
-					return
-				end
-
-				local stages = UnitEmpoweredStagePercentages("player")
-				HandleCast(durationObject, "empower", stages)
-				return
-			end
-
-			if CAST_STOP_EVENTS[event] then
-				HideCastBar()
-			end
-		end)
+		castBar.playerEvents:SetScript("OnEvent", HandleEvents)
+		castBar.vehicleEvents:SetScript("OnEvent", HandleEvents)
 
 		self:RefreshCastBarWidth(0.1)
 		PlayerCastingBarFrame:UnregisterAllEvents()
