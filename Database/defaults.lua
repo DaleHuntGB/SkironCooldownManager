@@ -469,6 +469,8 @@ SCM.DefaultDB = {
 				fgColor = { r = 0.5, g = 0.5, b = 1, a = 1 },
 				bgColor = { r = 0, g = 0, b = 0, a = 0.8 },
 				interruptColor = { r = 1, g = 0.25, b = 0.25, a = 1 },
+				showBorder = true,
+				borderSize = 1,
 				borderColor = { r = 0, g = 0, b = 0, a = 1 },
 				empoweredStageColors = {
 					{ r = 0.35, g = 0.75, b = 1.00, a = 0.35 },

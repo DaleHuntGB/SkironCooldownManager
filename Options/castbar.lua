@@ -48,7 +48,10 @@ local function AddAnchorControls(parent, title, anchors, refreshFn, relativeFram
 		refreshFn()
 	end)
 	anchorGroup:AddChild(relativeTo)
-	Options.AddAnchorParentAutocomplete(anchorGroup, relativeTo, function(text) anchors[2] = text ~= "" and text or nil refreshFn() end)
+	Options.AddAnchorParentAutocomplete(anchorGroup, relativeTo, function(text)
+		anchors[2] = text ~= "" and text or nil
+		refreshFn()
+	end)
 
 	local point = AceGUI:Create("Dropdown")
 	point:SetRelativeWidth(0.5)
@@ -442,6 +445,44 @@ local function CastBar(self)
 		RefreshCastBar()
 	end)
 
+	local borderGroup = AceGUI:Create("InlineGroup")
+	borderGroup:SetTitle("Border")
+	borderGroup:SetFullWidth(true)
+	borderGroup:SetLayout("flow")
+	scrollFrame:AddChild(borderGroup)
+
+	local showBorder = AceGUI:Create("CheckBox")
+	showBorder:SetRelativeWidth(0.33)
+	showBorder:SetLabel("Show Border")
+	showBorder:SetValue(options.showBorder)
+	showBorder:SetCallback("OnValueChanged", function(_, _, value)
+		options.showBorder = value
+		RefreshCastBar()
+	end)
+	borderGroup:AddChild(showBorder)
+
+	local borderColor = AceGUI:Create("ColorPicker")
+	borderColor:SetRelativeWidth(0.33)
+	borderColor:SetLabel("Border Color")
+	borderColor:SetHasAlpha(true)
+	borderColor:SetColor(options.borderColor.r, options.borderColor.g, options.borderColor.b, options.borderColor.a)
+	borderColor:SetCallback("OnValueChanged", function(_, _, r, g, b, a)
+		options.borderColor = { r = r, g = g, b = b, a = a }
+		RefreshCastBar()
+	end)
+	borderGroup:AddChild(borderColor)
+
+	local borderSize = AceGUI:Create("Slider")
+	borderSize:SetRelativeWidth(0.33)
+	borderSize:SetLabel("Border Size")
+	borderSize:SetSliderValues(0, 10, 0.1)
+	borderSize:SetValue(options.borderSize or 1)
+	borderSize:SetCallback("OnValueChanged", function(_, _, value)
+		options.borderSize = value
+		RefreshCastBar()
+	end)
+	borderGroup:AddChild(borderSize)
+
 	local tickGroup = AceGUI:Create("InlineGroup")
 	tickGroup:SetTitle("Ticks")
 	tickGroup:SetFullWidth(true)
@@ -662,44 +703,6 @@ local function CastBar(self)
 		end)
 		colorGroup:AddChild(stageColor)
 	end
-
-	local borderGroup = AceGUI:Create("InlineGroup")
-	borderGroup:SetTitle("Border")
-	borderGroup:SetFullWidth(true)
-	borderGroup:SetLayout("flow")
-	scrollFrame:AddChild(borderGroup)
-
-	local showBorder = AceGUI:Create("CheckBox")
-	showBorder:SetRelativeWidth(0.33)
-	showBorder:SetLabel("Show Border")
-	showBorder:SetValue(options.showBorder)
-	showBorder:SetCallback("OnValueChanged", function(_, _, value)
-		options.showBorder = value
-		RefreshCastBar()
-	end)
-	borderGroup:AddChild(showBorder)
-
-	local borderColor = AceGUI:Create("ColorPicker")
-	borderColor:SetRelativeWidth(0.33)
-	borderColor:SetLabel("Border Color")
-	borderColor:SetHasAlpha(true)
-	borderColor:SetColor(options.borderColor.r, options.borderColor.g, options.borderColor.b, options.borderColor.a)
-	borderColor:SetCallback("OnValueChanged", function(_, _, r, g, b, a)
-		options.borderColor = { r = r, g = g, b = b, a = a }
-		RefreshCastBar()
-	end)
-	borderGroup:AddChild(borderColor)
-
-	local borderSize = AceGUI:Create("Slider")
-	borderSize:SetRelativeWidth(0.33)
-	borderSize:SetLabel("Border Size")
-	borderSize:SetSliderValues(0, 10, 0.1)
-	borderSize:SetValue(options.borderSize or 1)
-	borderSize:SetCallback("OnValueChanged", function(_, _, value)
-		options.borderSize = value
-		RefreshCastBar()
-	end)
-	borderGroup:AddChild(borderSize)
 
 	local anchorsGroup = AceGUI:Create("InlineGroup")
 	anchorsGroup:SetTitle("Anchors")

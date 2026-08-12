@@ -152,25 +152,20 @@ local function UpdateIconTexture(spellTexture)
 	end
 end
 
-local function CalculateCastBarPixelInset(region)
+local function GetBorderInset(region)
 	local options = region.barOptions or SCM.castBarConfig
 	if not options.showBorder then
 		return 0
 	end
 
-	local borderSize = options.borderSize or 0
-	if borderSize <= 0 then
-		return 0
-	end
-
-	return PixelUtil.GetNearestPixelSize(borderSize * 0.5, region:GetEffectiveScale(), 1)
+	return PixelUtil.GetNearestPixelSize((options.borderSize or 0) * 0.5, region:GetEffectiveScale(), 1)
 end
 
 local function UpdateStatusBarLook(fillColor, bgColor)
 	local castBar = SCM.CastBar
 	local options = castBar.barOptions or SCM.castBarConfig
 
-	local inset = CalculateCastBarPixelInset(castBar)
+	local inset = GetBorderInset(castBar)
 	local borderSize = options.showBorder and (options.borderSize or 0) or 0
 	local texturePath = LSM:Fetch("statusbar", options.texture) or "Interface\\TargetingFrame\\UI-StatusBar"
 	local borderColor = options.borderColor
