@@ -10,8 +10,7 @@ local NumericRuleFormatter = C_StringUtil.CreateNumericRuleFormatter()
 Cooldowns.NumericRuleFormatter = NumericRuleFormatter
 
 function Cooldowns.ApplyNumericRuleFormatter(cooldownFrame)
-	if cooldownFrame and cooldownFrame.SetCountdownFormatter and not cooldownFrame.SCMFormatter then
-		cooldownFrame.SCMFormatter = true
+	if cooldownFrame and cooldownFrame.SetCountdownFormatter then
 		cooldownFrame:SetCountdownFormatter(NumericRuleFormatter)
 	end
 end
@@ -237,20 +236,38 @@ function Cooldowns.GetChildCooldown(child)
 			local durationObject
 			local cooldownState = "ready"
 
-			local spellCooldown = C_Spell.GetSpellCooldown(spellID)
-			if spellCooldown and spellCooldown.isActive and not spellCooldown.isOnGCD then
-				durationObject = C_Spell.GetSpellCooldownDuration(spellID, true)
-				if durationObject then
-					cooldownState = "cooldown"
-				end
-			end
-
-			if cooldownData.charges and not durationObject then
+			if not issecretvalue(child.wasSetFromCharges) and child.wasSetFromCharges and cooldownData.charges then
 				local spellCharges = C_Spell.GetSpellCharges(spellID)
-				if spellCharges and spellCharges.isActive and not spellCharges.isOnGCD then
+				if spellCharges and spellCharges.isActive then
 					durationObject = C_Spell.GetSpellChargeDuration(spellID, true)
 					if durationObject then
 						cooldownState = "recharging"
+					end
+				end
+			elseif not issecretvalue(child.wasSetFromCooldown) and child.wasSetFromCooldown then
+				local spellCooldown = C_Spell.GetSpellCooldown(spellID)
+				if spellCooldown and spellCooldown.isActive and not spellCooldown.isOnGCD then
+					durationObject = C_Spell.GetSpellCooldownDuration(spellID, true)
+					if durationObject then
+						cooldownState = "cooldown"
+					end
+				end
+			else
+				local spellCooldown = C_Spell.GetSpellCooldown(spellID)
+				if spellCooldown and spellCooldown.isActive and not spellCooldown.isOnGCD then
+					durationObject = C_Spell.GetSpellCooldownDuration(spellID, true)
+					if durationObject then
+						cooldownState = "cooldown"
+					end
+				end
+
+				if cooldownData.charges and not durationObject then
+					local spellCharges = C_Spell.GetSpellCharges(spellID)
+					if spellCharges and spellCharges.isActive then
+						durationObject = C_Spell.GetSpellChargeDuration(spellID, true)
+						if durationObject then
+							cooldownState = "recharging"
+						end
 					end
 				end
 			end
