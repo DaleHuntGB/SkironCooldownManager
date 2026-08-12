@@ -98,7 +98,6 @@ local function ApplyCooldownFont(cooldownFrame, options)
 	end
 
 	if options.changeCooldownFont then
-		local fontPath = LSM:Fetch("font", options.cooldownFont)
 		if cooldownFontString and cooldownFontString.SetFont then
 			if not originalCooldownFont then
 				originalCooldownFont = { cooldownFontString:GetFont() }
@@ -114,6 +113,7 @@ local function ApplyCooldownFont(cooldownFrame, options)
 					config = childConfig
 				end
 
+				local fontPath = LSM:Fetch("font", config and config.cooldownFont or options.cooldownFont)
 				local percentageFontSize = config and config.cooldownFontSize or options.cooldownFontSize
 				local fontSize
 				if percentageFontSize > 1 then
