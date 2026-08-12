@@ -29,6 +29,8 @@ StaticPopupDialogs["SCM_FORCE_RELOAD_POPUP"] = {
 	end,
 }
 
+SCM.Tooltip = CreateFrame("GameTooltip", "SCM_GameTooltip", UIParent, "GameTooltipTemplate")
+
 function SCM.ShowReloadPopup(data)
 	StaticPopup_Show("SCM_FORCE_RELOAD_POPUP", nil, nil, data)
 end

@@ -634,6 +634,7 @@ local function CreateExternalCustomEntries(rootDescription, scrollFrame, anchorI
 end
 
 function CDMOptions.CreateAddSpellDropdown(owner, rootDescription, scrollFrame, anchorIndex, mode)
+	rootDescription:SetTooltipFrame(SCM.Tooltip)
 	rootDescription:CreateTitle("Add Icon")
 
 	if mode == "global" then
