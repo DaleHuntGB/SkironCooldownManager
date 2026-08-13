@@ -273,6 +273,7 @@ SCM.DefaultDB = {
 				frameStrata = "BACKGROUND",
 				useFrequentPowerUpdates = false,
 				maelstromOverflowColor = { r = 0.25, g = 0.70, b = 1.00 },
+				comboPointsOverflowColor = { r = 0.25, g = 0.70, b = 1.00 },
 				staggerDisplayAsPercent = false,
 				staggerColors = {
 					light = { r = 0.52, g = 1.00, b = 0.52 },

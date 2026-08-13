@@ -10,6 +10,9 @@ Constants.ClassSecondaryPower = {
 		powerType = Enum.PowerType.ComboPoints,
 		powerToken = "COMBO_POINTS",
 		showWhenPrimaryPowerType = Enum.PowerType.Energy,
+		registerUnitAuraSpecs = {
+			[103] = true,
+		},
 	},
 	["EVOKER"] = {
 		powerType = Enum.PowerType.Essence,

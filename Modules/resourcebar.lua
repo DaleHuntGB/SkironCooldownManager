@@ -23,7 +23,11 @@ local RESOURCE_BAR_RECONFIGURE_EVENTS = {
 	PLAYER_LOSES_VEHICLE_DATA = true,
 	UNIT_DISPLAYPOWER = true,
 	UPDATE_SHAPESHIFT_FORM = true,
+}
+local POWER_TOKEN_EVENTS = {
 	UNIT_MAXPOWER = true,
+	UNIT_POWER_FREQUENT = true,
+	UNIT_POWER_UPDATE = true,
 }
 
 local function GetPowerColorByInfo(powerToken, powerType)
@@ -581,7 +585,7 @@ local function ConfigureBarForResource(bar, resource, altR, altG, altB)
 	local powerType = resource.powerType
 	local powerToken = resource.powerToken
 	local spellID = resource.spellID
-	local registerUnitAura = resource.registerUnitAura
+	local registerUnitAura = resource.registerUnitAura or (resource.registerUnitAuraSpecs and resource.registerUnitAuraSpecs[Utils.GetSpec()])
 	local segmentCount = resource.segmentCount
 
 	if resource.segmentCountTalentSpellID and resource.talentSegmentCount and IsPlayerSpell(resource.segmentCountTalentSpellID) then
@@ -718,19 +722,36 @@ local function RefreshBarTicks(bar, maxValue)
 end
 
 local function GetChargedSegmentMap(bar, segmentCount, currentValue)
-	local isRogueComboPointResource = bar.powerType == Enum.PowerType.ComboPoints and Utils.GetClass() == "ROGUE"
-	if isRogueComboPointResource then
-		local chargedComboPoints = GetUnitChargedPowerPoints("player")
-		if not chargedComboPoints or #chargedComboPoints == 0 then
-			return
-		end
+	if bar.powerType == Enum.PowerType.ComboPoints then
+		local class = Utils.GetClass()
+		if class == "ROGUE" then
+			local chargedComboPoints = GetUnitChargedPowerPoints("player")
+			if not chargedComboPoints or #chargedComboPoints == 0 then
+				return
+			end
 
-		local chargedSegmentMap = {}
-		for _, pointIndex in ipairs(chargedComboPoints) do
-			chargedSegmentMap[pointIndex] = true
-		end
+			local chargedSegmentMap = {}
+			for _, pointIndex in ipairs(chargedComboPoints) do
+				chargedSegmentMap[pointIndex] = true
+			end
 
-		return chargedSegmentMap
+			return chargedSegmentMap
+		elseif class == "DRUID" then
+			local specID = Utils.GetSpec()
+			if specID == 103 then
+				local auraData = C_UnitAuras.GetPlayerAuraBySpellID(405189)
+				if auraData then
+					local chargedSegmentMap = {}
+					for segmentIndex = 1, auraData.applications do
+						chargedSegmentMap[segmentIndex] = true
+					end
+					return chargedSegmentMap
+				else
+					return
+				end
+			end
+		end
+		return
 	end
 
 	local isMaelstromWeaponResource = bar.resourceKind == "maelstromWeapon"
@@ -839,6 +860,11 @@ local function UpdateSegmentValues(bar, segmentBars, segmentCount, currentValue,
 		if overflowColor and overflowColor.r and overflowColor.g and overflowColor.b then
 			overflowR, overflowG, overflowB = overflowColor.r, overflowColor.g, overflowColor.b
 		end
+	elseif bar.resourceType == Enum.PowerType.ComboPoints then
+		local overflowColor = SCM.resourceBarConfig.comboPointsOverflowColor
+		if overflowColor and overflowColor.r and overflowColor.g and overflowColor.b then
+			overflowR, overflowG, overflowB = overflowColor.r, overflowColor.g, overflowColor.b
+		end
 	end
 
 	local chargedSegments = GetChargedSegmentMap(bar, segmentCount, currentValue)
@@ -851,7 +877,7 @@ local function UpdateSegmentValues(bar, segmentBars, segmentCount, currentValue,
 		if runeRechargeColor and segmentProgress > 0 and segmentProgress < 1 then
 			segmentR, segmentG, segmentB = runeRechargeColor.r, runeRechargeColor.g, runeRechargeColor.b
 		elseif chargedSegments and chargedSegments[segmentIndex] then
-			if bar.resourceKind == "maelstromWeapon" then
+			if bar.resourceKind == "maelstromWeapon" or bar.resourceType == Enum.PowerType.ComboPoints then
 				segmentR, segmentG, segmentB = overflowR, overflowG, overflowB
 			else
 				segmentR, segmentG, segmentB = CHARGED_COMBO_POINT_COLOR.r, CHARGED_COMBO_POINT_COLOR.g, CHARGED_COMBO_POINT_COLOR.b
@@ -1054,7 +1080,9 @@ local function RegisterBarEvents(bar, barOptions)
 
 	if bar.SCMRegisterUnitAura then
 		bar:RegisterUnitEvent("UNIT_AURA", "player")
-		return
+		if not bar.powerType then
+			return
+		end
 	end
 
 	if bar.resourceKind == "runes" then
@@ -1076,7 +1104,7 @@ local function RegisterBarEvents(bar, barOptions)
 	local powerUpdateEvent = barOptions.useFrequentPowerUpdates and "UNIT_POWER_FREQUENT" or "UNIT_POWER_UPDATE"
 	bar:RegisterUnitEvent(powerUpdateEvent, "player")
 
-	if bar.powerType ~= nil then
+	if bar.powerType then
 		bar:RegisterUnitEvent("UNIT_MAXPOWER", "player")
 	end
 
@@ -1085,13 +1113,19 @@ local function RegisterBarEvents(bar, barOptions)
 	end
 end
 
-local function OnResourceBarEvent(bar, event)
+local function OnResourceBarEvent(bar, event, _, powerToken)
 	local controller = bar and bar.Controller
 	if not controller then
 		return
 	end
 
-	if bar.resourceKind == "spellCharges" then
+	if POWER_TOKEN_EVENTS[event] and bar.powerType and powerToken ~= bar.powerToken then
+		return
+	end
+
+	if event == "UNIT_MAXPOWER" then
+		controller:RefreshBarDisplay(bar, true)
+	elseif bar.resourceKind == "spellCharges" then
 		controller:RefreshBarDisplay(bar)
 	else
 		controller:UpdateBarDisplay(bar)
@@ -1680,7 +1714,7 @@ end
 
 function SCMResourceBarControllerMixin:OnEvent(event)
 	if RESOURCE_BAR_RECONFIGURE_EVENTS[event] then
-		self:RefreshResourceBars(event == "UNIT_MAXPOWER")
+		self:RefreshResourceBars()
 	end
 end
 
@@ -1692,7 +1726,6 @@ function SCMResourceBarControllerMixin:RegisterResourceBarEvents()
 	self:RegisterEvent("UPDATE_SHAPESHIFT_FORM")
 	self:RegisterEvent("PLAYER_ENTERING_WORLD")
 	self:RegisterUnitEvent("UNIT_DISPLAYPOWER", "player")
-	self:RegisterUnitEvent("UNIT_MAXPOWER", "player")
 	self:RegisterEvent("PLAYER_GAINS_VEHICLE_DATA")
 	self:RegisterEvent("PLAYER_LOSES_VEHICLE_DATA")
 	self.SCMResourceBarEventsRegistered = true

@@ -317,6 +317,17 @@ local function AddSpecialColorSettings(parent, settings)
 	end)
 	specialColors:AddChild(maelstromOverflowColor)
 
+	local comboPointsOverflowColor = AceGUI:Create("ColorPicker")
+	comboPointsOverflowColor:SetRelativeWidth(0.33)
+	comboPointsOverflowColor:SetLabel("Combo Points Overflow")
+	comboPointsOverflowColor:SetHasAlpha(false)
+	comboPointsOverflowColor:SetColor(settings.comboPointsOverflowColor.r, settings.comboPointsOverflowColor.g, settings.comboPointsOverflowColor.b)
+	comboPointsOverflowColor:SetCallback("OnValueChanged", function(_, _, r, g, b)
+		settings.comboPointsOverflowColor = { r = r, g = g, b = b }
+		RefreshResourceBars()
+	end)
+	specialColors:AddChild(comboPointsOverflowColor)
+
 	local defaultRuneColor = settings.powerTypeColorOverrides.RUNES.color
 	local runeRechargeColorValue = settings.runeRechargeColor or defaultRuneColor
 	local runeRechargeColor = AceGUI:Create("ColorPicker")
