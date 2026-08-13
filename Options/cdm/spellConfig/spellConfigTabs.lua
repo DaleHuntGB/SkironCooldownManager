@@ -42,7 +42,11 @@ local iconTypeTabs = {
 		{ value = "items", text = "Items" },
 	},
 	timer = {},
-	bloodlust = {},
+	bloodlust = {
+		{ value = "display", text = "Display" },
+		{ value = "state", text = "States (Alpha)", children = stateTypeTree },
+		{ value = "load", text = "Load Conditions" },
+	},
 	slot = {
 		{ value = "filter", text = "Filter" },
 	},
