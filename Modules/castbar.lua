@@ -685,6 +685,8 @@ local function HandleEvents(_, event, unit, _, _, castBarID, ...)
 	if CAST_STOP_EVENTS[event] then
 		if event == "UNIT_SPELLCAST_EMPOWER_STOP" then
 			castBarID = select(2, ...)
+		elseif event == "UNIT_SPELLCAST_INTERRUPTED" then
+			castBarID = ...
 		end
 		HideCastBar(castBarID)
 	end
