@@ -143,21 +143,20 @@ function SCM:UpdateCooldownInfo()
 		local cooldownIDs = C_CooldownViewer.GetCooldownViewerCategorySet(cooldownCategory, true)
 		for _, cooldownID in ipairs(cooldownIDs) do
 			local info = C_CooldownViewer.GetCooldownViewerCooldownInfo(cooldownID)
-			if info then
-				local data = CopyTable(displayData[cooldownID])
-				if data then
-					self.defaultCooldownViewerConfig[cooldownCategory][data.cooldownID] = data
-					self.defaultCooldownViewerConfig[cooldownCategory].cooldownIDs[data.cooldownID] = data
-					self.defaultCooldownViewerConfig.cooldownIDs[data.cooldownID] = data
+			local data = displayData and displayData[cooldownID]
+			if info and data then
+				data = CopyTable(data)
+				self.defaultCooldownViewerConfig[cooldownCategory][data.cooldownID] = data
+				self.defaultCooldownViewerConfig[cooldownCategory].cooldownIDs[data.cooldownID] = data
+				self.defaultCooldownViewerConfig.cooldownIDs[data.cooldownID] = data
 
-					local spellID = data.spellID
-					if spellID and not issecretvalue(spellID) then
-						self.defaultCooldownViewerConfig[cooldownCategory].spellIDs[spellID] = data
-						self.defaultCooldownViewerConfig.spellIDs[spellID] = data
-						for _, linkedSpellID in ipairs(data.linkedSpellIDs or {}) do
-							self.defaultCooldownViewerConfig[cooldownCategory].spellIDs[linkedSpellID] = data
-							self.defaultCooldownViewerConfig.spellIDs[linkedSpellID] = data
-						end
+				local spellID = data.spellID
+				if spellID and not issecretvalue(spellID) then
+					self.defaultCooldownViewerConfig[cooldownCategory].spellIDs[spellID] = data
+					self.defaultCooldownViewerConfig.spellIDs[spellID] = data
+					for _, linkedSpellID in ipairs(data.linkedSpellIDs or {}) do
+						self.defaultCooldownViewerConfig[cooldownCategory].spellIDs[linkedSpellID] = data
+						self.defaultCooldownViewerConfig.spellIDs[linkedSpellID] = data
 					end
 				end
 			end

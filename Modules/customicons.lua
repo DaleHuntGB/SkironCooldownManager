@@ -1191,6 +1191,10 @@ function CustomIcons.UpdateSpellRange(spellID, isInRange, checksRange)
 end
 
 local function UpdateCountTextForConfigTable(customConfig)
+	if not customConfig then
+		return
+	end
+
 	local visibilityChanged = false
 
 	for id, config in pairs(customConfig) do

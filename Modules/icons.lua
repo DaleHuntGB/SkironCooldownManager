@@ -408,7 +408,7 @@ local function ProcessSingleChild(child, validChildren, categoryIndex, isBuffIco
 	end
 
 	local configID, childData = GetSpellConfigByCooldownID(SCM.spellConfig, cooldownID)
-	if not (cooldownID and childData) then
+	if not (cooldownID and info and childData) then
 		if child.SCMConfig then
 			Utils.ResetChildSCMState(child)
 		end
