@@ -735,7 +735,7 @@ local function SelectGlobalSettingsTab(tabWidget, scrollFrame, group, options)
 		chargeSettings:AddChild(chargeFrameLevel)
 
 		local chargeColour = AceGUI:Create("ColorPicker")
-		chargeColour:SetLabel("Colour")
+		chargeColour:SetLabel("Color")
 		chargeColour:SetRelativeWidth(0.5)
 		chargeColour:SetColor(options.chargeColour.r, options.chargeColour.g, options.chargeColour.b, options.chargeColour.a or 1)
 		chargeColour:SetCallback("OnValueChanged", function(_, _, r, g, b, a)

@@ -369,7 +369,7 @@ function CDMOptions.SelectRow(widget, rowWidget, parentWidget, anchorOptions, sc
 		chargeSettings:AddChild(truncateWhenZero)
 
 		local chargeColour = AceGUI:Create("ColorPicker")
-		chargeColour:SetLabel("Colour")
+		chargeColour:SetLabel("Color")
 		chargeColour:SetRelativeWidth(0.33)
 		if not rowConfig.chargeColour then
 			local optionsChargeColour = options.chargeColour
