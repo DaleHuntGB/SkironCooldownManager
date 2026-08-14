@@ -97,12 +97,12 @@ Constants.SpecSecondaryPower = {
 }
 
 Constants.ClassManaSecondaryPower = {
-	["DRUID"] = {
-		[Enum.PowerType.LunarPower] = {
-			powerType = Enum.PowerType.Mana,
-			powerToken = "MANA",
-		},
-	},
+	-- ["DRUID"] = {
+	-- 	[Enum.PowerType.LunarPower] = {
+	-- 		powerType = Enum.PowerType.Mana,
+	-- 		powerToken = "MANA",
+	-- 	},
+	-- },
 	["PRIEST"] = {
 		[Enum.PowerType.Insanity] = {
 			powerType = Enum.PowerType.Mana,

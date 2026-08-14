@@ -469,16 +469,6 @@ local function AddBarSettings(parent, title, settings, includeManaRoleSettings, 
 		end
 		generalSettings:AddChild(hideManaRoles)
 	else
-		local forceMana = AceGUI:Create("CheckBox")
-		forceMana:SetRelativeWidth(0.33)
-		forceMana:SetLabel("Show Mana (if possible)")
-		forceMana:SetValue(settings.forceMana)
-		forceMana:SetCallback("OnValueChanged", function(_, _, value)
-			settings.forceMana = value
-			RefreshResourceBars()
-		end)
-		generalSettings:AddChild(forceMana)
-
 		if UnitClassBase("player") == "DRUID" then
 			local powerTypeList = title == "Primary" and Constants.DruidPrimaryPowerTypes or Constants.DruidSecondaryPowerTypes
 			local druidFormPowerTypesBySpec = settings.druidFormPowerTypes
@@ -509,6 +499,16 @@ local function AddBarSettings(parent, title, settings, includeManaRoleSettings, 
 			AddDruidFormDropdown(druidSettings, druidFormPowerTypes, 2, "Cat Form")
 			AddDruidFormDropdown(druidSettings, druidFormPowerTypes, 3, "Travel Form")
 			AddDruidFormDropdown(druidSettings, druidFormPowerTypes, 4, "Moonkin Form")
+		else
+			local forceMana = AceGUI:Create("CheckBox")
+			forceMana:SetRelativeWidth(0.33)
+			forceMana:SetLabel("Show Mana (if possible)")
+			forceMana:SetValue(settings.forceMana)
+			forceMana:SetCallback("OnValueChanged", function(_, _, value)
+				settings.forceMana = value
+				RefreshResourceBars()
+			end)
+			generalSettings:AddChild(forceMana)
 		end
 	end
 

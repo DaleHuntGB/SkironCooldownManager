@@ -340,7 +340,10 @@ function Icons.ExpandScopedAnchorGroups(viewer, viewerData, scopedAnchorGroups)
 						Cache.cachedAnchorStates[oldGroup].layoutSignature = nil
 						scopedAnchorGroups[oldGroup] = true
 					end
-					Cache.cachedAnchorStates[group].layoutSignature = nil
+					local state = Cache.cachedAnchorStates[group]
+					if state then
+						state.layoutSignature = nil
+					end
 					scopedAnchorGroups[group] = true
 				end
 			end
