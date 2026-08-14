@@ -26,6 +26,39 @@ local function HookTabBuilder(skins, tabGroup)
 	end)
 end
 
+local function SkinHorizontalScrollBar(skins, scrollbar)
+	if not scrollbar or scrollbar.SCMElvUISkinned then return end
+
+	-- pre-skin the arrows so they get left/right rotation instead of the up/down default
+	if scrollbar.Back then
+		skins:HandleNextPrevButton(scrollbar.Back, 'left')
+	end
+
+	if scrollbar.Forward then
+		skins:HandleNextPrevButton(scrollbar.Forward, 'right')
+	end
+
+	skins:HandleTrimScrollBar(scrollbar)
+
+	scrollbar.SCMElvUISkinned = true
+end
+
+local function HookHorizontalScrollFrames()
+	local AceGUI = LibStub and LibStub('AceGUI-3.0', true)
+	if not AceGUI then return end
+
+	hooksecurefunc(AceGUI, 'RegisterAsContainer', function(_, widget)
+		if not widget or widget.type ~= 'SCMHorizontalScrollFrame' then return end
+
+		local skins = GetSkinsModule()
+		if not skins then return end
+
+		SkinHorizontalScrollBar(skins, widget.scrollbar)
+	end)
+end
+
+HookHorizontalScrollFrames()
+
 local function SkinRootFrame(skins, rootFrame)
 	skins:HandleFrame(rootFrame, nil, true)
 
