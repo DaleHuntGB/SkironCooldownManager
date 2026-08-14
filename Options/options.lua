@@ -417,7 +417,10 @@ local function OpenOptions()
 	end)
 	tabs:SelectTab("General")
 	frame:AddChild(tabs)
-	SCM:SkinOptionsFrame(frame, tabs)
+
+	if SCM.SkinOptionsFrame then -- Only exists if ElvUI[1] is loaded
+		SCM:SkinOptionsFrame(frame, tabs)
+	end
 	frame:SetCallback("OnClose", function()
 		SCM.OptionsFrame = nil
 		SCM.isOptionsOpen = nil

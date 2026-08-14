@@ -1,97 +1,39 @@
 local SCM = select(2, ...)
 
-local function GetSkinsModule()
-	if not ElvUI or not ElvUI[1] then return end
+local S = ElvUI and ElvUI[1]:GetModule('Skins', true)
+if not S then return end
 
-	return ElvUI[1]:GetModule('Skins', true)
-end
-
-local function HandleTabs(skins, tabGroup)
-	if not tabGroup or type(tabGroup.tabs) ~= 'table' then return end
-
+local function HandleTabs(tabGroup)
 	for _, tab in pairs(tabGroup.tabs) do
-		if tab and not tab.SCMElvUISkinned then
-			skins:HandleTab(tab)
-			tab.SCMElvUISkinned = true
-		end
+		S:HandleTab(tab)
 	end
 end
 
-local function HookTabBuilder(skins, tabGroup)
-	if not tabGroup or tabGroup.SCMElvUITabHooked then return end
+-- Fires once per constructed widget, recycled widgets keep their skin
+hooksecurefunc(LibStub('AceGUI-3.0'), 'RegisterAsContainer', function(_, widget)
+	if widget.type ~= 'SCMHorizontalScrollFrame' then return end
 
-	tabGroup.SCMElvUITabHooked = true
-	hooksecurefunc(tabGroup, 'BuildTabs', function(self)
-		HandleTabs(skins, self)
-	end)
-end
-
-local function SkinHorizontalScrollBar(skins, scrollbar)
-	if not scrollbar or scrollbar.SCMElvUISkinned then return end
-
-	-- pre-skin the arrows so they get left/right rotation instead of the up/down default
-	if scrollbar.Back then
-		skins:HandleNextPrevButton(scrollbar.Back, 'left')
-	end
-
-	if scrollbar.Forward then
-		skins:HandleNextPrevButton(scrollbar.Forward, 'right')
-	end
-
-	skins:HandleTrimScrollBar(scrollbar)
-
-	scrollbar.SCMElvUISkinned = true
-end
-
-local function HookHorizontalScrollFrames()
-	local AceGUI = LibStub and LibStub('AceGUI-3.0', true)
-	if not AceGUI then return end
-
-	hooksecurefunc(AceGUI, 'RegisterAsContainer', function(_, widget)
-		if not widget or widget.type ~= 'SCMHorizontalScrollFrame' then return end
-
-		local skins = GetSkinsModule()
-		if not skins then return end
-
-		SkinHorizontalScrollBar(skins, widget.scrollbar)
-	end)
-end
-
-HookHorizontalScrollFrames()
-
-local function SkinRootFrame(skins, rootFrame)
-	skins:HandleFrame(rootFrame, nil, true)
-
-	if rootFrame.CloseButton then
-		skins:HandleCloseButton(rootFrame.CloseButton)
-	end
-
-	if rootFrame.Inset then
-		skins:HandleFrame(rootFrame.Inset)
-	end
-
-	if rootFrame.NineSlice then
-		rootFrame.NineSlice:SetTemplate()
-	end
-end
+	-- Pre-skin the arrows so they get left/right rotation instead of the up/down default
+	S:HandleNextPrevButton(widget.scrollbar.Back, 'left')
+	S:HandleNextPrevButton(widget.scrollbar.Forward, 'right')
+	S:HandleTrimScrollBar(widget.scrollbar)
+end)
 
 function SCM:SkinOptionsFrame(frame, tabGroup)
-	if not frame or not frame.frame then return end
-
 	local rootFrame = frame.frame
-	if rootFrame.SCMElvUISkinned then return end
+	if not rootFrame.SCMElvUISkinned then
+		rootFrame.SCMElvUISkinned = true
 
-	local skins = GetSkinsModule()
-	if not skins then return end
-
-	SkinRootFrame(skins, rootFrame)
-
-	if tabGroup and tabGroup.border then
-		skins:HandleFrame(tabGroup.border)
+		S:HandleFrame(rootFrame, nil, true)
+		S:HandleFrame(rootFrame.Inset)
+		rootFrame.NineSlice:SetTemplate()
 	end
 
-	HandleTabs(skins, tabGroup)
-	HookTabBuilder(skins, tabGroup)
+	if not tabGroup.SCMElvUISkinned then
+		tabGroup.SCMElvUISkinned = true
 
-	rootFrame.SCMElvUISkinned = true
+		S:HandleFrame(tabGroup.border)
+		HandleTabs(tabGroup)
+		hooksecurefunc(tabGroup, 'BuildTabs', HandleTabs)
+	end
 end
