@@ -78,7 +78,9 @@ function SCM.SetHooks()
 		hooksecurefunc(ActionButtonSpellAlertManager, "HideAlert", OnSpellAlertManagerHideAlert)
 	end
 
-	hooksecurefunc(UIParent, "SetScale", function()
-		SCM.RefreshCooldownViewerData(true)
+	hooksecurefunc(UIParent, "SetScale", function(self)
+		if self == UIParent then
+			SCM.RefreshCooldownViewerData(true)
+		end
 	end)
 end

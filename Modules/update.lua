@@ -3,7 +3,6 @@ local SCM = select(2, ...)
 local CDM = SCM.CDM
 local UPDATE_SCOPE = CDM.UPDATE_SCOPE
 local OrderCDManagerSpells = CDM.OrderSpells
-local OrderCDManagerSpells_Actual = CDM.OrderSpellsActual
 local Utils = SCM.Utils
 local ToGlobalGroup = Utils.ToGlobalGroup
 local ToBuffBarGroup = Utils.ToBuffBarGroup
@@ -34,7 +33,7 @@ end
 
 function SCM:ApplyAllCDManagerConfigs(isInit, refreshOptions, refreshGlowOptions)
 	if C_CVar.GetCVar("cooldownViewerEnabled") == "1" and SCM.currentConfig then
-		OrderCDManagerSpells(UPDATE_SCOPE.ALL, isInit, refreshOptions, refreshGlowOptions)
+		OrderCDManagerSpells(UPDATE_SCOPE.ALL, nil, refreshOptions, refreshGlowOptions)
 	end
 end
 
@@ -60,7 +59,7 @@ function SCM:ApplyAnchorGroupCDManagerConfig(group, isGlobal, updateScope, refre
 
 	local scopedGroups = self:AcquireScopedGroupCache()
 	scopedGroups[scopedGroup] = true
-	OrderCDManagerSpells_Actual(updateScope, scopedGroups, refreshOptions, refreshGlowOptions)
+	OrderCDManagerSpells(updateScope, scopedGroups, refreshOptions, refreshGlowOptions)
 	self:ReleaseScopedGroupCache(scopedGroups)
 end
 
@@ -81,7 +80,7 @@ end
 
 local function ApplyScopedGroups(scopedGroups, updateScope)
 	if next(scopedGroups) then
-		OrderCDManagerSpells_Actual(updateScope or UPDATE_SCOPE.ALL, scopedGroups)
+		OrderCDManagerSpells(updateScope or UPDATE_SCOPE.ALL, scopedGroups)
 	end
 end
 

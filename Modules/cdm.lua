@@ -618,7 +618,9 @@ local function UpdateAnchorChain(changedGroups, config)
 	SCM:ReleaseScopedGroupCache(visitedGroups)
 end
 
-local function OrderCDManagerSpells_Actual(updateScope, scopedAnchorGroupsOverride, refreshOptions, refreshGlowOptions)
+local function OrderCDManagerSpells(updateScope, scopedAnchorGroupsOverride, refreshOptions, refreshGlowOptions)
+	updateScope = updateScope or UPDATE_SCOPE.ALL
+
 	Cache.cachedViewerScale = 1
 
 	wipe(Cache.cachedChildrenTbl)
@@ -738,33 +740,4 @@ local function OrderCDManagerSpells_Actual(updateScope, scopedAnchorGroupsOverri
 	Cache.activeScopedAnchorGroups = nil
 end
 
-CDM.OrderSpellsActual = OrderCDManagerSpells_Actual
-
-local pendingUpdateScopes = {}
-
-local function OrderCDManagerSpells(updateScope, applyNow, refreshOptions, refreshGlowOptions)
-	updateScope = updateScope or UPDATE_SCOPE.ALL
-
-	if applyNow then
-		if updateScope == UPDATE_SCOPE.ALL then
-			wipe(pendingUpdateScopes)
-		else
-			pendingUpdateScopes[updateScope] = nil
-		end
-		OrderCDManagerSpells_Actual(updateScope, nil, refreshOptions, refreshGlowOptions)
-		return
-	end
-	
-	if pendingUpdateScopes[updateScope] then
-		return
-	end
-
-	pendingUpdateScopes[updateScope] = true
-	C_Timer.After(0.1, function()
-		if pendingUpdateScopes[updateScope] then
-			pendingUpdateScopes[updateScope] = nil
-			OrderCDManagerSpells_Actual(updateScope)
-		end
-	end)
-end
 CDM.OrderSpells = OrderCDManagerSpells
