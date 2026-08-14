@@ -524,7 +524,7 @@ function SCM.CheckForDisabledCooldowns()
 	local disabledCooldowns = SCM.GetDisabledCooldowns()
 
 	if next(disabledCooldowns) then
-		StaticPopup_Show("SCM_FORCE_RELOAD_POPUP", "Disabled icons detected. Do you want to reload to fix this automatically?", nil, {
+		StaticPopup_Show("SCM_FORCE_RELOAD_POPUP", "|cFF4080FFSkiron|r|cFFFFFFFFCooldownManager|r detected disabled icons in Blizzards CooldownViewer. Do you want to reload to fix this automatically?", nil, {
 			callback = FixCooldownCategories,
 			data = disabledCooldowns,
 		})
