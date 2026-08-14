@@ -242,6 +242,18 @@ local function SelectGlobalSettingsTab(tabWidget, scrollFrame, group, options)
 		end)
 		skinningSettings:AddChild(enableBuffBarSkinning)
 
+		local pressOverlay = AceGUI:Create("CheckBox")
+		pressOverlay:SetRelativeWidth(0.33)
+		pressOverlay:SetLabel("Show Keypress Overlay")
+		pressOverlay:SetValue(options.pressOverlay)
+		pressOverlay:SetCallback("OnValueChanged", function(_, _, value)
+			options.pressOverlay = value
+			if value then
+				SCM:InitializePressOverlay()
+			end
+		end)
+		skinningSettings:AddChild(pressOverlay)
+
 		local showAnchorHighlight = AceGUI:Create("CheckBox")
 		showAnchorHighlight:SetValue(options.showAnchorHighlight)
 		showAnchorHighlight:SetRelativeWidth(0.33)

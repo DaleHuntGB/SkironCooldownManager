@@ -393,6 +393,13 @@ function SCM:SkinChild(child, childConfig)
 			end
 		end
 
+		if not child.SCMPressOverlay then
+			child.SCMPressOverlay = child:CreateTexture(nil, "OVERLAY")
+			child.SCMPressOverlay:SetAllPoints()
+			child.SCMPressOverlay:SetAtlas("UI-HUD-ActionBar-IconFrame-Down")
+			child.SCMPressOverlay:Hide()
+		end
+
 		if childConfig and childConfig.customIcon and textureRegion then
 			child.Icon:SetTexture(childConfig.customIcon)
 			child.Icon:SetTexelSnappingBias(0)

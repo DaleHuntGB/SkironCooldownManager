@@ -62,6 +62,7 @@ Modules\resourcebar.lua
 Modules\castbar.lua
 Modules\states.lua
 Modules\auras.lua
+Modules\overlay.lua
 
 api.lua
 

@@ -38,7 +38,9 @@ function SCM.RefreshCooldownViewerData(releaseCustomIcons, skipCustomIconRebuild
 end
 
 local function OnProfileChanged(_, _, _, skipReset)
-	if SCM.importingProfile then return end
+	if SCM.importingProfile then
+		return
+	end
 
 	-- Hopefully players won't change profiles that much that we reach the frame limit :)
 	if not skipReset then
@@ -51,6 +53,7 @@ local function OnProfileChanged(_, _, _, skipReset)
 	SCM:ApplyOptions()
 
 	local options = SCM.db.profile.options
+	SCM.options = options
 	if SCM.OptionsFrame and SCM.OptionsFrame:IsShown() and options and options.showAnchorHighlight then
 		for _, anchorFrame in pairs(SCM.anchorFrames) do
 			anchorFrame.debugTexture:Show()

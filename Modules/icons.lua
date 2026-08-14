@@ -18,6 +18,10 @@ local function OnSetAlpha(self)
 	UIParent.SetAlpha(self, self.SCMHidden and 0 or 1)
 end
 function Icons.HideChild(child)
+	if child.SCMSpellID and not child.SCMBuffOptions and not child.SCMBuffBar then
+		Cache.cachedChildsBySpellID[child.SCMSpellID] = nil
+	end
+
 	if child.SCMHidden then
 		return
 	elseif not child.viewerFrame then
@@ -26,6 +30,7 @@ function Icons.HideChild(child)
 		return
 	end
 
+	SCM:PositionHiddenManagedChild(child)
 	child.SCMHidden = true
 	UIParent.SetAlpha(child, 0)
 	child:EnableMouse(false)
@@ -51,6 +56,10 @@ function Icons.ShowChild(child)
 
 	if child.SCMLayoutLimited then
 		return
+	end
+
+	if child.SCMSpellID and not child.SCMBuffOptions and not child.SCMBuffBar then
+		Cache.cachedChildsBySpellID[child.SCMSpellID] = child
 	end
 
 	if child.viewerFrame and child.SCMHidden then

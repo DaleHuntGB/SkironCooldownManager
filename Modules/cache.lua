@@ -7,6 +7,7 @@ Cache.cachedChildrenTbl = {}
 Cache.cachedGroupedChildren = {}
 Cache.cachedVisibleChildren = {}
 Cache.cachedCooldownFrameTbl = {}
+Cache.cachedChildsBySpellID = {}
 Cache.cachedViewerChildren = {}
 Cache.cachedActiveItemFrames = {}
 Cache.cachedVisitedAnchorGroups = {}

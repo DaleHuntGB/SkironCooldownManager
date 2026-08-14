@@ -126,6 +126,7 @@ SCM.DefaultDB = {
 			savePosition = false,
 			menuScale = 1,
 			enableSkinning = true,
+			pressOverlay = false,
 			enableCustomIcons = true,
 			simulateAuras = true,
 			iconZoom = 0.12,

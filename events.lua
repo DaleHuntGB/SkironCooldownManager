@@ -9,7 +9,7 @@ function SCM:RegisterEvent(event)
 	end
 end
 
-local function UnregisterEvent(event)
+function SCM:UnregisterEvent(event)
 	if registeredEvents[event] then
 		registeredEvents[event] = nil
 		eventFrame:UnregisterEvent(event)
@@ -19,9 +19,11 @@ end
 function SCM:PLAYER_ENTERING_WORLD(isInitialLogin, isReload)
 	if isInitialLogin or isReload then
 		SCM.build = select(4, GetBuildInfo())
+		SCM.options = SCM.db.profile.options
 
 		SCM.RefreshCooldownViewerData()
 		SCM:ApplyOptions()
+		SCM:InitializePressOverlay()
 
 		SCM:SetHooks()
 		SCM:InitializeResourceBars()
@@ -78,7 +80,7 @@ function SCM:ITEM_DATA_LOAD_RESULT(itemID, success)
 	end
 	requestedItemIDs[itemID] = nil
 	if not next(requestedItemIDs) then
-		UnregisterEvent("ITEM_DATA_LOAD_RESULT")
+		SCM:UnregisterEvent("ITEM_DATA_LOAD_RESULT")
 	end
 
 	if success then
@@ -240,7 +242,7 @@ function SCM:SPELL_DATA_LOAD_RESULT(spellID, success)
 	end
 	requestedSpellIDs[spellID] = nil
 	if not next(requestedSpellIDs) then
-		UnregisterEvent("SPELL_DATA_LOAD_RESULT")
+		SCM:UnregisterEvent("SPELL_DATA_LOAD_RESULT")
 	end
 
 	if success then
