@@ -274,6 +274,15 @@ local function SelectGlobalSettingsTab(tabWidget, scrollFrame, group, options)
 		end)
 		skinningSettings:AddChild(showAnchorHighlight)
 
+		local checkForDisabledIcons = AceGUI:Create("CheckBox")
+		checkForDisabledIcons:SetRelativeWidth(0.33)
+		checkForDisabledIcons:SetLabel("Check for disabled icons")
+		checkForDisabledIcons:SetValue(options.checkForDisabledIcons)
+		checkForDisabledIcons:SetCallback("OnValueChanged", function(_, _, value)
+			options.checkForDisabledIcons = value
+		end)
+		skinningSettings:AddChild(checkForDisabledIcons)
+
 		local savePosition = AceGUI:Create("CheckBox")
 		savePosition:SetRelativeWidth(0.33)
 		savePosition:SetLabel("Save Option Window Position")

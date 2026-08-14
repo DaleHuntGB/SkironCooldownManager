@@ -11,7 +11,7 @@ local ToBuffBarGroup = Utils.ToBuffBarGroup
 local UPDATE_SCOPE = SCM.CDM.UPDATE_SCOPE
 
 StaticPopupDialogs["SCM_FORCE_RELOAD_POPUP"] = {
-	text = "This requires a UI reload. Reload now?",
+	text = "%s",
 	button1 = RELOADUI,
 	button2 = CANCEL,
 	timeout = 0,
@@ -19,7 +19,11 @@ StaticPopupDialogs["SCM_FORCE_RELOAD_POPUP"] = {
 	hideOnEscape = true,
 	preferredIndex = 3,
 	OnAccept = function(_, data)
-		data.options[data.key] = data.value
+		if data.callback then
+			data.callback(data.data)
+		else
+			data.options[data.key] = data.value
+		end
 		C_UI.Reload()
 	end,
 	OnCancel = function(_, data)
@@ -32,7 +36,7 @@ StaticPopupDialogs["SCM_FORCE_RELOAD_POPUP"] = {
 SCM.Tooltip = CreateFrame("GameTooltip", "SCM_GameTooltip", UIParent, "GameTooltipTemplate")
 
 function SCM.ShowReloadPopup(data)
-	StaticPopup_Show("SCM_FORCE_RELOAD_POPUP", nil, nil, data)
+	StaticPopup_Show("SCM_FORCE_RELOAD_POPUP", "This requires a UI reload. Reload now?", nil, data)
 end
 
 function SCM.Encode(table)
@@ -430,6 +434,7 @@ local function OpenOptions()
 			anchorFrame.debugText:Hide()
 		end
 		SCM.RefreshCooldownViewerData(true)
+		SCM.CheckForDisabledCooldowns()
 		RunNextFrame(function()
 			SCM:RestoreBlizzardGlows()
 		end)
@@ -447,6 +452,88 @@ local function OpenOptions()
 	end
 
 	tabs.border:ClearBackdrop()
+end
+
+local function IsDisabled(categoryID)
+	return categoryID < 0
+		or categoryID == Enum.CooldownViewerCategory.SpecAgnosticEssential
+		or categoryID == Enum.CooldownViewerCategory.EquipSlotEssential
+		or categoryID == Enum.CooldownViewerCategory.SpecAgnosticTracked
+		or categoryID == Enum.CooldownViewerCategory.EquipSlotTracked
+end
+
+local function IsCooldownSpell(categoryID)
+	return categoryID == Enum.CooldownViewerCategory.Essential
+		or categoryID == Enum.CooldownViewerCategory.Utility
+		or categoryID == Enum.CooldownViewerCategory.SpecAgnosticEssential
+		or categoryID == Enum.CooldownViewerCategory.EquipSlotEssential
+end
+
+local function IsCooldownBuff(categoryID)
+	return categoryID == Enum.CooldownViewerCategory.TrackedBuff
+		or categoryID == Enum.CooldownViewerCategory.TrackedBar
+		or categoryID == Enum.CooldownViewerCategory.SpecAgnosticTracked
+		or categoryID == Enum.CooldownViewerCategory.EquipSlotTracked
+end
+
+local function FixCooldownCategories(data)
+	local dataProvider = CooldownViewerSettings:GetDataProvider()
+
+	for cooldownID, categoryID in pairs(data) do
+		dataProvider:SetCooldownToCategory(cooldownID, categoryID)
+	end
+
+	CooldownViewerSettings:SaveCurrentLayout()
+end
+
+function SCM.GetDisabledCooldowns()
+	local dataProvider = CooldownViewerSettings:GetDataProvider()
+	local cooldownInfoByID = dataProvider and dataProvider.displayData.cooldownInfoByID
+
+	local disabledCooldowns = {}
+	for _, config in pairs(SCM.spellConfig) do
+		local data = cooldownInfoByID[config.cooldownID]
+		if data and IsDisabled(data.category) then
+			local cooldownInfo = C_CooldownViewer.GetCooldownViewerCooldownInfo(config.cooldownID)
+			if cooldownInfo then
+				local categoryID = cooldownInfo.category
+				local targetCategoryID
+				if IsCooldownSpell(categoryID) then
+					targetCategoryID = Enum.CooldownViewerCategory.Essential
+				elseif IsCooldownBuff(categoryID) then
+					local _, anchorGroup = next(config.source)
+					if anchorGroup and anchorGroup > 200 then
+						targetCategoryID = Enum.CooldownViewerCategory.TrackedBar
+					else
+						targetCategoryID = Enum.CooldownViewerCategory.TrackedBuff
+					end
+				end
+
+				if targetCategoryID then
+					disabledCooldowns[config.cooldownID] = targetCategoryID
+				end
+			end
+		end
+	end
+
+	return disabledCooldowns
+end
+
+function SCM.CheckForDisabledCooldowns()
+	if not SCM.options.checkForDisabledIcons or InCombatLockdown() then return end
+	local disabledCooldowns = SCM.GetDisabledCooldowns()
+
+	if next(disabledCooldowns) then
+		StaticPopup_Show("SCM_FORCE_RELOAD_POPUP", "Disabled icons detected. Do you want to reload to fix this automatically?", nil, {
+			callback = FixCooldownCategories,
+			data = disabledCooldowns,
+		})
+	end
+end
+
+function SCM.ForceEnableDisabledCooldowns()
+	local disabledCooldowns = SCM.GetDisabledCooldowns()
+	FixCooldownCategories(disabledCooldowns)
 end
 
 SLASH_SCM1 = "/scm"

@@ -112,6 +112,7 @@ SCM.DefaultDB = {
 			elvUIAnchors = {},
 			anchorConfig = {},
 			showAnchorHighlight = true,
+			checkForDisabledIcons = true,
 			hideWhileMounted = false,
 			hideWhileDead = false,
 			hideWhileInVehicle = false,

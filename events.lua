@@ -52,6 +52,7 @@ function SCM:PLAYER_ENTERING_WORLD(isInitialLogin, isReload)
 
 		SCM.initialized = true
 		SCM.Callbacks:Fire("SCM_Ready")
+		SCM.CheckForDisabledCooldowns()
 	elseif self.isInInstance ~= IsInInstance() then
 		SCM.RefreshCooldownViewerData(false, true)
 	end

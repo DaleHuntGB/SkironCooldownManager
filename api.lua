@@ -113,3 +113,8 @@ end
 function SCMAPI.FetchAnchors()
 	return SCM.anchorFrames
 end
+
+-- You REALLY should force a reload after calling this. I'm not responsible for your taint!
+function SCMAPI.ForceEnableDisabledIcons()
+	SCM.ForceEnableDisabledCooldowns()
+end
