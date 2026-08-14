@@ -2,6 +2,7 @@
 
 Additions:
 - Add a keypress overlay
+- Add a check for disabled icons
 
 Fixes:
 - Hopefully fix vehicle casts
@@ -11,3 +12,4 @@ Fixes:
 - Guard against some lua errors
 - Color > Colour
 - Remove the refresh delay (for now) to fix some flickering when Blizzard creates new frames for already existing icons (why?)
+- Fix Bloodstone for WLs
