@@ -395,8 +395,12 @@ function SCM:SkinChild(child, childConfig)
 
 		if not child.SCMPressOverlay then
 			child.SCMPressOverlay = child:CreateTexture(nil, "OVERLAY")
-			child.SCMPressOverlay:SetAllPoints()
-			child.SCMPressOverlay:SetAtlas("UI-HUD-ActionBar-IconFrame-Down")
+			child.SCMPressOverlay:SetPoint("TOPLEFT", child, "TOPLEFT", 1, -1)
+			child.SCMPressOverlay:SetPoint("BOTTOMRIGHT", child, "BOTTOMRIGHT", -1, 1)
+			child.SCMPressOverlay:SetTexture("Interface\\Buttons\\WHITE8x8")
+			child.SCMPressOverlay:SetVertexColor(1, 1, 1, 0.3)
+			child.SCMPressOverlay:SetTexelSnappingBias(0)
+			child.SCMPressOverlay:SetSnapToPixelGrid(false)
 			child.SCMPressOverlay:Hide()
 		end
 
