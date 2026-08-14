@@ -1274,7 +1274,7 @@ function SCMResourceBarControllerMixin:ApplyFrameWidthOptions(bar, forcePosition
 		if forcePositionUpdate or anchor ~= oldAnchor then
 			--No idea whats going in with these fucking pixels. BRB taking a math class
 			self:ClearAllPoints()
-			PixelUtil.SetPoint(self, generalBarOptions.point, anchor, generalBarOptions.relativePoint, generalBarOptions.xOffset, generalBarOptions.yOffset)
+			self:SetPoint(generalBarOptions.point, anchor, generalBarOptions.relativePoint, generalBarOptions.xOffset, generalBarOptions.yOffset)
 			self.SCMActiveAnchorFrame = anchor
 			self.SCMActiveAnchorGroup = activeAnchorGroup
 		end
