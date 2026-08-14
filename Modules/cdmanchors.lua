@@ -65,6 +65,16 @@ local function OnChildSetPoint(child)
 	child.SCMSetPoint = nil
 end
 
+local function SetChildSetPointHook(child)
+	if child.SCMPointHook or child.SCMCustom then
+		return
+	end
+
+	child.SCMPointHook = true
+	hooksecurefunc(child, "SetPoint", OnChildSetPoint)
+	hooksecurefunc(child, "ClearAllPoints", OnChildSetPoint)
+end
+
 function SCM:GetAnchorPivot(point, growDir)
 	return (PIVOT_MAP[growDir] and PIVOT_MAP[growDir][point]) or point
 end
@@ -108,6 +118,11 @@ local function SetChildPoint(child, groupAnchor, startPoint, offsetX, offsetY)
 	if anchorChanged or cooldownID then
 		OnChildSetPoint(child)
 	end
+end
+
+function SCM:PositionHiddenManagedChild(child)
+	SetChildSetPointHook(child)
+	SetChildPoint(child, UIParent, "TOP", 0, 0)
 end
 
 local function RemoveProxy(state)
@@ -308,11 +323,7 @@ function SCM:UpdateManagedAnchorChild(child, groupAnchor, startPoint, offsetX, o
 		hooksecurefunc(child, "SetScale", OnChildSetScale)
 	end
 
-	if not child.SCMPointHook and not child.SCMCustom then
-		child.SCMPointHook = true
-		hooksecurefunc(child, "SetPoint", OnChildSetPoint)
-		hooksecurefunc(child, "ClearAllPoints", OnChildSetPoint)
-	end
+	SetChildSetPointHook(child)
 
 	local adjustmentX, adjustmentY = 0, 0
 	if not useProxyAnchor then
