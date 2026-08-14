@@ -10,8 +10,12 @@ local Utils = SCM.Utils
 SCM.MainTabs.CDM = { value = "CDM", text = "Cooldown Manager", order = 2, subgroups = {} }
 
 local function GetSpellAnchorGroupConfig(order, sourceIndex)
-	if sourceIndex ~= Enum.CooldownViewerCategory.TrackedBuff and sourceIndex ~= Enum.CooldownViewerCategory.TrackedBar
-	and sourceIndex ~= Enum.CooldownViewerCategory.SpecAgnosticTracked and sourceIndex ~= Enum.CooldownViewerCategory.EquipSlotTracked then
+	if
+		sourceIndex ~= Enum.CooldownViewerCategory.TrackedBuff
+		and sourceIndex ~= Enum.CooldownViewerCategory.TrackedBar
+		and sourceIndex ~= Enum.CooldownViewerCategory.SpecAgnosticTracked
+		and sourceIndex ~= Enum.CooldownViewerCategory.EquipSlotTracked
+	then
 		return {
 			order = order,
 			effectRules = {
@@ -173,6 +177,10 @@ function CDMOptions.GetItemIconData(info, category, activeColor, trinketIndex)
 			texture = "Interface/ICONS/Warlock_ Healthstone"
 			itemName = "Healthstone"
 			info.tooltipItemID = 5512
+		elseif info.spellCategoryID == 2566 then
+			texture = "Interface/ICONS/Warlock_ Bloodstone"
+			itemName = "Bloodstone"
+			info.tooltipItemID = 224464
 		end
 
 		buttonName = string.format("|T%s:0|t |cff%s%s|r", texture, activeColor, itemName)
@@ -191,7 +199,6 @@ function CDMOptions.GetItemIconDataFromData(data, category)
 				texture = C_Spell.GetSpellTexture(data.spellID or data.linkedSpellIDs[1])
 			end
 		end
-
 	elseif data.spellCategoryID then
 		if data.spellCategoryID == 4 then
 			texture = "Interface/ICONS/INV_POTION_114"
@@ -199,6 +206,8 @@ function CDMOptions.GetItemIconDataFromData(data, category)
 			texture = "Interface/ICONS/INV_POTION_54"
 		elseif data.spellCategoryID == 1711 then
 			texture = "Interface/ICONS/Warlock_ Healthstone"
+		elseif data.spellCategoryID == 2566 then
+			texture = "Interface/ICONS/Warlock_ Bloodstone"
 		end
 	end
 
@@ -216,8 +225,8 @@ local function CDM(self, frame, group)
 		{ value = "buffbars", text = "|cFFFFFFFFSpecialization|r: Bars" },
 		{ value = "global", text = "|cFFFFFFFFGlobal|r: Icons" },
 		{ value = "copy", text = "|cFFFFFFFFCopy|r Anchors" },
-		{ value = "auras", text = "|cFFFFFFFFSpecialization|r: Auras (SoonTM)"},
-		{ value = "globalauras", text = "|cFFFFFFFFGlobal|r: Auras (SoonTM)"},
+		{ value = "auras", text = "|cFFFFFFFFSpecialization|r: Auras (SoonTM)" },
+		{ value = "globalauras", text = "|cFFFFFFFFGlobal|r: Auras (SoonTM)" },
 	}
 
 	modeTabs:SetTabs(tabs)
