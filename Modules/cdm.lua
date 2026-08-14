@@ -291,6 +291,7 @@ end
 
 local function LayoutAnchorGroup(group, visibleChildren, anchorConfig, options, changedGroups, resetSize, allowLayoutSkip)
 	Cache.cachedVisitedAnchorGroups[group] = true
+	if not anchorConfig then return end
 
 	local state = GetAnchorState(group)
 	local rowConfig = anchorConfig.rowConfig or DEFAULT_ROW_CONFIG

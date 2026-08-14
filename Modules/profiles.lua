@@ -425,11 +425,7 @@ function SCM:ImportGlobalAnchorsFromData(data, refreshData)
 	end
 
 	if customConfig then
-		for _, key in ipairs(GLOBAL_CUSTOM_CONFIG_KEYS) do
-			if customConfig[key] then
-				self.db.profile.globalCustomConfig[key] = customConfig[key]
-			end
-		end
+		self.db.profile.globalCustomConfig = customConfig
 	end
 
 	local currentAnchorCount = #self.db.profile.globalAnchorConfig
