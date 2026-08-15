@@ -105,12 +105,14 @@ local presetButtonConfigs = {
 	},
 	["ITEMS"] = {
 		{
-			text = "|T7548909:16:16|t Silvermoon Health Potion",
-			configID = 241304,
+			text = "|T7548909:16:16|t Concentrated Silvermoon Health Potion",
+			configID = 271884,
 			iconType = "item",
 			config = {
 				customItems = {
-					[1] = 241305,
+					[1] = 271883,
+ 					[2] = 241304,
+					[3] = 241305,
 				},
 			},
 		},
