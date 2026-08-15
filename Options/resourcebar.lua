@@ -328,8 +328,8 @@ local function AddSpecialColorSettings(parent, settings)
 	end)
 	specialColors:AddChild(comboPointsOverflowColor)
 
-	local defaultRuneColor = settings.powerTypeColorOverrides.RUNES.color
-	local runeRechargeColorValue = settings.runeRechargeColor or defaultRuneColor
+	settings.runeRechargeColor = settings.runeRechargeColor or CopyTable(settings.powerTypeColorOverrides.RUNES.color)
+	local runeRechargeColorValue = settings.runeRechargeColor
 	local runeRechargeColor = AceGUI:Create("ColorPicker")
 	runeRechargeColor:SetRelativeWidth(0.33)
 	runeRechargeColor:SetLabel("Recharging Runes")
