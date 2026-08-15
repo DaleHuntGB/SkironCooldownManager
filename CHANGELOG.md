@@ -13,3 +13,5 @@ Fixes:
 - Color > Colour
 - Remove the refresh delay (for now) to fix some flickering when Blizzard creates new frames for already existing icons (why?)
 - Fix Bloodstone for WLs
+- Update the Health Potion preset with the new potions
+- Fix default states for timers and the bloodlust icon
