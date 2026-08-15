@@ -1306,7 +1306,7 @@ function SCM:AddCustomIcon(anchorGroup, iconType, configID, order, uniqueID, isG
 	if iconType == "timer" or iconType == "bloodlust" then
 		desaturateRules = {
 			{ state = "active", enabled = false },
-			{ state = "cooldown", enabled = true, elseIf = true },
+			{ state = "inactive", enabled = true },
 		}
 	else
 		desaturateRules = {
