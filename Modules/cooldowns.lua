@@ -405,7 +405,12 @@ local function OnRegularCooldownChanged(self, changeType)
 	end
 
 	RunNextFrame(function()
-		States.SyncState(parent, useAuraDisplayTime, (Cooldowns.GetChildCooldown(parent)))
+		local isActive = useAuraDisplayTime
+		if not issecretvalue(parent.wasSetFromAura) then
+			isActive = parent.wasSetFromAura
+		end
+
+		States.SyncState(parent, isActive, (Cooldowns.GetChildCooldown(parent)))
 	end)
 end
 
