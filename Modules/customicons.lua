@@ -969,7 +969,7 @@ local function CreateCustomIcon(id, config, isGlobal, skipExisting)
 			return
 		end
 
-		if ShouldCreateCustomIcon(config) and (not isGlobal or ShouldLoadCustomIcon(config)) then
+		if ShouldCreateCustomIcon(config) and ShouldLoadCustomIcon(config) then
 			local frame = AcquireCustomIconFrame(customFrames, id)
 			ConfigureCustomIconFrame(frame, id, config, config.anchorGroup or 1, isGlobal)
 			UpdateCustomIconFrameState(frame, config)
@@ -1033,7 +1033,7 @@ local function ProcessCustomIcon(id, config, validChildren, refreshOptions, refr
 	end
 
 	local frame = customFrames[id]
-	if frame and ShouldCreateCustomIcon(config) and (not frame.SCMGlobal or ShouldLoadCustomIcon(config)) then
+	if frame and ShouldCreateCustomIcon(config) and ShouldLoadCustomIcon(config) then
 		local iconType = frame.SCMIconType
 		if iconType == "empty" then
 			States.SyncState(frame, true, "ready", true, refreshOptions, refreshGlowOptions)
@@ -1328,6 +1328,7 @@ function SCM:AddCustomIcon(anchorGroup, iconType, configID, order, uniqueID, isG
 		loadRaces = CustomIcons.GetDefaultLoadRaces(),
 		useLoadRole = false,
 		loadRoles = { ["TANK"] = false, ["HEALER"] = false, ["DAMAGER"] = false },
+		useSpellKnown = false,
 		effectRules = {
 			visibility = {
 				rules = visibilityRules,

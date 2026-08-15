@@ -2,6 +2,8 @@ local SCM = select(2, ...)
 local Options = SCM.Options
 local CDMOptions = Options.CDM
 local AceGUI = LibStub("AceGUI-3.0")
+local CustomIcons = SCM.CustomIcons
+local Constants = SCM.Constants
 
 local function GetDefaultLoadRaceNames()
 	local dualFactionRaces = {}
@@ -48,13 +50,13 @@ function CDMOptions.CreateLoadTabSettings(iconSettingsTabs, iconSettings, scroll
 			loadClass:SetMultiselect(true)
 			loadClass:SetDisabled(not buttonConfig.useLoadClass)
 			loadClass:SetCallback("OnValueChanged", function(_, _, key, value)
-				buttonConfig.loadClasses = buttonConfig.loadClasses or GetDefaultCustomIconLoadClasses()
+				buttonConfig.loadClasses = buttonConfig.loadClasses or CustomIcons.GetDefaultLoadClasses()
 				buttonConfig.loadClasses[key] = value
 				CDMOptions.ApplyIconConfigUpdate(buttonFrame, buttonData, anchorIndex, mode, isGlobal, isBuffBar)
 			end)
 
 			if not buttonConfig.loadClasses then
-				buttonConfig.loadClasses = GetDefaultCustomIconLoadClasses()
+				buttonConfig.loadClasses = CustomIcons.GetDefaultLoadClasses()
 			end
 
 			for key, value in pairs(buttonConfig.loadClasses) do
@@ -141,43 +143,43 @@ function CDMOptions.CreateLoadTabSettings(iconSettingsTabs, iconSettings, scroll
 			end)
 
 			iconSettingsTabs:AddChild(loadRaces)
-
-			local useSpellKnown = AceGUI:Create("CheckBox")
-			useSpellKnown:SetLabel(buttonConfig.useSpellKnown == nil and "|cFFFF0000Spell Not Known" or "Spell Known")
-			useSpellKnown:SetRelativeWidth(0.5)
-			useSpellKnown:SetValue(buttonConfig.useSpellKnown)
-			useSpellKnown:SetTriState(true)
-			iconSettingsTabs:AddChild(useSpellKnown)
-
-			local loadSpellKnown = AceGUI:Create("EditBox")
-			loadSpellKnown:SetRelativeWidth(0.5)
-			loadSpellKnown:SetLabel("SpellID")
-			loadSpellKnown:SetText(buttonConfig.spellKnownSpellID and tostring(buttonConfig.spellKnownSpellID) or "")
-			loadSpellKnown:SetDisabled(buttonConfig.useSpellKnown == false)
-			loadSpellKnown:SetCallback("OnEnterPressed", function(_, _, value)
-				buttonConfig.spellKnownSpellID = tonumber(value)
-				CDMOptions.ApplyIconConfigUpdate(buttonFrame, buttonData, anchorIndex, mode, isGlobal, isBuffBar)
-			end)
-
-			useSpellKnown:SetCallback("OnValueChanged", function(self, event, value)
-				buttonConfig.useSpellKnown = value
-
-				if buttonConfig.useSpellKnown == nil then
-					useSpellKnown:SetLabel("|cFFFF0000Spell Not Known")
-				else
-					useSpellKnown:SetLabel("Spell Known")
-				end
-
-				loadSpellKnown:SetDisabled(buttonConfig.useSpellKnown == false)
-				CDMOptions.ApplyIconConfigUpdate(buttonFrame, buttonData, anchorIndex, mode, isGlobal, isBuffBar)
-			end)
-
-			iconSettingsTabs:AddChild(loadSpellKnown)
-
-			iconSettings:DoLayout()
-			scrollFrame:DoLayout()
-			return
 		end
+
+		local useSpellKnown = AceGUI:Create("CheckBox")
+		useSpellKnown:SetLabel(buttonConfig.useSpellKnown == nil and "|cFFFF0000Spell Not Known" or "Spell Known")
+		useSpellKnown:SetRelativeWidth(0.5)
+		useSpellKnown:SetValue(buttonConfig.useSpellKnown)
+		useSpellKnown:SetTriState(true)
+		iconSettingsTabs:AddChild(useSpellKnown)
+
+		local loadSpellKnown = AceGUI:Create("EditBox")
+		loadSpellKnown:SetRelativeWidth(0.5)
+		loadSpellKnown:SetLabel("SpellID")
+		loadSpellKnown:SetText(buttonConfig.spellKnownSpellID and tostring(buttonConfig.spellKnownSpellID) or "")
+		loadSpellKnown:SetDisabled(buttonConfig.useSpellKnown == false)
+		loadSpellKnown:SetCallback("OnEnterPressed", function(_, _, value)
+			buttonConfig.spellKnownSpellID = tonumber(value)
+			CDMOptions.ApplyIconConfigUpdate(buttonFrame, buttonData, anchorIndex, mode, isGlobal, isBuffBar)
+		end)
+
+		useSpellKnown:SetCallback("OnValueChanged", function(self, event, value)
+			buttonConfig.useSpellKnown = value
+
+			if buttonConfig.useSpellKnown == nil then
+				useSpellKnown:SetLabel("|cFFFF0000Spell Not Known")
+			else
+				useSpellKnown:SetLabel("Spell Known")
+			end
+
+			loadSpellKnown:SetDisabled(buttonConfig.useSpellKnown == false)
+			CDMOptions.ApplyIconConfigUpdate(buttonFrame, buttonData, anchorIndex, mode, isGlobal, isBuffBar)
+		end)
+
+		iconSettingsTabs:AddChild(loadSpellKnown)
+
+		iconSettings:DoLayout()
+		scrollFrame:DoLayout()
+		return
 	end
 
 	local label = AceGUI:Create("Label")
