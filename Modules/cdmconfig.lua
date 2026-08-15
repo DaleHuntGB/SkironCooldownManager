@@ -91,23 +91,22 @@ function SCM:UpdateDB()
 	end
 
 	self.db.profile[class] = self.db.profile[class] or {}
-	self.db.profile[class][specID] = self.db.profile[class][specID]
-		or {
-			anchorConfig = CopyTable(specAnchorConfig),
-			buffBarsAnchorConfig = CopyTable(specBuffBarsAnchorConfig),
-			aurasAnchorConfig = CopyTable(specAurasAnchorConfig),
-			spellConfig = specSpellConfig,
-			customConfig = specCustomConfig,
-			resourceBarConfig = specResourceBarConfig,
-			castBarConfig = specCastBarConfig,
-		}
+	self.db.profile[class][specID] = self.db.profile[class][specID] or {}
 
-	self.currentConfig = self.db.profile[class][specID]
+	local currentConfig = self.db.profile[class][specID]
+	currentConfig.anchorConfig = currentConfig.anchorConfig or CopyTable(specAnchorConfig)
+	currentConfig.buffBarsAnchorConfig = currentConfig.buffBarsAnchorConfig or CopyTable(specBuffBarsAnchorConfig)
+	currentConfig.aurasAnchorConfig = currentConfig.aurasAnchorConfig or CopyTable(specAurasAnchorConfig)
+	currentConfig.spellConfig = currentConfig.spellConfig or CopyTable(specSpellConfig)
+	currentConfig.customConfig = currentConfig.customConfig or CopyTable(specCustomConfig)
+	currentConfig.resourceBarConfig = currentConfig.resourceBarConfig or CopyTable(specResourceBarConfig)
+	currentConfig.castBarConfig = currentConfig.castBarConfig or CopyTable(specCastBarConfig)
 
-	self.anchorConfig = self.currentConfig.anchorConfig
-	self.buffBarsAnchorConfig = self.currentConfig.buffBarsAnchorConfig
-	self.aurasAnchorConfig = self.currentConfig.aurasAnchorConfig
-	self.spellConfig = self.currentConfig.spellConfig
+	self.currentConfig = currentConfig
+	self.anchorConfig = currentConfig.anchorConfig
+	self.buffBarsAnchorConfig = currentConfig.buffBarsAnchorConfig
+	self.aurasAnchorConfig = currentConfig.aurasAnchorConfig
+	self.spellConfig = currentConfig.spellConfig
 
 	self:MigrateDB()
 
@@ -115,9 +114,9 @@ function SCM:UpdateDB()
 	self.globalCustomConfig = self.db.profile.globalCustomConfig
 	self.globalAurasAnchorConfig = self.db.profile.globalAurasAnchorConfig
 
-	self.customConfig = self.currentConfig.customConfig
-	self.specResourceBarConfig = self.currentConfig.resourceBarConfig
-	self.specCastBarConfig = self.currentConfig.castBarConfig
+	self.customConfig = currentConfig.customConfig
+	self.specResourceBarConfig = currentConfig.resourceBarConfig
+	self.specCastBarConfig = currentConfig.castBarConfig
 	self:UpdateCastAndResourceBarConfigs()
 
 	self.isHideWhenInactiveEnabled = self:GetHideWhenInactive() == 1
