@@ -315,6 +315,10 @@ local function LayoutAnchorGroup(group, visibleChildren, anchorConfig, options, 
 		local anchorFrame = Utils.GetAnchorFrame(anchor)
 		if anchorFrame then
 			matchedAnchorWidth = max(anchorFrame:GetWidth(), 1)
+			if not anchorFrame.SCMBuffBarWidthHook then
+				anchorFrame.SCMBuffBarWidthHook = true
+				anchorFrame:HookScript("OnSizeChanged", function() SCM:ApplyBuffBarCDManagerConfig() end)
+			end
 		end
 	end
 	local rows = state.rows

@@ -54,10 +54,6 @@ local function OnBuffCooldownViewerLayout(viewer)
 end
 
 local function OnBuffBarViewerLayout(viewer)
-	if not SCM.Icons.IsViewerLayoutDirty(viewer) then
-		return
-	end
-
 	SCM:InvalidateViewerChildrenCache(viewer)
 	SCM:ApplyBuffBarCDManagerConfig()
 end
