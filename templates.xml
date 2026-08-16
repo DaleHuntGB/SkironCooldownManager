@@ -22,15 +22,16 @@
 					atlas="UI-CooldownManager-OORshadow" hidden="true">
 					<Color r="1" g="1" b="1" a="0.5" />
 				</Texture>
-				<Texture parentKey="CraftQuality" hidden="true">
-					<Anchors>
-						<Anchor point="TOPLEFT" relativeKey="$parentIcon" />
-						<Anchor point="BOTTOMRIGHT" relativeKey="$parentIcon" />
-					</Anchors>
-				</Texture>
 			</Layer>
 		</Layers>
 		<Frames>
+			<Frame parentKey="CraftQuality" setAllPoints="true" hidden="true" enableMouse="false">
+				<Layers>
+					<Layer level="OVERLAY">
+						<Texture parentKey="Texture" />
+					</Layer>
+				</Layers>
+			</Frame>
 			<Cooldown parentKey="Cooldown" drawEdge="false" drawBling="true">
 				<Anchors>
 					<Anchor point="TOPLEFT" x="0" y="0" />

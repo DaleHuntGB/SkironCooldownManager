@@ -422,6 +422,10 @@ function SCM:SkinChild(child, childConfig)
 		ApplyCooldownStyle(child, options, childConfig, isOptionsOpen)
 	end
 
+	if child.SCMCustom then
+		child.CraftQuality:SetFrameLevel(child:GetFrameLevel() + 3)
+	end
+
 	for _, customSkin in ipairs(SCM.Skins) do
 		pcall(customSkin, child)
 	end

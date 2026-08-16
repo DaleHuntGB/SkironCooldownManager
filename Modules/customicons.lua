@@ -120,10 +120,11 @@ local function ResetCustomIconFrame(_, frame)
 	frame.Icon:SetTexture(nil)
 	frame.Icon:SetTexelSnappingBias(0)
 	frame.Icon:SetSnapToPixelGrid(false)
-	frame.CraftQuality:Hide()
-	frame.CraftQuality:SetTexture(nil)
-	frame.CraftQuality:SetTexelSnappingBias(0)
-	frame.CraftQuality:SetSnapToPixelGrid(false)
+	local craftQuality = frame.CraftQuality
+	craftQuality.Texture:SetTexture(nil)
+	craftQuality.Texture:SetTexelSnappingBias(0)
+	craftQuality.Texture:SetSnapToPixelGrid(false)
+	craftQuality:Hide()
 	frame.Cooldown:Clear()
 	frame.Cooldown:SetReverse(false)
 	frame.GCDCooldown:Clear()
@@ -202,8 +203,9 @@ local function AcquireCustomIconFrame(customFrames, id)
 		frame.Cooldown:SetCountdownFont("GameFontHighlightHugeOutline")
 		frame.Icon:SetTexelSnappingBias(0)
 		frame.Icon:SetSnapToPixelGrid(false)
-		frame.CraftQuality:SetTexelSnappingBias(0)
-		frame.CraftQuality:SetSnapToPixelGrid(false)
+		frame.CraftQuality:SetFrameLevel(frame:GetFrameLevel() + 3)
+		frame.CraftQuality.Texture:SetTexelSnappingBias(0)
+		frame.CraftQuality.Texture:SetSnapToPixelGrid(false)
 		frame.OutOfRange:SetTexelSnappingBias(0)
 		frame.OutOfRange:SetSnapToPixelGrid(false)
 		frame:HookScript("OnShow", OnCustomIconShow)
@@ -285,18 +287,27 @@ end
 
 local function UpdateCustomIconCraftQuality(frame, iconType, config)
 	local craftQuality = frame.CraftQuality
+	local texture = craftQuality.Texture
+	texture:SetTexture(nil)
+	texture:SetTexelSnappingBias(0)
+	texture:SetSnapToPixelGrid(false)
 	craftQuality:Hide()
-	craftQuality:SetTexture(nil)
-	craftQuality:SetTexelSnappingBias(0)
-	craftQuality:SetSnapToPixelGrid(false)
 
 	if iconType ~= "item" or not config.showCraftQuality then
 		return
 	end
 
 	local itemID = frame.SCMItemID
+	local qualityAtlas = Utils.GetCustomItemCraftQualityAtlas(itemID)
+	if not qualityAtlas then
+		return
+	end
 
-	Utils.ApplyCraftQuality(craftQuality, itemID)
+	texture:ClearAllPoints()
+	texture:SetPoint("TOPLEFT", frame.Icon, "TOPLEFT", -10, 10)
+	texture:SetSize(34, 34)
+	texture:SetAtlas(qualityAtlas, false)
+	craftQuality:Show()
 end
 
 local function GetActiveCustomTimer(frame, iconType, config, now)

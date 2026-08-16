@@ -103,22 +103,6 @@ function Utils.GetCustomItemCraftQualityAtlas(itemID)
 	return qualityInfo and (qualityInfo.iconSmall or qualityInfo.iconChat or qualityInfo.iconInventory)
 end
 
-function Utils.ApplyCraftQuality(craftQuality, itemID)
-	local qualityAtlas = Utils.GetCustomItemCraftQualityAtlas(itemID)
-	if not qualityAtlas then
-		return
-	end
-
-	craftQuality:ClearAllPoints()
-	craftQuality:SetPoint("TOPLEFT", craftQuality:GetParent().Icon, "TOPLEFT", -10, 10)
-	craftQuality:SetSize(34, 34)
-	craftQuality:SetAtlas(qualityAtlas, false)
-	craftQuality:SetTexelSnappingBias(0)
-	craftQuality:SetSnapToPixelGrid(false)
-	craftQuality:Show()
-	return true
-end
-
 function Utils.RefreshDisabledTooltip(widget)
 	local overlay = CreateDisabledTooltipOverlay(widget)
 	if not overlay then
