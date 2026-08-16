@@ -629,7 +629,7 @@ function SCM:CreateCastBar()
 	self.CastBar = castBar
 	castBar.playerEvents = CreateFrame("Frame")
 	castBar.vehicleEvents = CreateFrame("Frame")
-	EventRegistry:RegisterCallback(ANCHOR_PROXY_SIZE_CHANGED_EVENT, function(_, proxyGroup, proxy, _width, _height, _selectedAnchorRef, isActiveProxy)
+	SCMAPI.RegisterCallback(castBar, ANCHOR_PROXY_SIZE_CHANGED_EVENT, function(_, proxyGroup, proxy, _width, _height, _selectedAnchorRef, isActiveProxy)
 		local currentOptions = castBar.barOptions or SCM.castBarConfig
 		if not (currentOptions.enable and currentOptions.matchParentWidth and isActiveProxy) then
 			return
@@ -639,13 +639,13 @@ function SCM:CreateCastBar()
 			castBar.SCMActiveAnchorFrame = proxy
 			SCM:RefreshCastBarWidth()
 		end
-	end, castBar)
-	EventRegistry:RegisterCallback("SkironCooldownManager.ResourceBar.LayoutUpdated", function()
+	end)
+	SCMAPI.RegisterCallback(castBar, "SkironCooldownManager.ResourceBar.LayoutUpdated", function()
 		local currentOptions = castBar.barOptions or SCM.castBarConfig
 		if currentOptions and currentOptions.enable then
 			UpdateStatusBarLook()
 		end
-	end, castBar)
+	end)
 	self:UpdateCastBar()
 	return castBar
 end

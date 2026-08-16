@@ -1790,7 +1790,7 @@ function SCMResourceBarControllerMixin:RefreshResourceBars(refreshTicks, options
 		self:UpdateContainerShownState()
 		self:UpdateRefreshState()
 
-		EventRegistry:TriggerEvent("SkironCooldownManager.ResourceBar.LayoutUpdated")
+		SCM.Callbacks:Fire("SkironCooldownManager.ResourceBar.LayoutUpdated")
 	end
 
 	SCM:ApplyResourceBarAttributeDriver()
@@ -1811,7 +1811,7 @@ function SCMResourceBarControllerMixin:Initialize()
 	self:SetScript("OnAttributeChanged", self.OnAttributeChanged)
 	self:SetScript("OnEvent", self.OnEvent)
 	self:RegisterResourceBarEvents()
-	EventRegistry:RegisterCallback(ANCHOR_PROXY_SIZE_CHANGED_EVENT, function(_, proxyGroup, proxy, width, height, selectedAnchorRef, isActiveProxy)
+	SCMAPI.RegisterCallback(self, ANCHOR_PROXY_SIZE_CHANGED_EVENT, function(_, proxyGroup, proxy, width, height, selectedAnchorRef, isActiveProxy)
 		local barOptions = SCM.resourceBarConfig
 		if not barOptions then
 			return
@@ -1829,7 +1829,7 @@ function SCMResourceBarControllerMixin:Initialize()
 			self.SCMActiveAnchorFrame = proxy
 			SCM:RefreshResourceBarConfig()
 		end
-	end, self)
+	end)
 
 	self:RefreshResourceBars(true)
 end
@@ -1864,7 +1864,7 @@ function SCM:ResetResourceBar()
 	local primaryBar = container.PrimaryBar or _G["SCM_PrimaryResourceBar"]
 	local secondaryBar = container.SecondaryBar or _G["SCM_SecondaryResourceBar"]
 
-	EventRegistry:UnregisterCallback(ANCHOR_PROXY_SIZE_CHANGED_EVENT, container)
+	SCMAPI.UnregisterCallback(container, ANCHOR_PROXY_SIZE_CHANGED_EVENT)
 	container:UnregisterAllEvents()
 	container:SetScript("OnAttributeChanged", nil)
 	container:SetScript("OnEvent", nil)

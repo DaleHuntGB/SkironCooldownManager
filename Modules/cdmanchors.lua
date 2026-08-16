@@ -144,7 +144,7 @@ local function OnProxySizeChanged(proxy, width, height)
 	local state = Cache.cachedAnchorStates[group]
 	local selectedAnchorRef = state and state.currentSelectedAnchorFrame
 	local isActiveProxy = state and state.currentProxyActive and state.currentProxyFrame == proxy or false
-	EventRegistry:TriggerEvent(ANCHOR_PROXY_SIZE_CHANGED_EVENT, group, proxy, width, height, selectedAnchorRef, isActiveProxy)
+	SCM.Callbacks:Fire(ANCHOR_PROXY_SIZE_CHANGED_EVENT, group, proxy, width, height, selectedAnchorRef, isActiveProxy)
 end
 
 local function GetProxy(group)
