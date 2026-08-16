@@ -81,3 +81,9 @@ Constants.FixBlizzardSpells = {
 Constants.CheckCooldownFrameSpells = {
 	[190925] = true, -- Harpoon
 }
+
+Constants.CheckActiveSpell = {
+	[403631] = true, -- Breath of Eons (YEP, only Breath of Eons returns the wrong spellID from FindSpellOverrideByID)
+	-- [357210] = true, -- Deep Breath
+	-- [359816] = true, -- Dream Flight
+}

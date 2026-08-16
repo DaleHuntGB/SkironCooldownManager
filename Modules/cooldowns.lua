@@ -233,9 +233,15 @@ local function GetChildCooldownInfo(child, includeGCD)
 		end
 
 		if spellID then
+			if Constants.CheckActiveSpell[spellID] then
+				local isActiveSpell = not issecretvalue(child.isActiveSpell) and child.isActiveSpell
+				if isActiveSpell then
+					spellID = isActiveSpell
+				end
+			end
+			
 			local wasSetFromCharges = not issecretvalue(child.wasSetFromCharges) and child.wasSetFromCharges
 			local wasSetFromCooldown = not issecretvalue(child.wasSetFromCooldown) and child.wasSetFromCooldown
-
 			if wasSetFromCharges and cooldownData and cooldownData.charges then
 				local spellCharges = C_Spell.GetSpellCharges(spellID)
 				if spellCharges and spellCharges.isActive then
