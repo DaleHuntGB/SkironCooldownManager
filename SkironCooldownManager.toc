@@ -53,6 +53,7 @@ Modules\cooldowns.lua
 Modules\icons.lua
 Modules\cdm.lua
 Modules\cdmanchors.lua
+Modules\cdmlayout.lua
 Modules\update.lua
 Modules\cdmconfig.lua
 Modules\anchors.lua

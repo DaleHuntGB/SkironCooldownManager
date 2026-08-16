@@ -553,13 +553,9 @@ function SCM:RefreshCastBarWidth(delay)
 			return
 		end
 
-		local anchorFrame = UpdateActiveAnchorFrame(currentCastBar, currentOptions)
-		local anchorWidth = GetMatchedCastBarWidth(currentOptions, anchorFrame)
-		if anchorWidth and anchorWidth > 0 then
-			UpdateStatusBarLook(currentCastBar.CurrentFillColor)
-			if currentCastBar:IsShown() and currentCastBar.CurrentEmpoweredStages and currentCastBar.Status:GetStatusBarTexture() then
-				CreatePips(currentCastBar.CurrentEmpoweredStages)
-			end
+		UpdateStatusBarLook(currentCastBar.CurrentFillColor)
+		if currentCastBar:IsShown() and currentCastBar.CurrentEmpoweredStages and currentCastBar.Status:GetStatusBarTexture() then
+			CreatePips(currentCastBar.CurrentEmpoweredStages)
 		end
 	end)
 end

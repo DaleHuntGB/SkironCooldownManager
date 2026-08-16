@@ -185,6 +185,12 @@ function SCM:PLAYER_REGEN_ENABLED()
 	if not self.appliedOptions then
 		self:ApplyOptions()
 		SCM.RefreshCooldownViewerData()
+		return
+	end
+
+	if self.SCMRefreshMatchedBuffBarWidths then
+		self.SCMRefreshMatchedBuffBarWidths = nil
+		self:ApplyBuffBarCDManagerConfig()
 	end
 end
 

@@ -293,21 +293,27 @@ local function CastBar(self)
 	end)
 	generalGroup:AddChild(enable)
 
+	local width
 	local matchParentWidth = AceGUI:Create("CheckBox")
 	matchParentWidth:SetRelativeWidth(0.5)
 	matchParentWidth:SetLabel("Match Parent Width")
 	matchParentWidth:SetValue(options.matchParentWidth)
 	matchParentWidth:SetCallback("OnValueChanged", function(_, _, value)
 		options.matchParentWidth = value
+		if width then
+			width:SetDisabled(value)
+		end
+
 		RefreshCastBar()
 	end)
 	generalGroup:AddChild(matchParentWidth)
 
-	local width = AceGUI:Create("Slider")
+	width = AceGUI:Create("Slider")
 	width:SetRelativeWidth(0.33)
 	width:SetLabel("Width")
 	width:SetSliderValues(50, 1000, 1)
 	width:SetValue(options.width or 270)
+	width:SetDisabled(options.matchParentWidth)
 	width:SetCallback("OnValueChanged", function(_, _, value)
 		options.width = value
 		RefreshCastBar()

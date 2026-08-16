@@ -1219,31 +1219,7 @@ function SCMResourceBarControllerMixin:HookAnchorWidthRefresh(anchor)
 			return
 		end
 
-		local primaryBarOptions = controller.primaryBarOptions or generalBarOptions.primaryBar
-		local secondaryBarOptions = controller.secondaryBarOptions or generalBarOptions.secondaryBar
-		local primaryMatches = primaryBarOptions and primaryBarOptions.enabled and primaryBarOptions.matchAnchorWidth and not controller.PrimaryBar:IsProtected()
-		local secondaryMatches = secondaryBarOptions and secondaryBarOptions.enabled and secondaryBarOptions.matchAnchorWidth and not controller.SecondaryBar:IsProtected()
-		local primaryWidthChanged = false
-		local secondaryWidthChanged = false
-
-		if primaryMatches then
-			primaryWidthChanged = controller:ApplyFrameWidthOptions(controller.PrimaryBar)
-		end
-
-		if secondaryMatches then
-			secondaryWidthChanged = controller:ApplyFrameWidthOptions(controller.SecondaryBar)
-		end
-
-		local primaryHeightChanged, secondaryHeightChanged = controller:UpdateBarLayout()
-		local primaryGeometryChanged = primaryWidthChanged or primaryHeightChanged
-		local secondaryGeometryChanged = secondaryWidthChanged or secondaryHeightChanged
-		if primaryMatches and primaryGeometryChanged then
-			controller:RefreshBarGeometry(controller.PrimaryBar, primaryGeometryChanged, true)
-		end
-		if secondaryMatches and secondaryGeometryChanged then
-			controller:RefreshBarGeometry(controller.SecondaryBar, secondaryGeometryChanged, true)
-		end
-		controller:UpdateContainerShownState()
+		controller:RefreshMatchedBarWidths()
 	end)
 end
 
@@ -1283,6 +1259,50 @@ function SCMResourceBarControllerMixin:ApplyFrameWidthOptions(bar, forcePosition
 	end
 
 	return false
+end
+
+function SCMResourceBarControllerMixin:RefreshMatchedBarWidths(forcePositionUpdate)
+	local generalBarOptions = self.barOptions or SCM.resourceBarConfig
+	local primaryBarOptions = self.primaryBarOptions or generalBarOptions.primaryBar
+	local secondaryBarOptions = self.secondaryBarOptions or generalBarOptions.secondaryBar
+	local inLockdown = InCombatLockdown()
+	local primaryMatches = primaryBarOptions and primaryBarOptions.enabled and primaryBarOptions.matchAnchorWidth
+	local secondaryMatches = secondaryBarOptions and secondaryBarOptions.enabled and secondaryBarOptions.matchAnchorWidth
+	local canUpdatePrimary = primaryMatches and not (inLockdown and self.PrimaryBar:IsProtected())
+	local canUpdateSecondary = secondaryMatches and not (inLockdown and self.SecondaryBar:IsProtected())
+	local primaryWidthChanged = false
+	local secondaryWidthChanged = false
+
+	if (primaryMatches and not canUpdatePrimary) or (secondaryMatches and not canUpdateSecondary) then
+		self.SCMRefreshMatchedBarWidths = true
+	end
+
+	if canUpdatePrimary then
+		primaryWidthChanged = self:ApplyFrameWidthOptions(self.PrimaryBar, forcePositionUpdate)
+	end
+
+	if canUpdateSecondary then
+		secondaryWidthChanged = self:ApplyFrameWidthOptions(self.SecondaryBar, forcePositionUpdate)
+	end
+
+	if not (canUpdatePrimary or canUpdateSecondary) then
+		return
+	end
+
+	local primaryHeightChanged, secondaryHeightChanged = self:UpdateBarLayout()
+	local primaryGeometryChanged = primaryWidthChanged or primaryHeightChanged
+	local secondaryGeometryChanged = secondaryWidthChanged or secondaryHeightChanged
+	if canUpdatePrimary and primaryGeometryChanged then
+		self:RefreshBarGeometry(self.PrimaryBar, primaryGeometryChanged, true)
+	end
+	if canUpdateSecondary and secondaryGeometryChanged then
+		self:RefreshBarGeometry(self.SecondaryBar, secondaryGeometryChanged, true)
+	end
+
+	self:UpdateContainerShownState()
+	if primaryWidthChanged or secondaryWidthChanged then
+		SCM.Callbacks:Fire("SkironCooldownManager.ResourceBar.LayoutUpdated")
+	end
 end
 
 function SCMResourceBarControllerMixin:UpdateRefreshState()
@@ -1713,6 +1733,14 @@ function SCMResourceBarControllerMixin:OnAttributeChanged(name, value)
 end
 
 function SCMResourceBarControllerMixin:OnEvent(event)
+	if event == "PLAYER_REGEN_ENABLED" then
+		if self.SCMRefreshMatchedBarWidths then
+			self.SCMRefreshMatchedBarWidths = nil
+			self:RefreshMatchedBarWidths(true)
+		end
+		return
+	end
+
 	if RESOURCE_BAR_RECONFIGURE_EVENTS[event] then
 		self:RefreshResourceBars()
 	end
@@ -1725,6 +1753,7 @@ function SCMResourceBarControllerMixin:RegisterResourceBarEvents()
 
 	self:RegisterEvent("UPDATE_SHAPESHIFT_FORM")
 	self:RegisterEvent("PLAYER_ENTERING_WORLD")
+	self:RegisterEvent("PLAYER_REGEN_ENABLED")
 	self:RegisterUnitEvent("UNIT_DISPLAYPOWER", "player")
 	self:RegisterEvent("PLAYER_GAINS_VEHICLE_DATA")
 	self:RegisterEvent("PLAYER_LOSES_VEHICLE_DATA")
@@ -1826,8 +1855,7 @@ function SCMResourceBarControllerMixin:Initialize()
 		end
 
 		if self.SCMActiveAnchorFrame == proxy or self.SCMActiveAnchorGroup == proxyGroup then
-			self.SCMActiveAnchorFrame = proxy
-			SCM:RefreshResourceBarConfig()
+			self:RefreshMatchedBarWidths(true)
 		end
 	end)
 
@@ -1874,6 +1902,7 @@ function SCM:ResetResourceBar()
 	container.SCMResourceBarInitialized = nil
 	container.SCMActiveAnchorFrame = nil
 	container.SCMActiveAnchorGroup = nil
+	container.SCMRefreshMatchedBarWidths = nil
 	container.barOptions = nil
 	container.primaryBarOptions = nil
 	container.secondaryBarOptions = nil
