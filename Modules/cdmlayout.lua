@@ -29,9 +29,9 @@ local function GetNextLayoutDuplicateChild(child, masterCooldownID, masterChild)
 	return duplicateChild
 end
 
-local function LayoutManagedAnchorChild(child, row, anchorConfig, childAnchor, startPoint, offsetX, useProxyAnchor)
+local function ApplyChildLayout(child, row, anchorConfig, childAnchor, startPoint, offsetX, useProxyAnchor)
 	child.SCMRowConfig = row.rowConfig
-	child.SCMAnchorFrameStrata = anchorConfig and anchorConfig.frameStrata or nil
+	child.SCMAnchorFrameStrata = anchorConfig.frameStrata
 
 	if child.SCMLayoutLimited then
 		child.SCMLayoutLimited = nil
@@ -53,7 +53,7 @@ local function LayoutManagedAnchorChild(child, row, anchorConfig, childAnchor, s
 	child.SCMChanged = false
 end
 
-local function GetDuplicateChildren(layoutChildren, layoutChildCount)
+local function TrackDuplicateChildren(layoutChildren, layoutChildCount)
 	local uniqueChildren = Cache.cachedLayoutChildren
 	local seenCooldownIDs = Cache.cachedLayoutCooldownIDs
 	local hasDuplicateChildren = false
@@ -133,7 +133,7 @@ local function GetMatchedAnchorWidth(group, anchorConfig)
 	return matchedAnchorWidth
 end
 
-local function ShouldLayoutChildren(group, visibleChildren, state, anchorConfig, resetSize, allowLayoutSkip)
+local function ProcessLayoutChildren(group, visibleChildren, state, anchorConfig, resetSize, allowLayoutSkip)
 	local configuredChildren = Cache.cachedChildrenTbl[group]
 	local visibleChildCount = #visibleChildren
 	local configuredChildCount = configuredChildren and #configuredChildren or 0
@@ -173,16 +173,32 @@ local function ShouldLayoutChildren(group, visibleChildren, state, anchorConfig,
 	end
 
 	state.layoutSignature = layoutSignature
-	layoutChildren, layoutChildCount = GetDuplicateChildren(layoutChildren, layoutChildCount)
+	layoutChildren, layoutChildCount = TrackDuplicateChildren(layoutChildren, layoutChildCount)
 
 	return layoutChildren, layoutChildCount, lockGroupSize and layoutChildCount or visibleChildCount
 end
 
-local function BuildRowLayout(group, rows, rowConfig, anchorConfig, layoutChildCount, hardLimitChildCount)
+local function GetLayoutBounds(rows, rowConfig, anchorConfig, maxGroupWidth, accumulatedY, matchedAnchorWidth)
+	local firstRow = rows[1]
+	local firstRowConfig = rowConfig[1]
+	local firstRowWidth = (firstRow and firstRow.rowIconWidth) or (firstRowConfig.useFixedWidth and firstRowConfig.fixedWidth) or firstRowConfig.iconWidth or firstRowConfig.size or 47
+	local firstRowHeight = (firstRow and firstRow.rowIconHeight) or firstRowConfig.iconHeight or firstRowConfig.size or 47
+	local effectiveWidth = matchedAnchorWidth or max(firstRowWidth, maxGroupWidth, 1)
+	local effectiveHeight = max(firstRowHeight, accumulatedY - (anchorConfig.spacing or 0), 1)
+	local heightDelta = max(effectiveHeight - firstRowHeight, 0)
+	local point = (anchorConfig.anchor or DEFAULT_ANCHOR)[1]
+	local pivot = SCM:GetAnchorPivot(point, anchorConfig.grow or "CENTERED")
+	local growsUp = (anchorConfig.secondaryGrow or "DOWN") == "UP"
+	local anchorOffsetY = growsUp and ((pivot:find("TOP") and heightDelta) or (not pivot:find("BOTTOM") and heightDelta / 2) or 0)
+		or ((pivot:find("BOTTOM") and -heightDelta) or (not pivot:find("TOP") and -heightDelta / 2) or 0)
+
+	return firstRowWidth, effectiveWidth, effectiveHeight, anchorOffsetY, pivot
+end
+
+local function BuildLayoutRows(group, rows, rowConfig, anchorConfig, layoutChildCount, hardLimitChildCount)
 	local lastRowConfig = rowConfig[#rowConfig]
 	local baseSpacing = anchorConfig.spacing or 0
 	local growsUp = (anchorConfig.secondaryGrow or "DOWN") == "UP"
-	-- Doesn't exist yet as an option but it will at some point
 	local scaleData = anchorConfig.advancedScale
 	local matchedAnchorWidth = GetMatchedAnchorWidth(group, anchorConfig)
 	local childIndex = 1
@@ -248,21 +264,10 @@ local function BuildRowLayout(group, rows, rowConfig, anchorConfig, layoutChildC
 		rows[index] = nil
 	end
 
-	local firstRow = rows[1]
-	local firstRowConfig = rowConfig[1]
-	local firstRowWidth = (firstRow and firstRow.rowIconWidth) or (firstRowConfig.useFixedWidth and firstRowConfig.fixedWidth) or firstRowConfig.iconWidth or firstRowConfig.size or 47
-	local firstRowHeight = (firstRow and firstRow.rowIconHeight) or firstRowConfig.iconHeight or firstRowConfig.size or 47
-	local effectiveWidth = matchedAnchorWidth or max(firstRowWidth, maxGroupWidth, 1)
-	local effectiveHeight = max(firstRowHeight, accumulatedY - baseSpacing, 1)
-	local heightDelta = max(effectiveHeight - firstRowHeight, 0)
-	local point = (anchorConfig.anchor or DEFAULT_ANCHOR)[1]
-	local pivot = SCM:GetAnchorPivot(point, anchorConfig.grow or "CENTERED")
-	local anchorOffsetY = growsUp and ((pivot:find("TOP") and heightDelta) or (not pivot:find("BOTTOM") and heightDelta / 2) or 0)
-		or ((pivot:find("BOTTOM") and -heightDelta) or (not pivot:find("TOP") and -heightDelta / 2) or 0)
-
-	return rowCount, totalChildren, firstRowWidth, effectiveWidth, effectiveHeight, anchorOffsetY, pivot
+	return rowCount, totalChildren, GetLayoutBounds(rows, rowConfig, anchorConfig, maxGroupWidth, accumulatedY, matchedAnchorWidth)
 end
-local function ApplyGroupAnchor(group, state, anchorConfig, firstRowWidth, effectiveWidth, effectiveHeight, anchorOffsetY, changedGroups)
+
+local function ApplyAnchorLayout(group, state, anchorConfig, firstRowWidth, effectiveWidth, effectiveHeight, anchorOffsetY, changedGroups)
 	local point, anchor, relativePoint, xOffset, yOffset = unpack(anchorConfig.anchor or DEFAULT_ANCHOR)
 	local growDir = anchorConfig.grow or "CENTERED"
 	local parentGroup = Utils.ParseAnchorString(anchor)
@@ -294,7 +299,8 @@ local function ApplyGroupAnchor(group, state, anchorConfig, firstRowWidth, effec
 		state.appliedAnchorOffsetY = anchorOffsetY
 	end
 
-	local childAnchor, useProxyAnchor = SCM:GetManagedAnchorChildAnchor(group, groupAnchor, point, anchor, relativePoint, xOffset, yOffset, growDir, firstRowWidth, effectiveWidth, effectiveHeight, anchorOffsetY)
+	local childAnchor, useProxyAnchor =
+		SCM:GetManagedAnchorChildAnchor(group, groupAnchor, point, anchor, relativePoint, xOffset, yOffset, growDir, firstRowWidth, effectiveWidth, effectiveHeight, anchorOffsetY)
 	if SCM.initialized and (anchorResized or wasUsingProxy ~= useProxyAnchor) then
 		SCM.Callbacks:Fire("SCM_AnchorChanged", group, childAnchor, effectiveWidth, effectiveHeight, useProxyAnchor)
 	end
@@ -307,8 +313,8 @@ local function ApplyGroupAnchor(group, state, anchorConfig, firstRowWidth, effec
 	return childAnchor, useProxyAnchor, boundsChanged
 end
 
-local function LayoutChildAndDuplicates(child, row, anchorConfig, childAnchor, startPoint, offsetX, useProxyAnchor)
-	LayoutManagedAnchorChild(child, row, anchorConfig, childAnchor, startPoint, offsetX, useProxyAnchor)
+local function ApplyChildAndDuplicateLayouts(child, row, anchorConfig, childAnchor, startPoint, offsetX, useProxyAnchor)
+	ApplyChildLayout(child, row, anchorConfig, childAnchor, startPoint, offsetX, useProxyAnchor)
 
 	if not child.SCMLayoutNextDuplicate then
 		return
@@ -319,7 +325,7 @@ local function LayoutChildAndDuplicates(child, row, anchorConfig, childAnchor, s
 	local duplicateChild = GetNextLayoutDuplicateChild(child, masterCooldownID, masterChild)
 	while duplicateChild do
 		child = duplicateChild
-		LayoutManagedAnchorChild(child, row, anchorConfig, childAnchor, startPoint, offsetX, useProxyAnchor)
+		ApplyChildLayout(child, row, anchorConfig, childAnchor, startPoint, offsetX, useProxyAnchor)
 		duplicateChild = GetNextLayoutDuplicateChild(child, masterCooldownID, masterChild)
 	end
 end
@@ -334,7 +340,7 @@ local function GetStartPoint(anchorConfig)
 	return verticalPoint .. (growDir == "LEFT" and "RIGHT" or "LEFT")
 end
 
-local function LayoutRows(layoutChildren, rows, rowCount, anchorConfig, childAnchor, startPoint, useProxyAnchor)
+local function ApplyRowLayouts(layoutChildren, rows, rowCount, anchorConfig, childAnchor, startPoint, useProxyAnchor)
 	local growDir = anchorConfig.grow or "CENTERED"
 	local baseSpacing = anchorConfig.spacing or 0
 	local centeredRows = growDir == "CENTER" or growDir == "CENTERED" or growDir == "FIXED"
@@ -343,7 +349,7 @@ local function LayoutRows(layoutChildren, rows, rowCount, anchorConfig, childAnc
 		local row = rows[currentRow]
 		for currentChild = row.startIndex, row.endIndex do
 			local rowChild = currentChild - row.startIndex
-			local offsetX = 0
+			local offsetX
 
 			if centeredRows then
 				offsetX = (rowChild * (row.rowIconWidth + baseSpacing)) - (row.rowWidth / 2) + (row.rowIconWidth / 2)
@@ -353,12 +359,12 @@ local function LayoutRows(layoutChildren, rows, rowCount, anchorConfig, childAnc
 				offsetX = rowChild * (row.rowIconWidth + baseSpacing)
 			end
 
-			LayoutChildAndDuplicates(layoutChildren[currentChild], row, anchorConfig, childAnchor, startPoint, offsetX, useProxyAnchor)
+			ApplyChildAndDuplicateLayouts(layoutChildren[currentChild], row, anchorConfig, childAnchor, startPoint, offsetX, useProxyAnchor)
 		end
 	end
 end
 
-local function HandleDuplicates(child)
+local function LimitChildAndDuplicates(child)
 	if child.SCMShouldBeVisible then
 		child.SCMLayoutLimited = true
 		child.SCMLayoutApplied = nil
@@ -383,46 +389,22 @@ local function HandleDuplicates(child)
 	end
 end
 
-local function HandleOverFlowAndDuplicates(layoutChildren, totalChildren, layoutChildCount)
+local function LimitOverflowChildren(layoutChildren, totalChildren, layoutChildCount)
 	if totalChildren >= layoutChildCount then
 		return
 	end
 
 	for index = totalChildren + 1, layoutChildCount do
-		HandleDuplicates(layoutChildren[index])
+		LimitChildAndDuplicates(layoutChildren[index])
 	end
 end
 
-local function LayoutAnchorGroup(group, visibleChildren, anchorConfig, options, changedGroups, resetSize, allowLayoutSkip)
-	Cache.cachedVisitedAnchorGroups[group] = true
-	if not anchorConfig then
+local function UpdatePrimaryGroupLayout(group, options, effectiveWidth, rowConfig)
+	if group ~= 1 then
 		return
 	end
 
-	local state = GetAnchorState(group)
-	local rowConfig = anchorConfig.rowConfig or DEFAULT_ROW_CONFIG
-
-	local layoutChildren, layoutChildCount, hardLimitChildCount = ShouldLayoutChildren(group, visibleChildren, state, anchorConfig, resetSize, allowLayoutSkip)
-	if not layoutChildren then
-		return
-	end
-
-	local rowCount, totalChildren, firstRowWidth, effectiveWidth, effectiveHeight, anchorOffsetY, pivot = BuildRowLayout(
-		group,
-		state.rows,
-		rowConfig,
-		anchorConfig,
-		layoutChildCount,
-		hardLimitChildCount
-	)
-	state.startPoint = GetStartPoint(anchorConfig)
-	state.pivot = pivot
-	local childAnchor, useProxyAnchor, boundsChanged = ApplyGroupAnchor(group, state, anchorConfig, firstRowWidth, effectiveWidth, effectiveHeight, anchorOffsetY, changedGroups)
-
-	LayoutRows(layoutChildren, state.rows, rowCount, anchorConfig, childAnchor, state.startPoint, useProxyAnchor)
-	HandleOverFlowAndDuplicates(layoutChildren, totalChildren, layoutChildCount)
-
-	if not InCombatLockdown() and group == 1 then
+	if not InCombatLockdown() then
 		if options.adjustResourceWidth and C_AddOns.IsAddOnLoaded("SenseiClassResourceBar") then
 			if SCRB and SCRB.registerCustomFrame then
 				SCRB.registerCustomFrame(SCM:GetAnchor(1))
@@ -434,9 +416,38 @@ local function LayoutAnchorGroup(group, visibleChildren, anchorConfig, options, 
 		SCM:UpdateUFValues(options, effectiveWidth, rowConfig)
 	end
 
-	if group == 1 then
-		SCM:ApplyCustomAnchors(effectiveWidth, rowConfig)
+	SCM:ApplyCustomAnchors(effectiveWidth, rowConfig)
+end
+
+local function LayoutAnchorGroup(group, visibleChildren, anchorConfig, options, changedGroups, resetSize, allowLayoutSkip)
+	Cache.cachedVisitedAnchorGroups[group] = true
+	if not anchorConfig then
+		return
 	end
+
+	local state = GetAnchorState(group)
+	local rowConfig = anchorConfig.rowConfig or DEFAULT_ROW_CONFIG
+
+	local layoutChildren, layoutChildCount, hardLimitChildCount = ProcessLayoutChildren(group, visibleChildren, state, anchorConfig, resetSize, allowLayoutSkip)
+	if not layoutChildren then
+		return
+	end
+
+	local rowCount, totalChildren, firstRowWidth, effectiveWidth, effectiveHeight, anchorOffsetY, pivot = BuildLayoutRows(
+		group,
+		state.rows,
+		rowConfig,
+		anchorConfig,
+		layoutChildCount,
+		hardLimitChildCount
+	)
+	state.startPoint = GetStartPoint(anchorConfig)
+	state.pivot = pivot
+	local childAnchor, useProxyAnchor, boundsChanged = ApplyAnchorLayout(group, state, anchorConfig, firstRowWidth, effectiveWidth, effectiveHeight, anchorOffsetY, changedGroups)
+
+	ApplyRowLayouts(layoutChildren, state.rows, rowCount, anchorConfig, childAnchor, state.startPoint, useProxyAnchor)
+	LimitOverflowChildren(layoutChildren, totalChildren, layoutChildCount)
+	UpdatePrimaryGroupLayout(group, options, effectiveWidth, rowConfig)
 
 	if boundsChanged and changedGroups then
 		changedGroups[group] = true
