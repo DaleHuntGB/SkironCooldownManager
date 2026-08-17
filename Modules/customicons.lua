@@ -1054,7 +1054,7 @@ local function ProcessCustomIcon(id, config, validChildren, refreshOptions, refr
 			return
 		end
 
-		local iconTexture = GetCustomIconTexture(config, iconType, frame)
+		local iconTexture = GetCustomIconTexture(config, iconType, frame) or frame.SCMIconTexture
 		if not iconTexture and SCM.isOptionsOpen then
 			iconTexture = 134400
 		end

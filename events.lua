@@ -58,6 +58,7 @@ function SCM:PLAYER_ENTERING_WORLD(isInitialLogin, isReload)
 	end
 
 	self.isInInstance = IsInInstance()
+	self.refreshEquipmentSlotIcons = true
 end
 
 function SCM:BAG_UPDATE_DELAYED()
@@ -65,12 +66,11 @@ function SCM:BAG_UPDATE_DELAYED()
 		SCM:ApplyAnchorGroupByIconType("item")
 	end
 
-	if not self.initEquipment then
-		self.initEquipment = true
-		C_Timer.After(1, function()
-			SCM:CreateAllCustomIcons("slot")
-			SCM:ApplyAnchorGroupByIconType("slot")
-		end)
+	if self.refreshEquipmentSlotIcons then
+		self.refreshEquipmentSlotIcons = nil
+		SCM.CustomIcons.CreateIcons(SCM.customConfig.slotConfig, false, "slot")
+		SCM.CustomIcons.CreateIcons(SCM.globalCustomConfig.slotConfig, true, "slot")
+		SCM:ApplyAnchorGroupByIconType("slot")
 	end
 end
 
