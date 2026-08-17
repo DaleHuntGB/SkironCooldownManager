@@ -165,7 +165,7 @@ function CDMOptions.CreateSpellConfigScrollFrame(anchorIndex, mode, spellConfigT
 			spellConfigTab:DoLayout()
 			anchorOptions:DoLayout()
 		elseif button == "RightButton" and not buttonFrame.data.isAddButton then
-			local menu = MenuUtil.CreateContextMenu(nil, function(owner, rootDescription)
+			MenuUtil.CreateContextMenu(buttonFrame, function(owner, rootDescription)
 				rootDescription:CreateButton("Remove", function()
 					if buttonFrame.data.isCustom then
 						SCM:RemoveCustomIcon(buttonFrame.data.id, isGlobal, buttonFrame.data.iconType)
