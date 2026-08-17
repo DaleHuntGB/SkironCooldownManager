@@ -79,7 +79,7 @@ local function OnBuffShowPandemicStateFrame(self)
 		return
 	end
 
-	local options = self.SCMBuffOptions or self.SCMIconOptions
+	local options = self.SCMBuffOptions or self.SCMIconOptions or self.SCMBuffBarOptions
 	if not options or options.pandemicGlowOption == "keepPandemicGlow" then
 		return
 	end
@@ -111,7 +111,7 @@ local function OnBuffHidePandemicStateFrame(self)
 		return
 	end
 
-	local options = self.SCMBuffOptions or self.SCMIconOptions
+	local options = self.SCMBuffOptions or self.SCMIconOptions or self.SCMBuffBarOptions
 	if not options or options.pandemicGlowOption ~= "replacePandemicGlow" then
 		return
 	end
@@ -126,7 +126,7 @@ local function OnBuffHidePandemicStateFrame(self)
 	end)
 end
 
-local function SetupPandemicHooks(child, options)
+function Cooldowns.SetupPandemicHooks(child, options)
 	local pandemicGlowOption = options and options.pandemicGlowOption
 	if pandemicGlowOption and pandemicGlowOption ~= "keepPandemicGlow" and not child.SCMPandemicShowHooked then
 		hooksecurefunc(child, "ShowPandemicStateFrame", OnBuffShowPandemicStateFrame)
@@ -164,7 +164,7 @@ end
 function Cooldowns.SetupBuffIconHooks(child, options)
 	local checkCooldownFrame = (child.SCMSpellID and (Constants.FakeAuras[child.SCMSpellID] or Constants.TargetAuras[child.SCMSpellID]))
 	child.SCMBuffOptions = options
-	SetupPandemicHooks(child, options)
+	Cooldowns.SetupPandemicHooks(child, options)
 
 	if (checkCooldownFrame and child.SCMCooldownHooked) or (not checkCooldownFrame and child.SCMAuraHooked) then
 		return
@@ -425,7 +425,7 @@ function Cooldowns.SetupCooldownHooks(child, options)
 		return
 	end
 
-	SetupPandemicHooks(child, options)
+	Cooldowns.SetupPandemicHooks(child, options)
 	if child.SCMRegularCooldownHook then
 		return
 	end

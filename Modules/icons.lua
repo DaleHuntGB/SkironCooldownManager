@@ -390,6 +390,7 @@ end
 
 local function ProcessBuffBar(child, options, refreshOptions, refreshGlowOptions)
 	Icons.SetupBuffBarHooks(child)
+	Cooldowns.SetupPandemicHooks(child, options)
 	child.SCMBuffBarOptions = options
 
 	local isInactive = not child.auraInstanceID and not child.SCMFakeAuraInstanceID
