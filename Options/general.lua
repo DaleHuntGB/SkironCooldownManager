@@ -423,7 +423,6 @@ local function SelectGlobalSettingsTab(tabWidget, scrollFrame, group, options)
 			SCM:ApplyAttributeDriver()
 			SCM:CreateAllCustomIcons()
 		end)
-
 	elseif group == "Auras" then
 		local auraSettings = AceGUI:Create("InlineGroup")
 		auraSettings:SetLayout("flow")
@@ -449,13 +448,7 @@ local function SelectGlobalSettingsTab(tabWidget, scrollFrame, group, options)
 		end)
 		hideBuffsWhenInactive:SetCallback("OnEnter", function(self)
 			GameTooltip:SetOwner(self.frame, "ANCHOR_CURSOR")
-			GameTooltip:AddLine(
-				'Disables "Hide When Inactive" only for Blizzard buff icons. Untracked buffs remain hidden.',
-				1,
-				1,
-				1,
-				true
-			)
+			GameTooltip:AddLine('Disables "Hide When Inactive" only for Blizzard buff icons. Untracked buffs remain hidden.', 1, 1, 1, true)
 			GameTooltip:Show()
 		end)
 		hideBuffsWhenInactive:SetCallback("OnLeave", function()
@@ -481,13 +474,7 @@ local function SelectGlobalSettingsTab(tabWidget, scrollFrame, group, options)
 		end)
 		hideBuffBarsWhenInactive:SetCallback("OnEnter", function(self)
 			GameTooltip:SetOwner(self.frame, "ANCHOR_CURSOR")
-			GameTooltip:AddLine(
-				'Disables "Hide When Inactive" only for Blizzard buff bars. Configured bars remain visible while inactive.',
-				1,
-				1,
-				1,
-				true
-			)
+			GameTooltip:AddLine('Disables "Hide When Inactive" only for Blizzard buff bars. Configured bars remain visible while inactive.', 1, 1, 1, true)
 			GameTooltip:Show()
 		end)
 		hideBuffBarsWhenInactive:SetCallback("OnLeave", function()
@@ -734,7 +721,7 @@ local function SelectGlobalSettingsTab(tabWidget, scrollFrame, group, options)
 
 		local chargeFrameLevel = AceGUI:Create("Slider")
 		chargeFrameLevel:SetRelativeWidth(0.5)
-		chargeFrameLevel:SetLabel("Frame Level")
+		chargeFrameLevel:SetLabel("Charge Frame Level")
 		chargeFrameLevel:SetSliderValues(0, 10, 1)
 		chargeFrameLevel:SetValue(options.chargeFrameLevel or 1)
 		chargeFrameLevel:SetCallback("OnValueChanged", function(_, _, value)
@@ -742,6 +729,17 @@ local function SelectGlobalSettingsTab(tabWidget, scrollFrame, group, options)
 			SCM:ApplyAllCDManagerConfigs()
 		end)
 		chargeSettings:AddChild(chargeFrameLevel)
+
+		local applicationsFrameLevel = AceGUI:Create("Slider")
+		applicationsFrameLevel:SetRelativeWidth(0.5)
+		applicationsFrameLevel:SetLabel("Stack Frame Level")
+		applicationsFrameLevel:SetSliderValues(0, 10, 1)
+		applicationsFrameLevel:SetValue(options.applicationsFrameLevel or 1)
+		applicationsFrameLevel:SetCallback("OnValueChanged", function(_, _, value)
+			options.applicationsFrameLevel = value
+			SCM:ApplyAllCDManagerConfigs()
+		end)
+		chargeSettings:AddChild(applicationsFrameLevel)
 
 		local chargeColour = AceGUI:Create("ColorPicker")
 		chargeColour:SetLabel("Color")
@@ -753,6 +751,22 @@ local function SelectGlobalSettingsTab(tabWidget, scrollFrame, group, options)
 		end)
 		chargeSettings:AddChild(chargeColour)
 
+		local craftingQualitySettings = AceGUI:Create("InlineGroup")
+		craftingQualitySettings:SetLayout("flow")
+		craftingQualitySettings:SetFullWidth(true)
+		craftingQualitySettings:SetTitle("Crafting Quality")
+		tabWidget:AddChild(craftingQualitySettings)
+
+		local craftQualityFrameLevel = AceGUI:Create("Slider")
+		craftQualityFrameLevel:SetRelativeWidth(1)
+		craftQualityFrameLevel:SetLabel("Frame Level")
+		craftQualityFrameLevel:SetSliderValues(0, 10, 1)
+		craftQualityFrameLevel:SetValue(options.craftQualityFrameLevel or 3)
+		craftQualityFrameLevel:SetCallback("OnValueChanged", function(_, _, value)
+			options.craftQualityFrameLevel = value
+			SCM:ApplyAllCDManagerConfigs()
+		end)
+		craftingQualitySettings:AddChild(craftQualityFrameLevel)
 	elseif group == "Cooldowns" then
 		local cooldownTextSettings = AceGUI:Create("InlineGroup")
 		cooldownTextSettings:SetLayout("flow")

@@ -21,7 +21,7 @@ local function ApplyChargeAndApplicationStyle(child, options, fontPath)
 		end
 
 		child.ChargeCount:SetFrameStrata(child:GetFrameStrata())
-		child.ChargeCount:SetFrameLevel(child:GetFrameLevel() + options.chargeFrameLevel)
+		child.ChargeCount:SetFrameLevel(child:GetFrameLevel() + (options.chargeFrameLevel or 1))
 		child.ChargeCount.Current:ClearAllPoints()
 		child.ChargeCount.Current:SetPoint(
 			rowConfig.chargePoint or options.chargePoint,
@@ -71,7 +71,7 @@ local function ApplyChargeAndApplicationStyle(child, options, fontPath)
 		end
 
 		child.Applications:SetFrameStrata(child:GetFrameStrata())
-		child.Applications:SetFrameLevel(child:GetFrameLevel() + options.chargeFrameLevel)
+		child.Applications:SetFrameLevel(child:GetFrameLevel() + (options.applicationsFrameLevel or 1))
 		child.Applications.Applications:ClearAllPoints()
 		child.Applications.Applications:SetPoint(
 			rowConfig.applicationsPoint or options.chargePoint,
@@ -423,7 +423,7 @@ function SCM:SkinChild(child, childConfig)
 	end
 
 	if child.SCMCustom then
-		child.CraftQuality:SetFrameLevel(child:GetFrameLevel() + 3)
+		child.CraftQuality:SetFrameLevel(child:GetFrameLevel() + (options.craftQualityFrameLevel or 3))
 	end
 
 	for _, customSkin in ipairs(SCM.Skins) do
@@ -616,7 +616,7 @@ function SCM:SkinBuffBar(child, config)
 			iconFrame.SCMApplicationsOverlay = overlay
 		end
 
-		overlay:SetFrameLevel(iconFrame.customBorder:GetFrameLevel() + 1)
+		overlay:SetFrameLevel(iconFrame:GetFrameLevel() + (options.applicationsFrameLevel or 1))
 		applications:SetParent(overlay)
 		applications:SetDrawLayer("OVERLAY", 7)
 		applications:SetJustifyH("CENTER")

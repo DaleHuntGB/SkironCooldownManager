@@ -148,7 +148,7 @@ function CDMOptions.CreateSpellConfigScrollFrame(anchorIndex, mode, spellConfigT
 
 		if button == "LeftButton" then
 			if buttonFrame.data.isAddButton then
-				local menu = MenuUtil.CreateContextMenu(nil, function(owner, rootDescription)
+				MenuUtil.CreateContextMenu(buttonFrame, function(owner, rootDescription)
 					CDMOptions.CreateAddSpellDropdown(owner, rootDescription, scrollFrame, anchorIndex, mode)
 				end)
 			else
