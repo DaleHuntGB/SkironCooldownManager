@@ -263,6 +263,7 @@ end
 
 local function OrderCDManagerSpells(updateScope, scopedAnchorGroupsOverride, refreshOptions, refreshGlowOptions)
 	updateScope = updateScope or UPDATE_SCOPE.ALL
+	CDM.isLayoutInProgress = true
 
 	Cache.cachedViewerScale = 1
 
@@ -381,6 +382,12 @@ local function OrderCDManagerSpells(updateScope, scopedAnchorGroupsOverride, ref
 
 	SCM:ReleaseScopedGroupCache(changedGroups)
 	Cache.activeScopedAnchorGroups = nil
+	CDM.isLayoutInProgress = nil
+
+	if SCM.SCMRefreshMatchedBuffBarWidths and not InCombatLockdown() then
+		SCM.SCMRefreshMatchedBuffBarWidths = nil
+		OrderCDManagerSpells(UPDATE_SCOPE.BUFF_BAR)
+	end
 end
 
 CDM.OrderSpells = OrderCDManagerSpells

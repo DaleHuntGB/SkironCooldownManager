@@ -121,7 +121,7 @@ local function GetMatchedAnchorWidth(group, anchorConfig)
 	elseif not anchorFrame.SCMBuffBarWidthHook then
 		anchorFrame.SCMBuffBarWidthHook = true
 		anchorFrame:HookScript("OnSizeChanged", function()
-			if InCombatLockdown() then
+			if InCombatLockdown() or CDM.isLayoutInProgress then
 				SCM.SCMRefreshMatchedBuffBarWidths = true
 				return
 			end
@@ -433,14 +433,8 @@ local function LayoutAnchorGroup(group, visibleChildren, anchorConfig, options, 
 		return
 	end
 
-	local rowCount, totalChildren, firstRowWidth, effectiveWidth, effectiveHeight, anchorOffsetY, pivot = BuildLayoutRows(
-		group,
-		state.rows,
-		rowConfig,
-		anchorConfig,
-		layoutChildCount,
-		hardLimitChildCount
-	)
+	local rowCount, totalChildren, firstRowWidth, effectiveWidth, effectiveHeight, anchorOffsetY, pivot =
+		BuildLayoutRows(group, state.rows, rowConfig, anchorConfig, layoutChildCount, hardLimitChildCount)
 	state.startPoint = GetStartPoint(anchorConfig)
 	state.pivot = pivot
 	local childAnchor, useProxyAnchor, boundsChanged = ApplyAnchorLayout(group, state, anchorConfig, firstRowWidth, effectiveWidth, effectiveHeight, anchorOffsetY, changedGroups)
