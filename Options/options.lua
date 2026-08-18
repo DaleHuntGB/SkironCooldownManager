@@ -524,14 +524,21 @@ function SCM.GetDisabledCooldowns()
 end
 
 function SCM.CheckForDisabledCooldowns()
-	if not SCM.options.checkForDisabledIcons or InCombatLockdown() then return end
+	if not SCM.options.checkForDisabledIcons or InCombatLockdown() then
+		return
+	end
 	local disabledCooldowns = SCM.GetDisabledCooldowns()
 
 	if next(disabledCooldowns) then
-		StaticPopup_Show("SCM_FORCE_RELOAD_POPUP", "|cFF4080FFSkiron|r|cFFFFFFFFCooldownManager|r detected disabled icons in Blizzards CooldownViewer. Do you want to reload to fix this automatically?", nil, {
-			callback = FixCooldownCategories,
-			data = disabledCooldowns,
-		})
+		StaticPopup_Show(
+			"SCM_FORCE_RELOAD_POPUP",
+			"|cFF4080FFSkiron|r|cFFFFFFFFCooldownManager|r detected disabled icons in Blizzards CooldownViewer. Do you want to reload to fix this automatically?",
+			nil,
+			{
+				callback = FixCooldownCategories,
+				data = disabledCooldowns,
+			}
+		)
 	end
 end
 
@@ -546,16 +553,16 @@ local function HandleMessage(msg, editBox)
 		local options = SCM.db.profile.options
 		options.debug = not options.debug
 	else
-		if not SCM.OptionsFrame or not SCM.OptionsFrame:IsShown() then
-			OpenOptions()
-		else
-			SCM.OptionsFrame:Release()
-			SCM.OptionsFrame = nil
-		end
+		SCM:ToggleOptions()
 	end
 end
 SlashCmdList["SCM"] = HandleMessage
 
 function SCM:ToggleOptions()
-	HandleMessage()
+	if not SCM.OptionsFrame or not SCM.OptionsFrame:IsShown() then
+		OpenOptions()
+	else
+		SCM.OptionsFrame:Release()
+		SCM.OptionsFrame = nil
+	end
 end
