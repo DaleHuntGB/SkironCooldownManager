@@ -360,7 +360,7 @@ local function OpenOptions()
 	SCM:ApplyAllCDManagerConfigs()
 
 	local frame = AceGUI:Create("SCMFrame")
-	frame:SetTitle(addonName)
+	frame:SetTitle(addonName .. " - " .. C_AddOns.GetAddOnMetadata(addonName, "Version"))
 	frame:SetLayout("flow")
 	SCM.OptionsFrame = frame
 	LibWindow.RegisterConfig(frame.frame, options.optionsWindow)
