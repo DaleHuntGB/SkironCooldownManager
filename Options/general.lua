@@ -1,4 +1,4 @@
-local SCM = select(2, ...)
+local addonName, SCM = ...
 local AceGUI = LibStub("AceGUI-3.0")
 local LibEditModeOverride = LibStub("LibEditModeOverride-1.0")
 local LSM = LibStub("LibSharedMedia-3.0")
@@ -282,6 +282,16 @@ local function SelectGlobalSettingsTab(tabWidget, scrollFrame, group, options)
 			options.checkForDisabledIcons = value
 		end)
 		skinningSettings:AddChild(checkForDisabledIcons)
+
+		local showMinimapButton = AceGUI:Create("CheckBox")
+		showMinimapButton:SetRelativeWidth(0.33)
+		showMinimapButton:SetLabel("Show Minimap Button")
+		showMinimapButton:SetValue(not options.minimapButton.hide)
+		showMinimapButton:SetCallback("OnValueChanged", function(_, _, value)
+			options.minimapButton.hide = not value
+			LibStub("LibDBIcon-1.0"):Refresh(addonName, options.minimapButton)
+		end)
+		skinningSettings:AddChild(showMinimapButton)
 
 		local savePosition = AceGUI:Create("CheckBox")
 		savePosition:SetRelativeWidth(0.33)

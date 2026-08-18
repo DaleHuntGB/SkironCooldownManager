@@ -1,6 +1,17 @@
-local SCM = select(2, ...)
+local addonName, SCM = ...
 local eventFrame
 local registeredEvents = {}
+
+local SCMLDB = LibStub("LibDataBroker-1.1"):NewDataObject(addonName, {
+	type = "data source",
+	text = addonName,
+	icon = "Interface/AddOns/SkironCooldownManager/Media/Logo.png",
+	OnClick = function(_, button)
+		if button == "LeftButton" then
+			SCM:ToggleOptions()
+		end
+	end,
+})
 
 function SCM:RegisterEvent(event)
 	if not registeredEvents[event] then
@@ -53,6 +64,8 @@ function SCM:PLAYER_ENTERING_WORLD(isInitialLogin, isReload)
 		SCM.initialized = true
 		SCM.Callbacks:Fire("SCM_Ready")
 		SCM.CheckForDisabledCooldowns()
+
+		LibStub("LibDBIcon-1.0"):Register(addonName, SCMLDB, SCM.options.minimapButton)
 	elseif self.isInInstance ~= IsInInstance() then
 		SCM.RefreshCooldownViewerData(false, true)
 	end

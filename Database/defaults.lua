@@ -111,6 +111,9 @@ SCM.DefaultDB = {
 			},
 			elvUIAnchors = {},
 			anchorConfig = {},
+			minimapButton = {
+				hide = false,
+			},
 			showAnchorHighlight = true,
 			checkForDisabledIcons = true,
 			hideWhileMounted = false,
