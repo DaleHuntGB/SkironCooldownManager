@@ -248,7 +248,7 @@ end
 function SCM:COOLDOWN_VIEWER_SPELL_OVERRIDE_UPDATED(baseSpellID, overrideSpellID)
 	local options = SCM.db.profile.options
 	local cooldown = C_Spell.GetSpellCooldown(baseSpellID)
-	if not (cooldown and cooldown.isActive and options.disableRegularIconActiveSwipe) then
+	if not (cooldown and cooldown.isActive and SCM.IsActiveSwipeDisabled(baseSpellID, options)) then
 		cooldown = nil
 	end
 

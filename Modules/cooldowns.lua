@@ -311,7 +311,7 @@ function Cooldowns.SetNormalCooldown(self, parent)
 	local options = SCM.db.profile.options
 	local useAuraDisplayTime = self:GetUseAuraDisplayTime()
 	local childConfig = parent.SCMConfig
-	local shouldReplaceActiveSwipe = (childConfig.hideActiveSwipe or options.disableRegularIconActiveSwipe) and not childConfig.forceActiveSwipe
+	local shouldReplaceActiveSwipe = (childConfig.hideActiveSwipe or SCM.IsActiveSwipeDisabled(parent.SCMSpellID, options)) and not childConfig.forceActiveSwipe
 
 	if useAuraDisplayTime and not shouldReplaceActiveSwipe then
 		return
@@ -347,7 +347,7 @@ end
 
 function Cooldowns.OverrideRegularAuraCooldown(self, parent, options)
 	local config = parent.SCMConfig
-	if not self:GetUseAuraDisplayTime() or config.forceActiveSwipe or not (options.disableRegularIconActiveSwipe or config.hideActiveSwipe) then
+	if not self:GetUseAuraDisplayTime() or config.forceActiveSwipe or not (SCM.IsActiveSwipeDisabled(parent.SCMSpellID, options) or config.hideActiveSwipe) then
 		if not (config.effectRules and config.effectRules.desaturate) then
 			parent.Icon.SCMDesaturated = nil
 		end
@@ -401,7 +401,7 @@ local function OnRegularCooldownChanged(self, changeType)
 	local config = parent.SCMConfig
 	local useAuraDisplayTime = self:GetUseAuraDisplayTime()
 
-	if (options.disableRegularIconActiveSwipe or config.hideActiveSwipe) and not config.forceActiveSwipe and useAuraDisplayTime then
+	if (SCM.IsActiveSwipeDisabled(parent.SCMSpellID, options) or config.hideActiveSwipe) and not config.forceActiveSwipe and useAuraDisplayTime then
 		Cooldowns.OverrideRegularAuraCooldown(self, parent, options)
 	elseif options.disableGCD or (changeType == "CLEAR" and parent.SCMSpellID and Constants.FixBlizzardSpells[parent.SCMSpellID]) then
 		Cooldowns.SetNormalCooldown(self, parent)

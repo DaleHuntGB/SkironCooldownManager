@@ -146,6 +146,7 @@ SCM.DefaultDB = {
 			chargeFrameLevel = 3,
 			applicationsFrameLevel = 3,
 			chargeColour = { r = 1, g = 1, b = 1, a = 1 },
+			applicationsColour = { r = 1, g = 1, b = 1, a = 1 },
 			craftQualityFrameLevel = 2,
 			changeCooldownFont = true,
 			cooldownFont = "Expressway",

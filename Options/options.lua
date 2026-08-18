@@ -39,6 +39,10 @@ function SCM.ShowReloadPopup(data)
 	StaticPopup_Show("SCM_FORCE_RELOAD_POPUP", "This requires a UI reload. Reload now?", nil, data)
 end
 
+function SCM.IsActiveSwipeDisabled(spellID, options)
+	return options.disableRegularIconActiveSwipe or (options.disableDebuffIconActiveSwipe and not SCM.Constants.Debuffs[spellID])
+end
+
 function SCM.Encode(table)
 	local serialized = C_EncodingUtil.SerializeCBOR(table)
 	local compressed = C_EncodingUtil.CompressString(serialized, Enum.CompressionMethod.Deflate, Enum.CompressionLevel.OptimizeForSize)

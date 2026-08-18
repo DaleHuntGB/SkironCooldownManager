@@ -296,6 +296,17 @@ function CDMOptions.SelectRow(widget, rowWidget, parentWidget, anchorOptions, sc
 	end)
 	stacksSettings:AddChild(fontSize)
 
+	local applicationsColour = AceGUI:Create("ColorPicker")
+	applicationsColour:SetLabel("Color")
+	applicationsColour:SetRelativeWidth(0.33)
+	local applicationsColourValue = rowConfig.applicationsColour or options.applicationsColour
+	applicationsColour:SetColor(applicationsColourValue.r, applicationsColourValue.g, applicationsColourValue.b, applicationsColourValue.a or 1)
+	applicationsColour:SetCallback("OnValueChanged", function(_, _, r, g, b, a)
+		rowConfig.applicationsColour = { r = r, g = g, b = b, a = a }
+		Options.ApplyModeConfigUpdate(anchorIndex, mode)
+	end)
+	stacksSettings:AddChild(applicationsColour)
+
 	if not isBuffBar then
 		local chargeSettings = AceGUI:Create("InlineGroup")
 		chargeSettings:SetFullWidth(true)

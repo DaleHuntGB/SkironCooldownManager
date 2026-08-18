@@ -81,8 +81,8 @@ local function ApplyChargeAndApplicationStyle(child, options, fontPath)
 			rowConfig.applicationsYOffset or options.chargeYOffset
 		)
 
-		local chargeColour = rowConfig.chargeColour or options.chargeColour
-		child.Applications.Applications:SetTextColor(chargeColour.r, chargeColour.g, chargeColour.b, chargeColour.a or 1)
+		local applicationsColour = rowConfig.applicationsColour or options.applicationsColour
+		child.Applications.Applications:SetTextColor(applicationsColour.r, applicationsColour.g, applicationsColour.b, applicationsColour.a or 1)
 	end
 end
 
@@ -168,7 +168,7 @@ local function ApplyCooldownSwipe(cooldownFrame, options)
 
 	local childConfig = parent.SCMConfig or {}
 	if cooldownFrame:GetUseAuraDisplayTime() or parent.SCMFakeAuraInstanceID or parent.SCMBuffOptions then
-		if (options.disableRegularIconActiveSwipe or childConfig.hideActiveSwipe) and not childConfig.forceActiveSwipe then
+		if (SCM.IsActiveSwipeDisabled(parent.SCMSpellID, options) or childConfig.hideActiveSwipe) and not childConfig.forceActiveSwipe then
 			if options.recolorNormalSwipe then
 				cooldownFrame:SetSwipeColor(unpack(options.normalSwipeColor))
 			else
@@ -629,6 +629,9 @@ function SCM:SkinBuffBar(child, config)
 			rowConfig.applicationsXOffset or options.chargeXOffset,
 			rowConfig.applicationsYOffset or options.chargeYOffset
 		)
+
+		local applicationsColour = rowConfig.applicationsColour or options.applicationsColour
+		applications:SetTextColor(applicationsColour.r, applicationsColour.g, applicationsColour.b, applicationsColour.a or 1)
 	end
 end
 
