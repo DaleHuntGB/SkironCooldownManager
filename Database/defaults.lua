@@ -208,6 +208,73 @@ SCM.DefaultDB = {
 			},
 			recolorActiveSwipe = false,
 			disableRegularIconActiveSwipe = false,
+			limitActiveSwipeToSelectedSpell = false,
+			debuffs = {
+				-- Death Knight
+				-- Unholy
+				-- [77575] = { enabled = true, class = "DEATHKNIGHT" },
+
+				-- Demon Hunter
+
+				-- Druid
+				-- Guardian + Balance
+				[8921] = { enabled = true, class = "DRUID" }, -- Moonfire
+				-- Balance + Restoration
+				[93402] = { enabled = true, class = "DRUID" }, -- Sunfire
+				-- Restoration + Feral
+				[1822] = { enabled = true, class = "DRUID" }, -- Rake
+				[1079] = { enabled = true, class = "DRUID" }, -- Rip
+				-- Feral
+				[155625] = { enabled = true, class = "DRUID" }, -- Moonfire
+
+				-- Evoker
+
+				-- Hunter
+				[1264359] = { enabled = false, class = "HUNTER" }, -- Wild Thrash
+
+				-- Mage
+				-- Monk
+
+				-- Paladin
+				-- Protection + Holy
+				[26573] = { enabled = true, class = "PALADIN" }, -- Consecration
+
+				-- Priest
+				[10060] = { enabled = false, class = "PRIEST"}, -- Power Infusion
+				-- Discipline + Shadow
+				[589] = { enabled = true, class = "PRIEST" }, -- Shadow Word: Pain
+				-- Shadow
+				[34914] = { enabled = true, class = "PRIEST"}, -- Vampiric Touch
+				[335467] = { enabled = true, class = "PRIEST"}, -- Shadow Word: Madness
+
+				-- Rogue
+				[315496] = { enabled = true, class = "ROGUE" }, -- Slice and Dice
+				-- Assassination
+				[1943] = { enabled = true, class = "ROGUE" }, -- Rupture
+				[32645] = { enabled = true, class = "ROGUE" }, -- Envenom
+				[703] = { enabled = true, class = "ROGUE" }, -- Garrote
+
+				-- Shaman
+				-- Elemental + Restoration
+				[470411] = { enabled = true, class = "SHAMAN" }, -- Flame Shock
+				-- Enhancement
+				-- [470057] = { enabled = true, class = "SHAMAN" }, -- Flame Shock
+
+				-- Warlock
+				-- Destruction
+				[348] = { enabled = true, class = "WARLOCK" }, -- Immolate
+				-- Affliction
+				[172] = { enabled = true, class = "WARLOCK" }, -- Corruption
+				[980] = { enabled = true, class = "WARLOCK" }, -- Agony
+				[1259790] = { enabled = true, class = "WARLOCK" }, -- Unstable Affliction
+				-- Destruction + Affliction
+				[445468] = { enabled = true, class = "WARLOCK" }, -- Wither
+				-- Demonology
+				[264178] = { enabled = true, class = "WARLOCK" }, -- Demonbolt
+
+				-- Warrior
+				[772] = { enabled = true, class = "WARRIOR" }, -- Rend
+			},
 			disableGCD = false,
 			activeSwipeColor = { 0, 0, 0, 0.7 },
 			normalSwipeColor = { 0.1, 0.1, 0.1, 0.7 },

@@ -423,11 +423,13 @@ end
 
 local classFileNameToID = {}
 
---- Returns a table of { [classFile] = displayString } for all classes.
+--- Returns a table of { [classFile] = displayString } and a localized, alphabetically sorted array of classFile values.
 --- Populates the shared classFileNameToID lookup as a side effect.
 --- Pass addAll=true to include an "ALL" = "ALL" entry (for export/import filters).
 function Utils.GetClassList(addAll)
 	local classes = {}
+	local classNames = {}
+	local sortedClasses = {}
 
 	if addAll then
 		classes["ALL"] = "ALL"
@@ -435,15 +437,22 @@ function Utils.GetClassList(addAll)
 
 	for classIndex = 1, GetNumClasses() do
 		local className, classFile, classID = GetClassInfo(classIndex)
-		if className and classFile and classID then
-			local classColor = GetClassColorObj(classFile)
-			local classAtlas = GetClassAtlas(classFile)
-			classes[classFile] = classAtlas and ("|A:%s:0:0|a %s"):format(classAtlas, classColor:WrapTextInColorCode(className)) or classColor:WrapTextInColorCode(className)
-			classFileNameToID[classFile] = classID
-		end
+		local classColor = GetClassColorObj(classFile)
+		local classAtlas = GetClassAtlas(classFile)
+		classes[classFile] = classAtlas and ("|A:%s:0:0|a %s"):format(classAtlas, classColor:WrapTextInColorCode(className)) or classColor:WrapTextInColorCode(className)
+		classFileNameToID[classFile] = classID
+		classNames[classFile] = className
+		sortedClasses[#sortedClasses + 1] = classFile
 	end
 
-	return classes
+	table.sort(sortedClasses, function(firstClass, secondClass)
+		return classNames[firstClass] < classNames[secondClass]
+	end)
+	if addAll then
+		table.insert(sortedClasses, 1, "ALL")
+	end
+
+	return classes, sortedClasses
 end
 
 --- Returns a table of { [specID] = displayString } for all specs of the given class.

@@ -204,6 +204,31 @@ local function GetCooldownBreakpointComponents(displayStyle, minValue)
 	end
 end
 
+local function GetDebuffsByClass(debuffOptions)
+	local debuffsByClass = {}
+
+	for spellID, debuff in pairs(debuffOptions) do
+		local classDebuffs = debuffsByClass[debuff.class]
+		if not classDebuffs then
+			classDebuffs = {}
+			debuffsByClass[debuff.class] = classDebuffs
+		end
+
+		classDebuffs[#classDebuffs + 1] = {
+			spellID = spellID,
+			name = C_Spell.GetSpellName(spellID) or tostring(spellID),
+		}
+	end
+
+	for _, classDebuffs in pairs(debuffsByClass) do
+		table.sort(classDebuffs, function(firstDebuff, secondDebuff)
+			return firstDebuff.name < secondDebuff.name
+		end)
+	end
+
+	return debuffsByClass
+end
+
 local function SelectGlobalSettingsTab(tabWidget, scrollFrame, group, options)
 	tabWidget:ReleaseChildren()
 
@@ -572,6 +597,52 @@ local function SelectGlobalSettingsTab(tabWidget, scrollFrame, group, options)
 			options.disableRegularIconActiveSwipe = value
 		end)
 		activeSwipeSettings:AddChild(disableRegularIconActiveSwipe)
+
+		local limitActiveSwipeToSelectedSpell = AceGUI:Create("CheckBox")
+		limitActiveSwipeToSelectedSpell:SetRelativeWidth(0.5)
+		limitActiveSwipeToSelectedSpell:SetLabel("Limit Active Swipe to Selected Spells")
+		limitActiveSwipeToSelectedSpell:SetValue(options.limitActiveSwipeToSelectedSpell)
+		limitActiveSwipeToSelectedSpell:SetCallback("OnValueChanged", function(_, _, value)
+			options.limitActiveSwipeToSelectedSpell = value
+		end)
+		activeSwipeSettings:AddChild(limitActiveSwipeToSelectedSpell)
+
+		local debuffSettings = AceGUI:Create("TabGroup")
+		debuffSettings:SetLayout("flow")
+		debuffSettings:SetFullWidth(true)
+		debuffSettings:SetTitle("Selected Spells")
+
+		local classNames, sortedClasses = SCM.Utils.GetClassList(false)
+		local debuffsByClass = GetDebuffsByClass(options.debuffs)
+		local classTabs = {}
+		for _, classFile in ipairs(sortedClasses) do
+			if debuffsByClass[classFile] then
+				classTabs[#classTabs + 1] = { value = classFile, text = classNames[classFile] }
+			end
+		end
+		debuffSettings:SetTabs(classTabs)
+		debuffSettings:SetCallback("OnGroupSelected", function(self, _, classFile)
+			self:ReleaseChildren()
+
+			for _, debuffInfo in ipairs(debuffsByClass[classFile]) do
+				local debuffSpellID = debuffInfo.spellID
+				local debuffToggle = AceGUI:Create("CheckBox")
+				debuffToggle:SetRelativeWidth(0.5)
+				debuffToggle:SetImage(C_Spell.GetSpellTexture(debuffSpellID))
+				debuffToggle:SetLabel(string.format("%s (%d)", debuffInfo.name, debuffSpellID))
+				debuffToggle:SetValue(options.debuffs[debuffSpellID].enabled)
+				debuffToggle:SetCallback("OnValueChanged", function(_, _, value)
+					options.debuffs[debuffSpellID].enabled = value
+				end)
+				self:AddChild(debuffToggle)
+			end
+
+			self:DoLayout()
+			activeSwipeSettings:DoLayout()
+			scrollFrame:DoLayout()
+		end)
+		activeSwipeSettings:AddChild(debuffSettings)
+		debuffSettings:SelectTab(classTabs[1].value)
 	elseif group == "Icons" then
 		local iconSettings = AceGUI:Create("InlineGroup")
 		iconSettings:SetLayout("flow")

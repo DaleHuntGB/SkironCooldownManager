@@ -40,7 +40,14 @@ function SCM.ShowReloadPopup(data)
 end
 
 function SCM.IsActiveSwipeDisabled(spellID, options)
-	return options.disableRegularIconActiveSwipe or (options.disableDebuffIconActiveSwipe and not SCM.Constants.Debuffs[spellID])
+	if options.disableRegularIconActiveSwipe then
+		return true
+	end
+
+	if options.limitActiveSwipeToSelectedSpell then
+		local selectedSpell = options.debuffs[spellID]
+		return not selectedSpell or not selectedSpell.enabled
+	end
 end
 
 function SCM.Encode(table)
