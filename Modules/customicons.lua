@@ -209,6 +209,7 @@ local function AcquireCustomIconFrame(customFrames, id)
 		frame.OutOfRange:SetTexelSnappingBias(0)
 		frame.OutOfRange:SetSnapToPixelGrid(false)
 		frame:HookScript("OnShow", OnCustomIconShow)
+		frame:HookScript("OnHide", SCM.StopChildGlows)
 		frame.SCMCustomIconInitialized = true
 	end
 

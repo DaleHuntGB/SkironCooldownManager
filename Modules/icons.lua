@@ -18,6 +18,8 @@ local function OnSetAlpha(self)
 	UIParent.SetAlpha(self, self.SCMHidden and 0 or 1)
 end
 function Icons.HideChild(child)
+	SCM.StopChildGlows(child)
+
 	if child.SCMSpellID and not child.SCMBuffOptions and not child.SCMBuffBar then
 		Cache.cachedChildsBySpellID[child.SCMSpellID] = nil
 	end
@@ -36,8 +38,6 @@ function Icons.HideChild(child)
 	child:EnableMouse(false)
 	child:SetMouseClickEnabled(false)
 	child:SetMouseMotionEnabled(false)
-	SCM:StopCustomGlow(child)
-
 	if not child.SCMAlphaHook then
 		child.SCMAlphaHook = true
 		hooksecurefunc(child, "SetAlpha", OnSetAlpha)
@@ -93,6 +93,9 @@ function Icons.SetChildVisibilityState(child, shouldShow, applyNow)
 		end
 		return
 	end
+	if not child.SCMShouldBeVisible or child.SCMLayoutLimited then
+		SCM.StopChildGlows(child)
+	end
 
 	if child.SCMCustom and not child:GetAttribute("statehidden") then
 		local shouldBeShown = child.SCMShouldBeVisible and not child.SCMLayoutLimited
@@ -141,20 +144,25 @@ local function OnShow(child)
 end
 
 local function OnHide(child)
-	if child.SCMGroup and (child.SCMChanged or child.SCMBuffBar) then
+	local shouldRefresh = child.SCMGroup and (child.SCMChanged or child.SCMBuffBar)
+	if shouldRefresh then
 		if child.SCMBuffBar then
 			if child.SCMFakeAuraInstanceID and child.SCMFixedDuration and GetTime() < child.SCMFixedDuration then
-				return
+				shouldRefresh = false
 			elseif child:IsShown() and child.Cooldown and child.Cooldown:IsVisible() then
-				return
+				shouldRefresh = false
+			else
+				child.SCMFixedDuration = nil
+				child.SCMFakeAuraInstanceID = nil
 			end
-
-			child.SCMFixedDuration = nil
-			child.SCMFakeAuraInstanceID = nil
 		end
 
-		SCM:ApplyAnchorGroupCDManagerConfig(child.SCMGroup, child.SCMGlobal, child.viewerFrame and child.viewerFrame.SCMUpdateScope)
+		if shouldRefresh then
+			SCM:ApplyAnchorGroupCDManagerConfig(child.SCMGroup, child.SCMGlobal, child.viewerFrame and child.viewerFrame.SCMUpdateScope)
+		end
 	end
+
+	SCM.StopChildGlows(child)
 end
 
 local function OnSetDesaturated(iconTexture)

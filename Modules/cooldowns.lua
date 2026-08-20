@@ -75,7 +75,7 @@ local function OnBuffCooldownEnd(self)
 end
 
 local function OnBuffShowPandemicStateFrame(self)
-	if not self.PandemicIcon or not self.PandemicIcon:IsVisible() then
+	if self.SCMHidden or not self.PandemicIcon or not self.PandemicIcon:IsVisible() then
 		return
 	end
 

@@ -28,9 +28,12 @@ local CHILD_SCM_RESET_FIELDS = {
 	"SCMIconType",
 	"SCMIconTexture",
 	"SCMPandemic",
+	"SCMPandemicStop",
 	"SCMRowConfig",
 	"SCMShouldBeVisible",
 	"SCMGlow",
+	"SCMGlowKey",
+	"SCMPendingCustomGlow",
 	"SCMStateBorders",
 	"SCMActiveStateBorders",
 	"SCMActiveGlow",
@@ -162,13 +165,7 @@ function Utils.ResetChildSCMState(child)
 		child.SCMHideTimer = nil
 	end
 
-	if child.SCMGlow then
-		SCM:StopCustomGlow(child)
-	end
-
-	if SCM.States and SCM.States.StopStateGlows then
-		SCM.States.StopStateGlows(child)
-	end
+	SCM.Icons.StopChildGlows(child)
 	if child.SCMActiveStateBorders and SCM.States and SCM.States.HideAllStateBorders then
 		SCM.States.HideAllStateBorders(child)
 	end

@@ -1,6 +1,5 @@
 local SCM = select(2, ...)
 
-local pendingCustomGlowChildren = {}
 local function OnSpellAlertManagerShowAlert(_, child)
 	local options = SCM.db.profile.options
 	if not child.SCMConfig or not options.useCustomGlow or child.SCMActiveGlow then
@@ -17,22 +16,23 @@ local function OnSpellAlertManagerShowAlert(_, child)
 	child.SCMActiveGlow = true
 	child.SpellActivationAlert:Hide()
 
-	if pendingCustomGlowChildren[child] then
-		pendingCustomGlowChildren[child]:Cancel()
-		pendingCustomGlowChildren[child] = nil
+	if child.SCMPendingCustomGlow then
+		child.SCMPendingCustomGlow:Cancel()
+		child.SCMPendingCustomGlow = nil
 	end
 
 	-- The size of the glow is too large when you start the glow immediately if anyone is wondering why I do that
-	pendingCustomGlowChildren[child] = C_Timer.NewTimer(0, function()
+	child.SCMPendingCustomGlow = C_Timer.NewTimer(0, function()
+		child.SCMPendingCustomGlow = nil
 		SCM:StartCustomGlow(child)
 	end)
 end
 
 local function OnSpellAlertManagerHideAlert(_, child)
 	if child.SCMConfig and child.SCMActiveGlow then
-		if pendingCustomGlowChildren[child] then
-			pendingCustomGlowChildren[child]:Cancel()
-			pendingCustomGlowChildren[child] = nil
+		if child.SCMPendingCustomGlow then
+			child.SCMPendingCustomGlow:Cancel()
+			child.SCMPendingCustomGlow = nil
 		end
 
 		child.SCMActiveGlow = nil

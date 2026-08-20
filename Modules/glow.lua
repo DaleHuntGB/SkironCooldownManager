@@ -117,6 +117,26 @@ function SCM:StopCustomGlow(child, key, glowType)
 	activeGlows[child] = nil
 end
 
+function SCM.StopChildGlows(child)
+	if child.SCMPendingCustomGlow then
+		child.SCMPendingCustomGlow:Cancel()
+		child.SCMPendingCustomGlow = nil
+	end
+	if child.SCMPandemicStop then
+		child.SCMPandemicStop:Cancel()
+		child.SCMPandemicStop = nil
+	end
+
+	child.SCMActiveGlow = nil
+	child.SCMPandemic = nil
+	if child.pandemicBorder then
+		child.pandemicBorder:Hide()
+	end
+
+	SCM:StopCustomGlow(child)
+	SCM.States.StopStateGlows(child)
+end
+
 function SCM:StopAllGlows()
 	for child in pairs(activeGlows) do
 		self:StopCustomGlow(child)
