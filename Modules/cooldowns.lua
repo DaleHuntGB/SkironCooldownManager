@@ -232,7 +232,7 @@ local function GetChildCooldownInfo(child, includeGCD)
 			spellID = FindSpellOverrideByID(child.SCMSpellID) or child.SCMSpellID
 		end
 
-		if spellID then
+		if spellID and not issecretvalue(spellID) then
 			if Constants.CheckActiveSpell[spellID] then
 				local isActiveSpell = not issecretvalue(child.isActiveSpell) and child.isActiveSpell
 				if isActiveSpell then
