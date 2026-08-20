@@ -555,3 +555,43 @@ function SCM:GetAnchor(group, point, anchor, relativePoint, xOffset, yOffset, gr
 
 	return anchorFrame
 end
+
+function SCM:CreateAllAnchorFrames()
+	local config = self.currentConfig
+	if not config then
+		return
+	end
+
+	local anchorConfig = config.anchorConfig
+	if anchorConfig then
+		for group = 1, #anchorConfig do
+			self:GetAnchor(group)
+		end
+	end
+	local aurasAnchorConfig = config.aurasAnchorConfig
+	if aurasAnchorConfig then
+		for group in pairs(aurasAnchorConfig) do
+			self:GetAnchor(group)
+		end
+	end
+
+	local globalAnchorConfig = self.globalAnchorConfig
+	if globalAnchorConfig then
+		for index = 1, #globalAnchorConfig do
+			self:GetAnchor(Utils.ToGlobalGroup(index))
+		end
+	end
+	local globalAurasAnchorConfig = self.globalAurasAnchorConfig
+	if globalAurasAnchorConfig then
+		for index in pairs(globalAurasAnchorConfig) do
+			self:GetAnchor(Utils.ToGlobalGroup(index))
+		end
+	end
+
+	local buffBarsAnchorConfig = config.buffBarsAnchorConfig
+	if buffBarsAnchorConfig then
+		for index = 1, #buffBarsAnchorConfig do
+			self:GetAnchor(Utils.ToBuffBarGroup(index))
+		end
+	end
+end

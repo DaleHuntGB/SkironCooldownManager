@@ -32,13 +32,15 @@ function SCM:PLAYER_ENTERING_WORLD(isInitialLogin, isReload)
 		SCM.build = select(4, GetBuildInfo())
 		SCM.options = SCM.db.profile.options
 
-		SCM.RefreshCooldownViewerData()
+		SCM.PrepareCooldownViewerData()
+		SCM:CreateAllAnchorFrames()
 		SCM:ApplyOptions()
 		SCM:InitializePressOverlay()
 
 		SCM:SetHooks()
 		SCM:InitializeResourceBars()
 		SCM:CreateCastBar()
+		SCM.RefreshCooldownViewerLayout()
 
 		eventFrame:RegisterEvent("PLAYER_EQUIPMENT_CHANGED")
 		eventFrame:RegisterEvent("PLAYER_REGEN_DISABLED")

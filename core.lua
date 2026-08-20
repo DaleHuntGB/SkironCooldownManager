@@ -17,7 +17,7 @@ SCM.CustomEntries = {}
 SCM.Templates = {}
 SCM.States = {}
 
-function SCM.RefreshCooldownViewerData(releaseCustomIcons, skipCustomIconRebuild)
+function SCM.PrepareCooldownViewerData(releaseCustomIcons, skipCustomIconRebuild)
 	SCM:InvalidateAnchorLinks()
 	SCM:UpdateCooldownInfo(true)
 	SCM:UpdateDB()
@@ -30,11 +30,18 @@ function SCM.RefreshCooldownViewerData(releaseCustomIcons, skipCustomIconRebuild
 	if not skipCustomIconRebuild then
 		SCM:CreateAllCustomIcons()
 	end
+end
 
+function SCM.RefreshCooldownViewerLayout()
 	SCM:ApplyAllCDManagerConfigs(true, true)
 	SCM:UpdateCastBar()
 	SCM:RefreshResourceBarConfig()
 	SCM:RefreshAuraContainers()
+end
+
+function SCM.RefreshCooldownViewerData(releaseCustomIcons, skipCustomIconRebuild)
+	SCM.PrepareCooldownViewerData(releaseCustomIcons, skipCustomIconRebuild)
+	SCM.RefreshCooldownViewerLayout()
 end
 
 local function OnProfileChanged(_, _, _, skipReset)
@@ -47,7 +54,9 @@ local function OnProfileChanged(_, _, _, skipReset)
 		SCM.DB:ResetData()
 	end
 
-	SCM.RefreshCooldownViewerData(true)
+	SCM.PrepareCooldownViewerData(true)
+	SCM:CreateAllAnchorFrames()
+	SCM.RefreshCooldownViewerLayout()
 
 	SCM.appliedOptions = nil
 	SCM:ApplyOptions()
