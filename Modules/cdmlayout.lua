@@ -120,6 +120,19 @@ local function GetMatchedAnchorWidth(group, anchorConfig)
 		SCM.SCMRefreshMatchedBuffBarWidths = true
 	elseif not anchorFrame.SCMBuffBarWidthHook then
 		anchorFrame.SCMBuffBarWidthHook = true
+
+		-- SCMAPI.RegisterCallback(castBar, ANCHOR_PROXY_SIZE_CHANGED_EVENT, function(_, proxyGroup, proxy, _width, _height, _selectedAnchorRef, isActiveProxy)
+		-- 	local currentOptions = castBar.barOptions or SCM.castBarConfig
+		-- 	if not (currentOptions.enable and currentOptions.matchParentWidth and isActiveProxy) then
+		-- 		return
+		-- 	end
+-- 
+		-- 	if castBar.SCMActiveAnchorFrame == proxy or castBar.SCMActiveAnchorGroup == proxyGroup then
+		-- 		castBar.SCMActiveAnchorFrame = proxy
+		-- 		SCM:RefreshCastBarWidth()
+		-- 	end
+		-- end)
+
 		anchorFrame:HookScript("OnSizeChanged", function()
 			if InCombatLockdown() or CDM.isLayoutInProgress then
 				SCM.SCMRefreshMatchedBuffBarWidths = true

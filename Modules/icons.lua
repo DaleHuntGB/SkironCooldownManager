@@ -127,8 +127,7 @@ end
 
 local function OnShow(child)
 	UIParent.SetAlpha(child, child.SCMHidden and 0 or 1)
-
-	if child.SCMGroup and child.SCMChanged then
+	if child.SCMGroup and (child.SCMChanged or child.SCMBuffBar) then
 		if child.SCMBuffBar and child.SCMSpellID and (not SCM.OptionsFrame or not SCM.OptionsFrame:IsShown()) then
 			if Constants.FakeAuras[child.SCMSpellID] then
 				child.SCMFakeAuraInstanceID = true
@@ -156,7 +155,7 @@ local function OnHide(child)
 				child.SCMFakeAuraInstanceID = nil
 			end
 		end
-
+		
 		if shouldRefresh then
 			SCM:ApplyAnchorGroupCDManagerConfig(child.SCMGroup, child.SCMGlobal, child.viewerFrame and child.viewerFrame.SCMUpdateScope)
 		end
@@ -193,24 +192,30 @@ function Icons.SetupRegularIconHooks(child, options)
 	Cooldowns.SetupCooldownHooks(child, options)
 end
 
-function Icons.SetupBuffBarHooks(child)
-	if child.SCMShowHook then
-		return
+local function SetBuffBarActiveState(child)
+	local isActive = child.isActive
+	if not issecretvalue(isActive) then
+		if isActive then
+			OnShow(child)
+		else
+			OnHide(child)
+		end
 	end
-	child.SCMShowHook = true
+end
 
+function Icons.SetupBuffBarHooks(child)
 	if child.SCMSpellID and Constants.FakeAuras[child.SCMSpellID] then
-		child:HookScript("OnShow", OnShow)
-		child:HookScript("OnHide", OnHide)
-
 		child.SCMUseFixedDuration = type(Constants.FakeAuras[child.SCMSpellID]) == "number" and Constants.FakeAuras[child.SCMSpellID]
 	else
-		child:HookScript("OnShow", OnShow)
-		hooksecurefunc(child, "OnAuraInstanceInfoSet", OnShow)
-		hooksecurefunc(child, "OnAuraInstanceInfoCleared", OnHide)
-
 		child.SCMFakeAuraInstanceID = nil
 		child.SCMUseFixedDuration = nil
+	end
+
+	if not child.SCMShowHook then
+		child.SCMShowHook = true
+		hooksecurefunc(child, "OnActiveStateChanged", SetBuffBarActiveState)
+		child:HookScript("OnShow", OnShow)
+		child:HookScript("OnHide", OnHide)
 	end
 end
 
@@ -228,7 +233,7 @@ local function GetConfiguredGroupForCategory(childData, categoryIndex)
 		return
 	end
 
-	if (categoryIndex == Enum.CooldownViewerCategory.Essential or categoryIndex == Enum.CooldownViewerCategory.Utility) then
+	if categoryIndex == Enum.CooldownViewerCategory.Essential or categoryIndex == Enum.CooldownViewerCategory.Utility then
 		if childData.source[Enum.CooldownViewerCategory.EquipSlotEssential] then
 			return childData.source[Enum.CooldownViewerCategory.EquipSlotEssential]
 		elseif childData.source[Enum.CooldownViewerCategory.SpecAgnosticEssential] then
@@ -401,7 +406,13 @@ local function ProcessBuffBar(child, options, refreshOptions, refreshGlowOptions
 	Cooldowns.SetupPandemicHooks(child, options)
 	child.SCMBuffBarOptions = options
 
-	local isInactive = not child.auraInstanceID and not child.SCMFakeAuraInstanceID
+	local isInactive
+	if not issecretvalue(child.isActive) then
+		isInactive = not child.isActive
+	else
+		isInactive = not child.auraInstanceID and not child.SCMFakeAuraInstanceID
+	end
+
 	States.SetActiveState(child, not isInactive, true, refreshOptions, refreshGlowOptions)
 
 	local forceShow = options.disableBuffBarHideWhenInactive
