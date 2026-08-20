@@ -83,9 +83,11 @@ function SCM:BAG_UPDATE_DELAYED()
 
 	if self.refreshEquipmentSlotIcons then
 		self.refreshEquipmentSlotIcons = nil
-		SCM.CustomIcons.CreateIcons(SCM.customConfig.slotConfig, false, "slot")
-		SCM.CustomIcons.CreateIcons(SCM.globalCustomConfig.slotConfig, true, "slot")
-		SCM:ApplyAnchorGroupByIconType("slot")
+		C_Timer.After(0, function()
+			SCM.CustomIcons.CreateIcons(SCM.customConfig.slotConfig, false, "slot")
+			SCM.CustomIcons.CreateIcons(SCM.globalCustomConfig.slotConfig, true, "slot")
+			SCM:ApplyAnchorGroupByIconType("slot")
+		end)
 	end
 end
 
