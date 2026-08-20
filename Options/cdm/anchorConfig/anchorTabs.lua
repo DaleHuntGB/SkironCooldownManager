@@ -59,8 +59,13 @@ function CDMOptions.SelectAnchor(widget, parentWidget, anchorIndex, anchorTabsTb
 	end
 
 	local anchorName = data.anchorName
-	if anchorTabsTbl[anchorIndex].text ~= anchorName then
-		anchorTabsTbl[anchorIndex].text = anchorName or ("Anchor " .. anchorIndex)
+	local anchorPrefix = (isGlobal and "G" .. anchorIndex) or (isBuffBar and "B" .. anchorIndex) or anchorIndex
+	local anchorLabel = ((isGlobal or isBuffBar) and ("Anchor " .. anchorPrefix)) or ("Anchor " .. anchorIndex)
+	if anchorName then
+		anchorLabel = anchorPrefix .. " " .. anchorName
+	end
+	if anchorTabsTbl[anchorIndex].text ~= anchorLabel then
+		anchorTabsTbl[anchorIndex].text = anchorLabel
 		widget:SetTabs(anchorTabsTbl)
 	end
 
@@ -116,8 +121,15 @@ function CDMOptions.SelectAnchor(widget, parentWidget, anchorIndex, anchorTabsTb
 	renameAnchorButton:SetCallback("OnClick", function()
 		StaticPopup_Show("SCM_RENAME_ANCHOR", nil, nil, {
 			callback = function(anchorName)
+				if anchorName == "" then
+					anchorName = nil
+				end
 				data.anchorName = anchorName
-				anchorTabsTbl[anchorIndex].text = anchorName
+				anchorLabel = ((isGlobal or isBuffBar) and ("Anchor " .. anchorPrefix)) or ("Anchor " .. anchorIndex)
+				if anchorName then
+					anchorLabel = anchorPrefix .. " " .. anchorName
+				end
+				anchorTabsTbl[anchorIndex].text = anchorLabel
 				widget:SetTabs(anchorTabsTbl)
 				widget:SelectTab(anchorIndex)
 			end,

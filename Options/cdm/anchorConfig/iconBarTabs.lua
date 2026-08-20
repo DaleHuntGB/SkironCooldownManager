@@ -40,7 +40,7 @@ function SCM:AddGlobalAnchor(anchorTabsTbl)
 		},
 	}
 	self:InvalidateAnchorLinks()
-	tinsert(anchorTabsTbl, { value = nextIndex, text = "Anchor " .. nextIndex })
+	tinsert(anchorTabsTbl, { value = nextIndex, text = "Anchor G" .. nextIndex })
 	SCM:ApplyAllCDManagerConfigs()
 	return nextIndex
 end
@@ -59,7 +59,7 @@ function SCM:AddBuffBarAnchor(anchorTabsTbl)
 		},
 	}
 	self:InvalidateAnchorLinks()
-	tinsert(anchorTabsTbl, { value = nextIndex, text = "Anchor " .. nextIndex })
+	tinsert(anchorTabsTbl, { value = nextIndex, text = "Anchor B" .. nextIndex })
 	SCM:ApplyBuffBarCDManagerConfig()
 	return nextIndex
 end
@@ -103,8 +103,14 @@ function SCM:RemoveGlobalAnchor(anchorIndex, anchorTabsTbl)
 		end
 	end
 	for i, tab in ipairs(anchorTabsTbl) do
+		local anchorName = self.db.profile.globalAnchorConfig[i].anchorName
+		local anchorPrefix = "G" .. i
+		local anchorLabel = "Anchor " .. anchorPrefix
+		if anchorName then
+			anchorLabel = anchorPrefix .. " " .. anchorName
+		end
 		tab.value = i
-		tab.text = "Anchor " .. i
+		tab.text = anchorLabel
 	end
 
 	self:InvalidateAnchorLinks()
@@ -154,8 +160,15 @@ function SCM:RemoveBuffBarAnchor(anchorIndex, anchorTabsTbl)
 		end
 	end
 	for i, tab in ipairs(anchorTabsTbl) do
+		local anchorConfig = Utils.GetAnchorConfigForGroup(self.currentConfig, i, nil, true)
+		local anchorName = anchorConfig and anchorConfig.anchorName
+		local anchorPrefix = "B" .. i
+		local anchorLabel = "Anchor " .. anchorPrefix
+		if anchorName then
+			anchorLabel = anchorPrefix .. " " .. anchorName
+		end
 		tab.value = i
-		tab.text = "Anchor " .. i
+		tab.text = anchorLabel
 	end
 
 	self:InvalidateAnchorLinks()
@@ -200,8 +213,14 @@ function SCM:RemoveAnchor(anchorIndex, anchorTabsTbl)
 	end
 
 	for i = removedIndex, #anchorTabsTbl do
+		local anchorConfig = Utils.GetAnchorConfigForGroup(self.currentConfig, i)
+		local anchorName = anchorConfig and anchorConfig.anchorName
+		local anchorLabel = "Anchor " .. i
+		if anchorName then
+			anchorLabel = i .. " " .. anchorName
+		end
 		anchorTabsTbl[i].value = i
-		anchorTabsTbl[i].text = "Anchor " .. i
+		anchorTabsTbl[i].text = anchorLabel
 	end
 
 	self.anchorFrames[#self.anchorFrames]:Hide()
@@ -261,12 +280,20 @@ function CDMOptions.CreateAnchorTabGroup(parent, frame, mode)
 	local sourceConfig = (isGlobal and SCM.globalAnchorConfig) or (isBuffBar and SCM.buffBarsAnchorConfig) or SCM.anchorConfig
 	local anchorTabsTbl = {}
 	for i, anchorConfig in ipairs(sourceConfig) do
+		local anchorPrefix = (isGlobal and "G" .. i) or (isBuffBar and "B" .. i) or i
+		local anchorName
 		if not isGlobal and anchorConfig.useGlobalProfileConfig then
 			local profileAnchorConfig = CDMOptions.GetProfileAnchorConfig(options, anchorConfig, i, isBuffBar)
-			tinsert(anchorTabsTbl, { value = i, text = profileAnchorConfig.anchorName or ("Anchor " .. i) })
+			anchorName = profileAnchorConfig.anchorName
 		else
-			tinsert(anchorTabsTbl, { value = i, text = anchorConfig.anchorName or ("Anchor " .. i) })
+			anchorName = anchorConfig.anchorName
 		end
+
+		local anchorLabel = ((isGlobal or isBuffBar) and ("Anchor " .. anchorPrefix)) or ("Anchor " .. i)
+		if anchorName then
+			anchorLabel = anchorPrefix .. " " .. anchorName
+		end
+		tinsert(anchorTabsTbl, { value = i, text = anchorLabel })
 	end
 
 	anchorTabs:SetTabs(anchorTabsTbl)

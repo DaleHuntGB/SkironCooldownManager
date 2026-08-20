@@ -72,14 +72,6 @@ local function ApplyChargeAndApplicationStyle(child, options, fontPath)
 
 		child.Applications:SetFrameStrata(child:GetFrameStrata())
 		child.Applications:SetFrameLevel(child:GetFrameLevel() + (options.applicationsFrameLevel or 1))
-		child.Applications.Applications:ClearAllPoints()
-		child.Applications.Applications:SetPoint(
-			rowConfig.applicationsPoint or options.chargePoint,
-			child.Icon,
-			rowConfig.applicationsRelativePoint or options.chargeRelativePoint,
-			rowConfig.applicationsXOffset or options.chargeXOffset,
-			rowConfig.applicationsYOffset or options.chargeYOffset
-		)
 
 		local applicationsColour = rowConfig.applicationsColour or options.applicationsColour
 		child.Applications.Applications:SetTextColor(applicationsColour.r, applicationsColour.g, applicationsColour.b, applicationsColour.a or 1)
@@ -420,6 +412,19 @@ function SCM:SkinChild(child, childConfig)
 		ApplyZoomSettings(child, options)
 		ApplyChargeAndApplicationStyle(child, options, LSM:Fetch("font", options.chargeFont))
 		ApplyCooldownStyle(child, options, childConfig, isOptionsOpen)
+	end
+
+	local applications = child.Applications and child.Applications.Applications
+	if applications then
+		local rowConfig = child.SCMRowConfig
+		applications:ClearAllPoints()
+		applications:SetPoint(
+			rowConfig.applicationsPoint or options.chargePoint,
+			child.Icon,
+			rowConfig.applicationsRelativePoint or options.chargeRelativePoint,
+			rowConfig.applicationsXOffset or options.chargeXOffset,
+			rowConfig.applicationsYOffset or options.chargeYOffset
+		)
 	end
 
 	if child.SCMCustom then
