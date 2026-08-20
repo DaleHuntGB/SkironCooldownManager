@@ -165,7 +165,7 @@ function Utils.ResetChildSCMState(child)
 		child.SCMHideTimer = nil
 	end
 
-	SCM.Icons.StopChildGlows(child)
+	SCM.StopChildGlows(child)
 	if child.SCMActiveStateBorders and SCM.States and SCM.States.HideAllStateBorders then
 		SCM.States.HideAllStateBorders(child)
 	end
