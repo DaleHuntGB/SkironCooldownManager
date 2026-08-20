@@ -284,7 +284,7 @@ function CDMOptions.SelectAnchor(widget, parentWidget, anchorIndex, anchorTabsTb
 	advancedConfigTabs:SetLayout("flow")
 	advancedConfigTabs:SetFullWidth(true)
 	advancedConfigTabs:SetHeight(280)
-	advancedConfigTabs:SetTabs({ { value = "spellConfig", text = "Spell Config" }, { value = "rowConfig", text = "Icon Config" } })
+	advancedConfigTabs:SetTabs({ { value = "spellConfig", text = "Spell Config" }, { value = "rowConfig", text = isBuffBar and "Bar Config" or "Icon Config" } })
 	advancedConfigTabs:SetCallback("OnGroupSelected", function(self, _, configType)
 		self:ReleaseChildren()
 
