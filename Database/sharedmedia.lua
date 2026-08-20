@@ -1,6 +1,7 @@
 local LSM = LibStub("LibSharedMedia-3.0")
 
 LSM:Register("border", "1x1", [[Interface\Buttons\WHITE8X8]])
+LSM:Register("font", "Expressway", [[Interface\AddOns\SkironCooldownManager\Media\Fonts\Expressway.ttf]])
 
 local normalFont = CreateFont("Permok_Expressway")
 normalFont:SetFont("Interface\\AddOns\\SkironCooldownManager\\Media\\Fonts\\Expressway.ttf", 13, "OUTLINE")
