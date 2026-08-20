@@ -1,7 +1,6 @@
 local SCM = select(2, ...)
 local LSM = LibStub("LibSharedMedia-3.0")
 
-local originalCooldownFont
 local function ApplyChargeAndApplicationStyle(child, options, fontPath)
 	local rowConfig = child.SCMRowConfig or {}
 	if child.ChargeCount and child.ChargeCount.Current then
@@ -91,8 +90,8 @@ local function ApplyCooldownFont(cooldownFrame, options)
 
 	if options.changeCooldownFont then
 		if cooldownFontString and cooldownFontString.SetFont then
-			if not originalCooldownFont then
-				originalCooldownFont = { cooldownFontString:GetFont() }
+			if not cooldownFontString.SCMOriginalCooldownFont then
+				cooldownFontString.SCMOriginalCooldownFont = { cooldownFontString:GetFont() }
 			end
 
 			local parent = cooldownFrame.SCMParent or cooldownFrame:GetParent()
@@ -119,10 +118,11 @@ local function ApplyCooldownFont(cooldownFrame, options)
 					fontOutline = config.cooldownFontOutline
 				end
 
+				cooldownFontString.SCMApplyingCooldownFont = true
 				cooldownFontString:SetFont(fontPath, fontSize, fontOutline)
+				cooldownFontString.SCMApplyingCooldownFont = nil
 				cooldownFontString:SetShadowColor(0, 0, 0, 0)
 				cooldownFontString:SetShadowOffset(0, 0)
-
 				cooldownFontString:ClearAllPoints()
 
 				local point = "CENTER"
@@ -140,10 +140,21 @@ local function ApplyCooldownFont(cooldownFrame, options)
 				cooldownFontString:SetPoint(point, parent, relativePoint, xOffset, yOffset)
 			end
 		end
-	elseif originalCooldownFont then
-		if cooldownFontString and cooldownFontString.SetFont then
-			cooldownFontString:SetFont(unpack(originalCooldownFont))
-		end
+	elseif cooldownFontString and cooldownFontString.SCMOriginalCooldownFont then
+		cooldownFontString.SCMApplyingCooldownFont = true
+		cooldownFontString:SetFont(unpack(cooldownFontString.SCMOriginalCooldownFont))
+		cooldownFontString.SCMApplyingCooldownFont = nil
+	end
+
+	if cooldownFontString and not cooldownFontString.SCMCooldownFontHook then
+		cooldownFontString.SCMCooldownFontHook = true
+		hooksecurefunc(cooldownFontString, "SetFont", function(self)
+			if self.SCMApplyingCooldownFont or not SCM.db.profile.options.changeCooldownFont then
+				return
+			end
+
+			ApplyCooldownFont(cooldownFrame)
+		end)
 	end
 
 	local parent = cooldownFrame.SCMParent or cooldownFrame:GetParent()
