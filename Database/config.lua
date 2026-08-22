@@ -127,7 +127,8 @@ function SCM:UpdateCooldownInfo()
 		return
 	end
 
-	self.defaultCooldownViewerConfig = {
+	local previousConfig = self.defaultCooldownViewerConfig
+	local defaultCooldownViewerConfig = {
 		cooldownIDs = {},
 		spellIDs = {},
 	}
@@ -135,7 +136,7 @@ function SCM:UpdateCooldownInfo()
 	local dataProvider = CooldownViewerSettings:GetDataProvider()
 	local displayData = dataProvider and dataProvider.displayData.cooldownInfoByID
 	for _, cooldownCategory in pairs(CooldownViewerSettingsDataProvider_GetCategories()) do
-		self.defaultCooldownViewerConfig[cooldownCategory] = {
+		defaultCooldownViewerConfig[cooldownCategory] = {
 			spellIDs = {},
 			cooldownIDs = {},
 		}
@@ -146,20 +147,30 @@ function SCM:UpdateCooldownInfo()
 			local data = displayData and displayData[cooldownID]
 			if info and data then
 				data = CopyTable(data)
-				self.defaultCooldownViewerConfig[cooldownCategory][data.cooldownID] = data
-				self.defaultCooldownViewerConfig[cooldownCategory].cooldownIDs[data.cooldownID] = data
-				self.defaultCooldownViewerConfig.cooldownIDs[data.cooldownID] = data
+				if issecretvalue(data.spellID) then
+					data = previousConfig and previousConfig.cooldownIDs[cooldownID]
+				end
 
-				local spellID = data.spellID
-				if spellID and not issecretvalue(spellID) then
-					self.defaultCooldownViewerConfig[cooldownCategory].spellIDs[spellID] = data
-					self.defaultCooldownViewerConfig.spellIDs[spellID] = data
-					for _, linkedSpellID in ipairs(data.linkedSpellIDs or {}) do
-						self.defaultCooldownViewerConfig[cooldownCategory].spellIDs[linkedSpellID] = data
-						self.defaultCooldownViewerConfig.spellIDs[linkedSpellID] = data
+				if data then
+					defaultCooldownViewerConfig[cooldownCategory][cooldownID] = data
+					defaultCooldownViewerConfig[cooldownCategory].cooldownIDs[cooldownID] = data
+					defaultCooldownViewerConfig.cooldownIDs[cooldownID] = data
+
+					local spellID = data.spellID
+					if spellID then
+						defaultCooldownViewerConfig[cooldownCategory].spellIDs[spellID] = data
+						defaultCooldownViewerConfig.spellIDs[spellID] = data
+						for _, linkedSpellID in ipairs(data.linkedSpellIDs or {}) do
+							if not issecretvalue(linkedSpellID) then
+								defaultCooldownViewerConfig[cooldownCategory].spellIDs[linkedSpellID] = data
+								defaultCooldownViewerConfig.spellIDs[linkedSpellID] = data
+							end
+						end
 					end
 				end
 			end
 		end
 	end
+
+	self.defaultCooldownViewerConfig = defaultCooldownViewerConfig
 end
