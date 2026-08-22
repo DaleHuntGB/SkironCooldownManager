@@ -234,6 +234,7 @@ function SCM:ACTIVE_PLAYER_SPECIALIZATION_CHANGED()
 	SCM:ResetResourceBar()
 
 	C_Timer.After(0.5, function()
+		SCM:UpdateCooldownInfo()
 		SCM.RefreshCooldownViewerData(true)
 	end)
 end
