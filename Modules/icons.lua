@@ -110,7 +110,7 @@ function Icons.SetChildVisibilityState(child, shouldShow, applyNow)
 end
 
 function Icons.UpdateChildDesaturation(child, shouldDesaturate, forceDesaturation)
-	if child.Icon and child.SCMConfig and child.SCMSpellID then
+	if child.Icon and child.SCMConfig then
 		if forceDesaturation then
 			child.Icon.SCMDesaturated = shouldDesaturate
 		else
@@ -155,7 +155,7 @@ local function OnHide(child)
 				child.SCMFakeAuraInstanceID = nil
 			end
 		end
-		
+
 		if shouldRefresh then
 			SCM:ApplyAnchorGroupCDManagerConfig(child.SCMGroup, child.SCMGlobal, child.viewerFrame and child.viewerFrame.SCMUpdateScope)
 		end
