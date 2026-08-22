@@ -242,7 +242,7 @@ function CDMOptions.SelectRow(widget, rowWidget, parentWidget, anchorOptions, sc
 	widget:AddChild(stacksSettings)
 
 	local applicationsPoint = AceGUI:Create("Dropdown")
-	applicationsPoint:SetRelativeWidth(0.5)
+	applicationsPoint:SetRelativeWidth(0.25)
 	applicationsPoint:SetLabel("Point")
 	applicationsPoint:SetList(SCM.Constants.AnchorPoints)
 	applicationsPoint:SetValue(rowConfig.applicationsPoint or options.chargePoint)
@@ -253,7 +253,7 @@ function CDMOptions.SelectRow(widget, rowWidget, parentWidget, anchorOptions, sc
 	stacksSettings:AddChild(applicationsPoint)
 
 	local applicationsRelativePoint = AceGUI:Create("Dropdown")
-	applicationsRelativePoint:SetRelativeWidth(0.5)
+	applicationsRelativePoint:SetRelativeWidth(0.25)
 	applicationsRelativePoint:SetLabel("Relative Point")
 	applicationsRelativePoint:SetList(SCM.Constants.AnchorPoints)
 	applicationsRelativePoint:SetValue(rowConfig.applicationsRelativePoint or options.chargeRelativePoint)
@@ -264,7 +264,7 @@ function CDMOptions.SelectRow(widget, rowWidget, parentWidget, anchorOptions, sc
 	stacksSettings:AddChild(applicationsRelativePoint)
 
 	local xOffset = AceGUI:Create("Slider")
-	xOffset:SetRelativeWidth(0.33)
+	xOffset:SetRelativeWidth(0.25)
 	xOffset:SetSliderValues(-50, 50, 0.1)
 	xOffset:SetLabel("X Offset")
 	xOffset:SetValue(rowConfig.applicationsXOffset or options.chargeXOffset)
@@ -275,7 +275,7 @@ function CDMOptions.SelectRow(widget, rowWidget, parentWidget, anchorOptions, sc
 	stacksSettings:AddChild(xOffset)
 
 	local yOffset = AceGUI:Create("Slider")
-	yOffset:SetRelativeWidth(0.33)
+	yOffset:SetRelativeWidth(0.25)
 	yOffset:SetSliderValues(-50, 50, 0.1)
 	yOffset:SetLabel("Y Offset")
 	yOffset:SetValue(rowConfig.applicationsYOffset or options.chargeYOffset)
@@ -369,16 +369,6 @@ function CDMOptions.SelectRow(widget, rowWidget, parentWidget, anchorOptions, sc
 		end)
 		chargeSettings:AddChild(chargeFontSize)
 
-		local truncateWhenZero = AceGUI:Create("CheckBox")
-		truncateWhenZero:SetLabel("Truncate When Zero")
-		truncateWhenZero:SetRelativeWidth(0.33)
-		truncateWhenZero:SetValue(rowConfig.chargeTruncateWhenZero)
-		truncateWhenZero:SetCallback("OnValueChanged", function(_, _, value)
-			rowConfig.chargeTruncateWhenZero = value
-			Options.ApplyModeConfigUpdate(anchorIndex, mode)
-		end)
-		chargeSettings:AddChild(truncateWhenZero)
-
 		local chargeColour = AceGUI:Create("ColorPicker")
 		chargeColour:SetLabel("Color")
 		chargeColour:SetRelativeWidth(0.33)
@@ -392,6 +382,16 @@ function CDMOptions.SelectRow(widget, rowWidget, parentWidget, anchorOptions, sc
 			Options.ApplyModeConfigUpdate(anchorIndex, mode)
 		end)
 		chargeSettings:AddChild(chargeColour)
+
+		local truncateWhenZero = AceGUI:Create("CheckBox")
+		truncateWhenZero:SetLabel("Truncate When Zero")
+		truncateWhenZero:SetRelativeWidth(0.33)
+		truncateWhenZero:SetValue(rowConfig.chargeTruncateWhenZero)
+		truncateWhenZero:SetCallback("OnValueChanged", function(_, _, value)
+			rowConfig.chargeTruncateWhenZero = value
+			Options.ApplyModeConfigUpdate(anchorIndex, mode)
+		end)
+		chargeSettings:AddChild(truncateWhenZero)
 
 		local cooldownSettings = AceGUI:Create("InlineGroup")
 		cooldownSettings:SetFullWidth(true)
