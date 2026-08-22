@@ -64,6 +64,7 @@ function SCM:PLAYER_ENTERING_WORLD(isInitialLogin, isReload)
 		eventFrame:RegisterUnitEvent("UNIT_SPELLCAST_SUCCEEDED", "player")
 
 		SCM.initialized = true
+		SCM.InCombatLockdown = InCombatLockdown()
 		SCM.Callbacks:Fire("SCM_Ready")
 		SCM.CheckForDisabledCooldowns()
 
@@ -184,6 +185,8 @@ function SCM:SPELL_ACTIVATION_OVERLAY_GLOW_HIDE(spellID)
 end
 
 function SCM:PLAYER_EQUIPMENT_CHANGED()
+	if self.initialized and self.InCombatLockdown then return end
+
 	SCM:CreateAllCustomIcons("slot")
 	SCM:ApplyAnchorGroupByIconType("slot")
 end
@@ -197,9 +200,14 @@ function SCM:PLAYER_EQUIPED_SPELLS_CHANGED()
 	eventFrame:UnregisterEvent("PLAYER_EQUIPED_SPELLS_CHANGED")
 end
 
-function SCM:PLAYER_REGEN_DISABLED() end
+function SCM:PLAYER_REGEN_DISABLED()
+	self.InCombatLockdown = true
+end
 function SCM:PLAYER_REGEN_ENABLED()
+	self.InCombatLockdown = nil
+
 	if not self.appliedOptions then
+		refreshItemCooldownsAfterCombat = false
 		self:ApplyOptions()
 		SCM.RefreshCooldownViewerData()
 		return
