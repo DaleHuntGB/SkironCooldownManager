@@ -349,6 +349,7 @@ SCM.DefaultDB = {
 				useFrequentPowerUpdates = false,
 				maelstromOverflowColor = { r = 0.25, g = 0.70, b = 1.00 },
 				comboPointsOverflowColor = { r = 0.25, g = 0.70, b = 1.00 },
+				runeRechargeColor = { r = 0.55, g = 0.55, b = 0.55 },
 				staggerDisplayAsPercent = false,
 				staggerColors = {
 					light = { r = 0.52, g = 1.00, b = 0.52 },
