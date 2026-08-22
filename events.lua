@@ -122,42 +122,54 @@ end
 
 local isSpellCooldownUpdateThrottled = false
 local pendingSpellCooldownIDs = {}
+local pendingItemCooldownIDs = {}
+local refreshItemCooldownsAfterCombat = false
 
-local function PendingSpellCooldownPredicate(config)
-	return pendingSpellCooldownIDs[config.spellID]
+local function PendingSpellCooldownPredicate(config, _, iconType)
+	if refreshItemCooldownsAfterCombat and not SCM.InCombatLockdown and (iconType == "slot" or iconType == "item") then
+		return true
+	end
+
+	return pendingSpellCooldownIDs[config.spellID] or pendingItemCooldownIDs[config.spellID]
 end
 
 local function OnSpellCooldownUpdateThrottleTick()
-	if not next(pendingSpellCooldownIDs) then
-		isSpellCooldownUpdateThrottled = false
-		return
+	isSpellCooldownUpdateThrottled = false
+
+	if next(pendingItemCooldownIDs) then
+		SCM:ApplyAnchorGroupByIconTypes(false, PendingSpellCooldownPredicate, "item", "slot")
+		if refreshItemCooldownsAfterCombat and not SCM.InCombatLockdown then
+			refreshItemCooldownsAfterCombat = false
+		end
 	end
 
-	isSpellCooldownUpdateThrottled = true
-	C_Timer.After(0.1, OnSpellCooldownUpdateThrottleTick)
-	SCM:ApplyAnchorGroupByIconTypes(false, PendingSpellCooldownPredicate, "spell", "item", "slot")
-	SCM:UpdateCustomIconsGCD()
+	if next(pendingSpellCooldownIDs) then
+		SCM:ApplyAnchorGroupByIconTypes(false, PendingSpellCooldownPredicate, "spell")
+		SCM:UpdateCustomIconsGCD()
+	end
+
 	wipe(pendingSpellCooldownIDs)
+	wipe(pendingItemCooldownIDs)
 end
 
-function SCM:SPELL_UPDATE_COOLDOWN(spellID)
+function SCM:SPELL_UPDATE_COOLDOWN(spellID, _, categoryID)
 	if not spellID then
 		return
 	end
 
-	if isSpellCooldownUpdateThrottled then
+	if categoryID and SCM.Constants.ItemCategories[categoryID] then
+		refreshItemCooldownsAfterCombat = true
+		pendingItemCooldownIDs[spellID] = true
+	else
 		pendingSpellCooldownIDs[spellID] = true
-		return
 	end
 
-	local predicate = function(config)
-		return config.spellID == spellID
+	if isSpellCooldownUpdateThrottled then
+		return
 	end
 
 	isSpellCooldownUpdateThrottled = true
 	C_Timer.After(0.1, OnSpellCooldownUpdateThrottleTick)
-	SCM:ApplyAnchorGroupByIconTypes(false, predicate, "spell", "item", "slot")
-	SCM:UpdateCustomIconsGCD()
 end
 
 function SCM:SPELL_UPDATE_USABLE()

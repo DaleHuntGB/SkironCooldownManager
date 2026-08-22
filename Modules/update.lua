@@ -63,13 +63,13 @@ function SCM:ApplyAnchorGroupCDManagerConfig(group, isGlobal, updateScope, refre
 	self:ReleaseScopedGroupCache(scopedGroups)
 end
 
-local function GetScopeGroupsForConfig(customConfig, scopedGroups, isGlobal, predicate)
+local function GetScopeGroupsForConfig(customConfig, scopedGroups, isGlobal, predicate, iconType)
 	if not customConfig then
 		return scopedGroups
 	end
 
 	for id, config in pairs(customConfig) do
-		if not predicate or predicate(config, id) then
+		if not predicate or predicate(config, id, iconType) then
 			local group = isGlobal and ToGlobalGroup(config.anchorGroup) or config.anchorGroup
 			scopedGroups[group] = true
 		end
@@ -112,9 +112,9 @@ function SCM:ApplyAnchorGroupByIconTypes(skipGlobal, predicate, ...)
 	local numIconTypes = select("#", ...)
 	for i = 1, numIconTypes do
 		local iconType = select(i, ...)
-		GetScopeGroupsForConfig(self:GetConfigTable(iconType), scopedGroups, false, predicate)
+		GetScopeGroupsForConfig(self:GetConfigTable(iconType), scopedGroups, false, predicate, iconType)
 		if not skipGlobal then
-			GetScopeGroupsForConfig(self:GetConfigTable(iconType, true), scopedGroups, true, predicate)
+			GetScopeGroupsForConfig(self:GetConfigTable(iconType, true), scopedGroups, true, predicate, iconType)
 		end
 	end
 
