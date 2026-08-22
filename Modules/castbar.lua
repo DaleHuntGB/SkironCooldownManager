@@ -394,7 +394,7 @@ local function HandleCast(unit, durationObject, castType, castBarID, empoweredSt
 		spellName, _, spellTexture, _, _, _, notInterruptible, spellID = UnitChannelInfo(unit)
 	end
 
-	if spellID == 1271478 then
+	if unit == "player" and not issecretvalue(spellID) and spellID == 1271478 then
 		local specID = GetLootSpecialization()
 		if specID and specID > 0 then
 			local specName, _, specIcon = select(2, GetSpecializationInfoByID(specID))
