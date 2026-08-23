@@ -54,9 +54,9 @@ local function SetElvUIActionButtonHooks()
 
 	if LibActionButton then
 		LibActionButton.RegisterCallback(SCM, "OnButtonCreated", OnLABActionButtonCreated)
-	end
-	for button in pairs(LibActionButton.buttonRegistry) do
-		HookLABActionButton(button)
+		for button in pairs(LibActionButton.buttonRegistry) do
+			HookLABActionButton(button)
+		end
 	end
 end
 
