@@ -1,5 +1,6 @@
 local SCM = select(2, ...)
 local Cache = SCM.Cache
+local LibActionButton = LibStub("LibActionButton-1.0", true)
 
 local blizzardActionButtonHooksSet
 local ellesmereUIActionButtonHooksSet
@@ -31,7 +32,7 @@ local function OnElvUIActionButtonPostClick(button, _, down)
 	SetPressOverlay(button._state_action, down)
 end
 
-local function HookElvUIActionButton(button)
+local function HookLABActionButton(button)
 	if button.SCMPressOverlayHooked then
 		return
 	end
@@ -40,8 +41,8 @@ local function HookElvUIActionButton(button)
 	button:HookScript("PostClick", OnElvUIActionButtonPostClick)
 end
 
-local function OnElvUIActionButtonCreated(_, button)
-	HookElvUIActionButton(button)
+local function OnLABActionButtonCreated(_, button)
+	HookLABActionButton(button)
 end
 
 local function SetElvUIActionButtonHooks()
@@ -51,11 +52,12 @@ local function SetElvUIActionButtonHooks()
 
 	elvUIActionButtonHooksSet = true
 
-	local LAB = ElvUI[1].Libs.LAB
-	for button in pairs(LAB.buttonRegistry) do
-		HookElvUIActionButton(button)
+	if LibActionButton then
+		LibActionButton.RegisterCallback(SCM, "OnButtonCreated", OnLABActionButtonCreated)
 	end
-	LAB.RegisterCallback(SCM, "OnButtonCreated", OnElvUIActionButtonCreated)
+	for button in pairs(LibActionButton.buttonRegistry) do
+		HookLABActionButton(button)
+	end
 end
 
 local function SetBlizzardActionButtonHooks()
