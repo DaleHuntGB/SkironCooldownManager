@@ -24,7 +24,7 @@ local function SetPressOverlay(action, shown)
 	end
 end
 
-local function OnElvUIActionButtonPostClick(button, _, down)
+local function OnLABActionButtonPostClick(button, _, down)
 	if not SCM.options.pressOverlay or button._state_type ~= "action" then
 		return
 	end
@@ -38,7 +38,7 @@ local function HookLABActionButton(button)
 	end
 
 	button.SCMPressOverlayHooked = true
-	button:HookScript("PostClick", OnElvUIActionButtonPostClick)
+	button:HookScript("PostClick", OnLABActionButtonPostClick)
 end
 
 local function OnLABActionButtonCreated(_, button)
@@ -140,7 +140,7 @@ function SCM:InitializePressOverlay()
 
 	SetLABActionButtonHooks()
 	SetBlizzardActionButtonHooks()
-	
+
 	if C_AddOns.IsAddOnLoaded("EllesmereUIActionBars") then
 		SetEllesmereUIActionButtonHooks()
 	end
