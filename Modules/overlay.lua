@@ -45,7 +45,7 @@ local function OnLABActionButtonCreated(_, button)
 	HookLABActionButton(button)
 end
 
-local function SetElvUIActionButtonHooks()
+local function SetLABActionButtonHooks()
 	if elvUIActionButtonHooksSet then
 		return
 	end
@@ -138,12 +138,10 @@ function SCM:InitializePressOverlay()
 		return
 	end
 
-	if C_AddOns.IsAddOnLoaded("ElvUI") and ElvUI[1].private.actionbar.enable then
-		SetElvUIActionButtonHooks()
-	else
-		SetBlizzardActionButtonHooks()
-		if C_AddOns.IsAddOnLoaded("EllesmereUIActionBars") then
-			SetEllesmereUIActionButtonHooks()
-		end
+	SetLABActionButtonHooks()
+	SetBlizzardActionButtonHooks()
+	
+	if C_AddOns.IsAddOnLoaded("EllesmereUIActionBars") then
+		SetEllesmereUIActionButtonHooks()
 	end
 end
