@@ -53,6 +53,16 @@ local function FindBestTarget(scrollView, draggedX, draggedFrame)
 	return best
 end
 
+local function GetDestinationIndex(sourceIndex, targetIndex, after)
+	if sourceIndex < targetIndex then
+		targetIndex = targetIndex - 1
+	end
+	if after then
+		targetIndex = targetIndex + 1
+	end
+	return targetIndex
+end
+
 --[[-----------------------------------------------------------------------------
 Scripts
 -------------------------------------------------------------------------------]]
@@ -63,28 +73,16 @@ local function Controller_OnUpdate(self)
 
 	local draggedX = self:GetCenter()
 	local target = FindBestTarget(self.scrollView, draggedX, self.draggedFrame)
-	self.reorderTarget = target
 	if not target then
 		self.marker:Hide()
-		self.reorderOffset = 0
+		self.destinationIndex = nil
 		return
 	end
 
 	self.marker:Show()
 	local after = UpdateMarkerPosition(target, draggedX, self.marker)
-	if after then
-		if target.data.dataIndex < self.draggedFrame.data.dataIndex then
-			self.reorderOffset = 1
-		else
-			self.reorderOffset = 0
-		end
-	else
-		if target.data.dataIndex < self.draggedFrame.data.dataIndex then
-			self.reorderOffset = 0
-		else
-			self.reorderOffset = -1
-		end
-	end
+	local targetIndex = self.dataProvider:FindIndex(target.data)
+	self.destinationIndex = GetDestinationIndex(self.sourceIndex, targetIndex, after)
 end
 
 local function Button_OnDragStart(self)
@@ -95,9 +93,9 @@ local function Button_OnDragStart(self)
 
 	local controller = self.controller
 	controller.draggedFrame = self
-	controller.draggedIndex = self.data.dataIndex
-	controller.reorderTarget = self
-	controller.reorderOffset = 0
+	controller.draggedData = self.data
+	controller.sourceIndex = self.dataProvider:FindIndex(self.data)
+	controller.destinationIndex = controller.sourceIndex
 	controller.marker:Hide()
 
 	controller:Show()
@@ -115,34 +113,32 @@ local function Button_OnDragStop(self)
 	local controller = self.controller
 	local dataProvider = self.dataProvider
 
-	local source = controller.draggedFrame
-	local sourceIndex = controller.draggedIndex
-	local target = controller.reorderTarget
-	local offset = controller.reorderOffset
+	local sourceData = controller.draggedData
+	local sourceIndex = controller.sourceIndex
+	local destinationIndex = controller.destinationIndex
 
 	controller.draggedFrame = nil
-	controller.draggedIndex = nil
-	controller.reorderTarget = nil
-	controller.reorderOffset = 0
+	controller.draggedData = nil
+	controller.sourceIndex = nil
+	controller.destinationIndex = nil
 	controller.marker:Hide()
 	controller:SetScript("OnUpdate", nil)
 	controller:Hide()
 
-	if source and target then
-		local targetIndex = target.data.dataIndex + offset
-		if sourceIndex == targetIndex then
+	if sourceData and destinationIndex then
+		if sourceIndex == destinationIndex then
 			self.scrollBox:Layout()
 			obj.dragInProgress = nil
 			obj:ResumeLayout()
 			return
 		end
 
-		targetIndex = max(1, min(dataProvider:GetSize(), targetIndex))
+		destinationIndex = max(1, min(dataProvider:GetSize(), destinationIndex))
 
-		if source.data and dataProvider:FindIndex(source.data) then
+		if dataProvider:FindIndex(sourceData) then
 			local sortComparator = dataProvider.sortComparator
 			dataProvider:ClearSortComparator()
-			dataProvider:MoveElementDataToIndex(source.data, targetIndex)
+			dataProvider:MoveElementDataToIndex(sourceData, destinationIndex)
 
 			for i, entry in ipairs(dataProvider:GetCollection()) do
 				if not entry.isAddButton then
@@ -182,9 +178,9 @@ local methods = {
 
 		local controller = self.controller
 		controller.draggedFrame = nil
-		controller.draggedIndex = nil
-		controller.reorderTarget = nil
-		controller.reorderOffset = 0
+		controller.draggedData = nil
+		controller.sourceIndex = nil
+		controller.destinationIndex = nil
 		controller:SetScript("OnUpdate", nil)
 		controller.marker:Hide()
 		controller:Hide()
@@ -357,7 +353,7 @@ local function Constructor()
 	controller:SetFrameStrata("TOOLTIP")
 	controller:Hide()
 	controller.scrollView = scrollView
-	controller.scrollBox = scrollBox
+	controller.dataProvider = dataProvider
 
 	local markerFrame = CreateFrame("Frame", nil, scrollBox)
 	markerFrame:SetSize(2, 45)
