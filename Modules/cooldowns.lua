@@ -243,7 +243,8 @@ local function GetChildCooldownInfo(child, includeGCD)
 			local wasSetFromCharges = not issecretvalue(child.wasSetFromCharges) and child.wasSetFromCharges
 			local wasSetFromCooldown = not issecretvalue(child.wasSetFromCooldown) and child.wasSetFromCooldown
 
-			if wasSetFromCharges and cooldownData and cooldownData.charges then
+			-- I guess just trust Blizzard :). What could go wrong
+			if wasSetFromCharges then
 				local spellCharges = C_Spell.GetSpellCharges(spellID)
 				if spellCharges and spellCharges.isActive then
 					local durationObject = C_Spell.GetSpellChargeDuration(spellID, true)
