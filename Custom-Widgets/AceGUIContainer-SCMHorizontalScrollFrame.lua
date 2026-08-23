@@ -3,7 +3,7 @@ ScrollFrame Container
 Plain container that scrolls its content and doesn't grow in height.
 -------------------------------------------------------------------------------]]
 
-local Type, Version = "SCMHorizontalScrollFrame", 3
+local Type, Version = "SCMHorizontalScrollFrame", 4
 local AceGUI = LibStub and LibStub("AceGUI-3.0", true)
 if not AceGUI or (AceGUI:GetWidgetVersion(Type) or 0) >= Version then
 	return
@@ -13,7 +13,7 @@ local COOLDOWN_CONFIG_KEY_PREFIX = "cooldown:"
 
 -- Lua APIs
 local pairs, ipairs = pairs, ipairs
-local min, max = math.min, math.max
+local abs, min, max = math.abs, math.min, math.max
 
 -- WoW APIs
 local CreateFrame, UIParent = CreateFrame, UIParent
@@ -22,19 +22,13 @@ local CreateFrame, UIParent = CreateFrame, UIParent
 Support functions
 -------------------------------------------------------------------------------]]
 
-local function GetCursorScaled(controller)
-	local x, y = GetCursorPosition()
-	local scale = controller:GetEffectiveScale()
-	return x / scale, y / scale
-end
-
-local function UpdateMarkerPosition(frame, cursorX, marker)
+local function UpdateMarkerPosition(frame, draggedX, marker)
 	local left = frame:GetLeft()
 	local right = frame:GetRight()
 	local centerX = (left + right) / 2
 	marker:ClearAllPoints()
 
-	if cursorX < centerX then
+	if draggedX < centerX then
 		marker:SetPoint("CENTER", frame, "LEFT", -3, 0)
 		return false -- before
 	else
@@ -43,26 +37,12 @@ local function UpdateMarkerPosition(frame, cursorX, marker)
 	end
 end
 
-local function GetHorizontalDistanceToFrame(frame, cursorX)
-	local left = frame:GetLeft()
-	local right = frame:GetRight()
-
-	if cursorX < left then
-		return left - cursorX
-	end
-	if cursorX > right then
-		return cursorX - right
-	end
-
-	return 0
-end
-
-local function FindBestTarget(scrollView, cursorX, draggedFrame)
+local function FindBestTarget(scrollView, draggedX, draggedFrame)
 	local best, bestDistance
-	local snapDistance = 24
 	scrollView:ForEachFrame(function(frame)
-		if frame:IsShown() and not (frame == draggedFrame) and not frame.data.isAddButton then
-			local distance = GetHorizontalDistanceToFrame(frame, cursorX)
+		if frame:IsShown() and frame ~= draggedFrame and not frame.data.isAddButton then
+			local centerX = frame:GetCenter()
+			local distance = abs(centerX - draggedX)
 			if not bestDistance or distance < bestDistance then
 				best = frame
 				bestDistance = distance
@@ -70,11 +50,7 @@ local function FindBestTarget(scrollView, cursorX, draggedFrame)
 		end
 	end)
 
-	if bestDistance and bestDistance <= snapDistance then
-		return best
-	end
-
-	return nil
+	return best
 end
 
 --[[-----------------------------------------------------------------------------
@@ -85,27 +61,29 @@ local function Controller_OnUpdate(self)
 		return
 	end
 
-	local cursorX = GetCursorScaled(self)
-	local target = FindBestTarget(self.scrollView, cursorX, self.draggedFrame)
+	local draggedX = self:GetCenter()
+	local target = FindBestTarget(self.scrollView, draggedX, self.draggedFrame)
 	self.reorderTarget = target
-	self.marker:SetShown(target ~= nil)
-	if target then
-		local after = UpdateMarkerPosition(target, cursorX, self.marker)
-		if after then
-			if target.data.dataIndex < self.draggedFrame.data.dataIndex then
-				self.reorderOffset = 1
-			else
-				self.reorderOffset = 0
-			end
+	if not target then
+		self.marker:Hide()
+		self.reorderOffset = 0
+		return
+	end
+
+	self.marker:Show()
+	local after = UpdateMarkerPosition(target, draggedX, self.marker)
+	if after then
+		if target.data.dataIndex < self.draggedFrame.data.dataIndex then
+			self.reorderOffset = 1
 		else
-			if target.data.dataIndex < self.draggedFrame.data.dataIndex then
-				self.reorderOffset = 0
-			else
-				self.reorderOffset = -1
-			end
+			self.reorderOffset = 0
 		end
 	else
-		self.reorderOffset = -1
+		if target.data.dataIndex < self.draggedFrame.data.dataIndex then
+			self.reorderOffset = 0
+		else
+			self.reorderOffset = -1
+		end
 	end
 end
 
@@ -119,7 +97,8 @@ local function Button_OnDragStart(self)
 	controller.draggedFrame = self
 	controller.draggedIndex = self.data.dataIndex
 	controller.reorderTarget = self
-	controller.marker:Show()
+	controller.reorderOffset = 0
+	controller.marker:Hide()
 
 	controller:Show()
 	controller.Icon:SetTexture(self.data.texture)
@@ -139,7 +118,7 @@ local function Button_OnDragStop(self)
 	local source = controller.draggedFrame
 	local sourceIndex = controller.draggedIndex
 	local target = controller.reorderTarget
-	local offfset = controller.reorderOffset
+	local offset = controller.reorderOffset
 
 	controller.draggedFrame = nil
 	controller.draggedIndex = nil
@@ -150,7 +129,7 @@ local function Button_OnDragStop(self)
 	controller:Hide()
 
 	if source and target then
-		local targetIndex = target.data.dataIndex + offfset
+		local targetIndex = target.data.dataIndex + offset
 		if sourceIndex == targetIndex then
 			self.scrollBox:Layout()
 			obj.dragInProgress = nil
@@ -161,8 +140,6 @@ local function Button_OnDragStop(self)
 		targetIndex = max(1, min(dataProvider:GetSize(), targetIndex))
 
 		if source.data and dataProvider:FindIndex(source.data) then
-			--source.data.dataIndex = targetIndex
-			--dataProvider:Sort()
 			local sortComparator = dataProvider.sortComparator
 			dataProvider:ClearSortComparator()
 			dataProvider:MoveElementDataToIndex(source.data, targetIndex)
@@ -380,6 +357,7 @@ local function Constructor()
 	controller:SetFrameStrata("TOOLTIP")
 	controller:Hide()
 	controller.scrollView = scrollView
+	controller.scrollBox = scrollBox
 
 	local markerFrame = CreateFrame("Frame", nil, scrollBox)
 	markerFrame:SetSize(2, 45)
