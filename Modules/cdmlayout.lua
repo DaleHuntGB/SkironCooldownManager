@@ -29,9 +29,8 @@ local function GetNextLayoutDuplicateChild(child, masterCooldownID, masterChild)
 	return duplicateChild
 end
 
-local function ApplyChildLayout(child, row, anchorGroup, anchorConfig, childAnchor, startPoint, offsetX, useProxyAnchor)
-	child.SCMAnchorGroup = child.SCMShouldBeVisible and anchorGroup or nil
-	child.SCMRowIndex = child.SCMShouldBeVisible and row.rowIndex or nil
+local function ApplyChildLayout(child, row, anchorConfig, childAnchor, startPoint, offsetX, useProxyAnchor)
+	child.SCMRowConfig = row.rowConfig
 	child.SCMAnchorFrameStrata = anchorConfig.frameStrata
 
 	if child.SCMLayoutLimited then
@@ -261,7 +260,6 @@ local function BuildLayoutRows(group, rows, rowConfig, anchorConfig, layoutChild
 		end
 
 		rowCount = rowCount + 1
-		row.rowIndex = rowCount
 		row.startIndex = childIndex
 		row.endIndex = endIndex
 		row.rowConfig = currentRowConfig
@@ -328,8 +326,8 @@ local function ApplyAnchorLayout(group, state, anchorConfig, firstRowWidth, effe
 	return childAnchor, useProxyAnchor, boundsChanged
 end
 
-local function ApplyChildAndDuplicateLayouts(child, row, anchorGroup, anchorConfig, childAnchor, startPoint, offsetX, useProxyAnchor)
-	ApplyChildLayout(child, row, anchorGroup, anchorConfig, childAnchor, startPoint, offsetX, useProxyAnchor)
+local function ApplyChildAndDuplicateLayouts(child, row, anchorConfig, childAnchor, startPoint, offsetX, useProxyAnchor)
+	ApplyChildLayout(child, row, anchorConfig, childAnchor, startPoint, offsetX, useProxyAnchor)
 
 	if not child.SCMLayoutNextDuplicate then
 		return
@@ -340,7 +338,7 @@ local function ApplyChildAndDuplicateLayouts(child, row, anchorGroup, anchorConf
 	local duplicateChild = GetNextLayoutDuplicateChild(child, masterCooldownID, masterChild)
 	while duplicateChild do
 		child = duplicateChild
-		ApplyChildLayout(child, row, anchorGroup, anchorConfig, childAnchor, startPoint, offsetX, useProxyAnchor)
+		ApplyChildLayout(child, row, anchorConfig, childAnchor, startPoint, offsetX, useProxyAnchor)
 		duplicateChild = GetNextLayoutDuplicateChild(child, masterCooldownID, masterChild)
 	end
 end
@@ -355,7 +353,7 @@ local function GetStartPoint(anchorConfig)
 	return verticalPoint .. (growDir == "LEFT" and "RIGHT" or "LEFT")
 end
 
-local function ApplyRowLayouts(layoutChildren, rows, rowCount, anchorGroup, anchorConfig, childAnchor, startPoint, useProxyAnchor)
+local function ApplyRowLayouts(layoutChildren, rows, rowCount, anchorConfig, childAnchor, startPoint, useProxyAnchor)
 	local growDir = anchorConfig.grow or "CENTERED"
 	local baseSpacing = anchorConfig.spacing or 0
 	local centeredRows = growDir == "CENTER" or growDir == "CENTERED" or growDir == "FIXED"
@@ -374,7 +372,7 @@ local function ApplyRowLayouts(layoutChildren, rows, rowCount, anchorGroup, anch
 				offsetX = rowChild * (row.rowIconWidth + baseSpacing)
 			end
 
-			ApplyChildAndDuplicateLayouts(layoutChildren[currentChild], row, anchorGroup, anchorConfig, childAnchor, startPoint, offsetX, useProxyAnchor)
+			ApplyChildAndDuplicateLayouts(layoutChildren[currentChild], row, anchorConfig, childAnchor, startPoint, offsetX, useProxyAnchor)
 		end
 	end
 end
@@ -453,9 +451,8 @@ local function LayoutAnchorGroup(group, visibleChildren, anchorConfig, options, 
 	state.startPoint = GetStartPoint(anchorConfig)
 	state.pivot = pivot
 	local childAnchor, useProxyAnchor, boundsChanged = ApplyAnchorLayout(group, state, anchorConfig, firstRowWidth, effectiveWidth, effectiveHeight, anchorOffsetY, changedGroups)
-	SCM.anchorFrames[group].SCMRowConfigs = rowConfig
 
-	ApplyRowLayouts(layoutChildren, state.rows, rowCount, group, anchorConfig, childAnchor, state.startPoint, useProxyAnchor)
+	ApplyRowLayouts(layoutChildren, state.rows, rowCount, anchorConfig, childAnchor, state.startPoint, useProxyAnchor)
 	LimitOverflowChildren(layoutChildren, totalChildren, layoutChildCount)
 	UpdatePrimaryGroupLayout(group, options, effectiveWidth, rowConfig)
 

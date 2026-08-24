@@ -9,8 +9,7 @@ local FIRST_GLOBAL_GROUP = GLOBAL_GROUP_OFFSET + 1
 local FIRST_BUFF_BAR_GROUP = GLOBAL_BUFF_BAR_OFFSET + 1
 local CHILD_SCM_RESET_FIELDS = {
 	"SCMConfig",
-	"SCMAnchorGroup",
-	"SCMRowIndex",
+	"SCMRowConfig",
 	"SCMConfigID",
 	"SCMCooldownID",
 	"SCMSpellID",
@@ -30,6 +29,7 @@ local CHILD_SCM_RESET_FIELDS = {
 	"SCMIconTexture",
 	"SCMPandemic",
 	"SCMPandemicStop",
+	"SCMRowConfig",
 	"SCMShouldBeVisible",
 	"SCMGlow",
 	"SCMGlowKey",

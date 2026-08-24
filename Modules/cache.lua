@@ -41,10 +41,6 @@ end
 
 function SCM:ResetCooldownViewerRuntimeState()
 	local resetChild = self.Utils.ResetChildSCMState
-	for _, anchorFrame in pairs(self.anchorFrames) do
-		anchorFrame.SCMRowConfigs = nil
-	end
-
 	for viewerName in pairs(SCM.CooldownViewerNameToIndex) do
 		local viewer = _G[viewerName]
 		if viewer then
