@@ -127,7 +127,6 @@ function SCM:UpdateDB()
 	self.currentRace = raceID
 
 	for group, anchorFrame in pairs(self.anchorFrames) do
-		anchorFrame.SCMRowConfigs = nil
 		if group < firstGlobalGroup and not self.anchorConfig[group] then
 			anchorFrame:Hide()
 		elseif Utils.IsGlobalGroup(group) and not self.globalAnchorConfig[group - 100] then

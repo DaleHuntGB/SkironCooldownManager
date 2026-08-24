@@ -264,6 +264,7 @@ local function BuildLayoutRows(group, rows, rowConfig, anchorConfig, layoutChild
 		row.rowIndex = rowCount
 		row.startIndex = childIndex
 		row.endIndex = endIndex
+		row.rowConfig = currentRowConfig
 		row.rowIconWidth = rowIconWidth
 		row.rowIconHeight = rowIconHeight
 		row.rowWidth = rowWidth
@@ -435,21 +436,14 @@ end
 
 local function LayoutAnchorGroup(group, visibleChildren, anchorConfig, options, changedGroups, resetSize, allowLayoutSkip)
 	Cache.cachedVisitedAnchorGroups[group] = true
-	local anchorFrame = SCM.anchorFrames[group]
 	if not anchorConfig then
-		if anchorFrame then
-			anchorFrame.SCMRowConfigs = nil
-		end
 		return
 	end
 
 	local state = GetAnchorState(group)
 	local rowConfig = anchorConfig.rowConfig or DEFAULT_ROW_CONFIG
-	anchorFrame = anchorFrame or SCM:GetAnchor(group)
-	local rowConfigChanged = anchorFrame.SCMRowConfigs ~= rowConfig
-	anchorFrame.SCMRowConfigs = rowConfig
 
-	local layoutChildren, layoutChildCount, hardLimitChildCount = ProcessLayoutChildren(group, visibleChildren, state, anchorConfig, resetSize or rowConfigChanged, allowLayoutSkip)
+	local layoutChildren, layoutChildCount, hardLimitChildCount = ProcessLayoutChildren(group, visibleChildren, state, anchorConfig, resetSize, allowLayoutSkip)
 	if not layoutChildren then
 		return
 	end
@@ -459,6 +453,7 @@ local function LayoutAnchorGroup(group, visibleChildren, anchorConfig, options, 
 	state.startPoint = GetStartPoint(anchorConfig)
 	state.pivot = pivot
 	local childAnchor, useProxyAnchor, boundsChanged = ApplyAnchorLayout(group, state, anchorConfig, firstRowWidth, effectiveWidth, effectiveHeight, anchorOffsetY, changedGroups)
+	SCM.anchorFrames[group].SCMRowConfigs = rowConfig
 
 	ApplyRowLayouts(layoutChildren, state.rows, rowCount, group, anchorConfig, childAnchor, state.startPoint, useProxyAnchor)
 	LimitOverflowChildren(layoutChildren, totalChildren, layoutChildCount)
