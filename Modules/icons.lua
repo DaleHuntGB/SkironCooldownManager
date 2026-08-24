@@ -19,6 +19,8 @@ local function OnSetAlpha(self)
 end
 function Icons.HideChild(child)
 	SCM.StopChildGlows(child)
+	child.SCMAnchorGroup = nil
+	child.SCMRowIndex = nil
 
 	if child.SCMSpellID and not child.SCMBuffOptions and not child.SCMBuffBar then
 		Cache.cachedChildsBySpellID[child.SCMSpellID] = nil
@@ -84,6 +86,10 @@ function Icons.SetChildVisibilityState(child, shouldShow, applyNow)
 
 	child.SCMAppliedVisibility = child.SCMShouldBeVisible and not child.SCMLayoutLimited
 	child.SCMAppliedLayoutLimited = child.SCMLayoutLimited and true or false
+	if not child.SCMAppliedVisibility then
+		child.SCMAnchorGroup = nil
+		child.SCMRowIndex = nil
+	end
 
 	if child.viewerFrame then
 		if shouldShow and not child.SCMLayoutLimited then

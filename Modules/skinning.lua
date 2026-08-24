@@ -1,8 +1,14 @@
 local SCM = select(2, ...)
 local LSM = LibStub("LibSharedMedia-3.0")
 
+local function GetChildRowConfig(child)
+	local anchorFrame = SCM.anchorFrames[child.SCMAnchorGroup]
+	local rowConfigs = anchorFrame and anchorFrame.SCMRowConfigs
+	return rowConfigs and (rowConfigs[child.SCMRowIndex] or rowConfigs[#rowConfigs])
+end
+
 local function ApplyChargeAndApplicationStyle(child, options, fontPath)
-	local rowConfig = child.SCMRowConfig or {}
+	local rowConfig = GetChildRowConfig(child) or {}
 	if child.ChargeCount and child.ChargeCount.Current then
 		local size = rowConfig.chargeFontSize or options.chargeFontSize
 		local outline = rowConfig.chargeFontOutline or options.chargeFontOutline or "OUTLINE"
@@ -33,8 +39,6 @@ local function ApplyChargeAndApplicationStyle(child, options, fontPath)
 		local chargeColour = rowConfig.chargeColour or options.chargeColour
 		child.ChargeCount.Current:SetTextColor(chargeColour.r or 1, chargeColour.g or 1, chargeColour.b or 1, chargeColour.a or 1)
 
-		child.ChargeCount.Current.SCMRowConfig = rowConfig
-
 		if child.SCMCooldownID and not child.SCMCustom then
 			local cooldownData = SCM.defaultCooldownViewerConfig.cooldownIDs[child.SCMCooldownID]
 			if rowConfig and cooldownData and cooldownData.charges and not child.SCMChargeCountHook then
@@ -44,7 +48,8 @@ local function ApplyChargeAndApplicationStyle(child, options, fontPath)
 						return
 					end
 
-					if self.SCMRowConfig and self.SCMRowConfig.chargeTruncateWhenZero then
+					local currentRowConfig = GetChildRowConfig(child)
+					if currentRowConfig and currentRowConfig.chargeTruncateWhenZero then
 						self.SCMSetText = true
 						self:SetText(C_StringUtil.TruncateWhenZero(text))
 						self.SCMSetText = nil
@@ -98,7 +103,7 @@ local function ApplyCooldownFont(cooldownFrame, options)
 			if parent and parent.SCMWidth and parent.SCMHeight then
 				local iconSize = min(parent.SCMWidth, parent.SCMHeight)
 				local childConfig = parent.SCMConfig
-				local config = parent.SCMRowConfig
+				local config = GetChildRowConfig(parent)
 
 				if childConfig and childConfig.cooldownOverrideGlobal then
 					config = childConfig
@@ -427,7 +432,7 @@ function SCM:SkinChild(child, childConfig)
 
 	local applications = child.Applications and child.Applications.Applications
 	if applications then
-		local rowConfig = child.SCMRowConfig
+		local rowConfig = GetChildRowConfig(child) or {}
 		applications:ClearAllPoints()
 		applications:SetPoint(
 			rowConfig.applicationsPoint or options.chargePoint,
@@ -601,7 +606,7 @@ function SCM:SkinBuffBar(child, config)
 		end
 	end
 
-	local rowConfig = child.SCMRowConfig or {}
+	local rowConfig = GetChildRowConfig(child) or {}
 	local fontPath = LSM:Fetch("font", options.chargeFont)
 	if iconFrame.Applications then
 		local applications = iconFrame.Applications

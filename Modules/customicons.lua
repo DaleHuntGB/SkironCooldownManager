@@ -174,12 +174,16 @@ local function OnCustomIconShow(self)
 
 	if self.SCMShouldBeVisible and not self.SCMLayoutApplied then
 		self.SCMAppliedVisibility = false
+		self.SCMAnchorGroup = nil
+		self.SCMRowIndex = nil
 		self:Hide()
 		return
 	end
 
 	if self.SCMIconType ~= "empty" and not self.SCMShouldBeVisible then
 		self.SCMAppliedVisibility = false
+		self.SCMAnchorGroup = nil
+		self.SCMRowIndex = nil
 		self:Hide()
 	end
 end
