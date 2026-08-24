@@ -85,6 +85,7 @@ function SCM:RemoveGlobalAnchor(anchorIndex, anchorTabsTbl)
 	end
 
 	local globalAnchorIndex = ToGlobalGroup(#anchorTabsTbl)
+	self.anchorFrames[globalAnchorIndex].SCMRowConfigs = nil
 	self.anchorFrames[globalAnchorIndex]:Hide()
 	self.anchorFrames[globalAnchorIndex] = nil
 
@@ -126,6 +127,7 @@ function SCM:RemoveBuffBarAnchor(anchorIndex, anchorTabsTbl)
 	local removedGroup = ToBuffBarGroup(anchorIndex)
 	local buffBarAnchorFrame = self.anchorFrames[ToBuffBarGroup(#anchorTabsTbl)]
 	if buffBarAnchorFrame then
+		buffBarAnchorFrame.SCMRowConfigs = nil
 		buffBarAnchorFrame:Hide()
 		self.anchorFrames[ToBuffBarGroup(#anchorTabsTbl)] = nil
 	end
@@ -223,6 +225,7 @@ function SCM:RemoveAnchor(anchorIndex, anchorTabsTbl)
 		anchorTabsTbl[i].text = anchorLabel
 	end
 
+	self.anchorFrames[#self.anchorFrames].SCMRowConfigs = nil
 	self.anchorFrames[#self.anchorFrames]:Hide()
 	self.anchorFrames[#self.anchorFrames] = nil
 
