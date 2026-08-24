@@ -10,6 +10,7 @@ local FIRST_BUFF_BAR_GROUP = GLOBAL_BUFF_BAR_OFFSET + 1
 local CHILD_SCM_RESET_FIELDS = {
 	"SCMConfig",
 	"SCMRowConfig",
+	"SCMSkinned",
 	"SCMConfigID",
 	"SCMCooldownID",
 	"SCMSpellID",
@@ -29,7 +30,6 @@ local CHILD_SCM_RESET_FIELDS = {
 	"SCMIconTexture",
 	"SCMPandemic",
 	"SCMPandemicStop",
-	"SCMRowConfig",
 	"SCMShouldBeVisible",
 	"SCMGlow",
 	"SCMGlowKey",
@@ -172,6 +172,10 @@ function Utils.ResetChildSCMState(child)
 
 	if child.Icon then
 		child.Icon.SCMDesaturated = nil
+	end
+
+	if child.ChargeCount and child.ChargeCount.Current then
+		child.ChargeCount.Current.SCMRowConfig = nil
 	end
 
 	for index = 1, #CHILD_SCM_RESET_FIELDS do

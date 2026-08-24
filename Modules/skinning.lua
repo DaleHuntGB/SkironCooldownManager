@@ -77,8 +77,7 @@ local function ApplyChargeAndApplicationStyle(child, options, fontPath)
 	end
 end
 
-local function ApplyCooldownFont(cooldownFrame, options)
-	options = options or SCM.db.profile.options
+local function GetCooldownFontString(cooldownFrame)
 	local cooldownFontString = cooldownFrame.SCMCooldownFontString
 	if not cooldownFontString then
 		local region = cooldownFrame:GetRegions()
@@ -87,6 +86,13 @@ local function ApplyCooldownFont(cooldownFrame, options)
 			cooldownFrame.SCMCooldownFontString = region
 		end
 	end
+
+	return cooldownFontString
+end
+
+local function ApplyCooldownFont(cooldownFrame, options)
+	options = options or SCM.db.profile.options
+	local cooldownFontString = GetCooldownFontString(cooldownFrame)
 
 	if options.changeCooldownFont then
 		if cooldownFontString and cooldownFontString.SetFont then
@@ -146,21 +152,26 @@ local function ApplyCooldownFont(cooldownFrame, options)
 		cooldownFontString.SCMApplyingCooldownFont = nil
 	end
 
-	if cooldownFontString and not cooldownFontString.SCMCooldownFontHook then
-		cooldownFontString.SCMCooldownFontHook = true
-		hooksecurefunc(cooldownFontString, "SetFont", function(self)
-			if self.SCMApplyingCooldownFont or not SCM.db.profile.options.changeCooldownFont then
-				return
-			end
-
-			ApplyCooldownFont(cooldownFrame)
-		end)
-	end
-
 	local parent = cooldownFrame.SCMParent or cooldownFrame:GetParent()
 	if parent and parent.SCMConfig then
 		cooldownFrame:SetHideCountdownNumbers(parent.SCMConfig.hideCountdownNumbers)
 	end
+end
+
+local function SetupCooldownFontHook(cooldownFrame)
+	local cooldownFontString = GetCooldownFontString(cooldownFrame)
+	if not cooldownFontString or cooldownFontString.SCMCooldownFontHook then
+		return
+	end
+
+	cooldownFontString.SCMCooldownFontHook = true
+	hooksecurefunc(cooldownFontString, "SetFont", function(self)
+		if self.SCMApplyingCooldownFont or not SCM.db.profile.options.changeCooldownFont then
+			return
+		end
+
+		ApplyCooldownFont(cooldownFrame)
+	end)
 end
 
 local function ApplyCooldownSwipe(cooldownFrame, options)
@@ -209,9 +220,7 @@ local function ApplyCooldownSkin(self)
 		if not rule and not (parent and parent.SCMCustom) then
 			ApplyCooldownSwipe(self, options)
 		end
-		if not self.SCMCooldownFontString then
-			ApplyCooldownFont(self, options)
-		end
+		ApplyCooldownFont(self, options)
 	end
 
 	if rule then
@@ -237,11 +246,7 @@ ApplyCooldownRule = function(cooldownFrame, rule)
 end
 SCM.ApplyCooldownRule = ApplyCooldownRule
 
-local function ApplyCooldownPoints(cooldownFrame, child, options, childConfig, isOptionsOpen)
-	if child.SCMCooldownSkinHook and not isOptionsOpen then
-		return
-	end
-
+local function ApplyCooldownPoints(cooldownFrame, child, options, childConfig)
 	local pixel = SCM:PixelPerfectSize(1)
 	local topLeftX, topLeftY = 0, 0
 	local bottomRightX, bottomRightY = -pixel, pixel
@@ -267,13 +272,9 @@ local function ApplyCooldownPoints(cooldownFrame, child, options, childConfig, i
 	cooldownFrame:SetPoint("BOTTOMRIGHT", child, "BOTTOMRIGHT", bottomRightX, bottomRightY)
 end
 
-local function ApplyCooldownStyle(child, options, childConfig, isOptionsOpen)
+local function ApplyCooldownStyle(child, options, childConfig)
 	local cooldownFrame = child.Cooldown
 	if cooldownFrame then
-		if cooldownFrame.SCMCooldownSkinHook and not isOptionsOpen then
-			return
-		end
-
 		if child.CooldownFlash then
 			child.CooldownFlash:SetAlpha(0)
 		end
@@ -282,20 +283,28 @@ local function ApplyCooldownStyle(child, options, childConfig, isOptionsOpen)
 		cooldownFrame:SetFrameLevel(child:GetFrameLevel() + (options.cooldownFrameLevel or 1))
 		cooldownFrame:SetSwipeTexture("Interface\\Buttons\\WHITE8x8")
 		cooldownFrame.SCMParent = child
-		ApplyCooldownPoints(cooldownFrame, child, options, childConfig, isOptionsOpen)
+		ApplyCooldownPoints(cooldownFrame, child, options, childConfig)
 		SCM.Cooldowns.ApplyNumericRuleFormatter(cooldownFrame)
-		ApplyCooldownFont(cooldownFrame, options)
-
-		if child.SCMCooldownSkinHook then
-			return
-		end
-
-		child.SCMCooldownSkinHook = true
-		cooldownFrame.SCMApplyCooldownSkin = true
-
-		SCM.Cooldowns.SetupCooldownHook(cooldownFrame)
 		ApplyCooldownSkin(cooldownFrame)
 	end
+end
+
+local function SetupCooldownStyleHooks(child)
+	local cooldownFrame = child.Cooldown
+	if not cooldownFrame then
+		return
+	end
+
+	SetupCooldownFontHook(cooldownFrame)
+	if child.SCMCooldownSkinHook then
+		return
+	end
+
+	child.SCMCooldownSkinHook = true
+	cooldownFrame.SCMApplyCooldownSkin = true
+
+	SCM.Cooldowns.SetupCooldownHook(cooldownFrame)
+	ApplyCooldownSkin(cooldownFrame)
 end
 
 local function ApplyZoomSettings(child, options)
@@ -422,8 +431,10 @@ function SCM:SkinChild(child, childConfig)
 
 		ApplyZoomSettings(child, options)
 		ApplyChargeAndApplicationStyle(child, options, LSM:Fetch("font", options.chargeFont))
-		ApplyCooldownStyle(child, options, childConfig, isOptionsOpen)
+		ApplyCooldownStyle(child, options, childConfig)
 	end
+
+	SetupCooldownStyleHooks(child)
 
 	local applications = child.Applications and child.Applications.Applications
 	if applications then
