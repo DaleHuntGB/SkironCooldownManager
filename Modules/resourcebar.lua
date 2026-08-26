@@ -1717,7 +1717,7 @@ function SCMResourceBarControllerMixin:UpdateContainerShownState()
 		return
 	end
 
-	if barOptions.hideWhileMounted and self:GetAttribute("statehidden") then
+	if self:GetAttribute("statehidden") then
 		return
 	end
 
