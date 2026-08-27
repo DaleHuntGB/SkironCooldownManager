@@ -487,6 +487,10 @@ local function IsCooldownBuff(categoryID)
 		or categoryID == Enum.CooldownViewerCategory.EquipSlotTracked
 end
 
+local function IsInWrongCategory(categoryID, anchorGroup)
+	return (anchorGroup >= 200 and categoryID ~= Enum.CooldownViewerCategory.TrackedBar) or (anchorGroup < 100 and categoryID ~= Enum.CooldownViewerCategory.TrackedBuff)
+end
+
 local function FixCooldownCategories(data)
 	local dataProvider = CooldownViewerSettings:GetDataProvider()
 
@@ -504,15 +508,17 @@ function SCM.GetDisabledCooldowns()
 	local disabledCooldowns = {}
 	for _, config in pairs(SCM.spellConfig) do
 		local data = cooldownInfoByID[config.cooldownID]
-		if data and IsDisabled(data.category) then
-			local cooldownInfo = C_CooldownViewer.GetCooldownViewerCooldownInfo(config.cooldownID)
-			if cooldownInfo then
-				local categoryID = cooldownInfo.category
+		local cooldownInfo = C_CooldownViewer.GetCooldownViewerCooldownInfo(config.cooldownID)
+		if data and cooldownInfo then
+			local _, anchorGroup = next(config.source)
+			local categoryID = cooldownInfo.category
+			local isCooldownSpell = IsCooldownSpell(categoryID)
+			local isCooldownBuff = IsCooldownBuff(categoryID)
+			if IsDisabled(data.category) or (isCooldownBuff and IsInWrongCategory(data.category, anchorGroup)) then
 				local targetCategoryID
-				if IsCooldownSpell(categoryID) then
+				if isCooldownSpell then
 					targetCategoryID = Enum.CooldownViewerCategory.Essential
-				elseif IsCooldownBuff(categoryID) then
-					local _, anchorGroup = next(config.source)
+				elseif isCooldownBuff then
 					if anchorGroup and anchorGroup > 200 then
 						targetCategoryID = Enum.CooldownViewerCategory.TrackedBar
 					else

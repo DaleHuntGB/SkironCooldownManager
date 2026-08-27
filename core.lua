@@ -60,6 +60,7 @@ local function OnProfileChanged(_, _, _, skipReset)
 
 	SCM.appliedOptions = nil
 	SCM:ApplyOptions()
+	SCM.CheckForDisabledCooldowns()
 
 	local options = SCM.db.profile.options
 	SCM.options = options
