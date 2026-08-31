@@ -86,7 +86,6 @@ function SCM:RemoveGlobalAnchor(anchorIndex, anchorTabsTbl)
 
 	local globalAnchorIndex = ToGlobalGroup(#anchorTabsTbl)
 	self.anchorFrames[globalAnchorIndex]:Hide()
-	self.anchorFrames[globalAnchorIndex] = nil
 
 	for _, globalConfig in pairs({
 		self.db.profile.globalCustomConfig.spellConfig,
@@ -127,7 +126,6 @@ function SCM:RemoveBuffBarAnchor(anchorIndex, anchorTabsTbl)
 	local buffBarAnchorFrame = self.anchorFrames[ToBuffBarGroup(#anchorTabsTbl)]
 	if buffBarAnchorFrame then
 		buffBarAnchorFrame:Hide()
-		self.anchorFrames[ToBuffBarGroup(#anchorTabsTbl)] = nil
 	end
 
 	for configID, config in pairs(self.spellConfig) do
@@ -199,6 +197,7 @@ function SCM:AddAnchor(anchorTabsTbl)
 end
 
 function SCM:RemoveAnchor(anchorIndex, anchorTabsTbl)
+	local oldAnchorCount = #self.anchorConfig
 	if self.anchorConfig[anchorIndex] then
 		tremove(self.anchorConfig, anchorIndex)
 	end
@@ -223,8 +222,7 @@ function SCM:RemoveAnchor(anchorIndex, anchorTabsTbl)
 		anchorTabsTbl[i].text = anchorLabel
 	end
 
-	self.anchorFrames[#self.anchorFrames]:Hide()
-	self.anchorFrames[#self.anchorFrames] = nil
+	self.anchorFrames[oldAnchorCount]:Hide()
 
 	for spellID, config in pairs(self.spellConfig) do
 		for sourceIndex, anchorGroup in pairs(config.source) do

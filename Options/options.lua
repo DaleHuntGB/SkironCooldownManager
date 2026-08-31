@@ -88,23 +88,33 @@ function Options.ApplyModeConfigUpdate(anchorIndex, mode, refreshOptions, refres
 end
 
 function Options.AddAnchorParentAutocomplete(_, editBox, onValueSelected)
-	local suggestionFrame = CreateFrame("Frame", nil, UIParent, "BackdropTemplate")
+	local suggestionFrame = editBox.frame.SCMAnchorSuggestionFrame
+	if not suggestionFrame then
+		suggestionFrame = CreateFrame("Frame", nil, UIParent, "BackdropTemplate")
+		editBox.frame.SCMAnchorSuggestionFrame = suggestionFrame
+		suggestionFrame:SetFrameStrata("TOOLTIP")
+		suggestionFrame:SetFrameLevel(10000)
+		suggestionFrame:SetToplevel(true)
+		suggestionFrame:SetBackdrop({ bgFile = "Interface\\Buttons\\WHITE8x8", edgeFile = "Interface\\Buttons\\WHITE8x8", edgeSize = 1 })
+		suggestionFrame:SetBackdropColor(26 / 255, 26 / 255, 26 / 255, 1)
+		suggestionFrame:SetBackdropBorderColor(0, 0, 0, 1)
+		suggestionFrame:SetScript("OnHide", function(self)
+			self.selectSuggestion = nil
+		end)
+		suggestionFrame:SetScript("OnUpdate", function(self)
+			if not editBox.frame:IsShown() or (not editBox.editbox:HasFocus() and not self:IsMouseOver()) then
+				self:Hide()
+			end
+		end)
+		suggestionFrame.rows = {}
+		suggestionFrame:Hide()
+	end
+
+	suggestionFrame:ClearAllPoints()
 	suggestionFrame:SetPoint("TOPLEFT", editBox.editbox, "BOTTOMLEFT", 0, -2)
 	suggestionFrame:SetPoint("TOPRIGHT", editBox.editbox, "BOTTOMRIGHT", 0, -2)
-	suggestionFrame:SetFrameStrata("TOOLTIP")
-	suggestionFrame:SetFrameLevel(10000)
-	suggestionFrame:SetToplevel(true)
-	suggestionFrame:SetBackdrop({ bgFile = "Interface\\Buttons\\WHITE8x8", edgeFile = "Interface\\Buttons\\WHITE8x8", edgeSize = 1 })
-	suggestionFrame:SetBackdropColor(26 / 255, 26 / 255, 26 / 255, 1)
-	suggestionFrame:SetBackdropBorderColor(0, 0, 0, 1)
-	suggestionFrame:SetScript("OnUpdate", function(self)
-		if not editBox.frame:IsShown() or (not editBox.editbox:HasFocus() and not self:IsMouseOver()) then
-			self:Hide()
-		end
-	end)
-	suggestionFrame:Hide()
 
-	local rows = {}
+	local rows = suggestionFrame.rows
 
 	local function SelectSuggestion(anchor)
 		local text = editBox:GetText() or ""
@@ -152,6 +162,7 @@ function Options.AddAnchorParentAutocomplete(_, editBox, onValueSelected)
 			return
 		end
 
+		suggestionFrame.selectSuggestion = SelectSuggestion
 		for i = 1, #suggestions do
 			local row = rows[i]
 			if not row then
@@ -175,7 +186,10 @@ function Options.AddAnchorParentAutocomplete(_, editBox, onValueSelected)
 					self.highlight:Hide()
 				end)
 				row:SetScript("OnClick", function(self)
-					SelectSuggestion(self.anchor)
+					local selectSuggestion = self:GetParent().selectSuggestion
+					if selectSuggestion then
+						selectSuggestion(self.anchor)
+					end
 				end)
 				rows[i] = row
 			end
@@ -376,11 +390,15 @@ local function OpenOptions()
 	SCM.OptionsFrame = frame
 	LibWindow.RegisterConfig(frame.frame, options.optionsWindow)
 	LibWindow.SetScale(frame.frame, options.menuScale)
-	frame.frame.TitleContainer:HookScript("OnMouseUp", function()
-		if options.savePosition then
-			LibWindow.SavePosition(frame.frame)
-		end
-	end)
+	local titleContainer = frame.frame.TitleContainer
+	if not titleContainer.SCMPositionSaveHook then
+		titleContainer.SCMPositionSaveHook = true
+		titleContainer:HookScript("OnMouseUp", function(self)
+			if SCM.db.profile.options.savePosition then
+				LibWindow.SavePosition(self:GetParent())
+			end
+		end)
+	end
 
 	if options.savePosition then
 		LibWindow.RestorePosition(frame.frame)
@@ -450,6 +468,10 @@ local function OpenOptions()
 
 		if options.savePosition then
 			LibWindow.SavePosition(frame.frame)
+		end
+
+		if not AceGUI:IsReleasing(frame) then
+			frame:Release()
 		end
 	end)
 
