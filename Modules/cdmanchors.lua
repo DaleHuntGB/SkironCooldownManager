@@ -48,7 +48,9 @@ local function GetAnchorState(group)
 end
 
 local function OnChildSetPoint(child)
-	if child.SCMSetPoint then return end
+	if child.SCMSetPoint then
+		return
+	end
 
 	local cooldownID = not child.SCMCustom and (child:GetCooldownID() or child.SCMCooldownID)
 	local anchorData = cooldownID and anchorDataByCooldownID[cooldownID] or not cooldownID and child.SCMAnchorData
@@ -345,13 +347,23 @@ local function OnDebugTextureShow(self)
 	LibCustomGlow.PixelGlow_Start(anchorFrame, nil, nil, nil, nil, nil, nil, nil, nil, "SCM")
 end
 
+local function StopAnchorHighlight(anchorFrame)
+	anchorFrame.SCMHighlightState = nil
+	anchorFrame.isGlowActive = false
+	LibCustomGlow.PixelGlow_Stop(anchorFrame, "SCM")
+end
+
 local function OnDebugTextureHide(self)
 	local anchorFrame = self:GetParent()
 	if anchorFrame then
-		anchorFrame.SCMHighlightState = nil
-		anchorFrame.isGlowActive = false
-		LibCustomGlow.PixelGlow_Stop(anchorFrame, "SCM")
+		StopAnchorHighlight(anchorFrame)
 	end
+end
+
+function SCM:HideAnchorHighlight(anchorFrame)
+	anchorFrame.debugTexture:Hide()
+	anchorFrame.debugText:Hide()
+	StopAnchorHighlight(anchorFrame)
 end
 
 local function RefreshAnchorVisibilitySelection(group, currentAnchorFrame)
@@ -463,7 +475,7 @@ function SCM:GetManagedAnchorChildAnchor(group, groupAnchor, point, anchor, rela
 
 	proxy:SetFrameStrata((groupAnchor and groupAnchor:GetFrameStrata()) or "HIGH")
 	proxy:SetScale((groupAnchor and groupAnchor:GetScale()) or Cache.cachedViewerScale or 1)
-	
+
 	state.currentProxyRequired = nil
 	state.currentProxyActive = true
 
@@ -488,7 +500,8 @@ function SCM:GetAnchor(group, point, anchor, relativePoint, xOffset, yOffset, gr
 		anchorFrame.debugTexture:SetColorTexture(8 / 255, 8 / 255, 8 / 255, 0.4)
 		anchorFrame.debugTexture:SetTexelSnappingBias(0)
 		anchorFrame.debugTexture:SetSnapToPixelGrid(false)
-		anchorFrame.debugTexture:SetShown(self.OptionsFrame ~= nil)
+		local showAnchorHighlight = self.OptionsFrame and self.OptionsFrame:IsShown() and self.db.profile.options.showAnchorHighlight
+		anchorFrame.debugTexture:SetShown(showAnchorHighlight)
 
 		anchorFrame.debugText = anchorFrame:CreateFontString(nil, "OVERLAY", "Permok_Expressway_Large")
 		anchorFrame.debugText:SetPoint("CENTER", anchorFrame, "CENTER", 0, 0)
@@ -500,7 +513,7 @@ function SCM:GetAnchor(group, point, anchor, relativePoint, xOffset, yOffset, gr
 			anchorFrame.debugText:SetText(group)
 		end
 		anchorFrame.debugText:SetFontHeight(35)
-		anchorFrame.debugText:SetShown(self.OptionsFrame ~= nil)
+		anchorFrame.debugText:SetShown(showAnchorHighlight)
 		anchorFrame.debugText:SetTextColor(0.90, 0.62, 0, 1)
 
 		anchorFrame.debugTexture:HookScript("OnShow", OnDebugTextureShow)

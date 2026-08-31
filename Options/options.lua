@@ -421,8 +421,7 @@ local function OpenOptions()
 			end
 		else
 			for _, anchorFrame in pairs(SCM.anchorFrames) do
-				anchorFrame.debugTexture:Hide()
-				anchorFrame.debugText:Hide()
+				SCM:HideAnchorHighlight(anchorFrame)
 			end
 		end
 
@@ -441,8 +440,7 @@ local function OpenOptions()
 		SCM.isOptionsOpen = nil
 		SCM.simulateBuffs = nil
 		for _, anchorFrame in pairs(SCM.anchorFrames) do
-			anchorFrame.debugTexture:Hide()
-			anchorFrame.debugText:Hide()
+			SCM:HideAnchorHighlight(anchorFrame)
 		end
 		SCM.RefreshCooldownViewerData(true)
 		SCM.CheckForDisabledCooldowns()

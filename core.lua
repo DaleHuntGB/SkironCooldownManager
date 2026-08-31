@@ -69,6 +69,10 @@ local function OnProfileChanged(_, _, _, skipReset)
 			anchorFrame.debugTexture:Show()
 			anchorFrame.debugText:Show()
 		end
+	else
+		for _, anchorFrame in pairs(SCM.anchorFrames) do
+			SCM:HideAnchorHighlight(anchorFrame)
+		end
 	end
 end
 
