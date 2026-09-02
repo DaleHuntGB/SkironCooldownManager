@@ -431,10 +431,9 @@ function SCM:ImportGlobalAnchorsFromData(data, refreshData)
 	local currentAnchorCount = #self.db.profile.globalAnchorConfig
 	for index = currentAnchorCount + 1, previousAnchorCount do
 		local globalGroup = self.Utils.ToGlobalGroup(index)
-		local anchorFrame = SCM:GetAnchor(globalGroup)
+		local anchorFrame = self.anchorFrames[globalGroup]
 		if anchorFrame then
 			anchorFrame:Hide()
-			self.anchorFrames[globalGroup] = nil
 		end
 	end
 

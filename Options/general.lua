@@ -292,8 +292,7 @@ local function SelectGlobalSettingsTab(tabWidget, scrollFrame, group, options)
 				end
 			else
 				for _, anchorFrame in pairs(SCM.anchorFrames) do
-					anchorFrame.debugTexture:Hide()
-					anchorFrame.debugText:Hide()
+					SCM:HideAnchorHighlight(anchorFrame)
 				end
 			end
 		end)
