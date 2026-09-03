@@ -1,6 +1,7 @@
 local SCM = select(2, ...)
 local Cache = SCM.Cache
 local LibActionButton = LibStub("LibActionButton-1.0", true)
+local LibActionButton_ElvUI = LibStub("LibActionButton-1.0-ElvUI", true)
 
 local blizzardActionButtonHooksSet
 local ellesmereUIActionButtonHooksSet
@@ -55,6 +56,13 @@ local function SetLABActionButtonHooks()
 	if LibActionButton then
 		LibActionButton.RegisterCallback(SCM, "OnButtonCreated", OnLABActionButtonCreated)
 		for button in pairs(LibActionButton.buttonRegistry) do
+			HookLABActionButton(button)
+		end
+	end
+
+	if LibActionButton_ElvUI then
+		LibActionButton_ElvUI.RegisterCallback(SCM, "OnButtonCreated", OnLABActionButtonCreated)
+		for button in pairs(LibActionButton_ElvUI.buttonRegistry) do
 			HookLABActionButton(button)
 		end
 	end
