@@ -442,12 +442,14 @@ function Utils.GetClassList(addAll)
 
 	for classIndex = 1, GetNumClasses() do
 		local className, classFile, classID = GetClassInfo(classIndex)
+		if classFile then
 		local classColor = GetClassColorObj(classFile)
-		local classAtlas = GetClassAtlas(classFile)
-		classes[classFile] = classAtlas and ("|A:%s:0:0|a %s"):format(classAtlas, classColor:WrapTextInColorCode(className)) or classColor:WrapTextInColorCode(className)
-		classFileNameToID[classFile] = classID
-		classNames[classFile] = className
-		sortedClasses[#sortedClasses + 1] = classFile
+			local classAtlas = GetClassAtlas(classFile)
+			classes[classFile] = classAtlas and ("|A:%s:0:0|a %s"):format(classAtlas, classColor:WrapTextInColorCode(className)) or classColor:WrapTextInColorCode(className)
+			classFileNameToID[classFile] = classID
+			classNames[classFile] = className
+			sortedClasses[#sortedClasses + 1] = classFile
+		end
 	end
 
 	table.sort(sortedClasses, function(firstClass, secondClass)
