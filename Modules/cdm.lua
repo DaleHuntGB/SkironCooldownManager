@@ -263,22 +263,24 @@ end
 
 local layoutUpdateScheduled, pendingLayoutUpdate, pendingRefreshOptions, pendingRefreshGlowOptions
 
-local function OrderCDManagerSpells(updateScope, scopedAnchorGroupsOverride, refreshOptions, refreshGlowOptions)
-	if layoutUpdateScheduled then
+local function OrderCDManagerSpells(updateScope, scopedAnchorGroupsOverride, refreshOptions, refreshGlowOptions, forceLayout)
+	if layoutUpdateScheduled and (not forceLayout or CDM.isLayoutInProgress) then
 		pendingLayoutUpdate = true
 		pendingRefreshOptions = pendingRefreshOptions or refreshOptions
 		pendingRefreshGlowOptions = pendingRefreshGlowOptions or refreshGlowOptions
 		return
 	end
-	layoutUpdateScheduled = true
-	C_Timer.After(0, function()
-		layoutUpdateScheduled = nil
-		if pendingLayoutUpdate then
-			local options, glows = pendingRefreshOptions, pendingRefreshGlowOptions
-			pendingLayoutUpdate, pendingRefreshOptions, pendingRefreshGlowOptions = nil, nil, nil
-			OrderCDManagerSpells(UPDATE_SCOPE.ALL, nil, options, glows)
-		end
-	end)
+	if not layoutUpdateScheduled then
+		layoutUpdateScheduled = true
+		C_Timer.After(0.1, function()
+			layoutUpdateScheduled = nil
+			if pendingLayoutUpdate then
+				local options, glows = pendingRefreshOptions, pendingRefreshGlowOptions
+				pendingLayoutUpdate, pendingRefreshOptions, pendingRefreshGlowOptions = nil, nil, nil
+				OrderCDManagerSpells(UPDATE_SCOPE.ALL, nil, options, glows)
+			end
+		end)
+	end
 	updateScope = updateScope or UPDATE_SCOPE.ALL
 	CDM.isLayoutInProgress = true
 

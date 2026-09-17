@@ -40,22 +40,24 @@ local function OnSpellAlertManagerHideAlert(_, child)
 	end
 end
 
-local function OnEssentialCooldownViewerLayout()
-	SCM:ApplyEssentialCDManagerConfig()
+local function OnEssentialCooldownViewerLayout(viewer)
+	SCM:ApplyEssentialCDManagerConfig(SCM.Icons.IsViewerLayoutDirty(viewer))
 end
 
-local function OnUtilityCooldownViewerLayout()
-	SCM:ApplyUtilityCDManagerConfig()
+local function OnUtilityCooldownViewerLayout(viewer)
+	SCM:ApplyUtilityCDManagerConfig(SCM.Icons.IsViewerLayoutDirty(viewer))
 end
 
 local function OnBuffCooldownViewerLayout(viewer)
+	local forceLayout = SCM.Icons.IsViewerLayoutDirty(viewer)
 	SCM:InvalidateViewerChildrenCache(viewer)
-	SCM:ApplyBuffIconCDManagerConfig()
+	SCM:ApplyBuffIconCDManagerConfig(forceLayout)
 end
 
 local function OnBuffBarViewerLayout(viewer)
+	local forceLayout = SCM.Icons.IsViewerLayoutDirty(viewer)
 	SCM:InvalidateViewerChildrenCache(viewer)
-	SCM:ApplyBuffBarCDManagerConfig()
+	SCM:ApplyBuffBarCDManagerConfig(forceLayout)
 end
 
 local function OnCooldownViewerSettingsRefreshLayout()

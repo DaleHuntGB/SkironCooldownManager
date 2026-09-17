@@ -529,10 +529,10 @@ function SCM.GetDisabledCooldowns()
 
 	local disabledCooldowns = {}
 	for _, config in pairs(SCM.spellConfig) do
+		local _, anchorGroup = next(config.source)
 		local data = cooldownInfoByID[config.cooldownID]
 		local cooldownInfo = C_CooldownViewer.GetCooldownViewerCooldownInfo(config.cooldownID)
-		if data and cooldownInfo then
-			local _, anchorGroup = next(config.source)
+		if anchorGroup and data and cooldownInfo then
 			local categoryID = cooldownInfo.category
 			local isCooldownSpell = IsCooldownSpell(categoryID)
 			local isCooldownBuff = IsCooldownBuff(categoryID)
@@ -542,7 +542,7 @@ function SCM.GetDisabledCooldowns()
 				if isCooldownSpell then
 					targetCategoryID = Enum.CooldownViewerCategory.Essential
 				elseif isCooldownBuff then
-					if anchorGroup and anchorGroup > 200 then
+					if anchorGroup > 200 then
 						targetCategoryID = Enum.CooldownViewerCategory.TrackedBar
 					else
 						targetCategoryID = Enum.CooldownViewerCategory.TrackedBuff

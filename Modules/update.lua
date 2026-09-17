@@ -7,27 +7,27 @@ local Utils = SCM.Utils
 local ToGlobalGroup = Utils.ToGlobalGroup
 local ToBuffBarGroup = Utils.ToBuffBarGroup
 
-function SCM:ApplyEssentialCDManagerConfig()
+function SCM:ApplyEssentialCDManagerConfig(forceLayout)
 	if C_CVar.GetCVar("cooldownViewerEnabled") == "1" and SCM.currentConfig then
-		OrderCDManagerSpells(UPDATE_SCOPE.ESSENTIAL)
+		OrderCDManagerSpells(UPDATE_SCOPE.ESSENTIAL, nil, nil, nil, forceLayout)
 	end
 end
 
-function SCM:ApplyUtilityCDManagerConfig()
+function SCM:ApplyUtilityCDManagerConfig(forceLayout)
 	if SCM.currentConfig then
-		OrderCDManagerSpells(UPDATE_SCOPE.UTILITY)
+		OrderCDManagerSpells(UPDATE_SCOPE.UTILITY, nil, nil, nil, forceLayout)
 	end
 end
 
-function SCM:ApplyBuffIconCDManagerConfig()
+function SCM:ApplyBuffIconCDManagerConfig(forceLayout)
 	if SCM.currentConfig then
-		OrderCDManagerSpells(UPDATE_SCOPE.BUFF)
+		OrderCDManagerSpells(UPDATE_SCOPE.BUFF, nil, nil, nil, forceLayout)
 	end
 end
 
-function SCM:ApplyBuffBarCDManagerConfig()
+function SCM:ApplyBuffBarCDManagerConfig(forceLayout)
 	if SCM.currentConfig then
-		OrderCDManagerSpells(UPDATE_SCOPE.BUFF_BAR)
+		OrderCDManagerSpells(UPDATE_SCOPE.BUFF_BAR, nil, nil, nil, forceLayout)
 	end
 end
 

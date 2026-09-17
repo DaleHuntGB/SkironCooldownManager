@@ -35,7 +35,7 @@ end
 function SCM.RefreshCooldownViewerLayout()
 	SCM:ApplyAllCDManagerConfigs(true, true)
 	SCM:UpdateCastBar()
-	SCM:RefreshResourceBarConfig()
+	SCM:RefreshResourceBarConfig(true, true)
 	SCM:RefreshAuraContainers()
 end
 

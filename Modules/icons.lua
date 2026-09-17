@@ -471,6 +471,7 @@ local function ProcessSingleChild(child, validChildren, categoryIndex, isBuffIco
 
 	AddChildToGroup(validChildren, group, child)
 
+	refreshOptions = refreshOptions or child.SCMConfig ~= groupConfig or child.SCMCooldownID ~= cooldownID
 	child.SCMChanged = child.SCMChanged or (not child.SCMConfig or child.SCMConfig ~= groupConfig) or (not child.SCMCooldownID or child.SCMCooldownID ~= cooldownID)
 	child.SCMConfig = groupConfig
 	child.SCMOrder = groupConfig.order
@@ -536,6 +537,7 @@ local function ProcessSingleBuffBarChild(child, validChildren, categoryIndex, op
 
 	AddChildToGroup(validChildren, group, child)
 
+	refreshOptions = refreshOptions or child.SCMConfig ~= groupConfig or child.SCMCooldownID ~= cooldownID
 	child.SCMChanged = child.SCMChanged or (not child.SCMConfig or child.SCMConfig ~= groupConfig) or (not child.SCMCooldownID or child.SCMCooldownID ~= cooldownID)
 	child.SCMConfig = groupConfig
 	child.SCMOrder = groupConfig.order

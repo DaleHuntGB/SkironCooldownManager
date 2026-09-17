@@ -133,6 +133,21 @@ local function GetMatchedCastBarWidth(options, anchorFrame)
 	return (anchorWidth and anchorWidth > 0) and anchorWidth or nil, anchorFrame
 end
 
+local function HookAnchorWidthRefresh(anchorFrame)
+	if not anchorFrame or anchorFrame.SCMProxyGroup or anchorFrame.SCMCastBarWidthHook then
+		return
+	end
+
+	anchorFrame.SCMCastBarWidthHook = true
+	anchorFrame:HookScript("OnSizeChanged", function(changedAnchor)
+		local castBar = SCM.CastBar
+		local options = castBar and (castBar.barOptions or SCM.castBarConfig)
+		if castBar and options.enable and options.matchParentWidth and castBar.SCMActiveAnchorFrame == changedAnchor then
+			SCM:RefreshCastBarWidth()
+		end
+	end)
+end
+
 local function UpdateIconTexture(spellTexture)
 	local castBar = SCM.CastBar
 	local iconOptions = castBar.barOptions and castBar.barOptions.icon or SCM.castBarConfig.icon
@@ -175,19 +190,8 @@ local function UpdateStatusBarLook(fillColor, bgColor)
 	local matchedWidth = GetMatchedCastBarWidth(options, anchorFrame)
 	local width = matchedWidth or options.width or 270
 
-	if options.matchParentWidth and anchorFrame and not anchorFrame.SCMProxyGroup and not anchorFrame.SCMCastBarWidthHook then
-		anchorFrame.SCMCastBarWidthHook = true
-		anchorFrame:HookScript("OnSizeChanged", function(changedAnchor)
-			local currentCastBar = SCM.CastBar
-			local currentOptions = currentCastBar and (currentCastBar.barOptions or SCM.castBarConfig)
-			if not (currentCastBar and currentOptions.enable and currentOptions.matchParentWidth) then
-				return
-			end
-
-			if currentCastBar.SCMActiveAnchorFrame == changedAnchor then
-				SCM:RefreshCastBarWidth()
-			end
-		end)
+	if options.matchParentWidth then
+		HookAnchorWidthRefresh(anchorFrame)
 	end
 
 	castBar.CurrentFillColor = foregroundColor
@@ -349,6 +353,24 @@ local function UpdateStatusBarLook(fillColor, bgColor)
 		for i = castBar.CurrentChannelTickCount, #castBar.TickLines do
 			castBar.TickLines[i]:Hide()
 		end
+	end
+end
+
+local function RefreshCastBarAnchor(castBar, options)
+	local anchorFrame = UpdateActiveAnchorFrame(castBar, options)
+	if options.matchParentWidth then
+		HookAnchorWidthRefresh(anchorFrame)
+	end
+
+	local width = GetMatchedCastBarWidth(options, anchorFrame) or options.width or 270
+	if castBar:GetWidth() ~= width then
+		UpdateStatusBarLook()
+		if castBar:IsShown() and castBar.CurrentEmpoweredStages and castBar.Status:GetStatusBarTexture() then
+			CreatePips(castBar.CurrentEmpoweredStages)
+		end
+	elseif select(2, castBar:GetPoint(1)) ~= (anchorFrame or UIParent) then
+		castBar:ClearAllPoints()
+		castBar:SetPoint(options.anchors[1], anchorFrame or UIParent, options.anchors[3], options.anchors[4], options.anchors[5])
 	end
 end
 
@@ -553,10 +575,7 @@ function SCM:RefreshCastBarWidth(delay)
 			return
 		end
 
-		UpdateStatusBarLook(currentCastBar.CurrentFillColor)
-		if currentCastBar:IsShown() and currentCastBar.CurrentEmpoweredStages and currentCastBar.Status:GetStatusBarTexture() then
-			CreatePips(currentCastBar.CurrentEmpoweredStages)
-		end
+		RefreshCastBarAnchor(currentCastBar, currentOptions)
 	end)
 end
 
@@ -639,7 +658,7 @@ function SCM:CreateCastBar()
 	SCMAPI.RegisterCallback(castBar, "SkironCooldownManager.ResourceBar.LayoutUpdated", function()
 		local currentOptions = castBar.barOptions or SCM.castBarConfig
 		if currentOptions and currentOptions.enable then
-			UpdateStatusBarLook()
+			RefreshCastBarAnchor(castBar, currentOptions)
 		end
 	end)
 	self:UpdateCastBar()
