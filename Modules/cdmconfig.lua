@@ -67,7 +67,7 @@ function SCM:UpdateDB()
 	local firstGlobalGroup = SCM.Utils.ToGlobalGroup(1)
 	local firstBuffBarGroup = SCM.Utils.ToBuffBarGroup(1)
 	local class = Utils.GetClass()
-	local specID, _, _, _, role = Utils.GetSpec()
+	local specID, _, _, _, role = Utils.GetSpec() or 1
 	local _, _, raceID = UnitRace("player")
 
 	local currentConfig = self.DB:LoadData()

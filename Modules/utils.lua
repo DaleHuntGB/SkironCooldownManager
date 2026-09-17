@@ -421,7 +421,9 @@ function Utils.GetClass()
 end
 
 function Utils.GetSpec()
-	return GetSpecializationInfo(GetSpecialization())
+	if GetSpecialization then
+		return GetSpecializationInfo(GetSpecialization())
+	end
 end
 
 local classFileNameToID = {}
