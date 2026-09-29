@@ -33,12 +33,10 @@ function SCM:PLAYER_ENTERING_WORLD(isInitialLogin, isReload)
 		SCM.options = SCM.db.profile.options
 
 		SCM.PrepareCooldownViewerData()
-		SCM:CreateAllAnchorFrames()
+		SCM:InitializeAllAnchorFrames()
 		SCM:ApplyOptions()
 
 		SCM:SetHooks()
-		SCM:InitializeResourceBars()
-		SCM:CreateCastBar()
 		SCM.RefreshCooldownViewerLayout()
 
 		eventFrame:RegisterEvent("PLAYER_EQUIPMENT_CHANGED")

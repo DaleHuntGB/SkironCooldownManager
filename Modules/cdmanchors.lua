@@ -588,7 +588,7 @@ function SCM:ResetAnchors()
 	end
 end
 
-function SCM:CreateAllAnchorFrames()
+function SCM:InitializeAllAnchorFrames()
 	local config = self.currentConfig
 	if not config then
 		return

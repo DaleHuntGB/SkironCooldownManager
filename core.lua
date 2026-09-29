@@ -34,7 +34,7 @@ end
 
 function SCM.RefreshCooldownViewerLayout()
 	SCM:ApplyAllCDManagerConfigs(true, true)
-	SCM:UpdateCastBar()
+	SCM:InitializeCastBar()
 	SCM:RefreshResourceBarConfig(true, true)
 	SCM:RefreshAuraContainers()
 end
@@ -55,7 +55,7 @@ local function OnProfileChanged(_, _, _, skipReset)
 	end
 
 	SCM.PrepareCooldownViewerData(true)
-	SCM:CreateAllAnchorFrames()
+	SCM:InitializeAllAnchorFrames()
 	SCM.RefreshCooldownViewerLayout()
 
 	SCM.appliedOptions = nil

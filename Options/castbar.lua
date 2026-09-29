@@ -166,7 +166,7 @@ local function AddCastBarTextAnchorControls(parent, title, anchors, refreshFn)
 end
 
 local function RefreshCastBar()
-	SCM:CreateCastBar()
+	SCM:InitializeCastBar()
 end
 
 local function UpdateIconControlStates(iconOptions, iconPosition, matchBarHeight, iconZoom, iconSize)

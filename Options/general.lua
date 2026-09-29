@@ -693,7 +693,7 @@ local function SelectGlobalSettingsTab(tabWidget, scrollFrame, group, options)
 		borderSize:SetValue(options.borderSize or 1)
 		borderSize:SetCallback("OnValueChanged", function(_, _, value)
 			options.borderSize = value
-			SCM:CreateCastBar()
+			SCM:InitializeCastBar()
 			SCM:ApplyAllCDManagerConfigs()
 		end)
 		borderSettings:AddChild(borderSize)

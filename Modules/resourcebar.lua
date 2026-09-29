@@ -1957,10 +1957,7 @@ function SCM:RefreshResourceBarConfig(refreshTicks, optionsChanged)
 
 	if not container.SCMResourceBarInitialized then
 		self:InitializeResourceBars()
-		container = _G[RESOURCE_BAR_FRAME_NAME]
-		if not container or not container.SCMResourceBarInitialized then
-			return
-		end
+		return
 	end
 
 	container:RefreshResourceBars(refreshTicks, optionsChanged)

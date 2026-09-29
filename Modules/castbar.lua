@@ -599,7 +599,7 @@ function SCM:ResetCastBar()
 	end
 end
 
-function SCM:CreateCastBar()
+function SCM:InitializeCastBar()
 	if self.CastBar then
 		self:UpdateCastBar()
 		return self.CastBar
