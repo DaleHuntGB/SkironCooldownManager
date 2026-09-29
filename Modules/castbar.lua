@@ -593,6 +593,12 @@ function SCM:RefreshCastBarLayout()
 	end
 end
 
+function SCM:ResetCastBar()
+	if self.CastBar and not InCombatLockdown() then
+		self.CastBar:ClearAllPoints()
+	end
+end
+
 function SCM:CreateCastBar()
 	if self.CastBar then
 		self:UpdateCastBar()

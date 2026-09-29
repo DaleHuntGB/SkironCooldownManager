@@ -366,6 +366,18 @@ function SCM:HideAnchorHighlight(anchorFrame)
 	StopAnchorHighlight(anchorFrame)
 end
 
+local function SetGroupAnchorPoint(anchorFrame, group, point, target, relativePoint, xOffset, yOffset)
+	anchorFrame:ClearAllPoints()
+	local success = pcall(anchorFrame.SetPoint, anchorFrame, point, target, relativePoint, xOffset, yOffset)
+	if not success then
+		anchorFrame:SetPoint(point, UIParent, "CENTER", xOffset, yOffset)
+		if anchorFrame.SCMInvalidAnchorTarget ~= target then
+			SCM:Print("|cffff4040Invalid anchor for group " .. group .. ": " .. (target:GetName() or "unnamed frame") .. ". Using screen center.|r")
+		end
+	end
+	anchorFrame.SCMInvalidAnchorTarget = not success and target or nil
+end
+
 local function RefreshAnchorVisibilitySelection(group, currentAnchorFrame)
 	local state = Cache.cachedAnchorStates[group]
 	if not (state and state.currentAnchorFrame == currentAnchorFrame) then
@@ -480,8 +492,7 @@ function SCM:GetManagedAnchorChildAnchor(group, groupAnchor, point, anchor, rela
 	state.currentProxyActive = true
 
 	proxy:SetSize(max(frameWidth, 1), max(frameHeight, 1))
-	proxy:ClearAllPoints()
-	proxy:SetPoint(self:GetAnchorPivot(point, growDir), target, relativePoint, GetAnchorPointOffsets(point, growDir, offsetWidth, xOffset, yOffset, anchorOffsetY))
+	SetGroupAnchorPoint(proxy, group, self:GetAnchorPivot(point, growDir), target, relativePoint, GetAnchorPointOffsets(point, growDir, offsetWidth, xOffset, yOffset, anchorOffsetY))
 	proxy:Show()
 
 	return proxy, true
@@ -548,8 +559,7 @@ function SCM:GetAnchor(group, point, anchor, relativePoint, xOffset, yOffset, gr
 
 	anchorFrame:SetSize(frameWidth, frameHeight)
 	anchorFrame:SetScale(Cache.cachedViewerScale or 1)
-	anchorFrame:ClearAllPoints()
-	anchorFrame:SetPoint(pivot, target, relativePoint, appliedXOffset, appliedYOffset)
+	SetGroupAnchorPoint(anchorFrame, group, pivot, target, relativePoint, appliedXOffset, appliedYOffset)
 	anchorFrame:Show()
 	RemoveProxy(state)
 
@@ -567,6 +577,15 @@ function SCM:GetAnchor(group, point, anchor, relativePoint, xOffset, yOffset, gr
 	end
 
 	return anchorFrame
+end
+
+function SCM:ResetAnchors()
+	if InCombatLockdown() then
+		return
+	end
+	for _, anchorFrame in pairs(self.anchorFrames) do
+		anchorFrame:ClearAllPoints()
+	end
 end
 
 function SCM:CreateAllAnchorFrames()

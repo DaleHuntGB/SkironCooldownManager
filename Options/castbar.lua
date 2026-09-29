@@ -42,16 +42,21 @@ local function AddAnchorControls(parent, title, anchors, refreshFn, relativeFram
 	relativeTo:SetRelativeWidth(1)
 	relativeTo:SetLabel(relativeFrameHelp or "Anchor Frame")
 	relativeTo:SetText(anchors[2] or "")
-	relativeTo:SetCallback("OnEnterPressed", function(self, _, text)
+	local function SetAnchor(text)
+		if Options.IsCircularAnchor(SCM.CastBar, text) then
+			relativeTo:SetText(anchors[2] or "")
+			SCM:Print("|cffff4040Anchor unchanged: that choice would create a circular dependency.|r")
+			return
+		end
 		anchors[2] = text ~= "" and text or nil
-		self:SetText(anchors[2] or "")
+		relativeTo:SetText(anchors[2] or "")
 		refreshFn()
+	end
+	relativeTo:SetCallback("OnEnterPressed", function(_, _, text)
+		SetAnchor(text)
 	end)
 	anchorGroup:AddChild(relativeTo)
-	Options.AddAnchorParentAutocomplete(anchorGroup, relativeTo, function(text)
-		anchors[2] = text ~= "" and text or nil
-		refreshFn()
-	end)
+	Options.AddAnchorParentAutocomplete(anchorGroup, relativeTo, SetAnchor)
 
 	local point = AceGUI:Create("Dropdown")
 	point:SetRelativeWidth(0.5)

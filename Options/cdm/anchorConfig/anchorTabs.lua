@@ -178,15 +178,20 @@ function CDMOptions.SelectAnchor(widget, parentWidget, anchorIndex, anchorTabsTb
 	relativeTo:SetRelativeWidth(isBuffBar and 0.25 or 0.33)
 	relativeTo:SetLabel("Anchor Frame")
 	relativeTo:SetText(data.anchor[2])
-	relativeTo:SetCallback("OnEnterPressed", function(self, event, text)
+	local function SetAnchor(text)
+		if Options.IsCircularAnchor(SCM:GetAnchor(Options.GetEffectiveAnchorGroup(anchorIndex, mode)), text) then
+			relativeTo:SetText(data.anchor[2])
+			SCM:Print("|cffff4040Anchor unchanged: that choice would create a circular dependency.|r")
+			return
+		end
 		data.anchor[2] = text
 		Options.ApplyModeConfigUpdate(anchorIndex, mode)
+	end
+	relativeTo:SetCallback("OnEnterPressed", function(_, _, text)
+		SetAnchor(text)
 	end)
 	anchorOptions:AddChild(relativeTo)
-	Options.AddAnchorParentAutocomplete(anchorOptions, relativeTo, function(text)
-		data.anchor[2] = text
-		Options.ApplyModeConfigUpdate(anchorIndex, mode)
-	end)
+	Options.AddAnchorParentAutocomplete(anchorOptions, relativeTo, SetAnchor)
 
 	local relativePoint = AceGUI:Create("Dropdown")
 	relativePoint:SetRelativeWidth(isBuffBar and 0.25 or 0.33)

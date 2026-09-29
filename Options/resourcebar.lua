@@ -211,16 +211,22 @@ local function AddPositionSettings(parent, settings)
 	anchorFrame:SetRelativeWidth(0.33)
 	anchorFrame:SetLabel("Anchor Frame")
 	anchorFrame:SetText(settings.anchorFrame or "ANCHOR:1")
-	anchorFrame:SetCallback("OnEnterPressed", function(self, _, text)
-		settings.anchorFrame = (text and text ~= "" and text) or "ANCHOR:1"
-		self:SetText(settings.anchorFrame)
+	local function SetAnchor(text)
+		text = text ~= "" and text or "ANCHOR:1"
+		if Options.IsCircularAnchor(_G.SCM_ResourceBarContainer, text) then
+			anchorFrame:SetText(settings.anchorFrame or "ANCHOR:1")
+			SCM:Print("|cffff4040Anchor unchanged: that choice would create a circular dependency.|r")
+			return
+		end
+		settings.anchorFrame = text
+		anchorFrame:SetText(text)
 		RefreshResourceBars()
+	end
+	anchorFrame:SetCallback("OnEnterPressed", function(_, _, text)
+		SetAnchor(text)
 	end)
 	positionSettings:AddChild(anchorFrame)
-	Options.AddAnchorParentAutocomplete(positionSettings, anchorFrame, function(text)
-		settings.anchorFrame = (text and text ~= "" and text) or "ANCHOR:1"
-		RefreshResourceBars()
-	end)
+	Options.AddAnchorParentAutocomplete(positionSettings, anchorFrame, SetAnchor)
 
 	local relativePoint = AceGUI:Create("Dropdown")
 	relativePoint:SetRelativeWidth(0.33)
