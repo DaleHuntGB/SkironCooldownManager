@@ -30,6 +30,7 @@ end
 function SCM:PLAYER_ENTERING_WORLD(isInitialLogin, isReload)
 	if isInitialLogin or isReload then
 		SCM.build = select(4, GetBuildInfo())
+		SCM.isForever = SCM.build >= 16000 and SCM.build < 20000
 		SCM.options = SCM.db.profile.options
 
 		SCM.PrepareCooldownViewerData()

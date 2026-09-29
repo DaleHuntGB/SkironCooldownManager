@@ -363,6 +363,10 @@ local function GetCurrentPowerValue(resourceKind, powerType, spellID, segmentCou
 		return GetIciclesValue()
 	end
 
+	if powerType == Enum.PowerType.ComboPoints and SCM.isForever then
+		return UnitExists("target") and GetComboPoints("player", "target") or 0, UnitPowerMax("player", powerType)
+	end
+
 	local currentValue = UnitPower("player", powerType)
 	local maxValue = UnitPowerMax("player", powerType)
 	return currentValue, maxValue
@@ -603,6 +607,7 @@ local function ConfigureBarForResource(bar, resource)
 	local powerToken = resource.powerToken
 	local spellID = resource.spellID
 	local registerUnitAura = resource.registerUnitAura or (resource.registerUnitAuraSpecs and resource.registerUnitAuraSpecs[Utils.GetSpec()])
+	local registerPlayerTarget = SCM.isForever and powerType == Enum.PowerType.ComboPoints
 	local segmentCount = resource.segmentCount
 
 	if resource.segmentCountTalentSpellID and resource.talentSegmentCount and IsPlayerSpell(resource.segmentCountTalentSpellID) then
@@ -621,6 +626,7 @@ local function ConfigureBarForResource(bar, resource)
 		or bar.powerToken ~= powerToken
 		or bar.spellID ~= spellID
 		or bar.SCMRegisterUnitAura ~= registerUnitAura
+		or bar.SCMRegisterPlayerTarget ~= registerPlayerTarget
 		or segmentCountChanged
 
 	if not resourceChanged then
@@ -629,8 +635,9 @@ local function ConfigureBarForResource(bar, resource)
 
 	local eventsChanged = bar.resourceKind ~= resourceKind
 		or bar.SCMRegisterUnitAura ~= registerUnitAura
-		or (not bar.powerToken) ~= (not powerToken)
-		or (not bar.powerType) ~= (not powerType)
+		or bar.SCMRegisterPlayerTarget ~= registerPlayerTarget
+		or (not bar.powerToken) ~= not powerToken
+		or (not bar.powerType) ~= not powerType
 		or (bar.powerType == Enum.PowerType.ComboPoints) ~= (powerType == Enum.PowerType.ComboPoints)
 
 	if segmentCountChanged then
@@ -644,6 +651,7 @@ local function ConfigureBarForResource(bar, resource)
 	bar.segmentCount = segmentCount
 	bar.SCMConfiguredSegmentCount = segmentCount
 	bar.SCMRegisterUnitAura = registerUnitAura
+	bar.SCMRegisterPlayerTarget = registerPlayerTarget
 
 	return true, eventsChanged
 end
@@ -1093,6 +1101,10 @@ local function RegisterBarEvents(bar, barOptions)
 		if not bar.powerType then
 			return
 		end
+	end
+
+	if bar.SCMRegisterPlayerTarget then
+		bar:RegisterEvent("PLAYER_TARGET_CHANGED")
 	end
 
 	if bar.resourceKind == "runes" then
