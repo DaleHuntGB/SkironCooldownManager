@@ -81,7 +81,7 @@ function SCM:BAG_UPDATE_DELAYED()
 		SCM:ApplyAnchorGroupByIconType("item")
 	end
 
-	if self.refreshEquipmentSlotIcons then
+	if self.refreshEquipmentSlotIcons and not self.InCombatLockdown then
 		self.refreshEquipmentSlotIcons = nil
 		C_Timer.After(0, function()
 			SCM.CustomIcons.CreateIcons(SCM.customConfig.slotConfig, false, "slot")
@@ -170,8 +170,12 @@ function SCM:SPELL_ACTIVATION_OVERLAY_GLOW_HIDE(spellID)
 end
 
 function SCM:PLAYER_EQUIPMENT_CHANGED()
-	if self.initialized and self.InCombatLockdown then return end
+	if self.initialized and self.InCombatLockdown then
+		self.refreshEquipmentSlotIcons = true
+		return
+	end
 
+	self.refreshEquipmentSlotIcons = nil
 	SCM:CreateAllCustomIcons("slot")
 	SCM:ApplyAnchorGroupByIconType("slot")
 end
@@ -197,6 +201,9 @@ function SCM:PLAYER_REGEN_ENABLED()
 		return
 	end
 
+	if self.refreshEquipmentSlotIcons then
+		self:PLAYER_EQUIPMENT_CHANGED()
+	end
 	QueueCooldownUpdate()
 
 	if self.SCMRefreshMatchedBuffBarWidths then
