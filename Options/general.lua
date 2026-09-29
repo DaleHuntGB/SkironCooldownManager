@@ -935,7 +935,7 @@ local function SelectGlobalSettingsTab(tabWidget, scrollFrame, group, options)
 
 		local cooldownFrameLevel = AceGUI:Create("Slider")
 		cooldownFrameLevel:SetRelativeWidth(0.33)
-		cooldownFrameLevel:SetLabel("Frame Level")
+		cooldownFrameLevel:SetLabel("Swipe / Text Frame Level")
 		cooldownFrameLevel:SetSliderValues(0, 10, 1)
 		cooldownFrameLevel:SetValue(options.cooldownFrameLevel or 1)
 		cooldownFrameLevel:SetCallback("OnValueChanged", function(_, _, value)
@@ -1176,6 +1176,18 @@ local function SelectGlobalSettingsTab(tabWidget, scrollFrame, group, options)
 			end
 		end)
 	elseif group == "Glow" then
+		local glowFrameLevel = AceGUI:Create("Slider")
+		glowFrameLevel:SetRelativeWidth(0.5)
+		glowFrameLevel:SetLabel("Glow Frame Level")
+		glowFrameLevel:SetSliderValues(0, 10, 1)
+		glowFrameLevel:SetValue(options.glowFrameLevel or 2)
+		glowFrameLevel:SetCallback("OnValueChanged", function(_, _, value)
+			options.glowFrameLevel = value
+			SCM:ApplyAllCDManagerConfigs(nil, true, true)
+		end)
+		tabWidget:AddChild(glowFrameLevel)
+		AddInfoText(tabWidget, "Frame levels are relative to the icon. Keep the glow level above the cooldown swipe level to draw glows on top")
+
 		local glowSettings = AceGUI:Create("InlineGroup")
 		glowSettings:SetLayout("flow")
 		glowSettings:SetFullWidth(true)

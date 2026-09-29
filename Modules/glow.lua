@@ -30,6 +30,7 @@ function SCM:StartCustomGlow(child, glowTypeOptions, glowType, key, forceUpdate,
 	end
 
 	local color = childConfig.useCustomGlowColor and childConfig.customGlowColor or glowTypeOptions.glowColor
+	local frameLevel = options.glowFrameLevel or 2
 	key = key or "SCM"
 
 	if not skipGlowState then
@@ -38,10 +39,10 @@ function SCM:StartCustomGlow(child, glowTypeOptions, glowType, key, forceUpdate,
 	end
 
 	if glowType == "Proc" then
-		LibCustomGlow.ProcGlow_Start(targetFrame, { key = key, frameLevel = 1, color = color, startAnim = glowTypeOptions.startAnim, xOffset = glowTypeOptions.xOffset, yOffset = glowTypeOptions.yOffset })
+		LibCustomGlow.ProcGlow_Start(targetFrame, { key = key, frameLevel = frameLevel, color = color, startAnim = glowTypeOptions.startAnim, xOffset = glowTypeOptions.xOffset, yOffset = glowTypeOptions.yOffset })
 	elseif glowType == "Autocast" then
 		-- color,N,frequency,scale,xOffset,yOffset,key,frameLevel
-		LibCustomGlow.AutoCastGlow_Start(targetFrame, color, glowTypeOptions.numParticles, glowTypeOptions.frequency, glowTypeOptions.scale, glowTypeOptions.xOffset, glowTypeOptions.yOffset, key, 1)
+		LibCustomGlow.AutoCastGlow_Start(targetFrame, color, glowTypeOptions.numParticles, glowTypeOptions.frequency, glowTypeOptions.scale, glowTypeOptions.xOffset, glowTypeOptions.yOffset, key, frameLevel)
 	elseif glowType == "Pixel" then
 		-- N,frequency,length,th,xOffset,yOffset,border
 		LibCustomGlow.PixelGlow_Start(
@@ -55,7 +56,7 @@ function SCM:StartCustomGlow(child, glowTypeOptions, glowType, key, forceUpdate,
 			glowTypeOptions.yOffset,
 			glowTypeOptions.border,
 			key,
-			1
+			frameLevel
 		)
 
 		-- Why do I have to do this?
@@ -80,7 +81,7 @@ function SCM:StartCustomGlow(child, glowTypeOptions, glowType, key, forceUpdate,
 			end
 		end
 	elseif glowType == "Button" then
-		LibCustomGlow.ButtonGlow_Start(targetFrame, color, glowTypeOptions.frequency)
+		LibCustomGlow.ButtonGlow_Start(targetFrame, color, glowTypeOptions.frequency, frameLevel)
 	end
 
 	if not skipGlowState then

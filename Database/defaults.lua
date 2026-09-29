@@ -164,6 +164,7 @@ SCM.DefaultDB = {
 			cooldownYOffsetBR = 1,
 
 			useCustomGlow = false,
+			glowFrameLevel = 2,
 			glowType = "Proc",
 			borderSize = 1,
 			anchorUUF = false,

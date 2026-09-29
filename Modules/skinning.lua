@@ -335,6 +335,10 @@ end
 
 function SCM:SkinChild(child, childConfig)
 	local options = self.db.profile.options
+	if child.SpellActivationAlert then
+		child.SpellActivationAlert:SetFrameStrata(child:GetFrameStrata())
+		child.SpellActivationAlert:SetFrameLevel(child:GetFrameLevel() + (options.glowFrameLevel or 2))
+	end
 
 	if C_AddOns.IsAddOnLoaded("ElvUI") and ElvUI[1].private.skins.blizzard.cooldownManager then
 		return

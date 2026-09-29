@@ -2,6 +2,10 @@ local SCM = select(2, ...)
 
 local function OnSpellAlertManagerShowAlert(_, child)
 	local options = SCM.db.profile.options
+	if child.SCMConfig and child.SpellActivationAlert then
+		child.SpellActivationAlert:SetFrameStrata(child:GetFrameStrata())
+		child.SpellActivationAlert:SetFrameLevel(child:GetFrameLevel() + (options.glowFrameLevel or 2))
+	end
 	if not child.SCMConfig or not options.useCustomGlow or child.SCMActiveGlow then
 		if child.SCMWidth and child.SCMHeight then
 			local width = child.SCMWidth
