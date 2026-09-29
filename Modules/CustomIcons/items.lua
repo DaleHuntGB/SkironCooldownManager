@@ -29,6 +29,9 @@ end
 
 function CustomIcons.SetCustomItemID(frame, config)
 	local itemID = GetCustomItemID(config)
+	if frame.SCMItemID ~= itemID then
+		frame.SCMItemCount = nil
+	end
 	frame.SCMItemID = itemID
 	frame.SCMSpellID = select(2, C_Item.GetItemSpell(itemID))
 	config.spellID = frame.SCMSpellID
@@ -47,6 +50,7 @@ function CustomIcons.SetCustomIconCountText(frame, iconType, config)
 	local itemID = frame.SCMItemID
 
 	local count = C_Item.GetItemCount(itemID, false, true)
+	frame.SCMItemCount = count
 	if not config.hideStackText then
 		frame.ChargeCount.Current:SetText(count)
 		frame.ChargeCount.Current:Show()

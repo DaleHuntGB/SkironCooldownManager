@@ -40,6 +40,7 @@ local function ResetCustomIconFrame(_, frame)
 	frame.SCMSkinned = nil
 	frame.spellID = nil
 	frame.SCMItemID = nil
+	frame.SCMItemCount = nil
 	frame.slotID = nil
 	frame.lastCastStartTime = nil
 	frame.UpdateCooldown = nil
@@ -48,8 +49,9 @@ local function ResetCustomIconFrame(_, frame)
 	frame.isOnCooldown = nil
 	frame.isOnGCD = nil
 	frame.spellOutOfRange = nil
-	frame.SCMCooldownStartTime = nil
-	frame.SCMCooldownDuration = nil
+	frame.SCMCooldownExpirationTime = nil
+	frame.SCMGCDStartTime = nil
+	frame.SCMGCDDuration = nil
 
 	frame:EnableMouse(false)
 	frame:SetAlpha(1)
@@ -184,6 +186,11 @@ function CustomIcons.UpdateCustomIconFrameState(frame, config)
 	local iconType = frame.SCMIconType
 	if iconType == "empty" then
 		return
+	end
+
+	if iconType == "item" or iconType == "slot" then
+		frame.isOnCooldown = nil
+		frame.SCMCooldownExpirationTime = nil
 	end
 
 	local iconTexture = CustomIcons.GetCustomIconTexture(config, iconType, frame)

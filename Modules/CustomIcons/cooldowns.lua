@@ -15,6 +15,15 @@ function Cooldowns.OnCustomIconCooldownDone(self)
 		return
 	end
 
+	if parent.SCMIconType == "item" or parent.SCMIconType == "slot" then
+		local wasVisible = parent.SCMShouldBeVisible
+		Cooldowns.UpdateItemCooldownState(parent)
+		if parent.SCMShouldBeVisible ~= wasVisible then
+			SCM:ApplyAnchorGroupCDManagerConfig(parent.SCMGroup, parent.SCMGlobal)
+		end
+		return
+	end
+
 	if parent.Icon and not (parent.SCMConfig.effectRules and parent.SCMConfig.effectRules.desaturate) then
 		parent.Icon.SCMDesaturated = nil
 		parent.Icon:SetDesaturated(false)
@@ -35,19 +44,24 @@ function Cooldowns.OnCustomIconCooldownDone(self)
 end
 
 local function UpdateCustomIconGCD(frame, config, isOnCooldown)
-	if isOnCooldown or frame.Cooldown:IsShown() or not config.showGCD then
-		frame.GCDCooldown:Hide()
-		return
+	if not isOnCooldown and not frame.Cooldown:IsShown() and config.showGCD then
+		local globalCooldown = C_Spell.GetSpellCooldown(61304)
+		if globalCooldown and globalCooldown.isActive then
+			if frame.SCMGCDStartTime ~= globalCooldown.startTime or frame.SCMGCDDuration ~= globalCooldown.duration then
+				frame.SCMGCDStartTime = globalCooldown.startTime
+				frame.SCMGCDDuration = globalCooldown.duration
+				frame.GCDCooldown:Show()
+				frame.GCDCooldown:SetReverse(false)
+				frame.GCDCooldown:SetCooldown(globalCooldown.startTime, globalCooldown.duration)
+			end
+			return
+		end
 	end
-
-	local globalCooldown = C_Spell.GetSpellCooldown(61304)
-	if globalCooldown and globalCooldown.isActive then
-		frame.GCDCooldown:Show()
-		frame.GCDCooldown:SetReverse(false)
-		frame.GCDCooldown:SetCooldown(globalCooldown.startTime, globalCooldown.duration)
-	else
+	if frame.GCDCooldown:IsShown() then
 		frame.GCDCooldown:Hide()
 	end
+	frame.SCMGCDStartTime = nil
+	frame.SCMGCDDuration = nil
 end
 
 function Cooldowns.UpdateCustomIconCooldown(frame, iconType, config)
@@ -98,81 +112,50 @@ function Cooldowns.UpdateCustomIconCooldown(frame, iconType, config)
 			end
 		end
 
-		if not isOnCooldown and (not spellCooldown or not spellCooldown.isActive or spellCooldown.isOnGCD) and config.showGCD then
-			local globalCooldown = C_Spell.GetSpellCooldown(61304)
-
-			if globalCooldown.isActive then
-				frame.GCDCooldown:Show()
-				frame.GCDCooldown:SetReverse(false)
-				frame.GCDCooldown:SetCooldown(globalCooldown.startTime, globalCooldown.duration)
-			end
-		else
-			frame.GCDCooldown:Hide()
-		end
+		UpdateCustomIconGCD(frame, config, isOnCooldown)
 
 		return isOnCooldown, isChargeCooldown
 	end
 
-	if iconType == "item" then
-		local itemID = frame.SCMItemID
-		--local count = C_Item.GetItemCount(itemID, false, true)
-		local startTime, duration, _, modRate = C_Item.GetItemCooldown(itemID)
+	if iconType == "item" or iconType == "slot" then
+		local startTime, duration, modRate
+		if iconType == "slot" then
+			startTime, duration = GetInventoryItemCooldown("player", config.slotID)
+		else
+			local enabled
+			startTime, duration, enabled, modRate = C_Item.GetItemCooldown(frame.SCMItemID)
+		end
 
-		if duration > 0 and (startTime + duration) - now >= 0 then
-			if not frame.isOnCooldown or frame.SCMCooldownStartTime ~= startTime or frame.SCMCooldownDuration ~= duration then
-				if duration < 0.1 then
-					frame.Icon:SetVertexColor(CooldownViewerConstants.ITEM_NOT_USABLE_COLOR:GetRGBA())
-					if not (config.effectRules and config.effectRules.desaturate) then
-						frame.Icon:SetDesaturated(false)
-					end
-				else
-					if modRate then
-						frame.Cooldown:SetCooldown(startTime, duration, modRate)
-					else
-						frame.Cooldown:SetCooldown(startTime, duration)
-					end
+		local expirationTime = startTime and duration > 0 and startTime + duration / (modRate or 1) or 0
+		local isOnCooldown = expirationTime > now
+		if isOnCooldown and iconType == "slot" and Cooldowns.IsGlobalCooldown(startTime, duration) then
+			isOnCooldown = false
+		end
+		if not isOnCooldown then
+			expirationTime = 0
+		end
 
-					frame.Icon:SetVertexColor(1, 1, 1)
-					if not (config.effectRules and config.effectRules.desaturate) then
-						frame.Icon:SetDesaturated(true)
-					end
-				end
-				frame.isOnCooldown = true
-				frame.SCMCooldownStartTime = startTime
-				frame.SCMCooldownDuration = duration
-				UpdateCustomIconGCD(frame, config, true)
+		if frame.SCMCooldownExpirationTime ~= expirationTime then
+			frame.isOnCooldown = isOnCooldown
+			frame.SCMCooldownExpirationTime = expirationTime
+			local isPendingItemCooldown = isOnCooldown and iconType == "item" and duration < 0.1
+			if isOnCooldown and not isPendingItemCooldown then
+				frame.Cooldown:SetCooldown(startTime, duration, modRate or 1)
+			else
+				frame.Cooldown:Clear()
 			end
-
-			return true
-		elseif duration == 0 and frame.isOnCooldown then
-			frame.isOnCooldown = false
-			frame.SCMCooldownStartTime = nil
-			frame.SCMCooldownDuration = nil
-			frame.Cooldown:Clear()
-			frame.Icon:SetVertexColor(1, 1, 1)
+			if isPendingItemCooldown then
+				frame.Icon:SetVertexColor(CooldownViewerConstants.ITEM_NOT_USABLE_COLOR:GetRGBA())
+			else
+				local color = iconType == "item" and frame.SCMItemCount == 0 and 0.4 or 1
+				frame.Icon:SetVertexColor(color, color, color)
+			end
 			if not (config.effectRules and config.effectRules.desaturate) then
-				frame.Icon:SetDesaturated(false)
-			end
-			UpdateCustomIconGCD(frame, config, true)
-		end
-		return
-	end
-
-	if iconType == "slot" and config.slotID then
-		local startTime, duration = GetInventoryItemCooldown("player", config.slotID)
-		if startTime and startTime > 0 and (startTime + duration) - now >= 0.1 then
-			local globalCooldown = C_Spell.GetSpellCooldown(61304)
-			if duration ~= globalCooldown.duration or config.showGCD then
-				frame.Cooldown:SetCooldown(startTime, duration)
-
-				if not (config.effectRules and config.effectRules.desaturate) then
-					frame.Icon:SetDesaturated(not (duration == globalCooldown.duration))
-				end
-
-				UpdateCustomIconGCD(frame, config, true)
-				return true
+				frame.Icon:SetDesaturated(isOnCooldown and not isPendingItemCooldown)
 			end
 		end
+		UpdateCustomIconGCD(frame, config, isOnCooldown)
+		return isOnCooldown
 	end
 
 	frame.isOnCooldown = false
@@ -196,27 +179,50 @@ function Cooldowns.GetCustomIconCooldownState(iconType, hasCount, isOnCooldown, 
 	return isOnCooldown and "cooldown" or "ready"
 end
 
-function CustomIcons.UpdateIcons(customConfig, key)
-	for id, config in pairs(customConfig) do
-		if config[key] then
-			local customFrames = CustomIcons.GetCustomIconFrames(config)
-			if customFrames then
-				if customFrames[id] then
-					local frame = customFrames[id]
-					local iconType = frame.SCMIconType
-					Cooldowns.UpdateCustomIconCooldown(frame, iconType, config)
-				end
+function Cooldowns.UpdateItemCooldownState(frame)
+	local config = frame.SCMConfig
+	if not CustomIcons.ShouldLoadCustomIcon(config) then
+		return
+	end
+
+	local iconType = frame.SCMIconType
+	if iconType == "item" and not frame.SCMItemCount then
+		frame.SCMItemCount = C_Item.GetItemCount(frame.SCMItemID, false, true)
+	end
+	local isOnCooldown = Cooldowns.UpdateCustomIconCooldown(frame, iconType, config)
+	local hasCount = iconType ~= "item" or frame.SCMItemCount > 0
+	local cooldownState = Cooldowns.GetCustomIconCooldownState(iconType, hasCount, isOnCooldown)
+	local state = frame.SCMState
+	if not state or state.CooldownState ~= cooldownState then
+		States.SetCooldownState(frame, cooldownState, true)
+	end
+
+	local shouldShow = SCM.isOptionsOpen or frame.SCMState.Visibility
+	if frame.SCMShouldBeVisible ~= shouldShow then
+		Icons.SetChildVisibilityState(frame, shouldShow, true)
+	end
+end
+
+function Cooldowns.UpdateItemCooldowns(scopedGroups)
+	for _, frame in pairs(CustomItemFrames) do
+		if frame.SCMIconType == "item" or frame.SCMIconType == "slot" then
+			local wasVisible = frame.SCMShouldBeVisible
+			Cooldowns.UpdateItemCooldownState(frame)
+			if frame.SCMShouldBeVisible ~= wasVisible then
+				local group = frame.SCMGlobal and ToGlobalGroup(frame.SCMGroup) or frame.SCMGroup
+				scopedGroups[group] = true
 			end
 		end
 	end
 end
 
-function SCM:UpdateCustomIconsGCD()
-	for _, config in pairs(self.customConfig) do
-		CustomIcons.UpdateIcons(config, "showGCD")
-	end
-
-	for _, config in pairs(self.globalCustomConfig) do
-		CustomIcons.UpdateIcons(config, "showGCD")
+function Cooldowns.UpdateSpellGCD(scopedGroups)
+	for _, frame in pairs(CustomSpellFrames) do
+		local config = frame.SCMConfig
+		local group = frame.SCMGlobal and ToGlobalGroup(frame.SCMGroup) or frame.SCMGroup
+		-- Scoped icons are refreshed by the layout pass.
+		if config.showGCD and not scopedGroups[group] then
+			Cooldowns.UpdateCustomIconCooldown(frame, frame.SCMIconType, config)
+		end
 	end
 end

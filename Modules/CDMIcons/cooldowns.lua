@@ -10,9 +10,8 @@ local function GetChildCooldownInfo(child, includeGCD)
 	if child.SCMEquipSlot then
 		local now = GetTime()
 		local startTime, duration = GetInventoryItemCooldown("player", child.SCMEquipSlot)
-		if startTime and startTime > 0 and (startTime + duration) - now >= 0.1 then
-			local globalCooldown = C_Spell.GetSpellCooldown(61304)
-			if duration ~= globalCooldown.duration then
+		if startTime and startTime > 0 and duration > 0 and startTime + duration > now then
+			if not Cooldowns.IsGlobalCooldown(startTime, duration) then
 				return "cooldown", nil, startTime, duration
 			elseif includeGCD then
 				return "ready", nil, startTime, duration

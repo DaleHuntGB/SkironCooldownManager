@@ -84,6 +84,35 @@ local function ApplyScopedGroups(scopedGroups, updateScope)
 	end
 end
 
+function SCM:UpdateCustomCooldowns(pendingSpellIDs)
+	if not self.currentConfig or C_CVar.GetCVar("cooldownViewerEnabled") ~= "1" then
+		return
+	end
+
+	local scopedGroups = self:AcquireScopedGroupCache()
+	for spellID in pairs(pendingSpellIDs) do
+		local entries = self.Cache.cachedCustomSpellEntriesBySpellID[spellID]
+		if entries then
+			for _, entry in ipairs(entries) do
+				local config = entry.config
+				if Utils.GetIconType(config) == "spell" then
+					local group = entry.isGlobal and ToGlobalGroup(config.anchorGroup) or (config.anchorGroup or 1)
+					scopedGroups[group] = true
+				end
+			end
+		end
+	end
+
+	-- Shared item cooldowns can affect icons with different use spells and categories.
+	self.Cooldowns.UpdateItemCooldowns(scopedGroups)
+	if next(pendingSpellIDs) then
+		self.Cooldowns.UpdateSpellGCD(scopedGroups)
+	end
+
+	ApplyScopedGroups(scopedGroups)
+	self:ReleaseScopedGroupCache(scopedGroups)
+end
+
 function SCM:ApplyAnchorGroupCustomConfig(customConfig)
 	if not customConfig then
 		return

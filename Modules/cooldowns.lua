@@ -38,3 +38,8 @@ function Cooldowns.SetupCooldownHook(cooldownFrame, callback)
 	hooksecurefunc(cooldownFrame, "SetCooldown", OnCooldownSet)
 	cooldownFrame.SCMCooldownHook = true
 end
+
+function Cooldowns.IsGlobalCooldown(startTime, duration)
+	local globalCooldown = C_Spell.GetSpellCooldown(61304)
+	return globalCooldown and globalCooldown.isActive and startTime == globalCooldown.startTime and duration == globalCooldown.duration
+end

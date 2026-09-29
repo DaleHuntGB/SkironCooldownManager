@@ -121,54 +121,28 @@ end
 
 local isSpellCooldownUpdateThrottled = false
 local pendingSpellCooldownIDs = {}
-local pendingItemCooldownIDs = {}
-local refreshItemCooldownsAfterCombat = false
-
-local function PendingSpellCooldownPredicate(config, _, iconType)
-	if refreshItemCooldownsAfterCombat and not SCM.InCombatLockdown and (iconType == "slot" or iconType == "item") then
-		return true
-	end
-
-	return pendingSpellCooldownIDs[config.spellID] or pendingItemCooldownIDs[config.spellID]
-end
 
 local function OnSpellCooldownUpdateThrottleTick()
 	isSpellCooldownUpdateThrottled = false
 
-	if next(pendingItemCooldownIDs) then
-		SCM:ApplyAnchorGroupByIconTypes(false, PendingSpellCooldownPredicate, "item", "slot")
-		if refreshItemCooldownsAfterCombat and not SCM.InCombatLockdown then
-			refreshItemCooldownsAfterCombat = false
-		end
-	end
-
-	if next(pendingSpellCooldownIDs) then
-		SCM:ApplyAnchorGroupByIconTypes(false, PendingSpellCooldownPredicate, "spell")
-		SCM:UpdateCustomIconsGCD()
-	end
-
+	SCM:UpdateCustomCooldowns(pendingSpellCooldownIDs)
 	wipe(pendingSpellCooldownIDs)
-	wipe(pendingItemCooldownIDs)
 end
 
-function SCM:SPELL_UPDATE_COOLDOWN(spellID, _, categoryID)
-	if not spellID then
-		return
-	end
-
-	if categoryID and SCM.Constants.ItemCategories[categoryID] then
-		refreshItemCooldownsAfterCombat = true
-		pendingItemCooldownIDs[spellID] = true
-	else
-		pendingSpellCooldownIDs[spellID] = true
-	end
-
+local function QueueCooldownUpdate()
 	if isSpellCooldownUpdateThrottled then
 		return
 	end
 
 	isSpellCooldownUpdateThrottled = true
 	C_Timer.After(0.1, OnSpellCooldownUpdateThrottleTick)
+end
+
+function SCM:SPELL_UPDATE_COOLDOWN(spellID)
+	if spellID then
+		pendingSpellCooldownIDs[spellID] = true
+	end
+	QueueCooldownUpdate()
 end
 
 function SCM:SPELL_UPDATE_USABLE()
@@ -218,11 +192,12 @@ function SCM:PLAYER_REGEN_ENABLED()
 	self.InCombatLockdown = nil
 
 	if not self.appliedOptions then
-		refreshItemCooldownsAfterCombat = false
 		self:ApplyOptions()
 		SCM.RefreshCooldownViewerData()
 		return
 	end
+
+	QueueCooldownUpdate()
 
 	if self.SCMRefreshMatchedBuffBarWidths then
 		self.SCMRefreshMatchedBuffBarWidths = nil
