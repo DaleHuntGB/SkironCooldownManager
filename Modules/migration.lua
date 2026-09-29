@@ -39,7 +39,7 @@ local function CreateAnchorConfigTables(anchorConfig, isBuffBar, isAuras)
 	return anchorConfig
 end
 
-local function CreateCooldownBreakpoints(options)
+function SCM:CreateCooldownBreakpoints(options)
 	if not options.cooldownBreakpoints or #options.cooldownBreakpoints == 0 then
 		options.cooldownBreakpoints = CopyTable(SCM.Constants.CooldownTimer.DefaultBreakpoints)
 	else
@@ -437,7 +437,6 @@ function SCM:MigrateDB()
 			options.enableBuffBarSkinning = options.enableSkinning
 		end
 
-		CreateCooldownBreakpoints(options)
 		MigrateLegacySpellConfigKeys(self.spellConfig, self.defaultCooldownViewerConfig)
 		CreateTrackedBarSpellConfig(self.spellConfig)
 		MigrateLegacyIconOptions(self.spellConfig, options.disableRegularIconActiveSwipe)
@@ -451,6 +450,7 @@ function SCM:MigrateDB()
 	if profileVersion < 2 then
 	end
 
+	self:CreateCooldownBreakpoints(self.db.profile.options)
 	self.currentConfig.customConfig = CreateCustomConfigTables(self.currentConfig.customConfig)
 	self.currentConfig.resourceBarConfig = self.currentConfig.resourceBarConfig or {}
 	self.currentConfig.castBarConfig = self.currentConfig.castBarConfig or {}

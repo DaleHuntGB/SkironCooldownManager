@@ -35,6 +35,7 @@ local function BuildGeneralSettingsExport(options)
 		end
 	end
 
+	SCM:CreateCooldownBreakpoints(exportData)
 	return exportData
 end
 
