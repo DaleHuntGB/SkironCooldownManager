@@ -134,7 +134,9 @@ function SCM:UpdateCooldownInfo()
 	}
 
 	local dataProvider = CooldownViewerSettings:GetDataProvider()
-	local displayData = dataProvider and dataProvider.displayData.cooldownInfoByID
+	local displayData = dataProvider and dataProvider.displayData and dataProvider.displayData.cooldownInfoByID
+	if not displayData then return end
+
 	for _, cooldownCategory in pairs(CooldownViewerSettingsDataProvider_GetCategories()) do
 		defaultCooldownViewerConfig[cooldownCategory] = {
 			spellIDs = {},

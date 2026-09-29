@@ -286,6 +286,10 @@ function SCM:GetShowTooltip()
 end
 
 local function SetViewerHideWhenInactive(viewer, value)
+	if not LibEditModeOverride:IsReady() then
+		return false
+	end
+
 	LibEditModeOverride:LoadLayouts()
 
 	if not LibEditModeOverride:CanEditActiveLayout() then
@@ -316,6 +320,10 @@ function SCM:SetBuffBarHideWhenInactive(value)
 end
 
 function SCM:SetBuffBarContent(value)
+	if not LibEditModeOverride:IsReady() then
+		return
+	end
+
 	LibEditModeOverride:LoadLayouts()
 	if LibEditModeOverride:CanEditActiveLayout() then
 		local currentSetting = LibEditModeOverride:GetFrameSetting(BuffBarCooldownViewer, Enum.EditModeCooldownViewerSetting.BarContent)
@@ -379,7 +387,7 @@ end
 function SCM:ApplyOptions()
 	self:ApplyPressOverlayOptions()
 
-	if InCombatLockdown() or self.appliedOptions then
+	if InCombatLockdown() or self.appliedOptions or not LibEditModeOverride:IsReady() then
 		return
 	end
 	self.appliedOptions = true
@@ -545,7 +553,7 @@ end
 
 function SCM.GetDisabledCooldowns()
 	local dataProvider = CooldownViewerSettings:GetDataProvider()
-	local cooldownInfoByID = dataProvider and dataProvider.displayData.cooldownInfoByID
+	local cooldownInfoByID = dataProvider and dataProvider.displayData and dataProvider.displayData.cooldownInfoByID
 
 	local disabledCooldowns = {}
 	for _, config in pairs(SCM.spellConfig) do

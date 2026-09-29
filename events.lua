@@ -211,6 +211,9 @@ function SCM:PLAYER_REGEN_ENABLED()
 end
 
 function SCM:EDIT_MODE_LAYOUTS_UPDATED()
+	if not self.appliedOptions then
+		self:ApplyOptions()
+	end
 	SCM.RefreshCooldownViewerData(false, true)
 end
 
