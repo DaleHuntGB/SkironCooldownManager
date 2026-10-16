@@ -6,6 +6,10 @@ local SWING_TIMER_LABELS = {
 	Ranged = SWING_TIMER_RANGED,
 }
 
+for swingType, label in pairs(SWING_TIMER_LABELS) do
+	SCM.Constants.SCMAnchors.SkironCooldownManager["Swing Timer - " .. label] = "SCM_SwingTimer" .. swingType
+end
+
 local FORMATTER_OPTION_KEYS = { "durationDecimals", "durationRounding" }
 
 local function MigrateFormatterSettings(options)
