@@ -89,6 +89,7 @@ Modules\SwingTimer\init.lua [AllowLoadGameType camelot][ExcludeLoadGameType stan
 
 api.lua
 
+Options\anchorSearch.lua
 Options\cdm\cdm.lua
 Options\cdm\anchorConfig\iconBarTabs.lua
 Options\cdm\anchorConfig\anchorTabs.lua
