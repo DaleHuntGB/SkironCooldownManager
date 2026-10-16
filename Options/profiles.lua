@@ -42,10 +42,10 @@ local function CreateProfileOptionControls(parent, state, onRefresh)
 	specDropdown:SetValue(state.selectedSpec)
 	parent:AddChild(specDropdown)
 
-	for _, option in ipairs(PROFILE_INCLUDE_OPTIONS) do
+	for index, option in ipairs(PROFILE_INCLUDE_OPTIONS) do
 		local checkbox = AceGUI:Create("CheckBox")
 		checkbox:SetLabel(option.label)
-		checkbox:SetRelativeWidth(0.25)
+		checkbox:SetRelativeWidth(index <= 2 and 0.5 or 0.33)
 		checkbox:SetValue(state[option.key])
 		parent:AddChild(checkbox)
 
@@ -57,9 +57,9 @@ local function CreateProfileOptionControls(parent, state, onRefresh)
 
 	RefreshControls = function()
 		state.selectedClass = classDropdown:GetValue()
-		local hasSpecificClass = state.useSpecificClass and state.selectedClass ~= nil
+		local hasSpecificClass = state.useSpecificClass and state.selectedClass
 		local filteredSpecs = hasSpecificClass and SCM.Utils.GetSpecList(state.selectedClass) or {}
-		local hasSpecs = next(filteredSpecs) ~= nil
+		local hasSpecs = next(filteredSpecs)
 
 		classDropdown:SetDisabled(not state.useSpecificClass)
 		specificSpecCheckbox:SetDisabled(not hasSpecificClass or not hasSpecs)
@@ -126,6 +126,7 @@ local function CreateImportEditBox(Profiles, widget, frame, group)
 	widget:ReleaseChildren()
 
 	local importSettings = {
+		includeIcons = true,
 		useSpecificClass = true,
 		useSpecificSpec = false,
 		selectedClass = "ALL",
@@ -211,6 +212,8 @@ local function Profiles(widget, frame, group)
 	importButton:SetCallback("OnClick", function()
 		local editBox, profileName, importSettings = CreateImportEditBox(Profiles, widget, frame, group)
 		editBox:SetCallback("OnEnterPressed", function(self, event, text)
+			importSettings.excludeIcons = not importSettings.includeIcons
+
 			SCM:ImportProfile(profileName:GetText(), text, importSettings)
 			Profiles(widget, frame, group)
 		end)
@@ -224,6 +227,7 @@ local function Profiles(widget, frame, group)
 	profilesGroup:AddChild(exportGroup)
 
 	local exportState = {
+		includeIcons = true,
 		useSpecificClass = false,
 		useSpecificSpec = false,
 		includeResourceBar = false,
@@ -238,7 +242,7 @@ local function Profiles(widget, frame, group)
 			return
 		end
 
-		local hasSpecificClass = state.useSpecificClass and state.selectedClass ~= nil
+		local hasSpecificClass = state.useSpecificClass and state.selectedClass
 		local hasOptions = state.includeResourceBar or state.includeCastBar or state.includeGlobalSettings or state.includeGlobalAnchors
 		exportButton:SetDisabled((state.useSpecificClass and not state.selectedClass) or (state.useSpecificSpec and not state.selectedSpec) or (not hasSpecificClass and not hasOptions))
 	end)
@@ -255,6 +259,7 @@ local function Profiles(widget, frame, group)
 			frame,
 			group,
 			SCM:ExportProfile(selectedClass, selectedSpec, {
+				excludeIcons = not exportState.includeIcons,
 				includeResourceBar = exportState.includeResourceBar,
 				includeCastBar = exportState.includeCastBar,
 				includeGlobalSettings = exportState.includeGlobalSettings,

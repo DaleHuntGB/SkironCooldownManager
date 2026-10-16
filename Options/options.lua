@@ -50,21 +50,6 @@ function SCM.IsActiveSwipeDisabled(spellID, options)
 	end
 end
 
-function SCM.Encode(table)
-	local serialized = C_EncodingUtil.SerializeCBOR(table)
-	local compressed = C_EncodingUtil.CompressString(serialized, Enum.CompressionMethod.Deflate, Enum.CompressionLevel.OptimizeForSize)
-	local encoded = C_EncodingUtil.EncodeBase64(compressed)
-	return encoded
-end
-
-function SCM.Decode(importString)
-	local decoded = C_EncodingUtil.DecodeBase64(importString)
-	local decompressed = C_EncodingUtil.DecompressString(decoded)
-	local data = C_EncodingUtil.DeserializeCBOR(decompressed)
-
-	return data
-end
-
 function Options.GetEffectiveAnchorGroup(anchorIndex, mode)
 	if mode == "global" then
 		return ToGlobalGroup(anchorIndex)

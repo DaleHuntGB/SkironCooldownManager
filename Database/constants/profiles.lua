@@ -3,12 +3,19 @@ local SCM = select(2, ...)
 SCM.Constants.PROFILES = {
 	PREFIX = "SCM",
 	DATA_VERSION = 1,
+	PAYLOAD_VERSION = 2,
+
+	ANCHOR_KEYS = {
+		anchorConfig = true,
+		buffBarsAnchorConfig = true,
+	},
 
 	INCLUDE_OPTIONS = {
+		{ key = "includeIcons", label = "Include Icons/Bars" },
+		{ key = "includeGlobalAnchors", label = "Global Icon Anchors" },
+		{ key = "includeGlobalSettings", label = "Global Settings" },
 		{ key = "includeResourceBar", label = "Resource Bar Settings" },
 		{ key = "includeCastBar", label = "Cast Bar Settings" },
-		{ key = "includeGlobalSettings", label = "Global Settings" },
-		{ key = "includeGlobalAnchors", label = "Global Icon Anchors" },
 	},
 
 	EXPORT_TYPE = {
@@ -25,6 +32,17 @@ SCM.Constants.PROFILES = {
 		"slotConfig",
 		"timerConfig",
 		"bloodlustConfig",
+	},
+
+	SPEC_CONFIG_KEYS = {
+		"spellConfig",
+		"itemConfig",
+		"customConfig",
+		"resourceBarConfig",
+		"castBarConfig",
+		"anchorConfig",
+		"buffBarsAnchorConfig",
+		"aurasAnchorConfig",
 	},
 
 	OPTION_KEYS = {

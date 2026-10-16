@@ -17,6 +17,8 @@ SCM.CustomAnchors = {}
 SCM.CustomEntries = {}
 SCM.Templates = {}
 SCM.States = {}
+SCM.Profiles = {}
+
 SCM.Callbacks = LibStub("CallbackHandler-1.0"):New(SCM)
 
 function SCM.PrepareCooldownViewerData(releaseCustomIcons, skipCustomIconRebuild)

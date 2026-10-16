@@ -79,7 +79,12 @@ Modules\update.lua
 Modules\cdmconfig.lua
 Modules\anchors.lua
 Modules\uid.lua
-Modules\profiles.lua
+Modules\Profiles\serialization.lua
+Modules\Profiles\settings.lua
+Modules\Profiles\config.lua
+Modules\Profiles\anchors.lua
+Modules\Profiles\export.lua
+Modules\Profiles\import.lua
 Modules\resourcebar.lua
 Modules\castbar.lua
 Modules\states.lua
