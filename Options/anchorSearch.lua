@@ -1,6 +1,6 @@
 local SCM = select(2, ...)
 
-local Constants = SCM.Constants
+local CONSTANTS = SCM.Constants.GENERAL
 local Options = SCM.Options
 
 local SCMAnchorSearchMixin = {}
@@ -16,7 +16,7 @@ function SCMAnchorSearchMixin:BuildCandidates()
 	local candidates = self.candidates
 	local count = 0
 
-	for _, anchors in pairs(Constants.SCMAnchors) do
+	for _, anchors in pairs(CONSTANTS.SCM_ANCHORS) do
 		for label, anchorName in pairs(anchors) do
 			if anchorName then
 				local configKey = ANCHOR_CONFIGS[label]

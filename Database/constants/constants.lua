@@ -1,226 +1,228 @@
 local SCM = select(2, ...)
 SCM.Constants = {}
 
-local Constants = SCM.Constants
+local CONSTANTS = SCM.Constants
 
 BACKDROP_SCM_PIXEL = {
 	edgeFile = "Interface\\Buttons\\WHITE8x8",
 	edgeSize = 2,
 }
 
-Constants.AnchorPoints = {
-	TOPLEFT = "TOPLEFT",
-	TOP = "TOP",
-	TOPRIGHT = "TOPRIGHT",
-	LEFT = "LEFT",
-	CENTER = "CENTER",
-	RIGHT = "RIGHT",
-	BOTTOMLEFT = "BOTTOMLEFT",
-	BOTTOM = "BOTTOM",
-	BOTTOMRIGHT = "BOTTOMRIGHT",
-}
-
-Constants.GrowthDirections = {
-	CENTERED = "Centered Horizontal",
-	LEFT = "Left",
-	RIGHT = "Right",
-	FIXED = "Fixed",
-}
-
-Constants.SecondaryGrowthDirections = {
-	DOWN = "Down",
-	UP = "Up",
-}
-
-Constants.FrameStrata = {
-	BACKGROUND = "Background",
-	LOW = "Low",
-	MEDIUM = "Medium",
-	HIGH = "High",
-	DIALOG = "Dialog",
-	FULLSCREEN = "Fullscreen",
-	FULLSCREEN_DIALOG = "Fullscreen Dialog",
-	-- TOOLTIP = "Tooltip",
-}
-
-Constants.FrameStrataSorted = {
-	"BACKGROUND",
-	"LOW",
-	"MEDIUM",
-	"HIGH",
-	"DIALOG",
-	"FULLSCREEN",
-	"FULLSCREEN_DIALOG",
-	-- "TOOLTIP",
-}
-
-Constants.TextOutline = {
-	[""] = "None",
-	OUTLINE = "Outline",
-	THICKOUTLINE = "Thick Outline",
-	MONOCHROME = "Monochrome",
-	["OUTLINE,MONOCHROME"] = "Monochrome Outline",
-	SLUG = "Slug",
-	["OUTLINE SLUG"] = "Outline Slug",
-}
-
-Constants.TextOutlineSorted = {
-	"",
-	"OUTLINE",
-	"SLUG",
-	"MONOCHROME",
-	"OUTLINE,MONOCHROME",
-	"OUTLINE SLUG",
-	"THICKOUTLINE",
-}
-
-Constants.BlendMode = {
-	["DISABLE"] = "DISABLE",
-	["BLEND"] = "BLEND",
-	["ADD"] = "ADD",
-	["MOD"] = "MOD",
-}
-
-Constants.BlendModeSorted = {
-	"DISABLE",
-	"BLEND",
-	"ADD",
-	"MOD",
-}
-
-Constants.States = {
-	["always"] = "Always",
-	["active"] = "Active",
-	["inactive"] = "Inactive",
-	["overridden"] = "Overridden",
-	["ready"] = "Ready",
-	["cooldown"] = "On Cooldown",
-	["noitem"] = "No Item",
-	["recharging"] = "Recharging",
-}
-
-Constants.StatesSorted = {
-	["buffBar"] = {
-		"always",
-		"active",
-		"inactive",
+CONSTANTS.GENERAL = {
+	ANCHOR_POINTS = {
+		TOPLEFT = "TOPLEFT",
+		TOP = "TOP",
+		TOPRIGHT = "TOPRIGHT",
+		LEFT = "LEFT",
+		CENTER = "CENTER",
+		RIGHT = "RIGHT",
+		BOTTOMLEFT = "BOTTOMLEFT",
+		BOTTOM = "BOTTOM",
+		BOTTOMRIGHT = "BOTTOMRIGHT",
 	},
-	["spell"] = {
-		"always",
-		"ready",
-		"cooldown",
-		"active",
-		"inactive",
-		"overridden",
-		"recharging",
+
+	GROWTH_DIRECTIONS = {
+		CENTERED = "Centered Horizontal",
+		LEFT = "Left",
+		RIGHT = "Right",
+		FIXED = "Fixed",
 	},
-	["buffIcon"] = {
-		"always",
-		"ready",
-		"cooldown",
-		"active",
-		"inactive",
-		"recharging",
+
+	SECONDARY_GROWTH_DIRECTIONS = {
+		DOWN = "Down",
+		UP = "Up",
 	},
-	["timer"] = {
-		"always",
-		"active",
-		"inactive",
+
+	FRAME_STRATA = {
+		BACKGROUND = "Background",
+		LOW = "Low",
+		MEDIUM = "Medium",
+		HIGH = "High",
+		DIALOG = "Dialog",
+		FULLSCREEN = "Fullscreen",
+		FULLSCREEN_DIALOG = "Fullscreen Dialog",
+		-- TOOLTIP = "Tooltip",
 	},
-	["item"] = {
-		"always",
-		"ready",
-		"cooldown",
-		"noitem",
+
+	FRAME_STRATA_SORTED = {
+		"BACKGROUND",
+		"LOW",
+		"MEDIUM",
+		"HIGH",
+		"DIALOG",
+		"FULLSCREEN",
+		"FULLSCREEN_DIALOG",
+		-- "TOOLTIP",
 	},
-	["slot"] = {
-		"always",
-		"ready",
-		"cooldown",
+
+	TEXT_OUTLINE = {
+		[""] = "None",
+		OUTLINE = "Outline",
+		THICKOUTLINE = "Thick Outline",
+		MONOCHROME = "Monochrome",
+		["OUTLINE,MONOCHROME"] = "Monochrome Outline",
+		SLUG = "Slug",
+		["OUTLINE SLUG"] = "Outline Slug",
 	},
-	["custom"] = {
-		"always",
-		"ready",
-		"cooldown",
+
+	TEXT_OUTLINE_SORTED = {
+		"",
+		"OUTLINE",
+		"SLUG",
+		"MONOCHROME",
+		"OUTLINE,MONOCHROME",
+		"OUTLINE SLUG",
+		"THICKOUTLINE",
 	},
-	-- "nocharges",
-	-- "maxcharges",
-	-- "recharging",
-	-- "ongcd",
-	-- "mounted",
-}
 
-Constants.Visibility = {
-	["show"] = "Show",
-	["hide"] = "Hide",
-}
+	BLEND_MODE = {
+		["DISABLE"] = "DISABLE",
+		["BLEND"] = "BLEND",
+		["ADD"] = "ADD",
+		["MOD"] = "MOD",
+	},
 
-Constants.VisibilitySorted = {
-	"show",
-	"hide",
-}
+	BLEND_MODE_SORTED = {
+		"DISABLE",
+		"BLEND",
+		"ADD",
+		"MOD",
+	},
 
-Constants.GlobalGlowSubregion = "global"
+	STATES = {
+		["always"] = "Always",
+		["active"] = "Active",
+		["inactive"] = "Inactive",
+		["overridden"] = "Overridden",
+		["ready"] = "Ready",
+		["cooldown"] = "On Cooldown",
+		["noitem"] = "No Item",
+		["recharging"] = "Recharging",
+	},
 
-Constants.Subregions = {
-	["glow"] = "Glow",
-	["border"] = "Border",
-	--["text"] = "Text"
-}
+	STATES_SORTED = {
+		["buffBar"] = {
+			"always",
+			"active",
+			"inactive",
+		},
+		["spell"] = {
+			"always",
+			"ready",
+			"cooldown",
+			"active",
+			"inactive",
+			"overridden",
+			"recharging",
+		},
+		["buffIcon"] = {
+			"always",
+			"ready",
+			"cooldown",
+			"active",
+			"inactive",
+			"recharging",
+		},
+		["timer"] = {
+			"always",
+			"active",
+			"inactive",
+		},
+		["item"] = {
+			"always",
+			"ready",
+			"cooldown",
+			"noitem",
+		},
+		["slot"] = {
+			"always",
+			"ready",
+			"cooldown",
+		},
+		["custom"] = {
+			"always",
+			"ready",
+			"cooldown",
+		},
+		-- "nocharges",
+		-- "maxcharges",
+		-- "recharging",
+		-- "ongcd",
+		-- "mounted",
+	},
 
-Constants.SubregionsSorted = {
-	"glow",
-	"border",
-}
+	VISIBILITY = {
+		["show"] = "Show",
+		["hide"] = "Hide",
+	},
 
-Constants.SubregionTargets = {
-	["self"] = "Self",
-	["custom"] = "Custom"
-}
+	VISIBILITY_SORTED = {
+		"show",
+		"hide",
+	},
 
-Constants.SubregionTargetsSorted = {
-	"self",
-	"custom"
-}
+	GLOBAL_GLOW_SUBREGION = "global",
 
-Constants.GlowTypes = {
-	["Pixel"] = "Pixel",
-	["Autocast"] = "Autocast",
-	["Proc"] = "Proc",
-	["Button"] = "Button",
-}
+	SUBREGIONS = {
+		["glow"] = "Glow",
+		["border"] = "Border",
+		--["text"] = "Text"
+	},
 
-Constants.GlowTypesSorted = {
-	"Pixel",
-	"Proc",
-	"Autocast",
-	"Button",
-	"Button",
-}
+	SUBREGIONS_SORTED = {
+		"glow",
+		"border",
+	},
 
-Constants.ResourceBarGrowthDirection = {
-	UP = "Up",
-	DOWN = "Down",
-}
+	SUBREGION_TARGETS = {
+		["self"] = "Self",
+		["custom"] = "Custom"
+	},
 
-Constants.SatedDebuffs = {
-	[57723] = true,
-	[57724] = true,
-	[80354] = true,
-	[95809] = true,
-	[160455] = true,
-	[264689] = true,
-	[390435] = true,
-}
+	SUBREGION_TARGETS_SORTED = {
+		"self",
+		"custom"
+	},
 
-Constants.SCMAnchors = {
-	["SkironCooldownManager"] = {
-		["Cast Bar"] = "SCM_CastBar",
-		["Primary Resource Bar"] = "SCM_PrimaryResourceBar",
-		["Secondary Resource Bar"] = "SCM_SecondaryResourceBar",
-		["Anchor"] = "ANCHOR:#",
-		["Global Anchor"] = "ANCHOR:G:#",
-		["Buff Bar Anchor"] = "ANCHOR:BB:#"
+	GLOW_TYPES = {
+		["Pixel"] = "Pixel",
+		["Autocast"] = "Autocast",
+		["Proc"] = "Proc",
+		["Button"] = "Button",
+	},
+
+	GLOW_TYPES_SORTED = {
+		"Pixel",
+		"Proc",
+		"Autocast",
+		"Button",
+		"Button",
+	},
+
+	RESOURCE_BAR_GROWTH_DIRECTION = {
+		UP = "Up",
+		DOWN = "Down",
+	},
+
+	SATED_DEBUFFS = {
+		[57723] = true,
+		[57724] = true,
+		[80354] = true,
+		[95809] = true,
+		[160455] = true,
+		[264689] = true,
+		[390435] = true,
+	},
+
+	SCM_ANCHORS = {
+		["SkironCooldownManager"] = {
+			["Cast Bar"] = "SCM_CastBar",
+			["Primary Resource Bar"] = "SCM_PrimaryResourceBar",
+			["Secondary Resource Bar"] = "SCM_SecondaryResourceBar",
+			["Anchor"] = "ANCHOR:#",
+			["Global Anchor"] = "ANCHOR:G:#",
+			["Buff Bar Anchor"] = "ANCHOR:BB:#"
+		},
 	},
 }
 

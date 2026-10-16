@@ -41,7 +41,7 @@ end
 
 function SCM:ResetCooldownViewerRuntimeState()
 	local resetChild = self.Utils.ResetChildSCMState
-	for viewerName in pairs(SCM.CooldownViewerNameToIndex) do
+	for viewerName in pairs(SCM.Constants.CDM.COOLDOWN_VIEWER_NAME_TO_INDEX) do
 		local viewer = _G[viewerName]
 		if viewer then
 			local cachedChildren = Cache.cachedViewerChildren[viewer]

@@ -69,7 +69,7 @@ function Formatter.GetBreakpointComponents(displayStyle, minValue)
 end
 
 function Formatter.UpdateBreakpoint(breakpoint)
-	local style = SCM.Constants.Formatter.DisplayStyleSettings[breakpoint.displayStyle]
+	local style = SCM.Constants.COOLDOWN.FORMATTER.DISPLAY_STYLE_SETTINGS[breakpoint.displayStyle]
 	local decimals = breakpoint.precision or 1
 	local isDecimal = breakpoint.displayStyle == "decimalSeconds"
 

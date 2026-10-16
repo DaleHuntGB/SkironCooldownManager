@@ -1,14 +1,14 @@
 local SCM = select(2, ...)
 local Options = SCM.Options
 local CDMOptions = Options.CDM
-local Constants = SCM.Constants
+local CONSTANTS = SCM.Constants.GENERAL
 local AceGUI = LibStub("AceGUI-3.0")
 
 local function GetFormattedTitle(subregionData)
 	local color, type
 	if subregionData.type == "glow" then
 		color = { 0.95, 0.95, 0.32, 1 }
-		type = Constants.GlowTypes[subregionData.glowType or "Pixel"]
+		type = CONSTANTS.GLOW_TYPES[subregionData.glowType or "Pixel"]
 		local glowTypeOptions = subregionData.glowTypeOptions
 		if glowTypeOptions and subregionData.glowType and glowTypeOptions[subregionData.glowType] then
 			color = glowTypeOptions[subregionData.glowType].glowColor or color
@@ -17,7 +17,7 @@ local function GetFormattedTitle(subregionData)
 		color = { 1, 1, 1, 1 }
 	end
 
-	return string.format("|c%s%s %s %d|r", CreateColor(unpack(color)):GenerateHexColor(), type or "", Constants.Subregions[subregionData.type] or subregionData.type, subregionData.typeIndex)
+	return string.format("|c%s%s %s %d|r", CreateColor(unpack(color)):GenerateHexColor(), type or "", CONSTANTS.SUBREGIONS[subregionData.type] or subregionData.type, subregionData.typeIndex)
 end
 
 local function BuildSubregionTabs(iconConfig)
@@ -224,7 +224,7 @@ local function AddSubregionOptions(subregionData, subregionTabs, iconConfig, but
 		local glowType = AceGUI:Create("Dropdown")
 		glowType:SetRelativeWidth(1)
 		glowType:SetLabel("Glow Type")
-		glowType:SetList(Constants.GlowTypes, Constants.GlowTypesSorted)
+		glowType:SetList(CONSTANTS.GLOW_TYPES, CONSTANTS.GLOW_TYPES_SORTED)
 		subregionTabs:AddChild(glowType)
 
 		local dynamicGlowSettingsGroup = AceGUI:Create("SimpleGroup")
@@ -336,7 +336,7 @@ function CDMOptions.CreateSubregionTabSettings(iconSettingsTabs, iconSettings, p
 	addSubregionButton:SetRelativeWidth(0.2)
 	generalSettings:AddChild(addSubregionButton)
 
-	subregionDropdown:SetList(Constants.Subregions, Constants.SubregionsSorted)
+	subregionDropdown:SetList(CONSTANTS.SUBREGIONS, CONSTANTS.SUBREGIONS_SORTED)
 	subregionDropdown:SetValue(selectedSubregion)
 	addSubregionButton:SetDisabled(selectedSubregion == nil)
 

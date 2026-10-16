@@ -7,7 +7,7 @@ local SWING_TIMER_LABELS = {
 }
 
 for swingType, label in pairs(SWING_TIMER_LABELS) do
-	SCM.Constants.SCMAnchors.SkironCooldownManager["Swing Timer - " .. label] = "SCM_SwingTimer" .. swingType
+	SCM.Constants.GENERAL.SCM_ANCHORS.SkironCooldownManager["Swing Timer - " .. label] = "SCM_SwingTimer" .. swingType
 end
 
 local FORMATTER_OPTION_KEYS = { "durationDecimals", "durationRounding" }

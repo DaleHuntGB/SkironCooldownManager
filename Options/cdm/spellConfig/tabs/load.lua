@@ -3,7 +3,7 @@ local Options = SCM.Options
 local CDMOptions = Options.CDM
 local AceGUI = LibStub("AceGUI-3.0")
 local CustomIcons = SCM.CustomIcons
-local Constants = SCM.Constants
+local CONSTANTS = SCM.Constants.CHARACTER
 
 local function GetDefaultLoadRaceNames()
 	local dualFactionRaces = {}
@@ -11,7 +11,7 @@ local function GetDefaultLoadRaceNames()
 	local raceIDs = {}
 
 	local sortedIDs = {}
-	for raceID in pairs(SCM.Constants.Races) do
+	for raceID in pairs(SCM.Constants.CHARACTER.RACES) do
 		sortedIDs[#sortedIDs + 1] = raceID
 	end
 	table.sort(sortedIDs)
@@ -80,7 +80,7 @@ function CDMOptions.CreateLoadTabSettings(iconSettingsTabs, iconSettings, scroll
 			local loadRole = AceGUI:Create("Dropdown")
 			loadRole:SetRelativeWidth(0.5)
 			loadRole:SetLabel("Roles")
-			loadRole:SetList(SCM.Constants.Roles)
+			loadRole:SetList(SCM.Constants.CHARACTER.ROLES)
 			loadRole:SetMultiselect(true)
 			loadRole:SetDisabled(not buttonConfig.useLoadRole)
 			loadRole:SetCallback("OnValueChanged", function(_, _, key, value)
@@ -121,8 +121,8 @@ function CDMOptions.CreateLoadTabSettings(iconSettingsTabs, iconSettings, scroll
 				buttonConfig.loadRaces = buttonConfig.loadRaces or CustomIcons.GetDefaultLoadRaces()
 				buttonConfig.loadRaces[key] = value
 
-				if type(Constants.Races[key]) == "number" then
-					buttonConfig.loadRaces[Constants.Races[key]] = value
+				if type(CONSTANTS.RACES[key]) == "number" then
+					buttonConfig.loadRaces[CONSTANTS.RACES[key]] = value
 				end
 
 				CDMOptions.ApplyIconConfigUpdate(buttonFrame, buttonData, anchorIndex, mode, isGlobal, isBuffBar)

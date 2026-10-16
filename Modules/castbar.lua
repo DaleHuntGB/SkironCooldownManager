@@ -469,7 +469,7 @@ local function HandleCast(unit, durationObject, castType, castBarID, empoweredSt
 	end
 
 	if isChannel and spellID and not empoweredStages then
-		local channelTicks = SCM.Constants.CastBarChannelTicks
+		local channelTicks = SCM.Constants.CAST_BAR.CHANNEL_TICKS
 		local tickCount = channelTicks and channelTicks.ticks[spellID]
 
 		if tickCount then

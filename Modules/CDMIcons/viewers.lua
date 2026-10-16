@@ -41,7 +41,7 @@ function Icons.IsViewerLayoutDirty(viewer)
 		return true
 	end
 
-	local categoryIndex = SCM.CooldownViewerNameToIndex[viewer:GetName()]
+	local categoryIndex = SCM.Constants.CDM.COOLDOWN_VIEWER_NAME_TO_INDEX[viewer:GetName()]
 	for _, child in ipairs(children) do
 		if child.GetCooldownID then
 			local cooldownID = child:GetCooldownID()
@@ -80,7 +80,7 @@ function Icons.CollectScopedAnchorGroups(updateScope, config, viewerUpdateMappin
 		return targetGroups
 	end
 
-	local categoryIndex = SCM.CooldownViewerNameToIndex[viewer:GetName()]
+	local categoryIndex = SCM.Constants.CDM.COOLDOWN_VIEWER_NAME_TO_INDEX[viewer:GetName()]
 	if not categoryIndex then
 		return targetGroups
 	end
@@ -105,7 +105,7 @@ function Icons.ExpandScopedAnchorGroups(viewer, viewerData, scopedAnchorGroups)
 	end
 
 	local children = Icons.GetOrCacheChildren(viewer)
-	local categoryIndex = SCM.CooldownViewerNameToIndex[viewer:GetName()]
+	local categoryIndex = SCM.Constants.CDM.COOLDOWN_VIEWER_NAME_TO_INDEX[viewer:GetName()]
 	local defaultCooldownIDs = SCM.defaultCooldownViewerConfig.cooldownIDs
 	if not defaultCooldownIDs then
 		return

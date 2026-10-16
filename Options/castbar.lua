@@ -1,7 +1,7 @@
 local SCM = select(2, ...)
 local AceGUI = LibStub("AceGUI-3.0")
 local LSM = LibStub("LibSharedMedia-3.0")
-local Constants = SCM.Constants
+local CONSTANTS = SCM.Constants.GENERAL
 local Options = SCM.Options
 
 SCM.MainTabs.CastBar = { value = "CastBar", text = "Cast Bar", order = 6, subgroups = {} }
@@ -57,7 +57,7 @@ local function AddAnchorControls(parent, title, anchors, refreshFn, relativeFram
 	local point = AceGUI:Create("Dropdown")
 	point:SetRelativeWidth(0.5)
 	point:SetLabel("Point")
-	point:SetList(SCM.Constants.AnchorPoints)
+	point:SetList(SCM.Constants.GENERAL.ANCHOR_POINTS)
 	point:SetValue(anchors[1])
 	point:SetCallback("OnValueChanged", function(_, _, value)
 		anchors[1] = value
@@ -68,7 +68,7 @@ local function AddAnchorControls(parent, title, anchors, refreshFn, relativeFram
 	local relativePoint = AceGUI:Create("Dropdown")
 	relativePoint:SetRelativeWidth(0.5)
 	relativePoint:SetLabel("Relative Point")
-	relativePoint:SetList(SCM.Constants.AnchorPoints)
+	relativePoint:SetList(SCM.Constants.GENERAL.ANCHOR_POINTS)
 	relativePoint:SetValue(anchors[3])
 	relativePoint:SetCallback("OnValueChanged", function(_, _, value)
 		anchors[3] = value
@@ -119,7 +119,7 @@ local function AddCastBarTextAnchorControls(parent, title, anchors, refreshFn)
 	local point = AceGUI:Create("Dropdown")
 	point:SetRelativeWidth(0.5)
 	point:SetLabel("Point")
-	point:SetList(SCM.Constants.AnchorPoints)
+	point:SetList(SCM.Constants.GENERAL.ANCHOR_POINTS)
 	point:SetValue(anchors.anchors[1])
 	point:SetCallback("OnValueChanged", function(_, _, value)
 		anchors.anchors[1] = value
@@ -130,7 +130,7 @@ local function AddCastBarTextAnchorControls(parent, title, anchors, refreshFn)
 	local relativePoint = AceGUI:Create("Dropdown")
 	relativePoint:SetRelativeWidth(0.5)
 	relativePoint:SetLabel("Relative Point")
-	relativePoint:SetList(SCM.Constants.AnchorPoints)
+	relativePoint:SetList(SCM.Constants.GENERAL.ANCHOR_POINTS)
 	relativePoint:SetValue(anchors.anchors[2])
 	relativePoint:SetCallback("OnValueChanged", function(_, _, value)
 		anchors.anchors[2] = value
@@ -383,7 +383,7 @@ local function CastBar(self)
 	local fontOutline = AceGUI:Create("Dropdown")
 	fontOutline:SetRelativeWidth(0.25)
 	fontOutline:SetLabel("Font Outline")
-	fontOutline:SetList(Constants.TextOutline, Constants.TextOutlineSorted)
+	fontOutline:SetList(CONSTANTS.TEXT_OUTLINE, CONSTANTS.TEXT_OUTLINE_SORTED)
 	fontOutline:SetValue(options.fontOutline or "")
 	fontOutline:SetCallback("OnValueChanged", function(_, _, value)
 		options.fontOutline = value
@@ -393,7 +393,7 @@ local function CastBar(self)
 
 	local frameStrata = AceGUI:Create("Dropdown")
 	frameStrata:SetRelativeWidth(0.25)
-	frameStrata:SetList(SCM.Constants.FrameStrata, SCM.Constants.FrameStrataSorted)
+	frameStrata:SetList(SCM.Constants.GENERAL.FRAME_STRATA, SCM.Constants.GENERAL.FRAME_STRATA_SORTED)
 	frameStrata:SetLabel("Frame Strata")
 	frameStrata:SetValue(options.frameStrata or "")
 	frameStrata:SetCallback("OnValueChanged", function(self, event, value)
@@ -570,7 +570,7 @@ local function CastBar(self)
 
 	local blendMode = AceGUI:Create("Dropdown")
 	blendMode:SetRelativeWidth(0.33)
-	blendMode:SetList(SCM.Constants.BlendMode, SCM.Constants.BlendModeSorted)
+	blendMode:SetList(SCM.Constants.GENERAL.BLEND_MODE, SCM.Constants.GENERAL.BLEND_MODE_SORTED)
 	blendMode:SetLabel("Blend Mode")
 	blendMode:SetValue(sparkOptions.blendMode)
 	blendMode:SetCallback("OnValueChanged", function(self, event, value)

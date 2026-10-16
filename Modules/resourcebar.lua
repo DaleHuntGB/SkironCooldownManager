@@ -14,8 +14,8 @@ local SPELL_ID_SOUL_FRAGMENTS = 228477
 local SPELL_ID_TIP_OF_THE_SPEAR = 260286
 local SPELL_ID_ICICLES = 205473
 
-local SCMConstants = SCM.Constants
-local CHARGED_COMBO_POINT_COLOR = SCMConstants.ChargedComboPointColor
+local RESOURCE_BAR_CONSTANTS = SCM.Constants.RESOURCE_BAR
+local CHARGED_COMBO_POINT_COLOR = RESOURCE_BAR_CONSTANTS.CHARGED_COMBO_POINT_COLOR
 local DEFAULT_RESOURCE_BAR_ANCHOR = "ANCHOR:1"
 
 local RESOURCE_BAR_RECONFIGURE_EVENTS = {
@@ -38,7 +38,7 @@ local function GetPowerColorByInfo(powerToken, powerType)
 		return colorInfo
 	end
 
-	return SCMConstants.FallbackPowerColorByToken[powerToken]
+	return RESOURCE_BAR_CONSTANTS.FALLBACK_POWER_COLOR_BY_TOKEN[powerToken]
 end
 
 local function GetPowerColor(powerToken, powerType, altR, altG, altB)
@@ -692,7 +692,7 @@ local function UpdateTicks(bar, maxValue)
 	local barOptions = bar.barOptions
 	local segmentCount = GetNumSegments(bar, maxValue)
 	local hasConfiguredSegments = bar.segmentCount and bar.segmentCount > 1
-	local hasPowerTokenSegments = bar.powerToken and SCMConstants.SegmentTicksByPowerToken[bar.powerToken]
+	local hasPowerTokenSegments = bar.powerToken and RESOURCE_BAR_CONSTANTS.SEGMENT_TICKS_BY_POWER_TOKEN[bar.powerToken]
 	local hasSegmentTicks = hasConfiguredSegments or hasPowerTokenSegments
 
 	if not barOptions or barOptions.textOnly or not barOptions.showTicks or not hasSegmentTicks or type(segmentCount) ~= "number" or segmentCount <= 1 then
@@ -809,7 +809,7 @@ local function HasSegments(bar, segmentCount)
 		return true
 	end
 
-	return bar.powerToken and SCMConstants.SegmentTicksByPowerToken[bar.powerToken]
+	return bar.powerToken and RESOURCE_BAR_CONSTANTS.SEGMENT_TICKS_BY_POWER_TOKEN[bar.powerToken]
 end
 
 local function CreateSegments(bar, segmentCount)
@@ -1360,7 +1360,7 @@ end
 
 function SCMResourceBarControllerMixin:OnUpdate(elapsed)
 	self.totalElapsed = (self.totalElapsed or 0) + elapsed
-	if self.totalElapsed < (SCMConstants.RefreshInterval or 0.05) then
+	if self.totalElapsed < (RESOURCE_BAR_CONSTANTS.REFRESH_INTERVAL or 0.05) then
 		return
 	end
 
@@ -1413,13 +1413,13 @@ function SCMResourceBarControllerMixin:GetSecondaryResource(primaryPowerType, se
 	local secondaryResource
 	if not UnitHasVehicleUI("player") then
 		local specializationID = Utils.GetSpec()
-		secondaryResource = SCMConstants.SpecSecondaryPower[specializationID] or SCMConstants.ClassSecondaryPower[className]
+		secondaryResource = RESOURCE_BAR_CONSTANTS.SPEC_SECONDARY_POWER[specializationID] or RESOURCE_BAR_CONSTANTS.CLASS_SECONDARY_POWER[className]
 		local requiredPrimaryPowerType = secondaryResource and secondaryResource.showWhenPrimaryPowerType
 		if requiredPrimaryPowerType and primaryPowerType ~= requiredPrimaryPowerType then
 			secondaryResource = nil
 		end
-		if not secondaryResource and SCMConstants.ClassManaSecondaryPower[className] then
-			secondaryResource = SCMConstants.ClassManaSecondaryPower[className][primaryPowerType]
+		if not secondaryResource and RESOURCE_BAR_CONSTANTS.CLASS_MANA_SECONDARY_POWER[className] then
+			secondaryResource = RESOURCE_BAR_CONSTANTS.CLASS_MANA_SECONDARY_POWER[className][primaryPowerType]
 		end
 	end
 
@@ -1434,12 +1434,12 @@ function SCMResourceBarControllerMixin:GetSecondaryResource(primaryPowerType, se
 		if customPowerType == "none" or customPowerType == selectedPrimaryPowerType then
 			secondaryResource = nil
 		else
-			secondaryResource = SCMConstants.DruidSecondaryResourceByPowerType[customPowerType]
+			secondaryResource = RESOURCE_BAR_CONSTANTS.DRUID_SECONDARY_RESOURCE_BY_POWER_TYPE[customPowerType]
 			forceMana = secondaryResource and customPowerType == Enum.PowerType.Mana
 		end
 	elseif (SCM.isForever or SCM.resourceBarOverride.active) and self.secondaryBarOptions.forceMana and selectedPrimaryPowerType ~= Enum.PowerType.Mana then
 		forceMana = true
-		secondaryResource = SCMConstants.DruidSecondaryResourceByPowerType[Enum.PowerType.Mana]
+		secondaryResource = RESOURCE_BAR_CONSTANTS.DRUID_SECONDARY_RESOURCE_BY_POWER_TYPE[Enum.PowerType.Mana]
 	end
 
 	if secondaryResource and secondaryResource.powerType == Enum.PowerType.Mana and not forceMana and ShouldHideManaForCurrentRole(self.secondaryBarOptions) then

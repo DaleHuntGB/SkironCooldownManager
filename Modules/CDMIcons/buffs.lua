@@ -3,7 +3,7 @@ local SCM = select(2, ...)
 local Cooldowns = SCM.Cooldowns
 local Icons = SCM.Icons
 local States = SCM.States
-local Constants = SCM.Constants
+local CONSTANTS = SCM.Constants.CDM
 
 local function SetBuffActive(parent)
 	if parent.SCMUseFixedDuration then
@@ -124,7 +124,7 @@ function Cooldowns.SetupPandemicHooks(child, options)
 end
 
 function Cooldowns.SetupBuffIconHooks(child, options)
-	local checkCooldownFrame = (child.SCMSpellID and (Constants.FakeAuras[child.SCMSpellID] or Constants.TargetAuras[child.SCMSpellID]))
+	local checkCooldownFrame = (child.SCMSpellID and (CONSTANTS.FAKE_AURAS[child.SCMSpellID] or CONSTANTS.TARGET_AURAS[child.SCMSpellID]))
 	child.SCMBuffOptions = options
 	Cooldowns.SetupPandemicHooks(child, options)
 
@@ -149,7 +149,7 @@ function Cooldowns.SetupBuffIconHooks(child, options)
 		child.SCMCheckCooldownFrame = true
 
 		if child.SCMSpellID then
-			child.SCMUseFixedDuration = type(Constants.FakeAuras[child.SCMSpellID]) == "number" and Constants.FakeAuras[child.SCMSpellID]
+			child.SCMUseFixedDuration = type(CONSTANTS.FAKE_AURAS[child.SCMSpellID]) == "number" and CONSTANTS.FAKE_AURAS[child.SCMSpellID]
 		end
 	else
 		if not child.SCMAuraHooked then

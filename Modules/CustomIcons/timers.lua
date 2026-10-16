@@ -23,7 +23,7 @@ local function OnBloodlustUnitAura(self, _, _, updateInfo)
 
 	local auraData
 	local now = GetTime()
-	for spellID in pairs(SCM.Constants.SatedDebuffs) do
+	for spellID in pairs(SCM.Constants.GENERAL.SATED_DEBUFFS) do
 		auraData = C_UnitAuras.GetPlayerAuraBySpellID(spellID)
 		if auraData then
 			if not self.expirationTime or now > self.expirationTime then

@@ -1,7 +1,7 @@
 local SCM = select(2, ...)
 local Options = SCM.Options
 local CDMOptions = Options.CDM
-local Constants = SCM.Constants
+local CONSTANTS = SCM.Constants.GENERAL
 local AceGUI = LibStub("AceGUI-3.0")
 
 local effectOptions = {
@@ -50,7 +50,7 @@ local function SetDefaultRuleValues(rule, effectKey, iconConfig)
 		rule.edgeColor = rule.edgeColor or { r = 1, g = 0.7, b = 0, a = 1 }
 		rule.swipeColor = rule.swipeColor or { r = 0, g = 0, b = 0, a = 0.7 }
 	elseif effectKey == "glow" and not rule.subregion then
-		rule.subregion = Constants.GlobalGlowSubregion
+		rule.subregion = CONSTANTS.GLOBAL_GLOW_SUBREGION
 	elseif option.subregionType and not rule.subregion then
 		local subregions = iconConfig.subregionOptions and iconConfig.subregionOptions[option.subregionType]
 		if subregions and subregions[1] then
@@ -79,16 +79,16 @@ local function GetRuleStateList(rules, currentRule, buttonData, isBuffBar)
 	local states, statesSorted = {}, {}
 
 	local iconType = buttonData.iconType
-	local constantStatesSorted = isBuffBar and Constants.StatesSorted.buffBar or Constants.StatesSorted[iconType] or Constants.StatesSorted.spell
+	local constantStatesSorted = isBuffBar and CONSTANTS.STATES_SORTED.buffBar or CONSTANTS.STATES_SORTED[iconType] or CONSTANTS.STATES_SORTED.spell
 	if buttonData.isBuffIcon then
-		constantStatesSorted = Constants.StatesSorted.buffIcon
+		constantStatesSorted = CONSTANTS.STATES_SORTED.buffIcon
 	elseif not isBuffBar and buttonData.isCustom and iconType == "spell" then
-		constantStatesSorted = Constants.StatesSorted.custom
+		constantStatesSorted = CONSTANTS.STATES_SORTED.custom
 	end
 
 	for _, stateKey in ipairs(constantStatesSorted) do
 		if stateKey == currentRule.state or not usedStates[stateKey] then
-			states[stateKey] = Constants.States[stateKey]
+			states[stateKey] = CONSTANTS.STATES[stateKey]
 			tinsert(statesSorted, stateKey)
 		end
 	end
@@ -98,11 +98,11 @@ end
 
 local function GetAvailableRuleState(rules, buttonData, isBuffBar)
 	local iconType = buttonData.iconType
-	local constantStatesSorted = isBuffBar and Constants.StatesSorted.buffBar or Constants.StatesSorted[iconType] or Constants.StatesSorted.spell
+	local constantStatesSorted = isBuffBar and CONSTANTS.STATES_SORTED.buffBar or CONSTANTS.STATES_SORTED[iconType] or CONSTANTS.STATES_SORTED.spell
 	if buttonData.isBuffIcon then
-		constantStatesSorted = Constants.StatesSorted.buffIcon
+		constantStatesSorted = CONSTANTS.STATES_SORTED.buffIcon
 	elseif not isBuffBar and buttonData.isCustom and iconType == "spell" then
-		constantStatesSorted = Constants.StatesSorted.custom
+		constantStatesSorted = CONSTANTS.STATES_SORTED.custom
 	end
 
 	local usedStates = GetUsedRuleStates(rules)
@@ -118,15 +118,15 @@ local function GetSubregionList(iconConfig, subregionType)
 	local subregions, subregionsSorted = {}, {}
 
 	if subregionType == "glow" then
-		subregions[Constants.GlobalGlowSubregion] = "Global Glow"
-		tinsert(subregionsSorted, Constants.GlobalGlowSubregion)
+		subregions[CONSTANTS.GLOBAL_GLOW_SUBREGION] = "Global Glow"
+		tinsert(subregionsSorted, CONSTANTS.GLOBAL_GLOW_SUBREGION)
 	end
 
 	if subregionOptions then
 		for index, subregionData in ipairs(subregionOptions) do
-			local name = (Constants.Subregions[subregionData.type] or "Subregion") .. " " .. index
+			local name = (CONSTANTS.SUBREGIONS[subregionData.type] or "Subregion") .. " " .. index
 			if subregionData.type == "glow" and subregionData.glowType then
-				name = (Constants.GlowTypes[subregionData.glowType] or subregionData.glowType) .. " " .. name
+				name = (CONSTANTS.GLOW_TYPES[subregionData.glowType] or subregionData.glowType) .. " " .. name
 			end
 
 			subregions[index] = name
@@ -145,7 +145,7 @@ local function AddRuleValueControl(effectTabGroup, effectKey, iconConfig, rule, 
 		local valueDropdown = AceGUI:Create("Dropdown")
 		valueDropdown:SetLabel("Value")
 		valueDropdown:SetRelativeWidth(0.33)
-		valueDropdown:SetList(Constants.Visibility, Constants.VisibilitySorted)
+		valueDropdown:SetList(CONSTANTS.VISIBILITY, CONSTANTS.VISIBILITY_SORTED)
 		valueDropdown:SetValue(rule.value)
 		valueDropdown:SetCallback("OnValueChanged", function(_, _, value)
 			rule.value = value
@@ -229,7 +229,7 @@ local function AddRuleValueControl(effectTabGroup, effectKey, iconConfig, rule, 
 		local subregionTargetDropdown = AceGUI:Create("Dropdown")
 		subregionTargetDropdown:SetLabel("Target")
 		subregionTargetDropdown:SetRelativeWidth(0.33)
-		subregionTargetDropdown:SetList(Constants.SubregionTargets, Constants.SubregionTargetsSorted)
+		subregionTargetDropdown:SetList(CONSTANTS.SUBREGION_TARGETS, CONSTANTS.SUBREGION_TARGETS_SORTED)
 		subregionTargetDropdown:SetValue(rule.subregionTargetType or "self")
 		effectTabGroup:AddChild(subregionTargetDropdown)
 

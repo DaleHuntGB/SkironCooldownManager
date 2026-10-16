@@ -6,12 +6,7 @@ local AceDBOptions = LibStub("AceDBOptions-3.0")
 
 SCM.MainTabs.Profiles = { value = "Profiles", text = "Profiles", order = 9, subgroups = {} }
 
-local profileIncludeOptions = {
-	{ key = "includeResourceBar", label = "Resource Bar Settings" },
-	{ key = "includeCastBar", label = "Cast Bar Settings" },
-	{ key = "includeGlobalSettings", label = "Global Settings" },
-	{ key = "includeGlobalAnchors", label = "Global Icon Anchors" },
-}
+local PROFILE_INCLUDE_OPTIONS = SCM.Constants.PROFILES.INCLUDE_OPTIONS
 
 local function CreateProfileOptionControls(parent, state, onRefresh)
 	local RefreshControls
@@ -47,7 +42,7 @@ local function CreateProfileOptionControls(parent, state, onRefresh)
 	specDropdown:SetValue(state.selectedSpec)
 	parent:AddChild(specDropdown)
 
-	for _, option in ipairs(profileIncludeOptions) do
+	for _, option in ipairs(PROFILE_INCLUDE_OPTIONS) do
 		local checkbox = AceGUI:Create("CheckBox")
 		checkbox:SetLabel(option.label)
 		checkbox:SetRelativeWidth(0.25)

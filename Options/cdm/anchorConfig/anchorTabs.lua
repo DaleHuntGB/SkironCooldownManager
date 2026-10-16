@@ -166,7 +166,7 @@ function CDMOptions.SelectAnchor(widget, parentWidget, anchorIndex, anchorTabsTb
 	local point = AceGUI:Create("Dropdown")
 	point:SetRelativeWidth(isBuffBar and 0.25 or 0.33)
 	point:SetLabel("Point")
-	point:SetList(SCM.Constants.AnchorPoints)
+	point:SetList(SCM.Constants.GENERAL.ANCHOR_POINTS)
 	point:SetValue(data.anchor[1])
 	point:SetCallback("OnValueChanged", function(self, event, value)
 		data.anchor[1] = value
@@ -193,7 +193,7 @@ function CDMOptions.SelectAnchor(widget, parentWidget, anchorIndex, anchorTabsTb
 	local relativePoint = AceGUI:Create("Dropdown")
 	relativePoint:SetRelativeWidth(isBuffBar and 0.25 or 0.33)
 	relativePoint:SetLabel("Relative Point")
-	relativePoint:SetList(SCM.Constants.AnchorPoints)
+	relativePoint:SetList(SCM.Constants.GENERAL.ANCHOR_POINTS)
 	relativePoint:SetValue(data.anchor[3])
 	relativePoint:SetCallback("OnValueChanged", function(self, event, value)
 		data.anchor[3] = value
@@ -216,7 +216,7 @@ function CDMOptions.SelectAnchor(widget, parentWidget, anchorIndex, anchorTabsTb
 
 	local grow = AceGUI:Create("Dropdown")
 	grow:SetRelativeWidth(0.25)
-	grow:SetList(SCM.Constants.GrowthDirections)
+	grow:SetList(SCM.Constants.GENERAL.GROWTH_DIRECTIONS)
 	grow:SetLabel("Primary Growth")
 	grow:SetValue(data.grow or "CENTERED")
 	grow:SetCallback("OnValueChanged", function(self, event, value)
@@ -227,7 +227,7 @@ function CDMOptions.SelectAnchor(widget, parentWidget, anchorIndex, anchorTabsTb
 
 	local secondaryGrow = AceGUI:Create("Dropdown")
 	secondaryGrow:SetRelativeWidth(0.25)
-	secondaryGrow:SetList(SCM.Constants.SecondaryGrowthDirections)
+	secondaryGrow:SetList(SCM.Constants.GENERAL.SECONDARY_GROWTH_DIRECTIONS)
 	secondaryGrow:SetLabel("Secondary Growth")
 	secondaryGrow:SetValue(data.secondaryGrow or "DOWN")
 	secondaryGrow:SetCallback("OnValueChanged", function(self, event, value)
@@ -251,7 +251,7 @@ function CDMOptions.SelectAnchor(widget, parentWidget, anchorIndex, anchorTabsTb
 
 	local frameStrata = AceGUI:Create("Dropdown")
 	frameStrata:SetRelativeWidth(0.25)
-	frameStrata:SetList(SCM.Constants.FrameStrata, SCM.Constants.FrameStrataSorted)
+	frameStrata:SetList(SCM.Constants.GENERAL.FRAME_STRATA, SCM.Constants.GENERAL.FRAME_STRATA_SORTED)
 	frameStrata:SetLabel("Frame Strata")
 	frameStrata:SetValue(data.frameStrata)
 	frameStrata:SetCallback("OnValueChanged", function(self, event, value)

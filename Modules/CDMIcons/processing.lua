@@ -201,7 +201,7 @@ function Icons.ProcessChildren(viewer, validChildren, viewerData, refreshOptions
 	end
 
 	local children = Icons.GetOrCacheChildren(viewer)
-	local categoryIndex = SCM.CooldownViewerNameToIndex[viewer:GetName()]
+	local categoryIndex = SCM.Constants.CDM.COOLDOWN_VIEWER_NAME_TO_INDEX[viewer:GetName()]
 	local options = SCM.db.profile.options
 	viewer.SCMUpdateScope = viewerData.updateScope
 

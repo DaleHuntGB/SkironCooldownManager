@@ -1,19 +1,19 @@
 local SCM = select(2, ...)
 
 local Icons = SCM.Icons
-local Constants = SCM.Constants
+local CONSTANTS = SCM.Constants.CDM
 local Cooldowns = SCM.Cooldowns
 
 local function OnShow(child)
 	UIParent.SetAlpha(child, child.SCMHidden and 0 or 1)
 	if child.SCMGroup and (child.SCMChanged or child.SCMBuffBar) then
 		if child.SCMBuffBar and child.SCMSpellID and (not SCM.OptionsFrame or not SCM.OptionsFrame:IsShown()) then
-			if Constants.FakeAuras[child.SCMSpellID] then
+			if CONSTANTS.FAKE_AURAS[child.SCMSpellID] then
 				child.SCMFakeAuraInstanceID = true
 			end
 
 			if child.SCMFakeAuraInstanceID and child.SCMUseFixedDuration then
-				child.SCMFixedDuration = GetTime() + Constants.FakeAuras[child.SCMSpellID]
+				child.SCMFixedDuration = GetTime() + CONSTANTS.FAKE_AURAS[child.SCMSpellID]
 			end
 		end
 
@@ -100,8 +100,8 @@ end
 
 function Icons.SetupBuffBarHooks(child)
 	SetupDesaturationHooks(child)
-	if child.SCMSpellID and Constants.FakeAuras[child.SCMSpellID] then
-		child.SCMUseFixedDuration = type(Constants.FakeAuras[child.SCMSpellID]) == "number" and Constants.FakeAuras[child.SCMSpellID]
+	if child.SCMSpellID and CONSTANTS.FAKE_AURAS[child.SCMSpellID] then
+		child.SCMUseFixedDuration = type(CONSTANTS.FAKE_AURAS[child.SCMSpellID]) == "number" and CONSTANTS.FAKE_AURAS[child.SCMSpellID]
 	else
 		child.SCMFakeAuraInstanceID = nil
 		child.SCMUseFixedDuration = nil

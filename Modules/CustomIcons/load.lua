@@ -51,7 +51,7 @@ end
 
 function CustomIcons.GetDefaultLoadRaces()
 	local loadRaces = {}
-	for raceID in pairs(SCM.Constants.Races) do
+	for raceID in pairs(SCM.Constants.CHARACTER.RACES) do
 		loadRaces[raceID] = false
 	end
 	return loadRaces

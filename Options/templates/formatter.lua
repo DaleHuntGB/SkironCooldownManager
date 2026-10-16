@@ -1,7 +1,7 @@
 local SCM = select(2, ...)
 local AceGUI = LibStub("AceGUI-3.0")
 local Templates = SCM.Templates
-local Constants = SCM.Constants.Formatter
+local CONSTANTS = SCM.Constants.COOLDOWN.FORMATTER
 
 function Templates.AddFormatterOptions(parent, formatter, options)
 	options = options or {}
@@ -55,7 +55,7 @@ function Templates.AddFormatterOptions(parent, formatter, options)
 			local breakpointDisplayStyle = AceGUI:Create("Dropdown")
 			breakpointDisplayStyle:SetFullWidth(true)
 			breakpointDisplayStyle:SetLabel("Display Style")
-			breakpointDisplayStyle:SetList(Constants.DisplayStyle[1], Constants.DisplayStyle[2])
+			breakpointDisplayStyle:SetList(CONSTANTS.DISPLAY_STYLE[1], CONSTANTS.DISPLAY_STYLE[2])
 			breakpointDisplayStyle:SetValue(breakpoint.displayStyle)
 			breakpointRows:AddChild(breakpointDisplayStyle)
 
@@ -108,7 +108,7 @@ function Templates.AddFormatterOptions(parent, formatter, options)
 
 			breakpointDisplayStyle:SetCallback("OnValueChanged", function(_, _, value)
 				breakpoint.displayStyle = value
-				breakpoint.rounding = Constants.DisplayStyleSettings[value].rounding
+				breakpoint.rounding = CONSTANTS.DISPLAY_STYLE_SETTINGS[value].rounding
 
 				if breakpointPrecision then
 					breakpointPrecision:SetDisabled(value ~= "decimalSeconds")

@@ -1,22 +1,10 @@
 local SCM = select(2, ...)
 
-local dataVersion = 1
-local EXPORT_TYPE_ALL = 0
-local EXPORT_TYPE_CLASS = 1
-local EXPORT_TYPE_GLOBAL_SETTINGS = 2
-local EXPORT_TYPE_GLOBAL_ANCHORS = 3
-local EXPORT_TYPE_EVERYTHING = 4
-local GLOBAL_CUSTOM_CONFIG_KEYS = {
-	"spellConfig",
-	"itemConfig",
-	"slotConfig",
-	"timerConfig",
-	"bloodlustConfig",
-}
-local PROFILE_OPTION_SECTION_KEYS = {
-	resourceBar = true,
-	castBar = true,
-}
+local PROFILE_CONSTANTS = SCM.Constants.PROFILES
+local DATA_VERSION = PROFILE_CONSTANTS.DATA_VERSION
+local EXPORT_TYPE = PROFILE_CONSTANTS.EXPORT_TYPE
+local GLOBAL_CUSTOM_CONFIG_KEYS = PROFILE_CONSTANTS.CUSTOM_CONFIG_KEYS
+local PROFILE_OPTION_SECTION_KEYS = PROFILE_CONSTANTS.OPTION_KEYS
 
 -- Copy/settings helpers
 local function CopyValue(value)
@@ -65,7 +53,7 @@ local function GetProfileExportData(db, exportType, classFileName, specID)
 		return {}
 	end
 
-	if exportType == EXPORT_TYPE_ALL then
+	if exportType == EXPORT_TYPE.ALL then
 		if classFileName and classFileName ~= "ALL" and specID then
 			local classData = db[classFileName]
 			return {
@@ -131,25 +119,25 @@ function SCM:ExportProfile(classFileName, specID, exportOptions)
 	exportOptions = exportOptions or {}
 	local hasIncludeOptions = exportOptions.includeResourceBar or exportOptions.includeCastBar or exportOptions.includeGlobalSettings or exportOptions.includeGlobalAnchors
 
-	local exportType = specID or EXPORT_TYPE_ALL
+	local exportType = specID or EXPORT_TYPE.ALL
 	if classFileName == "ALL" or (specID and hasIncludeOptions) then
-		exportType = EXPORT_TYPE_ALL
+		exportType = EXPORT_TYPE.ALL
 	elseif classFileName and not specID then
-		exportType = EXPORT_TYPE_CLASS
+		exportType = EXPORT_TYPE.CLASS
 	end
 
-	local prefix = string.format("!SCM:%d:%d!", dataVersion, exportType)
+	local prefix = string.format("!%s:%d:%d!", PROFILE_CONSTANTS.PREFIX, DATA_VERSION, exportType)
 	return prefix .. SCM.Encode(BuildProfileExportPayload(self, exportType, classFileName, specID, exportOptions))
 end
 
 function SCM:ExportGlobalSettings()
-	local exportType = EXPORT_TYPE_GLOBAL_SETTINGS
-	local prefix = string.format("!SCM:%d:%d!", dataVersion, exportType)
+	local exportType = EXPORT_TYPE.GLOBAL_SETTINGS
+	local prefix = string.format("!%s:%d:%d!", PROFILE_CONSTANTS.PREFIX, DATA_VERSION, exportType)
 	return prefix .. SCM.Encode(BuildGeneralSettingsExport(self.db.profile.options))
 end
 
 function SCM:ExportGlobalAnchors()
-	local prefix = string.format("!SCM:%d:%d!", dataVersion, EXPORT_TYPE_GLOBAL_ANCHORS)
+	local prefix = string.format("!%s:%d:%d!", PROFILE_CONSTANTS.PREFIX, DATA_VERSION, EXPORT_TYPE.GLOBAL_ANCHORS)
 	return prefix .. SCM.Encode({
 		globalAnchorConfig = CopyTable(self.db.profile.globalAnchorConfig),
 		globalCustomConfig = CopyTable(self.db.profile.globalCustomConfig),
@@ -167,7 +155,7 @@ local function DecodeImportString(importString)
 	local typeID = tonumber(typeStr)
 	local versionID = tonumber(version)
 
-	if prefix ~= "SCM" or versionID ~= dataVersion then
+	if prefix ~= "SCM" or versionID ~= DATA_VERSION then
 		print("Invalid Import String")
 		return
 	end
@@ -290,14 +278,14 @@ function SCM:ImportProfile(profileName, importString, importSettings)
 	local includeGlobalSettings = not hasImportSettings or importSettings.includeGlobalSettings
 	local includeGlobalAnchors = not hasImportSettings or importSettings.includeGlobalAnchors
 
-	if typeID == EXPORT_TYPE_GLOBAL_SETTINGS then
+	if typeID == EXPORT_TYPE.GLOBAL_SETTINGS then
 		if includeGlobalSettings then
 			self:ImportGlobalSettingsFromData(data)
 		end
 		return
 	end
 
-	if typeID == EXPORT_TYPE_GLOBAL_ANCHORS then
+	if typeID == EXPORT_TYPE.GLOBAL_ANCHORS then
 		if includeGlobalAnchors then
 			self:ImportGlobalAnchorsFromData(data, true)
 		end
@@ -309,14 +297,14 @@ function SCM:ImportProfile(profileName, importString, importSettings)
 		if data.profileData or data.resourceBarSettings or data.castBarSettings or data.globalSettings or data.globalAnchors then
 			importedSections = data
 			data = type(data.profileData) == "table" and data.profileData or {}
-		elseif typeID == EXPORT_TYPE_EVERYTHING then
+		elseif typeID == EXPORT_TYPE.EVERYTHING then
 			importedSections = data
 			data = type(data.profileData) == "table" and data.profileData or {}
 		end
 	end
 
-	if typeID == EXPORT_TYPE_EVERYTHING then
-		typeID = EXPORT_TYPE_ALL
+	if typeID == EXPORT_TYPE.EVERYTHING then
+		typeID = EXPORT_TYPE.ALL
 	end
 
 	if not profileName or profileName == "" then
@@ -337,7 +325,7 @@ function SCM:ImportProfile(profileName, importString, importSettings)
 	local importProfileData = not hasImportSettings or importSettings.useSpecificClass
 
 	if importProfileData then
-		if typeID == EXPORT_TYPE_ALL then
+		if typeID == EXPORT_TYPE.ALL then
 			if selectedSpec then
 				local classFileName = importAllClasses and select(6, GetSpecializationInfoByID(selectedSpec)) or selectedClass
 				local classConfig = classFileName and data[classFileName]
@@ -359,7 +347,7 @@ function SCM:ImportProfile(profileName, importString, importSettings)
 					end
 				end
 			end
-		elseif typeID == EXPORT_TYPE_CLASS then
+		elseif typeID == EXPORT_TYPE.CLASS then
 			if selectedSpec then
 				local classFileName = importAllClasses and select(6, GetSpecializationInfoByID(selectedSpec)) or selectedClass
 				ImportSpec(db, defaultAnchor, classFileName, selectedSpec, data[selectedSpec] or data[selectedSpecKey])

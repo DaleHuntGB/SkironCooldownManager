@@ -17,7 +17,7 @@ local function GetDisplayDataForSpellConfig(defaultCooldownViewerConfig, sourceI
 		return
 	end
 
-	local pairData = defaultCooldownViewerConfig[SCM.Constants.SourcePairs[sourceIndex]]
+	local pairData = defaultCooldownViewerConfig[SCM.Constants.CDM.SOURCE_PAIRS[sourceIndex]]
 	local cooldownID = config.cooldownID or tonumber(tostring(configID):match("(%d+)$"))
 
 	if cooldownID then

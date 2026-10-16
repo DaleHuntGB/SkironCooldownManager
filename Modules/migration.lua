@@ -4,7 +4,7 @@ local Utils = SCM.Utils
 local GetCooldownConfigKey = Utils.GetCooldownConfigKey
 local ToBuffBarGroup = Utils.ToBuffBarGroup
 local IsBuffBarGroup = Utils.IsBuffBarGroup
-local GlobalGlowSubregion = SCM.Constants.GlobalGlowSubregion
+local GLOBAL_GLOW_SUBREGION = SCM.Constants.GENERAL.GLOBAL_GLOW_SUBREGION
 local PROFILE_VERSION = 1
 
 local function CreateCustomConfigTables(customConfig)
@@ -41,7 +41,7 @@ end
 
 function SCM:CreateCooldownBreakpoints(options)
 	if not options.cooldownBreakpoints or #options.cooldownBreakpoints == 0 then
-		options.cooldownBreakpoints = CopyTable(SCM.Constants.Formatter.DefaultBreakpoints)
+		options.cooldownBreakpoints = CopyTable(SCM.Constants.COOLDOWN.FORMATTER.DEFAULT_BREAKPOINTS)
 	else
 		for _, breakpoint in ipairs(options.cooldownBreakpoints) do
 			if not breakpoint.threshold then
@@ -214,7 +214,7 @@ local function MigrateGlowRules(config)
 	if not hasGlowRules and shouldCreateRules then
 		local state = config.glowWhileActive and "active" or "inactive"
 		SetEffectRules(config, "glow", {
-			{ state = state, subregion = GlobalGlowSubregion },
+			{ state = state, subregion = GLOBAL_GLOW_SUBREGION },
 		})
 	end
 
@@ -371,7 +371,7 @@ local function GetCooldownDataForLegacySpellConfig(defaultCooldownViewerConfig, 
 
 	for sourceIndex in pairs(config.source) do
 		local categoryConfig = defaultCooldownViewerConfig[sourceIndex]
-		local pairIndex = SCM.Constants.SourcePairs[sourceIndex]
+		local pairIndex = SCM.Constants.CDM.SOURCE_PAIRS[sourceIndex]
 		local pairConfig = pairIndex and defaultCooldownViewerConfig[pairIndex]
 		local data = categoryConfig and categoryConfig.spellIDs[spellID]
 		if not data and pairConfig then

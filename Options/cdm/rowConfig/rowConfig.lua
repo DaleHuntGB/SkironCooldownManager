@@ -244,7 +244,7 @@ function CDMOptions.SelectRow(widget, rowWidget, parentWidget, anchorOptions, sc
 	local applicationsPoint = AceGUI:Create("Dropdown")
 	applicationsPoint:SetRelativeWidth(0.25)
 	applicationsPoint:SetLabel("Point")
-	applicationsPoint:SetList(SCM.Constants.AnchorPoints)
+	applicationsPoint:SetList(SCM.Constants.GENERAL.ANCHOR_POINTS)
 	applicationsPoint:SetValue(rowConfig.applicationsPoint or options.chargePoint)
 	applicationsPoint:SetCallback("OnValueChanged", function(_, _, value)
 		rowConfig.applicationsPoint = value
@@ -255,7 +255,7 @@ function CDMOptions.SelectRow(widget, rowWidget, parentWidget, anchorOptions, sc
 	local applicationsRelativePoint = AceGUI:Create("Dropdown")
 	applicationsRelativePoint:SetRelativeWidth(0.25)
 	applicationsRelativePoint:SetLabel("Relative Point")
-	applicationsRelativePoint:SetList(SCM.Constants.AnchorPoints)
+	applicationsRelativePoint:SetList(SCM.Constants.GENERAL.ANCHOR_POINTS)
 	applicationsRelativePoint:SetValue(rowConfig.applicationsRelativePoint or options.chargeRelativePoint)
 	applicationsRelativePoint:SetCallback("OnValueChanged", function(_, _, value)
 		rowConfig.applicationsRelativePoint = value
@@ -317,7 +317,7 @@ function CDMOptions.SelectRow(widget, rowWidget, parentWidget, anchorOptions, sc
 		local chargeRelativePoint = AceGUI:Create("Dropdown")
 		chargeRelativePoint:SetRelativeWidth(0.25)
 		chargeRelativePoint:SetLabel("Point")
-		chargeRelativePoint:SetList(SCM.Constants.AnchorPoints)
+		chargeRelativePoint:SetList(SCM.Constants.GENERAL.ANCHOR_POINTS)
 		chargeRelativePoint:SetValue(rowConfig.chargePoint or options.chargePoint)
 		chargeRelativePoint:SetCallback("OnValueChanged", function(_, _, value)
 			rowConfig.chargePoint = value
@@ -328,7 +328,7 @@ function CDMOptions.SelectRow(widget, rowWidget, parentWidget, anchorOptions, sc
 		local chargeRelativePoint = AceGUI:Create("Dropdown")
 		chargeRelativePoint:SetRelativeWidth(0.25)
 		chargeRelativePoint:SetLabel("Relative Point")
-		chargeRelativePoint:SetList(SCM.Constants.AnchorPoints)
+		chargeRelativePoint:SetList(SCM.Constants.GENERAL.ANCHOR_POINTS)
 		chargeRelativePoint:SetValue(rowConfig.chargeRelativePoint or options.chargeRelativePoint)
 		chargeRelativePoint:SetCallback("OnValueChanged", function(_, _, value)
 			rowConfig.chargeRelativePoint = value

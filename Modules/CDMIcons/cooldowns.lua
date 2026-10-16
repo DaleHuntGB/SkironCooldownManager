@@ -3,7 +3,7 @@ local SCM = select(2, ...)
 local Cooldowns = SCM.Cooldowns
 local Cache = SCM.Cache
 local States = SCM.States
-local Constants = SCM.Constants
+local CONSTANTS = SCM.Constants.CDM
 
 local function GetChildSpellID(child)
 	local spellID
@@ -13,7 +13,7 @@ local function GetChildSpellID(child)
 		spellID = FindSpellOverrideByID(child.SCMSpellID) or child.SCMSpellID
 	end
 
-	if spellID and not issecretvalue(spellID) and Constants.CheckActiveSpell[spellID] then
+	if spellID and not issecretvalue(spellID) and CONSTANTS.CHECK_ACTIVE_SPELL[spellID] then
 		local activeSpellID = not issecretvalue(child.isActiveSpell) and child.isActiveSpell
 		if activeSpellID then
 			spellID = activeSpellID
@@ -116,7 +116,7 @@ function Cooldowns.GetChildCooldown(child)
 	local cooldownState, durationObject = GetChildCooldownInfo(child, false)
 	cooldownState = cooldownState or "ready"
 
-	if Constants.CheckCooldownFrameSpells[child.SCMSpellID] then
+	if CONSTANTS.CHECK_COOLDOWN_FRAME_SPELLS[child.SCMSpellID] then
 		return durationObject and child.Cooldown:IsVisible() and cooldownState or "ready", durationObject
 	end
 
@@ -210,7 +210,7 @@ local function OnRegularCooldownChanged(self, changeType)
 		if not config.forceActiveSwipe and (config.hideActiveSwipe or SCM.IsActiveSwipeDisabled(parent.SCMSpellID, options)) then
 			Cooldowns.OverrideRegularAuraCooldown(self, parent, options)
 		end
-	elseif (options.disableGCD and IsChildOnGlobalCooldown(parent)) or (changeType == "CLEAR" and parent.SCMSpellID and Constants.FixBlizzardSpells[parent.SCMSpellID]) then
+	elseif (options.disableGCD and IsChildOnGlobalCooldown(parent)) or (changeType == "CLEAR" and parent.SCMSpellID and CONSTANTS.FIX_BLIZZARD_SPELLS[parent.SCMSpellID]) then
 		Cooldowns.SetNormalCooldown(self, parent)
 	end
 

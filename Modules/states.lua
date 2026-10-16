@@ -2,7 +2,7 @@ local SCM = select(2, ...)
 local States = SCM.States
 local Icons = SCM.Icons
 local UpdateChildDesaturation = Icons.UpdateChildDesaturation
-local GlobalGlowSubregion = SCM.Constants.GlobalGlowSubregion
+local GLOBAL_GLOW_SUBREGION = SCM.Constants.GENERAL.GLOBAL_GLOW_SUBREGION
 
 function States.GetState(child)
 	if not child.SCMState then
@@ -55,7 +55,7 @@ function States.StopStateGlows(child)
 end
 
 local function GetGlowOptions(config, subregion)
-	if subregion == GlobalGlowSubregion then
+	if subregion == GLOBAL_GLOW_SUBREGION then
 		local options = SCM.db.profile.options
 		local glowType = options.glowType
 		local glowTypeOptions = glowType and options.glowTypeOptions and options.glowTypeOptions[glowType]

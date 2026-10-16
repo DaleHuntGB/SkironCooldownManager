@@ -207,7 +207,7 @@ function Utils.GetPairedSource(sourceIndex)
 		return
 	end
 
-	return SCM.Constants.SourcePairs[sourceIndex]
+	return SCM.Constants.CDM.SOURCE_PAIRS[sourceIndex]
 end
 
 function Utils.SortBySCMOrder(a, b)

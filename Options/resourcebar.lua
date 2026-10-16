@@ -1,9 +1,9 @@
 local SCM = select(2, ...)
 local AceGUI = LibStub("AceGUI-3.0")
 local LSM = LibStub("LibSharedMedia-3.0")
-local Constants = SCM.Constants
+local CONSTANTS = SCM.Constants
 local Options = SCM.Options
-local RESOURCE_BAR_POWER_TYPES = SCM.Constants.ResourceBarPowerTypes
+local RESOURCE_BAR_POWER_TYPES = SCM.Constants.RESOURCE_BAR.POWER_TYPES
 
 SCM.MainTabs.ResourceBar = { value = "ResourceBar", text = "Resource Bar", order = 5, subgroups = {} }
 
@@ -199,7 +199,7 @@ local function AddPositionSettings(parent, settings)
 	local anchorPoint = AceGUI:Create("Dropdown")
 	anchorPoint:SetRelativeWidth(0.33)
 	anchorPoint:SetLabel("Anchor Point")
-	anchorPoint:SetList(SCM.Constants.AnchorPoints)
+	anchorPoint:SetList(SCM.Constants.GENERAL.ANCHOR_POINTS)
 	anchorPoint:SetValue(settings.point)
 	anchorPoint:SetCallback("OnValueChanged", function(_, _, value)
 		settings.point = value
@@ -232,7 +232,7 @@ local function AddPositionSettings(parent, settings)
 	local relativePoint = AceGUI:Create("Dropdown")
 	relativePoint:SetRelativeWidth(0.33)
 	relativePoint:SetLabel("Relative Point")
-	relativePoint:SetList(SCM.Constants.AnchorPoints)
+	relativePoint:SetList(SCM.Constants.GENERAL.ANCHOR_POINTS)
 	relativePoint:SetValue(settings.relativePoint)
 	relativePoint:SetCallback("OnValueChanged", function(_, _, value)
 		settings.relativePoint = value
@@ -439,7 +439,7 @@ local function AddBarSettings(parent, title, settings, includeManaRoleSettings, 
 
 	local frameStrata = AceGUI:Create("Dropdown")
 	frameStrata:SetRelativeWidth(0.33)
-	frameStrata:SetList(SCM.Constants.FrameStrata, SCM.Constants.FrameStrataSorted)
+	frameStrata:SetList(SCM.Constants.GENERAL.FRAME_STRATA, SCM.Constants.GENERAL.FRAME_STRATA_SORTED)
 	frameStrata:SetLabel("Frame Strata")
 	frameStrata:SetValue(settings.frameStrata or globalSettings.frameStrata or "BACKGROUND")
 	frameStrata:SetCallback("OnValueChanged", function(_, _, value)
@@ -465,13 +465,13 @@ local function AddBarSettings(parent, title, settings, includeManaRoleSettings, 
 			local hideManaRoles = AceGUI:Create("Dropdown")
 			hideManaRoles:SetRelativeWidth(0.33)
 			hideManaRoles:SetLabel("Hide Mana For Roles")
-			hideManaRoles:SetList(SCM.Constants.Roles)
+			hideManaRoles:SetList(SCM.Constants.CHARACTER.ROLES)
 			hideManaRoles:SetMultiselect(true)
 			hideManaRoles:SetCallback("OnValueChanged", function(_, _, key, value)
 				settings.hideManaRoles[key] = value
 				RefreshResourceBars()
 			end)
-			for key in pairs(SCM.Constants.Roles) do
+			for key in pairs(SCM.Constants.CHARACTER.ROLES) do
 				hideManaRoles:SetItemValue(key, hideManaRoleSettings[key])
 			end
 			generalSettings:AddChild(hideManaRoles)
@@ -488,7 +488,7 @@ local function AddBarSettings(parent, title, settings, includeManaRoleSettings, 
 		end
 	else
 		if UnitClassBase("player") == "DRUID" then
-			local powerTypeList = title == "Primary" and Constants.DruidPrimaryPowerTypes or Constants.DruidSecondaryPowerTypes
+			local powerTypeList = title == "Primary" and CONSTANTS.RESOURCE_BAR.DRUID_PRIMARY_POWER_TYPES or CONSTANTS.RESOURCE_BAR.DRUID_SECONDARY_POWER_TYPES
 			local druidFormPowerTypesBySpec = settings.druidFormPowerTypes
 
 			local druidSettings = AceGUI:Create("InlineGroup")
@@ -649,7 +649,7 @@ local function AddBarSettings(parent, title, settings, includeManaRoleSettings, 
 
 	local blendMode = AceGUI:Create("Dropdown")
 	blendMode:SetRelativeWidth(0.33)
-	blendMode:SetList(SCM.Constants.BlendMode, SCM.Constants.BlendModeSorted)
+	blendMode:SetList(SCM.Constants.GENERAL.BLEND_MODE, SCM.Constants.GENERAL.BLEND_MODE_SORTED)
 	blendMode:SetLabel("Blend Mode")
 	blendMode:SetValue(sparkOptions.blendMode)
 	blendMode:SetCallback("OnValueChanged", function(_, _, value)
@@ -814,7 +814,7 @@ local function AddBarSettings(parent, title, settings, includeManaRoleSettings, 
 	local textOutline = AceGUI:Create("Dropdown")
 	textOutline:SetRelativeWidth(0.25)
 	textOutline:SetLabel("Outline")
-	textOutline:SetList(Constants.TextOutline, Constants.TextOutlineSorted)
+	textOutline:SetList(CONSTANTS.GENERAL.TEXT_OUTLINE, CONSTANTS.GENERAL.TEXT_OUTLINE_SORTED)
 	textOutline:SetValue(settings.textOutline)
 	textOutline:SetCallback("OnValueChanged", function(_, _, value)
 		settings.textOutline = value
