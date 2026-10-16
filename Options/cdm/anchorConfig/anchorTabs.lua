@@ -187,11 +187,8 @@ function CDMOptions.SelectAnchor(widget, parentWidget, anchorIndex, anchorTabsTb
 		data.anchor[2] = text
 		Options.ApplyModeConfigUpdate(anchorIndex, mode)
 	end
-	relativeTo:SetCallback("OnEnterPressed", function(_, _, text)
-		SetAnchor(text)
-	end)
 	anchorOptions:AddChild(relativeTo)
-	Options.AddAnchorParentAutocomplete(anchorOptions, relativeTo, SetAnchor)
+	Options.AddAnchorParentAutocomplete(relativeTo, SetAnchor)
 
 	local relativePoint = AceGUI:Create("Dropdown")
 	relativePoint:SetRelativeWidth(isBuffBar and 0.25 or 0.33)

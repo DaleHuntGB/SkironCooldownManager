@@ -237,13 +237,9 @@ local function AddRuleValueControl(effectTabGroup, effectKey, iconConfig, rule, 
 		targetEditBox:SetLabel("Frame")
 		targetEditBox:SetRelativeWidth(0.66)
 		targetEditBox:SetText(rule.subregionTargetCustom or "")
-		targetEditBox:SetCallback("OnEnterPressed", function(_, _, value)
-			rule.subregionTargetCustom = value
-			applyConfigUpdate()
-		end)
 		targetEditBox:SetDisabled(not ((rule.subregionTargetType or "self") == "custom"))
 		effectTabGroup:AddChild(targetEditBox)
-		Options.AddAnchorParentAutocomplete(effectTabGroup, targetEditBox, function(value)
+		Options.AddAnchorParentAutocomplete(targetEditBox, function(value)
 			rule.subregionTargetCustom = value
 			applyConfigUpdate()
 		end)
