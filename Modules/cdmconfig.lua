@@ -6,34 +6,34 @@ local function GetSpellAnchorGroupConfig(spellConfig, group)
 	return spellConfig and spellConfig.anchorGroup and spellConfig.anchorGroup[group]
 end
 
-local function SetSpecConfigMetatables(specConfig, profileConfig, defaultConfig)
+local function SetOverrideConfigMetatables(overrideConfig, profileConfig, defaultConfig)
 	if not defaultConfig then
 		defaultConfig = {}
 	end
 
-	for key, value in pairs(specConfig) do
+	for key, value in pairs(overrideConfig) do
 		local profileValue = profileConfig[key]
 		if type(value) == "table" and type(profileValue) == "table" then
-			SetSpecConfigMetatables(value, profileValue, defaultConfig[key])
+			SetOverrideConfigMetatables(value, profileValue, defaultConfig[key])
 		end
 	end
 
 	if type(defaultConfig[1]) == "table" then
 		for index, defaultValue in ipairs(defaultConfig) do
-			if rawget(specConfig, index) == nil then
+			if rawget(overrideConfig, index) == nil then
 				local profileValue = profileConfig[index]
 				if type(profileValue) == "table" then
-					specConfig[index] = SetSpecConfigMetatables({}, profileValue, defaultValue)
+					overrideConfig[index] = SetOverrideConfigMetatables({}, profileValue, defaultValue)
 				end
 			end
 		end
 	end
 
-	return setmetatable(specConfig, {
+	return setmetatable(overrideConfig, {
 		__index = function(self, key)
 			local value = profileConfig[key]
 			if type(value) == "table" then
-				value = SetSpecConfigMetatables({}, value, defaultConfig[key])
+				value = SetOverrideConfigMetatables({}, value, defaultConfig[key])
 				rawset(self, key, value)
 			end
 
@@ -42,18 +42,18 @@ local function SetSpecConfigMetatables(specConfig, profileConfig, defaultConfig)
 	})
 end
 
-function SCM:UpdateCastAndResourceBarConfigs(checkSpec)
+function SCM:UpdateCastAndResourceBarConfigs()
 	local options = self.db.profile.options
 	local defaultOptions = SCM.DefaultDB.profile.options
 
-	if checkSpec and self.specResourceBarConfig.active then
-		self.resourceBarConfig = SetSpecConfigMetatables(self.specResourceBarConfig, options.resourceBar, defaultOptions.resourceBar)
+	if self.resourceBarOverride.active then
+		self.resourceBarConfig = SetOverrideConfigMetatables(self.resourceBarOverride, options.resourceBar, defaultOptions.resourceBar)
 	else
 		self.resourceBarConfig = options.resourceBar
 	end
 
-	if checkSpec and self.specCastBarConfig.active then
-		self.castBarConfig = SetSpecConfigMetatables(self.specCastBarConfig, options.castBar, defaultOptions.castBar)
+	if self.castBarOverride.active then
+		self.castBarConfig = SetOverrideConfigMetatables(self.castBarOverride, options.castBar, defaultOptions.castBar)
 	else
 		self.castBarConfig = options.castBar
 	end
@@ -85,8 +85,8 @@ function SCM:UpdateDB()
 	local specAurasAnchorConfig = self.DB.defaultAurasAnchorConfig
 	local specSpellConfig = {}
 	local specCustomConfig = {}
-	local specResourceBarConfig = {}
-	local specCastBarConfig = {}
+	local resourceBarOverride = {}
+	local castBarOverride = {}
 
 	if currentConfig then
 		specAnchorConfig = currentConfig.anchorConfig[specID] or specAnchorConfig
@@ -94,8 +94,8 @@ function SCM:UpdateDB()
 		specAurasAnchorConfig = (currentConfig.aurasAnchorConfig and currentConfig.aurasAnchorConfig[specID]) or specAurasAnchorConfig
 		specSpellConfig = currentConfig.spellConfig[specID] or specSpellConfig
 		specCustomConfig = (currentConfig.customConfig and currentConfig.customConfig[specID]) or specCustomConfig
-		specResourceBarConfig = (currentConfig.resourceBarConfig and currentConfig.resourceBarConfig[specID]) or specResourceBarConfig
-		specCastBarConfig = (currentConfig.castBarConfig and currentConfig.castBarConfig[specID]) or specCastBarConfig
+		resourceBarOverride = (currentConfig.resourceBarConfig and currentConfig.resourceBarConfig[specID]) or resourceBarOverride
+		castBarOverride = (currentConfig.castBarConfig and currentConfig.castBarConfig[specID]) or castBarOverride
 	end
 
 	self.db.profile[class] = self.db.profile[class] or {}
@@ -107,8 +107,8 @@ function SCM:UpdateDB()
 	currentConfig.aurasAnchorConfig = currentConfig.aurasAnchorConfig or CopyTable(specAurasAnchorConfig)
 	currentConfig.spellConfig = currentConfig.spellConfig or CopyTable(specSpellConfig)
 	currentConfig.customConfig = currentConfig.customConfig or CopyTable(specCustomConfig)
-	currentConfig.resourceBarConfig = currentConfig.resourceBarConfig or CopyTable(specResourceBarConfig)
-	currentConfig.castBarConfig = currentConfig.castBarConfig or CopyTable(specCastBarConfig)
+	currentConfig.resourceBarConfig = currentConfig.resourceBarConfig or CopyTable(resourceBarOverride)
+	currentConfig.castBarConfig = currentConfig.castBarConfig or CopyTable(castBarOverride)
 
 	self.currentConfig = currentConfig
 	self.anchorConfig = currentConfig.anchorConfig
@@ -124,13 +124,12 @@ function SCM:UpdateDB()
 
 	self.customConfig = currentConfig.customConfig
 
-	if not SCM.isForever then
-		self.specResourceBarConfig = currentConfig.resourceBarConfig
-		self.specCastBarConfig = currentConfig.castBarConfig
-		self:UpdateCastAndResourceBarConfigs(true)
-	else
+	self.resourceBarOverride = currentConfig.resourceBarConfig
+	self.castBarOverride = currentConfig.castBarConfig
+	self:UpdateCastAndResourceBarConfigs()
+
+	if SCM.isForever then
 		self.swingTimerConfig = self.db.profile.options.swingTimer
-		self:UpdateCastAndResourceBarConfigs(false)
 	end
 
 	self.isHideWhenInactiveEnabled = self:GetHideWhenInactive() == 1
