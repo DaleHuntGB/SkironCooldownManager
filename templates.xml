@@ -132,7 +132,7 @@
 		</Scripts>
 	</Button>
 
-	<StatusBar name="SCMResourceBarTemplate" inherits="BackdropTemplate" virtual="true">
+	<StatusBar name="SCMResourceBarTemplate" mixin="SCMResourceBarMixin" inherits="BackdropTemplate" virtual="true">
 		<Size>
 			<AbsDimension x="240" y="14" />
 		</Size>
@@ -156,9 +156,12 @@
 				</Layers>
 			</Frame>
 		</Frames>
+		<Scripts>
+			<OnEvent method="OnEvent" />
+		</Scripts>
 	</StatusBar>
 
-	<Frame name="SCM_ResourceBarContainer" hidden="true" parent="UIParent" frameStrata="BACKGROUND">
+	<Frame name="SCM_ResourceBarContainer" mixin="SCMResourceBarControllerMixin" hidden="true" parent="UIParent" frameStrata="BACKGROUND">
 		<Size>
 			<AbsDimension x="1" y="30" />
 		</Size>
@@ -177,5 +180,9 @@
 				</Anchors>
 			</StatusBar>
 		</Frames>
+		<Scripts>
+			<OnEvent method="OnEvent" />
+			<OnAttributeChanged method="OnAttributeChanged" />
+		</Scripts>
 	</Frame>
 </Ui>

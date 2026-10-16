@@ -219,14 +219,15 @@ local function AddPositionSettings(parent, settings)
 			return
 		end
 		settings.anchorFrame = text
-		anchorFrame:SetText(text)
+
+		if anchorFrame:GetText() ~= text then
+			anchorFrame:SetText(text)
+		end
+
 		RefreshResourceBars()
 	end
-	anchorFrame:SetCallback("OnEnterPressed", function(_, _, text)
-		SetAnchor(text)
-	end)
 	positionSettings:AddChild(anchorFrame)
-	Options.AddAnchorParentAutocomplete(positionSettings, anchorFrame, SetAnchor)
+	Options.AddAnchorParentAutocomplete(anchorFrame, SetAnchor)
 
 	local relativePoint = AceGUI:Create("Dropdown")
 	relativePoint:SetRelativeWidth(0.33)
@@ -348,7 +349,7 @@ local function AddSpecialColorSettings(parent, settings)
 end
 
 local function AddBarSettings(parent, title, settings, includeManaRoleSettings, globalSettings)
-	local isSpecConfigActive = SCM.specResourceBarConfig.active
+	local isOverrideActive = SCM.resourceBarOverride.active
 
 	local generalSettings = AceGUI:Create("InlineGroup")
 	generalSettings:SetLayout("flow")
@@ -458,21 +459,33 @@ local function AddBarSettings(parent, title, settings, includeManaRoleSettings, 
 	end)
 	generalSettings:AddChild(frameLevel)
 
-	if not isSpecConfigActive then
-		local hideManaRoleSettings = settings.hideManaRoles
-		local hideManaRoles = AceGUI:Create("Dropdown")
-		hideManaRoles:SetRelativeWidth(0.33)
-		hideManaRoles:SetLabel("Hide Mana For Roles")
-		hideManaRoles:SetList(SCM.Constants.Roles)
-		hideManaRoles:SetMultiselect(true)
-		hideManaRoles:SetCallback("OnValueChanged", function(_, _, key, value)
-			settings.hideManaRoles[key] = value
-			RefreshResourceBars()
-		end)
-		for key in pairs(SCM.Constants.Roles) do
-			hideManaRoles:SetItemValue(key, hideManaRoleSettings[key])
+	if not isOverrideActive then
+		if not SCM.isForever then
+			local hideManaRoleSettings = settings.hideManaRoles
+			local hideManaRoles = AceGUI:Create("Dropdown")
+			hideManaRoles:SetRelativeWidth(0.33)
+			hideManaRoles:SetLabel("Hide Mana For Roles")
+			hideManaRoles:SetList(SCM.Constants.Roles)
+			hideManaRoles:SetMultiselect(true)
+			hideManaRoles:SetCallback("OnValueChanged", function(_, _, key, value)
+				settings.hideManaRoles[key] = value
+				RefreshResourceBars()
+			end)
+			for key in pairs(SCM.Constants.Roles) do
+				hideManaRoles:SetItemValue(key, hideManaRoleSettings[key])
+			end
+			generalSettings:AddChild(hideManaRoles)
+		else
+			local forceMana = AceGUI:Create("CheckBox")
+			forceMana:SetRelativeWidth(0.33)
+			forceMana:SetLabel("Show Mana")
+			forceMana:SetValue(settings.forceMana)
+			forceMana:SetCallback("OnValueChanged", function(_, _, value)
+				settings.forceMana = value
+				RefreshResourceBars()
+			end)
+			generalSettings:AddChild(forceMana)
 		end
-		generalSettings:AddChild(hideManaRoles)
 	else
 		if UnitClassBase("player") == "DRUID" then
 			local powerTypeList = title == "Primary" and Constants.DruidPrimaryPowerTypes or Constants.DruidSecondaryPowerTypes
@@ -507,7 +520,7 @@ local function AddBarSettings(parent, title, settings, includeManaRoleSettings, 
 		else
 			local forceMana = AceGUI:Create("CheckBox")
 			forceMana:SetRelativeWidth(0.33)
-			forceMana:SetLabel("Show Mana (if possible)")
+			forceMana:SetLabel("Show Mana")
 			forceMana:SetValue(settings.forceMana)
 			forceMana:SetCallback("OnValueChanged", function(_, _, value)
 				settings.forceMana = value
@@ -908,97 +921,88 @@ local function ResourceBar(self)
 	label:SetFontObject("Game12Font")
 	resourceBarFrame:AddChild(label)
 
-	if not SCM.isForever then
-		local statusGroup = AceGUI:Create("InlineGroup")
-		statusGroup:SetFullWidth(true)
-		statusGroup:SetLayout("flow")
-		resourceBarFrame:AddChild(statusGroup)
+	local configScope = SCM.isForever and "Class" or "Specialization"
+	local configName = SCM.isForever and UnitClass("player") or select(2, SCM.Utils.GetSpec())
+	local overrideStatus = string.format("Status: |cffea00ff%s|r (%s)", configScope, configName)
 
-		local currentStatus = AceGUI:Create("Label")
-		currentStatus:SetRelativeWidth(0.33)
-		currentStatus:SetJustifyH("LEFT")
-		currentStatus:SetJustifyV("MIDDLE")
-		currentStatus:SetFontObject("Game15Font")
-		statusGroup:AddChild(currentStatus)
+	local statusGroup = AceGUI:Create("InlineGroup")
+	statusGroup:SetFullWidth(true)
+	statusGroup:SetLayout("flow")
+	resourceBarFrame:AddChild(statusGroup)
 
-		if SCM.specResourceBarConfig.active then
-			currentStatus:SetText(string.format("Status: |cffea00ffSpecialization|r (%s)", (select(2, SCM.Utils.GetSpec()))))
+	local currentStatus = AceGUI:Create("Label")
+	currentStatus:SetRelativeWidth(0.33)
+	currentStatus:SetJustifyH("LEFT")
+	currentStatus:SetJustifyV("MIDDLE")
+	currentStatus:SetFontObject("Game15Font")
+	statusGroup:AddChild(currentStatus)
+
+	if SCM.resourceBarOverride.active then
+		currentStatus:SetText(overrideStatus)
+	else
+		currentStatus:SetText("Status: |cfffcf803Profile|r")
+	end
+
+	local modifyCurrentOverride = AceGUI:Create("CheckBox")
+	modifyCurrentOverride:SetRelativeWidth(0.33)
+	modifyCurrentOverride:SetLabel("Use " .. configScope .. " Config")
+	modifyCurrentOverride:SetValue(SCM.resourceBarOverride.active)
+	statusGroup:AddChild(modifyCurrentOverride)
+
+	local resetCurrentOverride = AceGUI:Create("Button")
+	resetCurrentOverride:SetText("Clear " .. configScope .. " Config")
+	resetCurrentOverride:SetRelativeWidth(0.33)
+	resetCurrentOverride:SetDisabled(not SCM.resourceBarOverride.active)
+	resetCurrentOverride:SetCallback("OnEnter", function()
+		GameTooltip:SetOwner(self.frame, "ANCHOR_CURSOR")
+		GameTooltip:SetText("Clear " .. configScope .. " Config", nil, nil, nil, nil, true)
+		GameTooltip:AddLine("This will clear the " .. configScope:lower() .. " config and fall back to the normal resource bar options.", 1, 1, 1, true)
+		GameTooltip:Show()
+	end)
+	resetCurrentOverride:SetCallback("OnLeave", function()
+		GameTooltip:Hide()
+	end)
+	statusGroup:AddChild(resetCurrentOverride)
+
+	local currentTab = "Layout"
+	local resourceBarTabs = AceGUI:Create("TabGroup")
+	resourceBarTabs:SetTabs(RESOURCE_BAR_TABS)
+	resourceBarTabs:SetFullWidth(true)
+	resourceBarTabs:SetFullHeight(true)
+	resourceBarTabs:SetLayout("fill")
+	resourceBarTabs:SetCallback("OnGroupSelected", function(widget, _, group)
+		currentTab = group
+		SelectResourceBarTab(widget, group, SCM.resourceBarConfig)
+	end)
+	resourceBarTabs:SelectTab("Layout")
+	resourceBarFrame:AddChild(resourceBarTabs)
+
+	resetCurrentOverride:SetCallback("OnClick", function()
+		local resourceBarOverride = SCM.resourceBarOverride
+		local isActive = resourceBarOverride.active
+
+		wipe(resourceBarOverride)
+		resourceBarOverride.active = isActive
+		SCM:UpdateCastAndResourceBarConfigs()
+
+		resourceBarTabs:SelectTab(currentTab)
+		RefreshResourceBars()
+	end)
+
+	modifyCurrentOverride:SetCallback("OnValueChanged", function(_, _, value)
+		SCM.resourceBarOverride.active = value
+		SCM:UpdateCastAndResourceBarConfigs()
+
+		if value then
+			currentStatus:SetText(overrideStatus)
 		else
 			currentStatus:SetText("Status: |cfffcf803Profile|r")
 		end
 
-		local modifyCurrentSpecialization = AceGUI:Create("CheckBox")
-		modifyCurrentSpecialization:SetRelativeWidth(0.33)
-		modifyCurrentSpecialization:SetLabel("Use Specialization Config")
-		modifyCurrentSpecialization:SetValue(SCM.specResourceBarConfig.active)
-		statusGroup:AddChild(modifyCurrentSpecialization)
-
-		local resetCurrentSpecialization = AceGUI:Create("Button")
-		resetCurrentSpecialization:SetText("Clear Spec Config")
-		resetCurrentSpecialization:SetRelativeWidth(0.33)
-		resetCurrentSpecialization:SetDisabled(not SCM.specResourceBarConfig.active)
-		resetCurrentSpecialization:SetCallback("OnEnter", function()
-			GameTooltip:SetOwner(self.frame, "ANCHOR_CURSOR")
-			GameTooltip:SetText("Clear Spec Config", nil, nil, nil, nil, true)
-			GameTooltip:AddLine("This will clear the spec config and fall back to the normal resource bar options.", 1, 1, 1, true)
-			GameTooltip:Show()
-		end)
-		resetCurrentSpecialization:SetCallback("OnLeave", function()
-			GameTooltip:Hide()
-		end)
-		statusGroup:AddChild(resetCurrentSpecialization)
-
-		local currentTab = "Layout"
-		local resourceBarTabs = AceGUI:Create("TabGroup")
-		resourceBarTabs:SetTabs(RESOURCE_BAR_TABS)
-		resourceBarTabs:SetFullWidth(true)
-		resourceBarTabs:SetFullHeight(true)
-		resourceBarTabs:SetLayout("fill")
-		resourceBarTabs:SetCallback("OnGroupSelected", function(widget, _, group)
-			currentTab = group
-			SelectResourceBarTab(widget, group, SCM.resourceBarConfig)
-		end)
-		resourceBarTabs:SelectTab("Layout")
-		resourceBarFrame:AddChild(resourceBarTabs)
-
-		resetCurrentSpecialization:SetCallback("OnClick", function()
-			local specResourceBarConfig = SCM.specResourceBarConfig
-			local isActive = specResourceBarConfig.active
-
-			wipe(specResourceBarConfig)
-			specResourceBarConfig.active = isActive
-			SCM:UpdateCastAndResourceBarConfigs()
-
-			resourceBarTabs:SelectTab(currentTab)
-			RefreshResourceBars()
-		end)
-
-		modifyCurrentSpecialization:SetCallback("OnValueChanged", function(_, _, value)
-			SCM.specResourceBarConfig.active = value
-			SCM:UpdateCastAndResourceBarConfigs()
-
-			if value then
-				currentStatus:SetText(string.format("Status: |cffea00ffSpecialization|r (%s)", (select(2, SCM.Utils.GetSpec()))))
-			else
-				currentStatus:SetText("Status: |cfffcf803Profile|r")
-			end
-
-			resourceBarTabs:SelectTab(currentTab)
-			resetCurrentSpecialization:SetDisabled(not value)
-			RefreshResourceBars()
-		end)
-	else
-		local resourceBarTabs = AceGUI:Create("TabGroup")
-		resourceBarTabs:SetTabs(RESOURCE_BAR_TABS)
-		resourceBarTabs:SetFullWidth(true)
-		resourceBarTabs:SetFullHeight(true)
-		resourceBarTabs:SetLayout("fill")
-		resourceBarTabs:SetCallback("OnGroupSelected", function(widget, _, group)
-			SelectResourceBarTab(widget, group, SCM.resourceBarConfig)
-		end)
-		resourceBarTabs:SelectTab("Layout")
-		resourceBarFrame:AddChild(resourceBarTabs)
-	end
+		resourceBarTabs:SelectTab(currentTab)
+		resetCurrentOverride:SetDisabled(not value)
+		RefreshResourceBars()
+	end)
 end
 
 SCM.MainTabs.ResourceBar.callback = ResourceBar

@@ -49,14 +49,10 @@ local function AddAnchorControls(parent, title, anchors, refreshFn, relativeFram
 			return
 		end
 		anchors[2] = text ~= "" and text or nil
-		relativeTo:SetText(anchors[2] or "")
 		refreshFn()
 	end
-	relativeTo:SetCallback("OnEnterPressed", function(_, _, text)
-		SetAnchor(text)
-	end)
 	anchorGroup:AddChild(relativeTo)
-	Options.AddAnchorParentAutocomplete(anchorGroup, relativeTo, SetAnchor)
+	Options.AddAnchorParentAutocomplete(relativeTo, SetAnchor)
 
 	local point = AceGUI:Create("Dropdown")
 	point:SetRelativeWidth(0.5)
@@ -206,66 +202,68 @@ local function CastBar(self)
 	statusGroup:SetLayout("flow")
 	scrollFrame:AddChild(statusGroup)
 
-	local currentStatus = AceGUI:Create("Label")
-	currentStatus:SetRelativeWidth(0.33)
-	currentStatus:SetJustifyH("LEFT")
-	currentStatus:SetJustifyV("MIDDLE")
-	currentStatus:SetFontObject("Game15Font")
-	statusGroup:AddChild(currentStatus)
+	if not SCM.isForever then
+		local currentStatus = AceGUI:Create("Label")
+		currentStatus:SetRelativeWidth(0.33)
+		currentStatus:SetJustifyH("LEFT")
+		currentStatus:SetJustifyV("MIDDLE")
+		currentStatus:SetFontObject("Game15Font")
+		statusGroup:AddChild(currentStatus)
 
-	if SCM.specCastBarConfig.active then
-		currentStatus:SetText(string.format("Status: |cffea00ffSpecialization|r (%s)", (select(2, SCM.Utils.GetSpec()))))
-	else
-		currentStatus:SetText("Status: |cfffcf803Profile|r")
-	end
-
-	local modifyCurrentSpecialization = AceGUI:Create("CheckBox")
-	modifyCurrentSpecialization:SetRelativeWidth(0.33)
-	modifyCurrentSpecialization:SetLabel("Use Specialization Config")
-	modifyCurrentSpecialization:SetValue(SCM.specCastBarConfig.active)
-	statusGroup:AddChild(modifyCurrentSpecialization)
-
-	local resetCurrentSpecialization = AceGUI:Create("Button")
-	resetCurrentSpecialization:SetText("Clear Spec Config")
-	resetCurrentSpecialization:SetRelativeWidth(0.33)
-	resetCurrentSpecialization:SetDisabled(not SCM.specCastBarConfig.active)
-	resetCurrentSpecialization:SetCallback("OnEnter", function()
-		GameTooltip:SetOwner(self.frame, "ANCHOR_CURSOR")
-		GameTooltip:SetText("Clear Spec Config", nil, nil, nil, nil, true)
-		GameTooltip:AddLine("This will clear the spec config and fall back to the normal resource bar options.", 1, 1, 1, true)
-		GameTooltip:Show()
-	end)
-	resetCurrentSpecialization:SetCallback("OnLeave", function()
-		GameTooltip:Hide()
-	end)
-	statusGroup:AddChild(resetCurrentSpecialization)
-
-	resetCurrentSpecialization:SetCallback("OnClick", function()
-		local specCastBarConfig = SCM.specCastBarConfig
-		local isActive = specCastBarConfig.active
-
-		wipe(specCastBarConfig)
-		specCastBarConfig.active = isActive
-		SCM:UpdateCastAndResourceBarConfigs()
-
-		self:SelectTab("CastBar")
-		RefreshCastBar()
-	end)
-
-	modifyCurrentSpecialization:SetCallback("OnValueChanged", function(_, _, value)
-		SCM.specCastBarConfig.active = value
-		SCM:UpdateCastAndResourceBarConfigs()
-
-		if value then
+		if SCM.castBarOverride.active then
 			currentStatus:SetText(string.format("Status: |cffea00ffSpecialization|r (%s)", (select(2, SCM.Utils.GetSpec()))))
 		else
 			currentStatus:SetText("Status: |cfffcf803Profile|r")
 		end
 
-		resetCurrentSpecialization:SetDisabled(not value)
-		self:SelectTab("CastBar")
-		RefreshCastBar()
-	end)
+		local modifyCurrentSpecialization = AceGUI:Create("CheckBox")
+		modifyCurrentSpecialization:SetRelativeWidth(0.33)
+		modifyCurrentSpecialization:SetLabel("Use Specialization Config")
+		modifyCurrentSpecialization:SetValue(SCM.castBarOverride.active)
+		statusGroup:AddChild(modifyCurrentSpecialization)
+
+		local resetCurrentSpecialization = AceGUI:Create("Button")
+		resetCurrentSpecialization:SetText("Clear Spec Config")
+		resetCurrentSpecialization:SetRelativeWidth(0.33)
+		resetCurrentSpecialization:SetDisabled(not SCM.castBarOverride.active)
+		resetCurrentSpecialization:SetCallback("OnEnter", function()
+			GameTooltip:SetOwner(self.frame, "ANCHOR_CURSOR")
+			GameTooltip:SetText("Clear Spec Config", nil, nil, nil, nil, true)
+			GameTooltip:AddLine("This will clear the spec config and fall back to the normal resource bar options.", 1, 1, 1, true)
+			GameTooltip:Show()
+		end)
+		resetCurrentSpecialization:SetCallback("OnLeave", function()
+			GameTooltip:Hide()
+		end)
+		statusGroup:AddChild(resetCurrentSpecialization)
+
+		resetCurrentSpecialization:SetCallback("OnClick", function()
+			local castBarOverride = SCM.castBarOverride
+			local isActive = castBarOverride.active
+
+			wipe(castBarOverride)
+			castBarOverride.active = isActive
+			SCM:UpdateCastAndResourceBarConfigs()
+
+			self:SelectTab("CastBar")
+			RefreshCastBar()
+		end)
+
+		modifyCurrentSpecialization:SetCallback("OnValueChanged", function(_, _, value)
+			SCM.castBarOverride.active = value
+			SCM:UpdateCastAndResourceBarConfigs()
+
+			if value then
+				currentStatus:SetText(string.format("Status: |cffea00ffSpecialization|r (%s)", (select(2, SCM.Utils.GetSpec()))))
+			else
+				currentStatus:SetText("Status: |cfffcf803Profile|r")
+			end
+
+			resetCurrentSpecialization:SetDisabled(not value)
+			self:SelectTab("CastBar")
+			RefreshCastBar()
+		end)
+	end
 
 	local options = SCM.castBarConfig
 	local iconOptions = options.icon

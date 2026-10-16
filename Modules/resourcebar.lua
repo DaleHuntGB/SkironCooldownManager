@@ -1359,32 +1359,30 @@ function SCMResourceBarControllerMixin:GetPrimaryPower(powerType, powerToken, cl
 	end
 
 	local forceMana = false
-	if SCM.specResourceBarConfig and SCM.specResourceBarConfig.active then
-		if className == "DRUID" then
-			local formPowerTypes = GetDruidFormPowerTypes(self.primaryBarOptions)
-			powerType = formPowerTypes and formPowerTypes[formIndex]
-			powerToken = nil
-			if powerType == Enum.PowerType.Mana then
-				powerToken = "MANA"
-				forceMana = true
-			elseif powerType == Enum.PowerType.Rage then
-				powerToken = "RAGE"
-			elseif powerType == Enum.PowerType.Energy then
-				powerToken = "ENERGY"
-			elseif powerType == Enum.PowerType.LunarPower then
-				powerToken = "LUNAR_POWER"
-			end
-		elseif self.primaryBarOptions.forceMana then
-			forceMana = true
-			powerType = Enum.PowerType.Mana
+	if SCM.resourceBarOverride.active and className == "DRUID" then
+		local formPowerTypes = GetDruidFormPowerTypes(self.primaryBarOptions)
+		powerType = formPowerTypes and formPowerTypes[formIndex]
+		powerToken = nil
+		if powerType == Enum.PowerType.Mana then
 			powerToken = "MANA"
+			forceMana = true
+		elseif powerType == Enum.PowerType.Rage then
+			powerToken = "RAGE"
+		elseif powerType == Enum.PowerType.Energy then
+			powerToken = "ENERGY"
+		elseif powerType == Enum.PowerType.LunarPower then
+			powerToken = "LUNAR_POWER"
 		end
+	elseif (SCM.isForever or SCM.resourceBarOverride.active) and self.primaryBarOptions.forceMana then
+		forceMana = true
+		powerType = Enum.PowerType.Mana
+		powerToken = "MANA"
 	end
 
 	if not powerType or not powerToken then
 		return
 	end
-	if powerType == Enum.PowerType.Mana and ShouldHideManaForCurrentRole(self.primaryBarOptions) and not forceMana then
+	if powerType == Enum.PowerType.Mana and not forceMana and ShouldHideManaForCurrentRole(self.primaryBarOptions) then
 		return
 	end
 	return powerType, powerToken
@@ -1413,23 +1411,21 @@ function SCMResourceBarControllerMixin:GetSecondaryResource(primaryPowerType, se
 	end
 
 	local forceMana = false
-	if SCM.specResourceBarConfig and SCM.specResourceBarConfig.active then
-		if className == "DRUID" then
-			local formPowerTypes = GetDruidFormPowerTypes(self.secondaryBarOptions)
-			local customPowerType = formPowerTypes and formPowerTypes[formIndex]
-			if customPowerType == "none" or customPowerType == selectedPrimaryPowerType then
-				secondaryResource = nil
-			else
-				secondaryResource = SCMConstants.DruidSecondaryResourceByPowerType[customPowerType]
-				forceMana = secondaryResource and customPowerType == Enum.PowerType.Mana
-			end
-		elseif self.secondaryBarOptions.forceMana and selectedPrimaryPowerType ~= Enum.PowerType.Mana then
-			forceMana = true
-			secondaryResource = SCMConstants.DruidSecondaryResourceByPowerType[Enum.PowerType.Mana]
+	if SCM.resourceBarOverride.active and className == "DRUID" then
+		local formPowerTypes = GetDruidFormPowerTypes(self.secondaryBarOptions)
+		local customPowerType = formPowerTypes and formPowerTypes[formIndex]
+		if customPowerType == "none" or customPowerType == selectedPrimaryPowerType then
+			secondaryResource = nil
+		else
+			secondaryResource = SCMConstants.DruidSecondaryResourceByPowerType[customPowerType]
+			forceMana = secondaryResource and customPowerType == Enum.PowerType.Mana
 		end
+	elseif (SCM.isForever or SCM.resourceBarOverride.active) and self.secondaryBarOptions.forceMana and selectedPrimaryPowerType ~= Enum.PowerType.Mana then
+		forceMana = true
+		secondaryResource = SCMConstants.DruidSecondaryResourceByPowerType[Enum.PowerType.Mana]
 	end
 
-	if secondaryResource and secondaryResource.powerType == Enum.PowerType.Mana and ShouldHideManaForCurrentRole(self.secondaryBarOptions) and not forceMana then
+	if secondaryResource and secondaryResource.powerType == Enum.PowerType.Mana and not forceMana and ShouldHideManaForCurrentRole(self.secondaryBarOptions) then
 		return
 	end
 	return secondaryResource
