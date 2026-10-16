@@ -3,7 +3,7 @@ local SCM = select(2, ...)
 SCM.DefaultDB.profile.options.castBar.anchors = { "BOTTOM", "ANCHOR:1", "TOP", 0, 0 }
 SCM.DefaultDB.profile.options.resourceBar.anchorFrame = "SCM_CastBar"
 SCM.DefaultDB.profile.options.resourceBar.primaryBar.forceMana = true
-SCM.DefaultDB.profile.options.resourceBar.secondaryBar.forceMana = true
+SCM.DefaultDB.profile.options.resourceBar.secondaryBar.forceMana = false
 
 SCM.DefaultSwingTimerBreakpoints = {
 	{ threshold = 0, displayStyle = "decimalSeconds", precision = 1, step = 0.1, rounding = Enum.NumericRuleFormatRounding.Nearest, format = "%.1f" },
