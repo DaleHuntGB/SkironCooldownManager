@@ -17,11 +17,76 @@ local SWING_TIMER_SETTINGS_TABS = {
 	{ value = "Text", text = "Text" },
 	{ value = "NumberFormat", text = "Number Format" },
 	{ value = "Spark", text = "Spark" },
+	{ value = "OutOfRange", text = "Out of Range" },
 	{ value = "Visibility", text = "Visibility" },
 }
 
 local function RefreshSwingTimer(refreshTicks)
 	SCM:RefreshSwingTimerConfig(refreshTicks, true)
+end
+
+local function AddRangeColorOption(parent, config, key, label)
+	local color = config[key]
+
+	local enableOverride = AceGUI:Create("CheckBox")
+	enableOverride:SetRelativeWidth(0.5)
+	enableOverride:SetLabel("Override " .. label)
+	enableOverride:SetValue(color.enabled)
+	parent:AddChild(enableOverride)
+
+	local colorPicker = AceGUI:Create("ColorPicker")
+	colorPicker:SetRelativeWidth(0.5)
+	colorPicker:SetLabel(label)
+	colorPicker:SetHasAlpha(true)
+	colorPicker:SetColor(color.r, color.g, color.b, color.a)
+	colorPicker:SetDisabled(not color.enabled)
+	colorPicker:SetCallback("OnValueChanged", function(_, _, r, g, b, a)
+		color.r, color.g, color.b, color.a = r, g, b, a
+		RefreshSwingTimer()
+	end)
+	parent:AddChild(colorPicker)
+
+	enableOverride:SetCallback("OnValueChanged", function(_, _, value)
+		color.enabled = value
+		colorPicker:SetDisabled(not value)
+		RefreshSwingTimer()
+	end)
+end
+
+local function AddRangeSettings(parent, config)
+	local rangeOptions = config.outOfRange
+	local rangeSettings = AceGUI:Create("InlineGroup")
+	rangeSettings:SetLayout("flow")
+	rangeSettings:SetTitle("Out of Range")
+	rangeSettings:SetFullWidth(true)
+	parent:AddChild(rangeSettings)
+
+	local enableStyling = AceGUI:Create("CheckBox")
+	enableStyling:SetRelativeWidth(0.5)
+	enableStyling:SetLabel("Enable Out of Range Styling")
+	enableStyling:SetValue(rangeOptions.enabled)
+	enableStyling:SetCallback("OnValueChanged", function(_, _, value)
+		rangeOptions.enabled = value
+		RefreshSwingTimer()
+	end)
+	rangeSettings:AddChild(enableStyling)
+
+	local alpha = AceGUI:Create("Slider")
+	alpha:SetRelativeWidth(0.5)
+	alpha:SetLabel("Out of Range Alpha")
+	alpha:SetSliderValues(0, 1, 0.05)
+	alpha:SetValue(rangeOptions.alpha)
+	alpha:SetCallback("OnValueChanged", function(_, _, value)
+		rangeOptions.alpha = value
+		RefreshSwingTimer()
+	end)
+	rangeSettings:AddChild(alpha)
+
+	AddRangeColorOption(rangeSettings, rangeOptions, "textColor", "Text Color")
+	AddRangeColorOption(rangeSettings, rangeOptions, "barColor", "Bar Color")
+	AddRangeColorOption(rangeSettings, rangeOptions, "backgroundColor", "Background Color")
+	AddRangeColorOption(rangeSettings, rangeOptions, "borderColor", "Border Color")
+	AddRangeColorOption(rangeSettings, rangeOptions, "sparkColor", "Spark Color")
 end
 
 local function AddVisibilitySettings(parent, config)
@@ -772,6 +837,8 @@ local function SelectSwingTimerTab(tabGroup, swingType)
 			AddNumberFormatSettings(widget, swingType)
 		elseif group == "Spark" then
 			AddSparkSettings(widget, swingTypeConfig)
+		elseif group == "OutOfRange" then
+			AddRangeSettings(widget, swingTypeConfig)
 		elseif group == "Visibility" then
 			AddVisibilitySettings(widget, swingTypeConfig)
 		end

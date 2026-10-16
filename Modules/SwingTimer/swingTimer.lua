@@ -111,11 +111,15 @@ function SCMSwingTimerMixin:OnEvent(event, ...)
 		if self:ShouldHandleSwing() then
 			self:UpdateRangeState()
 		end
+	elseif event == "UNIT_ATTACK_SPEED" then
+		self:UpdateWeaponState()
+		self:ApplyConfig(self:GetConfig())
+		self:UpdateSwingTimerDuration()
 	elseif event == "WEAPON_SLOT_CHANGED" then
 		self:UpdateWeaponState()
 		self:ApplyConfig(self:GetConfig())
 		self:ResetSwingTimerForEquippedWeapon()
-	elseif event == "PLAYER_ENTERING_WORLD" or event == "UNIT_ATTACK_SPEED" or event == "PLAYER_REGEN_ENABLED" then
+	elseif event == "PLAYER_ENTERING_WORLD" or event == "PLAYER_REGEN_ENABLED" then
 		self:UpdateWeaponState()
 		self:ApplyConfig(self:GetConfig())
 	end
@@ -146,11 +150,69 @@ function SCMSwingTimerMixin:ShouldDisplaySwing()
 end
 
 function SCMSwingTimerMixin:ShouldCheckRange()
-	return self:ShouldHandleSwing()
+	return self:ShouldHandleSwing() and self.barOptions.outOfRange.enabled
 end
 
 function SCMSwingTimerMixin:IsOutOfRange()
 	return self.isOutOfRange
+end
+
+function SCMSwingTimerMixin:ApplyRangePresentation()
+	local options = self.barOptions
+	local rangeOptions = options.outOfRange
+
+	local alpha = 1
+	local backgroundColor = options.backgroundColor
+	local borderColor = options.backdropColor
+	local barColor = options.foregroundColor
+	local sparkColor = options.spark.color
+	local textColor = HIGHLIGHT_FONT_COLOR
+	local overrideTextColor = false
+
+	if rangeOptions.enabled and self:IsOutOfRange() then
+		alpha = rangeOptions.alpha
+
+		if rangeOptions.backgroundColor.enabled then
+			backgroundColor = rangeOptions.backgroundColor
+		end
+		if rangeOptions.borderColor.enabled then
+			borderColor = rangeOptions.borderColor
+		end
+		if rangeOptions.barColor.enabled then
+			barColor = rangeOptions.barColor
+		end
+		if rangeOptions.sparkColor.enabled then
+			sparkColor = rangeOptions.sparkColor
+		end
+		if rangeOptions.textColor.enabled then
+			textColor = rangeOptions.textColor
+			overrideTextColor = true
+		end
+	end
+
+	local background = self:GetBackground()
+	background:SetAlpha(alpha)
+	background:SetVertexColor(backgroundColor.r, backgroundColor.g, backgroundColor.b, backgroundColor.a)
+
+	local border = self:GetBorder()
+	border:SetAlpha(alpha)
+	border:SetBackdropBorderColor(borderColor.r, borderColor.g, borderColor.b, borderColor.a)
+
+	local statusBar = self:GetStatusBar()
+	statusBar:SetAlpha(alpha)
+	statusBar:SetStatusBarColor(barColor.r, barColor.g, barColor.b, barColor.a)
+
+	local r, g, b, a = textColor.r, textColor.g, textColor.b, textColor.a
+
+	local typeLabel = self:GetTypeLabel()
+	typeLabel:SetTextColor(r, g, b, a)
+
+	local timeLabel = self:GetTimeLabel()
+	timeLabel:SetFixedColor(overrideTextColor)
+	timeLabel:SetTextColor(r, g, b, a)
+
+	local statusBarPip = self:GetStatusBarPip()
+	statusBarPip:SetVertexColor(sparkColor.r, sparkColor.g, sparkColor.b, sparkColor.a)
 end
 
 function SCMSwingTimerMixin:ShouldClearSwing()
@@ -171,11 +233,23 @@ function SCMSwingTimerMixin:UpdateSparkVisibility()
 end
 
 function SCMSwingTimerMixin:ResetSwingTimer(duration)
+	self:SetSwingTimerDuration(duration, 0)
+end
+
+function SCMSwingTimerMixin:UpdateSwingTimerDuration()
+	if not self:ShouldHandleSwing() or not self.durationObject:IsActive() then
+		return
+	end
+
+	self:SetSwingTimerDuration(self:GetEquippedSwingDuration(), self.durationObject:GetElapsedPercent())
+end
+
+function SCMSwingTimerMixin:SetSwingTimerDuration(duration, elapsedPercent)
 	if issecretvalue(duration) or not duration or duration <= 0 or self:GetAttribute("statehidden") then
 		return
 	end
 
-	self.durationObject:SetTimeFromStart(GetTime(), duration)
+	self.durationObject:SetTimeFromStart(GetTime() - elapsedPercent * duration, duration)
 	self.StatusBar:SetTimerDuration(self.durationObject, self.interpolation, Enum.StatusBarTimerDirection.ElapsedTime)
 
 	self.durationTextBinding:Enable()
@@ -296,8 +370,6 @@ function SCMSwingTimerMixin:ApplyBorder()
 	self.borderBackdrop = self.borderBackdrop or CopyTable(BACKDROP_SCM_PIXEL)
 	self.borderBackdrop.edgeSize = options.backdropSize
 	border:SetBackdrop(self.borderBackdrop)
-	local color = options.backdropColor
-	border:SetBackdropBorderColor(color.r, color.g, color.b, color.a)
 	border:Show()
 end
 
@@ -320,8 +392,6 @@ function SCMSwingTimerMixin:ApplySpark()
 	spark:SetSize(sparkOptions.width, sparkOptions.height)
 	spark:SetBlendMode(sparkOptions.blendMode)
 
-	local color = sparkOptions.color
-	spark:SetVertexColor(color.r, color.g, color.b, color.a)
 	spark:ClearAllPoints()
 	spark:SetPoint("RIGHT", self.StatusBar:GetStatusBarTexture(), "RIGHT", sparkOptions.xOffset, sparkOptions.yOffset)
 
@@ -337,14 +407,9 @@ function SCMSwingTimerMixin:ApplyAppearance()
 	self.interpolation = options.useSmoothPowerUpdates and Enum.StatusBarInterpolation.ExponentialEaseOut or Enum.StatusBarInterpolation.Immediate
 
 	self.StatusBar:SetStatusBarTexture(LSM:Fetch("statusbar", options.texture))
-	
-	local foregroundColor = options.foregroundColor
-	self.StatusBar:SetStatusBarColor(foregroundColor.r, foregroundColor.g, foregroundColor.b, foregroundColor.a)
 
 	local background = self.Background
-	local backgroundColor = options.backgroundColor
 	background:SetTexture(LSM:Fetch("statusbar", options.backgroundTexture))
-	background:SetVertexColor(backgroundColor.r, backgroundColor.g, backgroundColor.b, backgroundColor.a)
 
 	self:ApplyBorder()
 

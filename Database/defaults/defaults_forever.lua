@@ -13,6 +13,15 @@ SCM.DefaultDB.profile.options.swingTimer = {
 	combinedHeight = 40,
 	MainHand = {
 		enabled = true,
+		outOfRange = {
+			enabled = true,
+			alpha = 0.4,
+			textColor = { enabled = true, r = RED_FONT_COLOR.r, g = RED_FONT_COLOR.g, b = RED_FONT_COLOR.b, a = 1 },
+			barColor = { enabled = false, r = 1, g = 0.1, b = 0.1, a = 1 },
+			backgroundColor = { enabled = false, r = 0.2, g = 0, b = 0, a = 0.5 },
+			borderColor = { enabled = false, r = 1, g = 0.1, b = 0.1, a = 1 },
+			sparkColor = { enabled = false, r = 1, g = 0.1, b = 0.1, a = 1 },
+		},
 		hideWhileInactive = false,
 		hideWhileMounted = false,
 		hideWhileDead = false,
@@ -74,6 +83,15 @@ SCM.DefaultDB.profile.options.swingTimer = {
 	},
 	OffHand = {
 		enabled = true,
+		outOfRange = {
+			enabled = true,
+			alpha = 0.4,
+			textColor = { enabled = true, r = RED_FONT_COLOR.r, g = RED_FONT_COLOR.g, b = RED_FONT_COLOR.b, a = 1 },
+			barColor = { enabled = false, r = 1, g = 0.1, b = 0.1, a = 1 },
+			backgroundColor = { enabled = false, r = 0.2, g = 0, b = 0, a = 0.5 },
+			borderColor = { enabled = false, r = 1, g = 0.1, b = 0.1, a = 1 },
+			sparkColor = { enabled = false, r = 1, g = 0.1, b = 0.1, a = 1 },
+		},
 		hideWhileInactive = false,
 		hideWhileMounted = false,
 		hideWhileDead = false,
@@ -135,6 +153,15 @@ SCM.DefaultDB.profile.options.swingTimer = {
 	},
 	Ranged = {
 		enabled = true,
+		outOfRange = {
+			enabled = true,
+			alpha = 0.4,
+			textColor = { enabled = true, r = RED_FONT_COLOR.r, g = RED_FONT_COLOR.g, b = RED_FONT_COLOR.b, a = 1 },
+			barColor = { enabled = false, r = 1, g = 0.1, b = 0.1, a = 1 },
+			backgroundColor = { enabled = false, r = 0.2, g = 0, b = 0, a = 0.5 },
+			borderColor = { enabled = false, r = 1, g = 0.1, b = 0.1, a = 1 },
+			sparkColor = { enabled = false, r = 1, g = 0.1, b = 0.1, a = 1 },
+		},
 		hideWhileInactive = false,
 		hideWhileMounted = false,
 		hideWhileDead = false,
