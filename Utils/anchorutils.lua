@@ -101,16 +101,22 @@ function Utils.GetAnchorFrame(anchorFrames)
 	end
 
 	if anchorFrames:find(",", 1, true) then
+		local fallbackFrame, fallbackRef
+
 		for frameName in anchorFrames:gmatch("[^,]+") do
 			local currentFrame = strtrim(frameName)
 			local anchorFrame = currentFrame ~= "" and GetSingleAnchorFrame(currentFrame)
 
-			if anchorFrame and (currentFrame:sub(1, 7) == "ANCHOR:" or anchorFrame:IsVisible()) then
-				return anchorFrame, currentFrame
+			if anchorFrame then
+				if currentFrame:sub(1, 7) == "ANCHOR:" or anchorFrame:IsVisible() then
+					return anchorFrame, currentFrame
+				end
+
+				fallbackFrame, fallbackRef = anchorFrame, currentFrame
 			end
 		end
 
-		return
+		return fallbackFrame, fallbackRef
 	end
 
 	return GetSingleAnchorFrame(anchorFrames), anchorFrames
