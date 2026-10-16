@@ -106,18 +106,14 @@ local function ApplyTextStyle(fs, fontPath, fontSize, fontOutline, justify, widt
 	fs:SetShadowOffset(0, 0)
 end
 
-local function UpdateActiveAnchorFrame(castBar, options)
-	local activeAnchor, activeAnchorGroup
+local function UpdateAnchorSelection(castBar, options)
 	local anchor = options.anchors and options.anchors[2]
-	if type(anchor) == "string" then
-		activeAnchor, _, activeAnchorGroup = Utils.GetActiveAnchorFrame(anchor)
-	else
-		activeAnchor = anchor
-	end
+	local activeAnchor, _, activeAnchorGroup = Utils.GetActiveAnchorFrame(anchor)
+
+	Utils.RegisterAnchorVisibility(castBar, options.enable and anchor, castBar.OnAnchorVisibilityChanged)
 
 	castBar.SCMActiveAnchorFrame = activeAnchor
 	castBar.SCMActiveAnchorGroup = activeAnchorGroup
-	return activeAnchor
 end
 
 local function GetCastBarWidth(options, anchorFrame)
@@ -185,7 +181,9 @@ local function UpdateStatusBarLook(fillColor, bgColor)
 	local borderColor = options.borderColor
 	local backgroundColor = bgColor or options.bgColor
 	local foregroundColor = fillColor or castBar.CurrentFillColor or options.fgColor
-	local anchorFrame = UpdateActiveAnchorFrame(castBar, options)
+	UpdateAnchorSelection(castBar, options)
+
+	local anchorFrame = castBar.SCMActiveAnchorFrame
 	local width = GetCastBarWidth(options, anchorFrame)
 
 	if options.matchParentWidth then
@@ -354,15 +352,31 @@ local function UpdateStatusBarLook(fillColor, bgColor)
 	end
 end
 
-local function RefreshCastBarAnchor(castBar, options)
-	local anchorFrame = UpdateActiveAnchorFrame(castBar, options)
+local function OnAnchorVisibilityChanged(castBar)
+	local options = castBar.barOptions
+
+	if not (options and options.enable) then
+		return
+	end
+
+	if InCombatLockdown() and castBar:IsProtected() then
+		castBar.playerEvents:RegisterEvent("PLAYER_REGEN_ENABLED")
+		return
+	end
+
+	UpdateAnchorSelection(castBar, options)
+
+	local anchorFrame = castBar.SCMActiveAnchorFrame
+
 	if options.matchParentWidth then
 		HookAnchorWidthRefresh(anchorFrame)
 	end
 
 	local width = GetCastBarWidth(options, anchorFrame)
+
 	if castBar:GetWidth() ~= width then
 		UpdateStatusBarLook()
+
 		if castBar:IsShown() and castBar.CurrentEmpoweredStages and castBar.Status:GetStatusBarTexture() then
 			CreatePips(castBar.CurrentEmpoweredStages)
 		end
@@ -573,7 +587,7 @@ function SCM:RefreshCastBarWidth(delay)
 			return
 		end
 
-		RefreshCastBarAnchor(currentCastBar, currentOptions)
+		currentCastBar:OnAnchorVisibilityChanged()
 	end)
 end
 
@@ -593,6 +607,7 @@ end
 
 function SCM:ResetCastBar()
 	if self.CastBar and not InCombatLockdown() then
+		Utils.UnregisterAnchorVisibility(self.CastBar)
 		self.CastBar:ClearAllPoints()
 	end
 end
@@ -619,6 +634,7 @@ function SCM:InitializeCastBar()
 	end
 
 	local castBar = CreateFrame("Frame", "SCM_CastBar", UIParent, "BackdropTemplate")
+	castBar.OnAnchorVisibilityChanged = OnAnchorVisibilityChanged
 	castBar:SetFrameStrata("BACKGROUND")
 	castBar.StageBands = {}
 	castBar.TickLines = {}
@@ -648,28 +664,30 @@ function SCM:InitializeCastBar()
 	self.CastBar = castBar
 	castBar.playerEvents = CreateFrame("Frame")
 	castBar.vehicleEvents = CreateFrame("Frame")
-	SCM.RegisterCallback(castBar, ANCHOR_PROXY_SIZE_CHANGED_EVENT, function(_, proxyGroup, proxy, _width, _height, _selectedAnchorRef, isActiveProxy)
-		local currentOptions = castBar.barOptions or SCM.castBarConfig
-		if not (currentOptions.enable and currentOptions.matchParentWidth and isActiveProxy) then
-			return
-		end
 
-		if castBar.SCMActiveAnchorFrame == proxy or castBar.SCMActiveAnchorGroup == proxyGroup then
-			castBar.SCMActiveAnchorFrame = proxy
-			SCM:RefreshCastBarWidth()
+	SCM.RegisterCallback(castBar, ANCHOR_PROXY_SIZE_CHANGED_EVENT, function(_, proxyGroup, proxy, _width, _height, _selectedAnchorFrame, isActiveProxy)
+		if isActiveProxy and (castBar.SCMActiveAnchorFrame == proxy or castBar.SCMActiveAnchorGroup == proxyGroup) then
+			castBar:OnAnchorVisibilityChanged()
 		end
 	end)
+
 	SCM.RegisterCallback(castBar, "SkironCooldownManager.ResourceBar.LayoutUpdated", function()
-		local currentOptions = castBar.barOptions or SCM.castBarConfig
-		if currentOptions and currentOptions.enable then
-			RefreshCastBarAnchor(castBar, currentOptions)
-		end
+		castBar:OnAnchorVisibilityChanged()
 	end)
+
 	self:UpdateCastBar()
+
 	return castBar
 end
 
 local function HandleEvents(_, event, unit, _, _, castBarID, ...)
+	if event == "PLAYER_REGEN_ENABLED" then
+		SCM.CastBar.playerEvents:UnregisterEvent(event)
+		SCM.CastBar:OnAnchorVisibilityChanged()
+
+		return
+	end
+
 	if CAST_START_EVENTS[event] then
 		local durationObject = UnitCastingDuration(unit)
 		if not durationObject then

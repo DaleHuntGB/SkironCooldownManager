@@ -259,6 +259,7 @@ function SCMSwingTimerMixin:UpdateLayout()
 	end
 
 	local options = self.barOptions
+	Utils.RegisterAnchorVisibility(self, options.anchorFrame, self.UpdateLayout)
 	local anchor, _, anchorGroup = Utils.GetActiveAnchorFrame(options.anchorFrame)
 	self.SCMActiveAnchorFrame = anchor
 	self.SCMActiveAnchorGroup = anchorGroup
@@ -386,6 +387,7 @@ function SCMSwingTimerMixin:ApplyConfig(options)
 	self.barOptions = options
 
 	if not self:ShouldHandleSwing() then
+		Utils.UnregisterAnchorVisibility(self)
 		if self:IsEventRegistered("PLAYER_SWING") then
 			self:UpdateFrameState()
 		end

@@ -144,9 +144,9 @@ local function OnProxySizeChanged(proxy, width, height)
 	end
 
 	local state = Cache.cachedAnchorStates[group]
-	local selectedAnchorRef = state and state.currentSelectedAnchorFrame
+	local selectedAnchorFrame = state and state.selectedAnchorFrame
 	local isActiveProxy = state and state.currentProxyActive and state.currentProxyFrame == proxy or false
-	SCM.Callbacks:Fire(ANCHOR_PROXY_SIZE_CHANGED_EVENT, group, proxy, width, height, selectedAnchorRef, isActiveProxy)
+	SCM.Callbacks:Fire(ANCHOR_PROXY_SIZE_CHANGED_EVENT, group, proxy, width, height, selectedAnchorFrame, isActiveProxy)
 end
 
 local function GetProxy(group)
@@ -378,84 +378,15 @@ local function SetGroupAnchorPoint(anchorFrame, group, point, target, relativePo
 	anchorFrame.SCMInvalidAnchorTarget = not success and target or nil
 end
 
-local function RefreshAnchorVisibilitySelection(group, currentAnchorFrame)
-	local state = Cache.cachedAnchorStates[group]
-	if not (state and state.currentAnchorFrame == currentAnchorFrame) then
-		return
-	end
+local function OnGroupAnchorVisibilityChanged(anchorFrame, selectedAnchorFrame)
+	local group = anchorFrame.SCMAnchorGroup
+	local state = GetAnchorState(group)
 
-	local selectedAnchorFrame = select(2, Utils.GetAnchorFrame(currentAnchorFrame))
-	if state.currentSelectedAnchorFrame == selectedAnchorFrame then
-		return
-	end
-
-	state.currentSelectedAnchorFrame = selectedAnchorFrame
+	state.selectedAnchorFrame = selectedAnchorFrame
 	state.layoutSignature = nil
 	state.currentProxyRequired = InCombatLockdown() or nil
+
 	SCM:ApplyAnchorGroupCDManagerConfig(group)
-end
-
-local function OnAnchorVisibilityChanged(frame)
-	local anchorGroups = frame.SCMCurrentAnchorFrames
-	if not anchorGroups then
-		return
-	end
-
-	for group, currentAnchorFrame in pairs(anchorGroups) do
-		RefreshAnchorVisibilitySelection(group, currentAnchorFrame)
-	end
-end
-
-local function HookAnchorVisibilityFrame(frame, group, anchor)
-	if not (frame and frame ~= UIParent and frame.HookScript) then
-		return
-	end
-
-	frame.SCMCurrentAnchorFrames = frame.SCMCurrentAnchorFrames or {}
-	frame.SCMCurrentAnchorFrames[group] = anchor
-
-	if frame.SCMCurrentAnchorHook then
-		return
-	end
-
-	frame.SCMCurrentAnchorHook = true
-	frame:HookScript("OnShow", OnAnchorVisibilityChanged)
-	frame:HookScript("OnHide", OnAnchorVisibilityChanged)
-end
-
-local function SetAnchorVisibilityHooks(group, anchor, selectedAnchorFrame, groupAnchor)
-	local state = GetAnchorState(group)
-	if type(anchor) ~= "string" or not anchor:find(",", 1, true) then
-		state.currentAnchorFrame = nil
-		state.currentSelectedAnchorFrame = nil
-
-		if not InCombatLockdown() then
-			RemoveProxy(state)
-		end
-		return
-	end
-
-	state.currentAnchorFrame = anchor
-	state.currentSelectedAnchorFrame = selectedAnchorFrame
-
-	if InCombatLockdown() then
-		return
-	end
-
-	GetProxy(group)
-
-	for _, currentFrame in ipairs({ strsplit(",", anchor) }) do
-		currentFrame = strtrim(currentFrame)
-		if currentFrame ~= "" and currentFrame:sub(1, 7) ~= "ANCHOR:" then
-			local target = _G[currentFrame] or SCM[currentFrame]
-			HookAnchorVisibilityFrame(target, group, anchor)
-
-			local parent = target and target.GetParent and target:GetParent()
-			if parent ~= target then
-				HookAnchorVisibilityFrame(parent, group, anchor)
-			end
-		end
-	end
 end
 
 function SCM:GetManagedAnchorChildAnchor(group, groupAnchor, point, anchor, relativePoint, xOffset, yOffset, growDir, offsetWidth, frameWidth, frameHeight, anchorOffsetY)
@@ -502,6 +433,7 @@ function SCM:GetAnchor(group, point, anchor, relativePoint, xOffset, yOffset, gr
 	local anchorFrame = self.anchorFrames[group]
 	if not anchorFrame then
 		anchorFrame = CreateFrame("Frame", "SCM_GroupAnchor_" .. group, UIParent)
+		anchorFrame.SCMAnchorGroup = group
 		anchorFrame:SetFrameStrata("HIGH")
 		anchorFrame:SetFrameLevel(1000)
 		anchorFrame.debugTexture = anchorFrame:CreateTexture(nil, "BACKGROUND")
@@ -538,18 +470,14 @@ function SCM:GetAnchor(group, point, anchor, relativePoint, xOffset, yOffset, gr
 	end
 
 	local state = GetAnchorState(group)
-	if anchorFrame:IsProtected() then
-		GetProxy(group)
-	end
-
-	local target = anchor
-	local selectedAnchorRef
-	if type(target) == "string" then
-		target, selectedAnchorRef = Utils.GetAnchorFrame(target)
-	end
+	local target, selectedAnchorFrame = Utils.GetAnchorFrame(anchor)
 	local usesVisibilitySelection = type(anchor) == "string" and anchor:find(",", 1, true)
-	if usesVisibilitySelection or state.currentAnchorFrame or state.currentSelectedAnchorFrame then
-		SetAnchorVisibilityHooks(group, anchor, selectedAnchorRef, anchorFrame)
+
+	Utils.RegisterAnchorVisibility(anchorFrame, anchor, OnGroupAnchorVisibilityChanged)
+	state.selectedAnchorFrame = usesVisibilitySelection and selectedAnchorFrame or nil
+
+	if anchorFrame:IsProtected() or usesVisibilitySelection then
+		GetProxy(group)
 	end
 
 	target = target or UIParent
@@ -583,7 +511,9 @@ function SCM:ResetAnchors()
 	if InCombatLockdown() then
 		return
 	end
+
 	for _, anchorFrame in pairs(self.anchorFrames) do
+		Utils.UnregisterAnchorVisibility(anchorFrame)
 		anchorFrame:ClearAllPoints()
 	end
 end
