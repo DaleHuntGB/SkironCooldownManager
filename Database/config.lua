@@ -127,15 +127,21 @@ function SCM:UpdateCooldownInfo()
 		return
 	end
 
+	local dataProvider = CooldownViewerSettings:GetDataProvider()
+	if not dataProvider then
+		return
+	end
+
+	local displayData = dataProvider.displayData and dataProvider.displayData.cooldownInfoByID
+	if not displayData then
+		return
+	end
+
 	local previousConfig = self.defaultCooldownViewerConfig
 	local defaultCooldownViewerConfig = {
 		cooldownIDs = {},
 		spellIDs = {},
 	}
-
-	local dataProvider = CooldownViewerSettings:GetDataProvider()
-	local displayData = dataProvider and dataProvider.displayData and dataProvider.displayData.cooldownInfoByID
-	if not displayData then return end
 
 	for _, cooldownCategory in pairs(CooldownViewerSettingsDataProvider_GetCategories()) do
 		defaultCooldownViewerConfig[cooldownCategory] = {
