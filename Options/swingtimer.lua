@@ -164,14 +164,15 @@ local function AddPositionSettings(parent, swingType, config)
 			return
 		end
 		config.anchorFrame = text
-		anchorFrame:SetText(text)
+
+		if anchorFrame:GetText() ~= text then
+			anchorFrame:SetText(text)
+		end
+
 		RefreshSwingTimer()
 	end
-	anchorFrame:SetCallback("OnEnterPressed", function(_, _, text)
-		SetAnchor(text)
-	end)
 	positionSettings:AddChild(anchorFrame)
-	Options.AddAnchorParentAutocomplete(positionSettings, anchorFrame, SetAnchor)
+	Options.AddAnchorParentAutocomplete(anchorFrame, SetAnchor)
 
 	local relativePoint = AceGUI:Create("Dropdown")
 	relativePoint:SetRelativeWidth(0.33)
@@ -558,6 +559,33 @@ local function AddBorderSettings(parent, config)
 	backdropSettings:AddChild(backdropSize)
 end
 
+local function AddTextAnchorSettings(parent, config, textKey)
+	local pointKey = textKey .. "Point"
+	local relativePointKey = textKey .. "RelativePoint"
+
+	local point = AceGUI:Create("Dropdown")
+	point:SetRelativeWidth(0.5)
+	point:SetLabel("Anchor Point")
+	point:SetList(Constants.AnchorPoints)
+	point:SetValue(config[pointKey])
+	point:SetCallback("OnValueChanged", function(_, _, value)
+		config[pointKey] = value
+		RefreshSwingTimer()
+	end)
+	parent:AddChild(point)
+
+	local relativePoint = AceGUI:Create("Dropdown")
+	relativePoint:SetRelativeWidth(0.5)
+	relativePoint:SetLabel("Relative Point")
+	relativePoint:SetList(Constants.AnchorPoints)
+	relativePoint:SetValue(config[relativePointKey])
+	relativePoint:SetCallback("OnValueChanged", function(_, _, value)
+		config[relativePointKey] = value
+		RefreshSwingTimer()
+	end)
+	parent:AddChild(relativePoint)
+end
+
 local function AddTextSettings(parent, config)
 	local textSettings = AceGUI:Create("InlineGroup")
 	textSettings:SetLayout("flow")
@@ -614,6 +642,8 @@ local function AddTextSettings(parent, config)
 	end)
 	nameSettings:AddChild(showName)
 
+	AddTextAnchorSettings(nameSettings, config, "nameText")
+
 	local nameFontSize = AceGUI:Create("Slider")
 	nameFontSize:SetRelativeWidth(0.33)
 	nameFontSize:SetLabel("Font Size")
@@ -662,6 +692,8 @@ local function AddTextSettings(parent, config)
 		RefreshSwingTimer()
 	end)
 	durationSettings:AddChild(showDuration)
+
+	AddTextAnchorSettings(durationSettings, config, "durationText")
 
 	local durationFontSize = AceGUI:Create("Slider")
 	durationFontSize:SetRelativeWidth(0.33)

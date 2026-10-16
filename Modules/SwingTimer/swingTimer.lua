@@ -277,12 +277,11 @@ function SCMSwingTimerMixin:UpdateLayout()
 
 	local duration = self.StatusBar.Duration
 	duration:ClearAllPoints()
-	duration:SetPoint("RIGHT", self.StatusBar, "RIGHT", options.durationTextXOffset, options.durationTextYOffset)
+	duration:SetPoint(options.durationTextPoint, self.StatusBar, options.durationTextRelativePoint, options.durationTextXOffset, options.durationTextYOffset)
 
 	local name = self.StatusBar.Name
 	name:ClearAllPoints()
-	name:SetPoint("LEFT", self.StatusBar, "LEFT", options.nameTextXOffset, options.nameTextYOffset)
-	name:SetPoint("RIGHT", self.StatusBar, "RIGHT", options.nameTextXOffset, options.nameTextYOffset)
+	name:SetPoint(options.nameTextPoint, self.StatusBar, options.nameTextRelativePoint, options.nameTextXOffset, options.nameTextYOffset)
 end
 
 function SCMSwingTimerMixin:ApplyBorder()
