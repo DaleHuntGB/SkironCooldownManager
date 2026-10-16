@@ -51,7 +51,8 @@ Modules\cache.lua
 Modules\formatter.lua
 Modules\skinning.lua
 Modules\elvui_skin.lua
-Modules\utils.lua
+Utils\utils.lua
+Utils\anchorutils.lua
 Modules\CustomIcons\init.lua
 Modules\CustomIcons\load.lua
 Modules\CustomIcons\timers.lua
