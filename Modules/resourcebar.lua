@@ -17,6 +17,7 @@ local SPELL_ID_ICICLES = 205473
 local SCMConstants = SCM.Constants
 local CHARGED_COMBO_POINT_COLOR = SCMConstants.ChargedComboPointColor
 local DEFAULT_RESOURCE_BAR_ANCHOR = "ANCHOR:1"
+
 local RESOURCE_BAR_RECONFIGURE_EVENTS = {
 	PLAYER_ENTERING_WORLD = true,
 	PLAYER_GAINS_VEHICLE_DATA = true,
@@ -24,6 +25,7 @@ local RESOURCE_BAR_RECONFIGURE_EVENTS = {
 	UNIT_DISPLAYPOWER = true,
 	UPDATE_SHAPESHIFT_FORM = true,
 }
+
 local POWER_TOKEN_EVENTS = {
 	UNIT_MAXPOWER = true,
 	UNIT_POWER_FREQUENT = true,
@@ -614,7 +616,7 @@ local function ConfigureBarForResource(bar, resource)
 		segmentCount = resource.talentSegmentCount
 	end
 
-	if bar.SCMUseSegmentedSecondaryDisplay and powerType == Enum.PowerType.Mana then
+	if bar == bar.Controller.SecondaryBar and powerType == Enum.PowerType.Mana then
 		segmentCount = nil
 	elseif resourceKind == "maelstromWeapon" and bar.barOptions and bar.barOptions.disableMaelstromOverflow then
 		segmentCount = 10
@@ -798,7 +800,7 @@ end
 
 local function HasSegments(bar, segmentCount)
 	local hasSegments = type(segmentCount) == "number" and segmentCount > 1
-	if not bar.SCMUseSegmentedSecondaryDisplay or not hasSegments then
+	if bar ~= bar.Controller.SecondaryBar or not hasSegments then
 		return
 	end
 
@@ -1135,27 +1137,30 @@ local function RegisterBarEvents(bar, barOptions)
 	end
 end
 
-local function OnResourceBarEvent(bar, event, _, powerToken)
-	local controller = bar and bar.Controller
+SCMResourceBarMixin = {}
+
+function SCMResourceBarMixin:OnEvent(event, _, powerToken)
+	local controller = self.Controller
 	if not controller then
 		return
 	end
 
-	if POWER_TOKEN_EVENTS[event] and bar.powerType and powerToken ~= bar.powerToken then
+	if POWER_TOKEN_EVENTS[event] and self.powerType and powerToken ~= self.powerToken then
 		return
 	end
 
 	if event == "UNIT_MAXPOWER" then
-		controller:RefreshBarDisplay(bar, true)
-	elseif bar.resourceKind == "spellCharges" then
-		controller:RefreshBarDisplay(bar)
+		controller:RefreshBarDisplay(self, true)
+	elseif self.resourceKind == "spellCharges" then
+		controller:RefreshBarDisplay(self)
 	else
-		controller:UpdateBarDisplay(bar)
+		controller:UpdateBarDisplay(self)
 	end
+
 	controller:UpdateRefreshState()
 end
 
-local SCMResourceBarControllerMixin = {}
+SCMResourceBarControllerMixin = {}
 function SCM:ApplyResourceBarAttributeDriver(forceHide)
 	local container = _G[RESOURCE_BAR_FRAME_NAME]
 	if not container or InCombatLockdown() then
@@ -1208,15 +1213,34 @@ function SCMResourceBarControllerMixin:ApplyResourceBarOptions()
 	return barOptions
 end
 
-function SCMResourceBarControllerMixin:UpdateActiveAnchorFrame(anchor)
-	local activeAnchor, activeAnchorGroup
-	if type(anchor) == "string" then
-		activeAnchor, _, activeAnchorGroup = Utils.GetActiveAnchorFrame(anchor)
-	else
-		activeAnchor = anchor
+function SCMResourceBarControllerMixin:OnAnchorVisibilityChanged()
+	if self.SCMResourceBarInitialized and self.barOptions.enabled then
+		self:RefreshMatchedBarWidths(true)
+	end
+end
+
+function SCMResourceBarControllerMixin:ApplyAnchorOptions(forcePositionUpdate)
+	local options = self.barOptions
+	local anchorRef = options.anchorFrame or DEFAULT_RESOURCE_BAR_ANCHOR
+
+	Utils.RegisterAnchorVisibility(self, anchorRef, self.OnAnchorVisibilityChanged)
+
+	local anchor, _, anchorGroup = Utils.GetActiveAnchorFrame(anchorRef)
+
+	anchor = anchor or UIParent
+
+	if InCombatLockdown() and self:IsProtected() then
+		self.SCMRefreshMatchedBarWidths = true
+		return
 	end
 
-	return activeAnchor, activeAnchorGroup
+	if forcePositionUpdate or self.SCMActiveAnchorFrame ~= anchor then
+		self:ClearAllPoints()
+		self:SetPoint(options.point, anchor, options.relativePoint, options.xOffset, options.yOffset)
+	end
+
+	self.SCMActiveAnchorFrame = anchor
+	self.SCMActiveAnchorGroup = anchorGroup
 end
 
 function SCMResourceBarControllerMixin:HookAnchorWidthRefresh(anchor)
@@ -1245,11 +1269,10 @@ function SCMResourceBarControllerMixin:HookAnchorWidthRefresh(anchor)
 	end)
 end
 
-function SCMResourceBarControllerMixin:ApplyFrameWidthOptions(bar, forcePositionUpdate)
+function SCMResourceBarControllerMixin:ApplyFrameWidthOptions(bar)
 	local specificBarOptions = bar.barOptions
 	local generalBarOptions = self.barOptions
-	local oldAnchor = self.SCMActiveAnchorFrame
-	local anchor, activeAnchorGroup = self:UpdateActiveAnchorFrame(generalBarOptions.anchorFrame or DEFAULT_RESOURCE_BAR_ANCHOR)
+	local anchor = self.SCMActiveAnchorFrame
 
 	if anchor then
 		local widthFromOptions = specificBarOptions.width
@@ -1269,14 +1292,6 @@ function SCMResourceBarControllerMixin:ApplyFrameWidthOptions(bar, forcePosition
 			self:HookAnchorWidthRefresh(anchor)
 		end
 
-		if forcePositionUpdate or anchor ~= oldAnchor then
-			--No idea whats going in with these fucking pixels. BRB taking a math class
-			self:ClearAllPoints()
-			self:SetPoint(generalBarOptions.point, anchor, generalBarOptions.relativePoint, generalBarOptions.xOffset, generalBarOptions.yOffset)
-			self.SCMActiveAnchorFrame = anchor
-			self.SCMActiveAnchorGroup = activeAnchorGroup
-		end
-
 		return widthChanged
 	end
 
@@ -1284,6 +1299,8 @@ function SCMResourceBarControllerMixin:ApplyFrameWidthOptions(bar, forcePosition
 end
 
 function SCMResourceBarControllerMixin:RefreshMatchedBarWidths(forcePositionUpdate)
+	self:ApplyAnchorOptions(forcePositionUpdate)
+
 	local generalBarOptions = self.barOptions or SCM.resourceBarConfig
 	local primaryBarOptions = self.primaryBarOptions or generalBarOptions.primaryBar
 	local secondaryBarOptions = self.secondaryBarOptions or generalBarOptions.secondaryBar
@@ -1300,11 +1317,11 @@ function SCMResourceBarControllerMixin:RefreshMatchedBarWidths(forcePositionUpda
 	end
 
 	if canUpdatePrimary then
-		primaryWidthChanged = self:ApplyFrameWidthOptions(self.PrimaryBar, forcePositionUpdate)
+		primaryWidthChanged = self:ApplyFrameWidthOptions(self.PrimaryBar)
 	end
 
 	if canUpdateSecondary then
-		secondaryWidthChanged = self:ApplyFrameWidthOptions(self.SecondaryBar, forcePositionUpdate)
+		secondaryWidthChanged = self:ApplyFrameWidthOptions(self.SecondaryBar)
 	end
 
 	if not (canUpdatePrimary or canUpdateSecondary) then
@@ -1475,7 +1492,7 @@ function SCMResourceBarControllerMixin:UpdateBarDisplay(bar, currentValue, maxVa
 	end
 
 	local staggerPercent
-	local overrideColor = bar.SCMIsPrimaryResourceBar and SCM.primaryResourceBarColorOverride
+	local overrideColor = bar == self.PrimaryBar and SCM.primaryResourceBarColorOverride
 	if overrideColor then
 		bar:SetStatusBarColor(overrideColor.r, overrideColor.g, overrideColor.b)
 	elseif bar.resourceKind == "stagger" then
@@ -1488,7 +1505,7 @@ function SCMResourceBarControllerMixin:UpdateBarDisplay(bar, currentValue, maxVa
 	local text = bar.Text
 	local barOptions = bar.barOptions
 	local textValue = text.Value
-	local overrideText = bar.SCMIsPrimaryResourceBar and SCM.primaryResourceBarTextOverride
+	local overrideText = bar == self.PrimaryBar and SCM.primaryResourceBarTextOverride
 	if overrideText then
 		textValue:SetText(overrideText)
 		return
@@ -1529,20 +1546,25 @@ function SCMResourceBarControllerMixin:UpdateBarSegments(bar, currentValue, maxV
 	if bar.resourceKind == "spellCharges" then
 		bar.SCMSegmentedDisplay = nil
 		bar.SCMActiveSegmentCount = nil
+
 		HideSegmentBars(bar.SegmentFillBars)
 		HideRegions(bar.RuneSegmentBars)
 		bar:GetStatusBarTexture():SetAlpha(1)
+
 		UpdateSpellChargeRecharge(bar, resourceSegmentValues)
+
 		return
 	end
 
 	if bar.resourceKind == "vengeanceSoulFragments" then
 		bar.SCMSegmentedDisplay = nil
 		bar.SCMActiveSegmentCount = nil
+
 		HideSegmentBars(bar.SegmentFillBars)
 		HideRegions(bar.RuneSegmentBars)
 		HideRechargeSegment(bar)
 		bar:GetStatusBarTexture():SetAlpha(1)
+
 		return
 	end
 
@@ -1632,6 +1654,7 @@ function SCMResourceBarControllerMixin:RefreshBarAppearance(bar, refreshTicks, c
 	if not bar.powerToken or not bar:IsShown() then
 		return
 	end
+
 	self:UpdateBarSegments(bar, currentValue, maxValue, resourceSegmentValues)
 	self:RefreshBarSizes(bar, refreshTicks, currentValue, maxValue, resourceSegmentValues, true)
 end
@@ -1720,7 +1743,7 @@ function SCMResourceBarControllerMixin:UpdateContainerShownState()
 end
 
 function SCMResourceBarControllerMixin:OnAttributeChanged(name, value)
-	if name ~= "statehidden" or value then
+	if name ~= "statehidden" or value or not self.SCMResourceBarInitialized then
 		return
 	end
 
@@ -1751,9 +1774,11 @@ function SCMResourceBarControllerMixin:RefreshResourceType()
 	local primaryBar, secondaryBar = self.PrimaryBar, self.SecondaryBar
 	local primaryWasShown, secondaryWasShown = primaryBar:IsShown(), secondaryBar:IsShown()
 	local primaryChanged, secondaryChanged, primaryEventsChanged, secondaryEventsChanged = self:ConfigureResources()
+
 	if primaryEventsChanged then
 		RegisterBarEvents(primaryBar, self.barOptions)
 	end
+
 	if secondaryEventsChanged then
 		RegisterBarEvents(secondaryBar, self.barOptions)
 	end
@@ -1764,12 +1789,18 @@ function SCMResourceBarControllerMixin:RefreshResourceType()
 	local secondaryVisibilityChanged = secondaryWasShown ~= secondaryBar:IsShown()
 	local primaryWidthChanged, secondaryWidthChanged, primaryHeightChanged, secondaryHeightChanged
 
+	if primaryVisibilityChanged or secondaryVisibilityChanged then
+		self:ApplyAnchorOptions()
+	end
+
 	if primaryVisibilityChanged and primaryBar:IsShown() then
 		primaryWidthChanged = self:ApplyFrameWidthOptions(primaryBar)
 	end
+
 	if secondaryVisibilityChanged and secondaryBar:IsShown() then
 		secondaryWidthChanged = self:ApplyFrameWidthOptions(secondaryBar)
 	end
+
 	if primaryVisibilityChanged or secondaryVisibilityChanged then
 		primaryHeightChanged, secondaryHeightChanged = self:UpdateBarLayout()
 		self:UpdateContainerShownState()
@@ -1777,9 +1808,11 @@ function SCMResourceBarControllerMixin:RefreshResourceType()
 
 	UpdateFormBarPresentation(self, primaryBar, primaryChanged or primaryVisibilityChanged or primaryWidthChanged or primaryHeightChanged, primaryValue, primaryMax, primarySegments)
 	UpdateFormBarPresentation(self, secondaryBar, secondaryChanged or secondaryVisibilityChanged or secondaryWidthChanged or secondaryHeightChanged, secondaryValue, secondaryMax, secondarySegments)
+
 	if primaryChanged or secondaryChanged or primaryVisibilityChanged or secondaryVisibilityChanged then
 		self:UpdateRefreshState()
 	end
+
 	if primaryVisibilityChanged or secondaryVisibilityChanged then
 		SCM.Callbacks:Fire("SkironCooldownManager.ResourceBar.LayoutUpdated")
 	end
@@ -1793,6 +1826,7 @@ function SCMResourceBarControllerMixin:RegisterResourceBarEvents()
 	if Utils.GetClass() ~= "ROGUE" then
 		self:RegisterEvent("UPDATE_SHAPESHIFT_FORM")
 	end
+
 	self:RegisterEvent("PLAYER_ENTERING_WORLD")
 	self:RegisterEvent("PLAYER_REGEN_ENABLED")
 	self:RegisterUnitEvent("UNIT_DISPLAYPOWER", "player")
@@ -1809,16 +1843,21 @@ function SCMResourceBarControllerMixin:RefreshResourceBars(refreshTicks, options
 	local secondaryBarOptions = barOptions.secondaryBar
 
 	if not barOptions.enabled then
+		Utils.UnregisterAnchorVisibility(self)
 		SCM:ApplyResourceBarAttributeDriver(true)
 		self:UnregisterAllEvents()
+
 		self.SCMResourceBarEventsRegistered = false
-		self.PrimaryBar:UnregisterAllEvents()
-		self.SecondaryBar:UnregisterAllEvents()
 		self:SetScript("OnUpdate", nil)
 		self.totalElapsed = nil
+
+		self.PrimaryBar:UnregisterAllEvents()
+		self.SecondaryBar:UnregisterAllEvents()
 		ResetResourceBar(self.PrimaryBar)
 		ResetResourceBar(self.SecondaryBar)
+
 		self:UpdateContainerShownState()
+
 		return
 	end
 
@@ -1828,14 +1867,17 @@ function SCMResourceBarControllerMixin:RefreshResourceBars(refreshTicks, options
 
 	if primaryBarOptions.enabled or secondaryBarOptions.enabled then
 		self:RegisterResourceBarEvents()
+		self:ApplyAnchorOptions(optionsChanged)
 
 		local primaryWidthChanged = false
 		local secondaryWidthChanged = false
+
 		if primaryBarOptions.enabled then
-			primaryWidthChanged = self:ApplyFrameWidthOptions(self.PrimaryBar, optionsChanged)
+			primaryWidthChanged = self:ApplyFrameWidthOptions(self.PrimaryBar)
 		end
+
 		if secondaryBarOptions.enabled then
-			secondaryWidthChanged = self:ApplyFrameWidthOptions(self.SecondaryBar, optionsChanged)
+			secondaryWidthChanged = self:ApplyFrameWidthOptions(self.SecondaryBar)
 		end
 
 		local primaryValue, primaryMax, primarySegments = self:RefreshBarValues(self.PrimaryBar)
@@ -1858,29 +1900,19 @@ end
 function SCMResourceBarControllerMixin:Initialize()
 	InitializeBarSkin(self.PrimaryBar)
 	InitializeBarSkin(self.SecondaryBar)
-	self.PrimaryBar.SCMIsPrimaryResourceBar = true
-	self.SecondaryBar.SCMIsPrimaryResourceBar = nil
-	self.PrimaryBar.SCMUseSegmentedSecondaryDisplay = false
-	self.SecondaryBar.SCMUseSegmentedSecondaryDisplay = true
+
 	self.PrimaryBar.Controller = self
 	self.SecondaryBar.Controller = self
-	self.PrimaryBar:SetScript("OnEvent", OnResourceBarEvent)
-	self.SecondaryBar:SetScript("OnEvent", OnResourceBarEvent)
 
-	self:SetScript("OnAttributeChanged", self.OnAttributeChanged)
-	self:SetScript("OnEvent", self.OnEvent)
 	self:RegisterResourceBarEvents()
-	SCM.RegisterCallback(self, ANCHOR_PROXY_SIZE_CHANGED_EVENT, function(_, proxyGroup, proxy, width, height, selectedAnchorRef, isActiveProxy)
+
+	SCM.RegisterCallback(self, ANCHOR_PROXY_SIZE_CHANGED_EVENT, function(_, proxyGroup, proxy, width, height, selectedAnchorFrame, isActiveProxy)
 		local barOptions = SCM.resourceBarConfig
 		if not barOptions then
 			return
 		end
 
-		local primaryBarOptions = barOptions.primaryBar
-		local secondaryBarOptions = barOptions.secondaryBar
-		local primaryMatchesAnchor = primaryBarOptions.enabled and primaryBarOptions.matchAnchorWidth
-		local secondaryMatchesAnchor = secondaryBarOptions.enabled and secondaryBarOptions.matchAnchorWidth
-		if not (barOptions.enabled and isActiveProxy and (primaryMatchesAnchor or secondaryMatchesAnchor)) then
+		if not (barOptions.enabled and isActiveProxy) then
 			return
 		end
 
@@ -1905,7 +1937,6 @@ function SCM:InitializeResourceBars()
 	container.SCMResourceBarInitialized = true
 	container.PrimaryBar = primaryBar
 	container.SecondaryBar = secondaryBar
-	Mixin(container, SCMResourceBarControllerMixin)
 	container:Initialize()
 end
 
@@ -1923,10 +1954,11 @@ function SCM:ResetResourceBar()
 	local secondaryBar = container.SecondaryBar or _G["SCM_SecondaryResourceBar"]
 
 	SCM.UnregisterCallback(container, ANCHOR_PROXY_SIZE_CHANGED_EVENT)
+	Utils.UnregisterAnchorVisibility(container)
+
 	container:UnregisterAllEvents()
-	container:SetScript("OnAttributeChanged", nil)
-	container:SetScript("OnEvent", nil)
 	container:SetScript("OnUpdate", nil)
+
 	container.totalElapsed = nil
 	container.SCMResourceBarEventsRegistered = false
 	container.SCMResourceBarInitialized = nil
@@ -1936,20 +1968,19 @@ function SCM:ResetResourceBar()
 	container.barOptions = nil
 	container.primaryBarOptions = nil
 	container.secondaryBarOptions = nil
+
 	container:ClearAllPoints()
 	container:SetHeight(0)
 	container:Hide()
 
 	if primaryBar then
 		primaryBar:UnregisterAllEvents()
-		primaryBar:SetScript("OnEvent", nil)
 		ResetResourceBar(primaryBar)
 		primaryBar:ClearAllPoints()
 	end
 
 	if secondaryBar then
 		secondaryBar:UnregisterAllEvents()
-		secondaryBar:SetScript("OnEvent", nil)
 		ResetResourceBar(secondaryBar)
 		secondaryBar:ClearAllPoints()
 	end
