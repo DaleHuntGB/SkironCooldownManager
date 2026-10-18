@@ -19,6 +19,8 @@ SCM.Templates = {}
 SCM.States = {}
 SCM.Profiles = {}
 
+SCM.isForever = WOW_PROJECT_ID == WOW_PROJECT_CAMELOT
+
 SCM.Callbacks = LibStub("CallbackHandler-1.0"):New(SCM)
 
 function SCM.PrepareCooldownViewerData(releaseCustomIcons, skipCustomIconRebuild)
