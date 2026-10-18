@@ -273,6 +273,7 @@ local function Constructor()
 
 	local name = (Type .. "%dScrollBar"):format(AceGUI:GetNextWidgetNum(Type))
 	local scrollbar = CreateFrame("Slider", name, frame, "UIPanelScrollBarTemplate")
+	scrollbar:SetScript("OnValueChanged", nil)
 	scrollBox:SetPoint("TOPLEFT", frame, "TOPLEFT")
 	scrollBox:SetPoint("BOTTOMRIGHT", frame, "BOTTOMRIGHT", -20, 0)
 	scrollbar:SetPoint("TOPRIGHT", frame, "TOPRIGHT", 0, -16)
