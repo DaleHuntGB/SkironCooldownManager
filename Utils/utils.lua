@@ -285,7 +285,7 @@ function Utils.GetClassList(addAll)
 		classes["ALL"] = "ALL"
 	end
 
-	for classIndex = 1, GetNumClasses() do
+	for classIndex = 1, (SCM.isForever and 11 or GetNumClasses()) do
 		local className, classFile, classID = GetClassInfo(classIndex)
 		if classFile then
 		local classColor = GetClassColorObj(classFile)
