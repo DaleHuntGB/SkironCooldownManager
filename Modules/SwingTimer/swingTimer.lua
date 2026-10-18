@@ -369,6 +369,7 @@ function SCMSwingTimerMixin:ApplyBorder()
 
 	self.borderBackdrop = self.borderBackdrop or CopyTable(BACKDROP_SCM_PIXEL)
 	self.borderBackdrop.edgeSize = options.backdropSize
+	border:ClearBackdrop()
 	border:SetBackdrop(self.borderBackdrop)
 	border:Show()
 end
