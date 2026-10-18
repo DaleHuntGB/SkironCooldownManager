@@ -347,7 +347,7 @@ SCM.DefaultDB = {
 				spacing = -1,
 				growDirection = "UP",
 				frameStrata = "BACKGROUND",
-				useFrequentPowerUpdates = false,
+				useFrequentPowerUpdates = true,
 				maelstromOverflowColor = { r = 0.25, g = 0.70, b = 1.00 },
 				comboPointsOverflowColor = { r = 0.25, g = 0.70, b = 1.00 },
 				runeRechargeColor = { r = 0.55, g = 0.55, b = 0.55 },
