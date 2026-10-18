@@ -3,8 +3,8 @@ local SCM = select(2, ...)
 local Utils = SCM.Utils
 local Cache = SCM.Cache
 
-local GetSpecialization = C_SpecializationInfo and C_SpecializationInfo.GetSpecialization
-local GetSpecializationInfo = C_SpecializationInfo and C_SpecializationInfo.GetSpecializationInfo
+local GetSpecialization = C_SpecializationInfo and C_SpecializationInfo.GetSpecialization or GetSpecialization
+local GetSpecializationInfo = C_SpecializationInfo and C_SpecializationInfo.GetSpecializationInfo or GetSpecializationInfo
 
 local COOLDOWN_CONFIG_KEY_PREFIX = "cooldown:"
 local CHILD_SCM_RESET_FIELDS = {
