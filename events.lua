@@ -224,13 +224,8 @@ function SCM:TRAIT_CONFIG_UPDATED()
 end
 
 function SCM:ACTIVE_PLAYER_SPECIALIZATION_CHANGED()
-	SCM:ResetCooldownViewerRuntimeState()
-	SCM:ResetResourceBar()
-
 	C_Timer.After(0.5, function()
-		SCM:ResetAnchors()
-		SCM:ResetCastBar()
-		SCM.RefreshCooldownViewerData(true)
+		SCM:ResetCooldownViewer()
 	end)
 end
 

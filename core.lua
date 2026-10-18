@@ -54,19 +54,30 @@ function SCM.RefreshCooldownViewerData(releaseCustomIcons, skipCustomIconRebuild
 	SCM.RefreshCooldownViewerLayout()
 end
 
+function SCM:ResetCooldownViewer()
+	self:ResetCooldownViewerRuntimeState()
+	self:ResetResourceBar()
+	self:ResetAnchors()
+	self:ResetCastBar()
+
+	if self.isForever then
+		self:ResetSwingTimer()
+	end
+
+	SCM.RefreshCooldownViewerData(true)
+end
+
 local function OnProfileChanged(_, _, _, skipReset)
 	if SCM.importingProfile then
 		return
 	end
 
-	-- Hopefully players won't change profiles that much that we reach the frame limit :)
 	if not skipReset then
 		SCM.DB:ResetData()
 	end
 
-	SCM.PrepareCooldownViewerData(true)
+	SCM:ResetCooldownViewer()
 	SCM:InitializeAllAnchorFrames()
-	SCM.RefreshCooldownViewerLayout()
 
 	SCM.appliedOptions = nil
 	SCM:ApplyOptions()

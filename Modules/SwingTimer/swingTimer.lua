@@ -505,3 +505,11 @@ function SCM:RefreshSwingTimerConfig()
 		timer:ApplyConfig(options)
 	end
 end
+
+function SCM:ResetSwingTimer()
+	if self.SwingTimers and not InCombatLockdown() then
+		for _, timer in pairs(self.SwingTimers) do
+			timer:ClearAllPoints()
+		end
+	end
+end
