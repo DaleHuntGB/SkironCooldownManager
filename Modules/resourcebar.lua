@@ -1399,7 +1399,7 @@ function SCMResourceBarControllerMixin:GetPrimaryPower(powerType, powerToken, cl
 	if not powerType or not powerToken then
 		return
 	end
-	if powerType == Enum.PowerType.Mana and not forceMana and (SCM.isForever or ShouldHideManaForCurrentRole(self.primaryBarOptions)) then
+	if powerType == Enum.PowerType.Mana and not forceMana and not SCM.isForever and ShouldHideManaForCurrentRole(self.primaryBarOptions) then
 		return
 	end
 	return powerType, powerToken
