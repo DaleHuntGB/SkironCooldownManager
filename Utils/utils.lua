@@ -254,6 +254,7 @@ local fixedRaceAtlasNames = {
 	lightforgeddraenei = "lightforged",
 	zandalaritroll = "zandalari",
 	earthendwarf = "earthen",
+	scourge = "undead",
 }
 
 function Utils.GetRaceAtlas(raceName, gender)
