@@ -250,6 +250,7 @@ function SCMSwingTimerMixin:SetSwingTimerDuration(duration, elapsedPercent)
 	end
 
 	self.durationObject:SetTimeFromStart(GetTime() - elapsedPercent * duration, duration)
+	self.StatusBar:SetReverseFill(self.reverseFill)
 	self.StatusBar:SetTimerDuration(self.durationObject, self.interpolation, Enum.StatusBarTimerDirection.ElapsedTime)
 
 	self.durationTextBinding:Enable()
@@ -406,8 +407,10 @@ function SCMSwingTimerMixin:ApplyAppearance()
 	self:SetFrameLevel(options.frameLevel)
 
 	self.interpolation = options.useSmoothPowerUpdates and Enum.StatusBarInterpolation.ExponentialEaseOut or Enum.StatusBarInterpolation.Immediate
+	self.reverseFill = options.reverseFill
 
 	self.StatusBar:SetStatusBarTexture(LSM:Fetch("statusbar", options.texture))
+	self.StatusBar:SetReverseFill(options.reverseFill)
 
 	local background = self.Background
 	background:SetTexture(LSM:Fetch("statusbar", options.backgroundTexture))
@@ -420,7 +423,6 @@ function SCMSwingTimerMixin:ApplyAppearance()
 	self.StatusBar.Duration:SetFont(fontPath, options.durationFontSize, outline)
 	self.StatusBar.Name:SetShown(options.showValues and options.showNameText)
 	self.StatusBar.Duration:SetShown(options.showValues and options.showDurationText)
-	self.StatusBar:SetReverseFill(options.reverseFill)
 
 	self:ApplySpark()
 
