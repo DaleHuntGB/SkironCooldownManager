@@ -755,10 +755,12 @@ function SCM:UpdateCastBar()
 			"UNIT_SPELLCAST_CHANNEL_START",
 			"UNIT_SPELLCAST_CHANNEL_STOP",
 			"UNIT_SPELLCAST_CHANNEL_UPDATE",
-			"UNIT_SPELLCAST_EMPOWER_START",
-			"UNIT_SPELLCAST_EMPOWER_STOP",
-			"UNIT_SPELLCAST_EMPOWER_UPDATE",
 		}
+		if not SCM.isForever then
+			tinsert(events, "UNIT_SPELLCAST_EMPOWER_START")
+			tinsert(events, "UNIT_SPELLCAST_EMPOWER_STOP")
+			tinsert(events, "UNIT_SPELLCAST_EMPOWER_UPDATE")
+		end
 		for _, event in ipairs(events) do
 			castBar.playerEvents:RegisterUnitEvent(event, "player")
 			castBar.vehicleEvents:RegisterUnitEvent(event, "vehicle")
