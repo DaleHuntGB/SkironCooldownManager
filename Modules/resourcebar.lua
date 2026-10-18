@@ -876,7 +876,10 @@ end
 local function UpdateSegmentValues(bar, segmentBars, segmentCount, currentValue, resourceSegmentValues)
 	local r, g, b = GetPowerColor(bar.powerToken, bar.powerType)
 	local runeRechargeColor = bar.resourceKind == "runes" and SCM.resourceBarConfig.runeRechargeColor
-	local overflowR, overflowG, overflowB = CHARGED_COMBO_POINT_COLOR.r, CHARGED_COMBO_POINT_COLOR.g, CHARGED_COMBO_POINT_COLOR.b
+	local overflowR, overflowG, overflowB
+	if CHARGED_COMBO_POINT_COLOR then
+		overflowR, overflowG, overflowB = CHARGED_COMBO_POINT_COLOR.r, CHARGED_COMBO_POINT_COLOR.g, CHARGED_COMBO_POINT_COLOR.b
+	end
 
 	if bar.resourceKind == "maelstromWeapon" then
 		local overflowColor = SCM.resourceBarConfig.maelstromOverflowColor
@@ -900,9 +903,9 @@ local function UpdateSegmentValues(bar, segmentBars, segmentCount, currentValue,
 		if runeRechargeColor and segmentProgress > 0 and segmentProgress < 1 then
 			segmentR, segmentG, segmentB = runeRechargeColor.r, runeRechargeColor.g, runeRechargeColor.b
 		elseif chargedSegments and chargedSegments[segmentIndex] then
-			if bar.resourceKind == "maelstromWeapon" or bar.resourceType == Enum.PowerType.ComboPoints then
+			if bar.resourceKind == "maelstromWeapon" or (overflowR and bar.resourceType == Enum.PowerType.ComboPoints) then
 				segmentR, segmentG, segmentB = overflowR, overflowG, overflowB
-			else
+			elseif CHARGED_COMBO_POINT_COLOR then
 				segmentR, segmentG, segmentB = CHARGED_COMBO_POINT_COLOR.r, CHARGED_COMBO_POINT_COLOR.g, CHARGED_COMBO_POINT_COLOR.b
 			end
 		end
