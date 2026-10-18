@@ -2,9 +2,11 @@ local SCM = select(2, ...)
 local LSM = LibStub("LibSharedMedia-3.0")
 
 local Utils = SCM.Utils
+local GetSpellPowerCost = C_Spell.GetSpellPowerCost or GetSpellPowerCost
+
+local MANA_TICK_SIGNAL_KEY = 1
 local RESOURCE_BAR_FRAME_NAME = "SCM_ResourceBarContainer"
 local ANCHOR_PROXY_SIZE_CHANGED_EVENT = "SkironCooldownManager.AnchorProxy.SizeChanged"
-
 local UNIT_POWER_SPELL_IDS = Constants.UnitPowerSpellIDs
 local SPELL_ID_VOID_METAMORPHOSIS = UNIT_POWER_SPELL_IDS.VOID_METAMORPHOSIS_SPELL_ID or 1217607
 local SPELL_ID_DARK_HEART = UNIT_POWER_SPELL_IDS.DARK_HEART_SPELL_ID or 1225789
@@ -31,6 +33,11 @@ local POWER_TOKEN_EVENTS = {
 	UNIT_POWER_FREQUENT = true,
 	UNIT_POWER_UPDATE = true,
 }
+
+local manaTickCurve = C_CurveUtil.CreateCurve()
+manaTickCurve:SetType(Enum.LuaCurveType.Step)
+manaTickCurve:AddPoint(0, 1)
+manaTickCurve:AddPoint(1, 0)
 
 local function GetPowerColorByInfo(powerToken, powerType)
 	local colorInfo = GetPowerBarColor(powerType)
@@ -562,6 +569,17 @@ local function ApplyResourceBarSparkOptions(bar)
 	spark:SetAlpha(1)
 end
 
+local function StopManaTick(bar)
+	if bar.manaTickEndSignals then
+		bar.manaTickEndSignals:CancelAllSignals()
+	end
+
+	bar.manaTickPending = nil
+	if bar.manaTickBar then
+		bar.manaTickBar:Hide()
+	end
+end
+
 local function ResetResourceBar(bar)
 	bar.resourceKind = nil
 	bar.powerType = nil
@@ -571,11 +589,13 @@ local function ResetResourceBar(bar)
 	bar.SCMRegisterUnitAura = nil
 	bar.Text.Value:SetText("")
 
+	StopManaTick(bar)
 	HideRegions(bar.SegmentTicks)
 	HideSegmentBars(bar.SegmentFillBars)
 	HideRegions(bar.RuneSegmentBars)
 	HideRechargeSegment(bar)
 	HideResourceBarSpark(bar)
+
 	if bar.SegmentTickFrame then
 		bar.SegmentTickFrame:Hide()
 	end
@@ -641,6 +661,11 @@ local function ConfigureBarForResource(bar, resource)
 		or (not bar.powerToken) ~= not powerToken
 		or (not bar.powerType) ~= not powerType
 		or (bar.powerType == Enum.PowerType.ComboPoints) ~= (powerType == Enum.PowerType.ComboPoints)
+		or (bar.powerType == Enum.PowerType.Mana) ~= (powerType == Enum.PowerType.Mana)
+
+	if bar.powerType == Enum.PowerType.Mana and powerType ~= Enum.PowerType.Mana then
+		StopManaTick(bar)
+	end
 
 	if segmentCountChanged then
 		bar.SCMSegmentCount = nil
@@ -950,6 +975,40 @@ local function UpdateSegments(bar, maxValue, currentValue, resourceSegmentValues
 	HideSegmentBars(segmentBars, segmentCount + 1)
 end
 
+local function UpdateManaTick(bar)
+	if not bar.manaTickEndSignals or not bar.manaTickEndSignals:HasSignal(MANA_TICK_SIGNAL_KEY) then
+		return
+	end
+
+	local manaTickBar = bar.manaTickBar
+	if not manaTickBar then
+		manaTickBar = CreateFrame("StatusBar", nil, bar)
+		manaTickBar:SetMinMaxValues(0, 5)
+		manaTickBar:SetAllPoints(bar)
+		manaTickBar:SetStatusBarTexture([[Interface\Buttons\WHITE8X8]])
+		manaTickBar:GetStatusBarTexture():SetAlpha(0)
+		bar.manaTickBar = manaTickBar
+
+		local spark = manaTickBar:CreateTexture(nil, "OVERLAY")
+		spark:SetTexture([[Interface\Buttons\WHITE8X8]])
+		spark:SetSnapToPixelGrid(false)
+		spark:SetTexelSnappingBias(0)
+		spark:SetBlendMode("ADD")
+		spark:SetWidth(4)
+		spark:SetPoint("TOP", manaTickBar:GetStatusBarTexture(), "TOPRIGHT", 0, 0)
+		spark:SetPoint("BOTTOM", manaTickBar:GetStatusBarTexture(), "BOTTOMRIGHT", 0, 0)
+		manaTickBar.Spark = spark
+	end
+
+	if bar.manaTickPending then
+		manaTickBar:SetTimerDuration(bar.manaTickDuration, Enum.StatusBarInterpolation.Immediate, Enum.StatusBarTimerDirection.ElapsedTime)
+		bar.manaTickPending = nil
+	end
+
+	manaTickBar.Spark:SetAlpha(UnitPowerPercent("player", Enum.PowerType.Mana, true, manaTickCurve))
+	manaTickBar:Show()
+end
+
 local function ApplyBarAppearance(bar, barOptions)
 	if not bar then
 		return
@@ -1073,7 +1132,7 @@ local function InitializeBarSkin(bar)
 end
 
 local function BarNeedsContinuousRefresh(bar)
-	if not bar.powerToken or not bar:IsShown() then
+	if SCM.isForever or not bar.powerToken or not bar:IsShown() then
 		return
 	end
 
@@ -1135,20 +1194,35 @@ local function RegisterBarEvents(bar, barOptions)
 		bar:RegisterUnitEvent("UNIT_MAXPOWER", "player")
 	end
 
-	if bar.powerType == Enum.PowerType.ComboPoints then
+	if bar.powerType == Enum.PowerType.ComboPoints and not SCM.isForever then
 		bar:RegisterUnitEvent("UNIT_POWER_POINT_CHARGE", "player")
+	end
+
+	if SCM.isForever and bar.powerType == Enum.PowerType.Mana then
+		bar:RegisterUnitEvent("UNIT_SPELLCAST_SUCCEEDED", "player")
 	end
 end
 
 SCMResourceBarMixin = {}
 
-function SCMResourceBarMixin:OnEvent(event, _, powerToken)
+function SCMResourceBarMixin:OnEvent(event, _, ...)
 	local controller = self.Controller
 	if not controller then
 		return
 	end
 
-	if POWER_TOKEN_EVENTS[event] and self.powerType and powerToken ~= self.powerToken then
+	if POWER_TOKEN_EVENTS[event] and self.powerType then
+		local powerToken = ...
+		if powerToken ~= self.powerToken then
+			return
+		end
+
+		if self.powerType == Enum.PowerType.Mana then
+			UpdateManaTick(self)
+		end
+	elseif event == "UNIT_SPELLCAST_SUCCEEDED" then
+		local spellID = select(2, ...)
+		controller:RefreshManaTick(self, spellID)
 		return
 	end
 
@@ -1216,9 +1290,18 @@ function SCMResourceBarControllerMixin:ApplyResourceBarOptions()
 	return barOptions
 end
 
+local function UpdateMatchedBarWidths(controller)
+	local forcePositionUpdate = controller.SCMForceAnchorUpdate
+	controller.SCMForceAnchorUpdate = nil
+	if controller.SCMResourceBarInitialized and controller.barOptions.enabled then
+		controller:RefreshMatchedBarWidths(forcePositionUpdate)
+	end
+end
+
 function SCMResourceBarControllerMixin:OnAnchorVisibilityChanged()
 	if self.SCMResourceBarInitialized and self.barOptions.enabled then
-		self:RefreshMatchedBarWidths(true)
+		self.SCMForceAnchorUpdate = true
+		SCM:RequestLayoutUpdate(self, UpdateMatchedBarWidths)
 	end
 end
 
@@ -1268,7 +1351,7 @@ function SCMResourceBarControllerMixin:HookAnchorWidthRefresh(anchor)
 			return
 		end
 
-		controller:RefreshMatchedBarWidths()
+		SCM:RequestLayoutUpdate(controller, UpdateMatchedBarWidths)
 	end)
 end
 
@@ -1667,6 +1750,35 @@ function SCMResourceBarControllerMixin:RefreshBarDisplay(bar, refreshTicks)
 	self:RefreshBarAppearance(bar, refreshTicks, currentValue, maxValue, resourceSegmentValues)
 end
 
+function SCMResourceBarControllerMixin:RefreshManaTick(bar, spellID)
+	if not spellID or issecretvalue(spellID) then
+		return
+	end
+
+	local powerCosts = GetSpellPowerCost(spellID)
+	if not powerCosts then
+		return
+	end
+
+	local now = GetTime()
+	for _, costInfo in ipairs(powerCosts) do
+		if costInfo.cost and costInfo.cost > 0 and costInfo.type == Enum.PowerType.Mana then
+			bar.manaTickDuration = bar.manaTickDuration or C_DurationUtil.CreateDuration()
+			bar.manaTickDuration:SetTimeFromStart(now, 5)
+			bar.manaTickPending = true
+
+			if not bar.manaTickEndSignals then
+				bar.manaTickEndSignals = C_Timer.NewTimedSignalMap(function()
+					StopManaTick(bar)
+				end)
+			end
+
+			bar.manaTickEndSignals:SignalAt(MANA_TICK_SIGNAL_KEY, bar.manaTickDuration:GetEndTime())
+			break
+		end
+	end
+end
+
 local function UpdateFormBarPresentation(controller, bar, geometryChanged, currentValue, maxValue, resourceSegmentValues)
 	if not bar.powerToken or not bar:IsShown() then
 		return
@@ -1826,7 +1938,7 @@ function SCMResourceBarControllerMixin:RegisterResourceBarEvents()
 		return
 	end
 
-	if Utils.GetClass() ~= "ROGUE" then
+	if Utils.GetClass() == "DRUID" then
 		self:RegisterEvent("UPDATE_SHAPESHIFT_FORM")
 	end
 
@@ -1920,7 +2032,7 @@ function SCMResourceBarControllerMixin:Initialize()
 		end
 
 		if self.SCMActiveAnchorFrame == proxy or self.SCMActiveAnchorGroup == proxyGroup then
-			self:RefreshMatchedBarWidths(true)
+			self:OnAnchorVisibilityChanged()
 		end
 	end)
 
@@ -1968,6 +2080,7 @@ function SCM:ResetResourceBar()
 	container.SCMActiveAnchorFrame = nil
 	container.SCMActiveAnchorGroup = nil
 	container.SCMRefreshMatchedBarWidths = nil
+	container.SCMForceAnchorUpdate = nil
 	container.barOptions = nil
 	container.primaryBarOptions = nil
 	container.secondaryBarOptions = nil
