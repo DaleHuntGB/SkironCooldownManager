@@ -1413,12 +1413,12 @@ function SCMResourceBarControllerMixin:GetSecondaryResource(primaryPowerType, se
 	local secondaryResource
 	if not UnitHasVehicleUI("player") then
 		local specializationID = Utils.GetSpec()
-		secondaryResource = RESOURCE_BAR_CONSTANTS.SPEC_SECONDARY_POWER[specializationID] or RESOURCE_BAR_CONSTANTS.CLASS_SECONDARY_POWER[className]
+		secondaryResource = (RESOURCE_BAR_CONSTANTS.SPEC_SECONDARY_POWER and RESOURCE_BAR_CONSTANTS.SPEC_SECONDARY_POWER[specializationID]) or RESOURCE_BAR_CONSTANTS.CLASS_SECONDARY_POWER[className]
 		local requiredPrimaryPowerType = secondaryResource and secondaryResource.showWhenPrimaryPowerType
 		if requiredPrimaryPowerType and primaryPowerType ~= requiredPrimaryPowerType then
 			secondaryResource = nil
 		end
-		if not secondaryResource and RESOURCE_BAR_CONSTANTS.CLASS_MANA_SECONDARY_POWER[className] then
+		if not secondaryResource and RESOURCE_BAR_CONSTANTS.CLASS_MANA_SECONDARY_POWER and RESOURCE_BAR_CONSTANTS.CLASS_MANA_SECONDARY_POWER[className] then
 			secondaryResource = RESOURCE_BAR_CONSTANTS.CLASS_MANA_SECONDARY_POWER[className][primaryPowerType]
 		end
 	end
