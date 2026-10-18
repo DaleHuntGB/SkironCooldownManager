@@ -9,7 +9,7 @@ local DecodeImportString = Profiles.DecodeImport
 
 local EXPORT_TYPE = SCM.Constants.PROFILES.EXPORT_TYPE
 
-function SCM:ImportProfile(profileName, importString, importSettings)
+local function ImportProfile(self, profileName, importString, importSettings)
 	local typeID, data = DecodeImportString(importString)
 
 	if not typeID then
@@ -72,13 +72,16 @@ function SCM:ImportProfile(profileName, importString, importSettings)
 
 	self.db.profile.options = options
 	SCM.db:RegisterDefaults(SCM.DefaultDB)
-	SCM:UpdateDB()
+	SCM:ResetCooldownViewer()
 
 	SCM.appliedOptions = nil
 	SCM:ApplyOptions()
 
-	SCM.RefreshCooldownViewerData(true)
 	SCM.importingProfile = nil
 
 	return true
+end
+
+function SCM:ImportProfile(profileName, importString, importSettings)
+	return self:RunLayoutBatch(ImportProfile, self, profileName, importString, importSettings)
 end

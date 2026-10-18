@@ -225,7 +225,7 @@ end
 
 function SCM:ACTIVE_PLAYER_SPECIALIZATION_CHANGED()
 	C_Timer.After(0.5, function()
-		SCM:ResetCooldownViewer()
+		SCM:RunLayoutBatch(SCM.ResetCooldownViewer, SCM)
 	end)
 end
 

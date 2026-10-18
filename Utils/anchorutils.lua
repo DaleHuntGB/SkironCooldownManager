@@ -10,6 +10,31 @@ local FIRST_BUFF_BAR_GROUP = GLOBAL_BUFF_BAR_OFFSET + 1
 
 local pendingAnchorVisibilityRegistrations = {}
 local anchorVisibilityRefreshQueued
+local visitedAnchorDependencies = {}
+
+local function DependsOnAnchor(target, anchorFrame)
+	if not target or visitedAnchorDependencies[target] then
+		return false
+	end
+
+	if target == anchorFrame then
+		return true
+	end
+
+	visitedAnchorDependencies[target] = true
+	for index = 1, target:GetNumPoints() do
+		if DependsOnAnchor(select(2, target:GetPoint(index)), anchorFrame) then
+			return true
+		end
+	end
+
+	return DependsOnAnchor(target:GetParent(), anchorFrame)
+end
+
+function Utils.IsAnchorDependentOn(target, anchorFrame)
+	wipe(visitedAnchorDependencies)
+	return DependsOnAnchor(target, anchorFrame)
+end
 
 function Utils.ToGlobalGroup(index)
 	return GLOBAL_GROUP_OFFSET + (index or 1)
@@ -140,7 +165,12 @@ function Utils.GetActiveAnchorFrame(anchorFrames)
 	return anchorFrame, selectedAnchorFrame, anchorGroup
 end
 
-local function RefreshAnchorVisibilitySelection(owner, registration)
+local function RefreshAnchorVisibilitySelection(owner)
+	local registration = owner.SCMAnchorVisibility
+	if not registration then
+		return
+	end
+
 	local selectedFrame, selectedRef = Utils.GetAnchorFrame(registration.anchor)
 
 	if registration.selectedFrame ~= selectedFrame or registration.selectedRef ~= selectedRef then
@@ -152,8 +182,8 @@ local function RefreshAnchorVisibilitySelection(owner, registration)
 end
 
 local function OnAnchorVisibilityChanged(frame)
-	for owner, registration in pairs(frame.SCMAnchorVisibilityObservers) do
-		RefreshAnchorVisibilitySelection(owner, registration)
+	for owner in pairs(frame.SCMAnchorVisibilityObservers) do
+		SCM:RequestLayoutUpdate(owner, RefreshAnchorVisibilitySelection)
 	end
 end
 
@@ -199,7 +229,7 @@ local function RefreshPendingAnchorVisibilityRegistrations()
 		pendingAnchorVisibilityRegistrations[owner] = nil
 
 		WatchAnchorCandidates(owner, registration)
-		RefreshAnchorVisibilitySelection(owner, registration)
+		SCM:RequestLayoutUpdate(owner, RefreshAnchorVisibilitySelection)
 	end
 end
 

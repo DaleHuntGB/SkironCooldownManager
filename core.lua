@@ -38,24 +38,12 @@ function SCM.PrepareCooldownViewerData(releaseCustomIcons, skipCustomIconRebuild
 	end
 end
 
-function SCM.RefreshCooldownViewerLayout()
-	SCM:ApplyAllCDManagerConfigs(true, true)
-	SCM:InitializeCastBar()
-	SCM:RefreshResourceBarConfig(true, true)
-	SCM:RefreshAuraContainers()
-
-	if SCM.isForever then
-		SCM:InitializeSwingTimer()
-	end
-end
-
 function SCM.RefreshCooldownViewerData(releaseCustomIcons, skipCustomIconRebuild)
 	SCM.PrepareCooldownViewerData(releaseCustomIcons, skipCustomIconRebuild)
 	SCM.RefreshCooldownViewerLayout()
 end
 
 function SCM:ResetCooldownViewer()
-	self:ResetCooldownViewerRuntimeState()
 	self:ResetResourceBar()
 	self:ResetAnchors()
 	self:ResetCastBar()
@@ -67,11 +55,7 @@ function SCM:ResetCooldownViewer()
 	SCM.RefreshCooldownViewerData(true)
 end
 
-local function OnProfileChanged(_, _, _, skipReset)
-	if SCM.importingProfile then
-		return
-	end
-
+local function ApplyProfileChange(skipReset)
 	if not skipReset then
 		SCM.DB:ResetData()
 	end
@@ -94,6 +78,12 @@ local function OnProfileChanged(_, _, _, skipReset)
 		for _, anchorFrame in pairs(SCM.anchorFrames) do
 			SCM:HideAnchorHighlight(anchorFrame)
 		end
+	end
+end
+
+local function OnProfileChanged(_, _, _, skipReset)
+	if not SCM.importingProfile then
+		SCM:RunLayoutBatch(ApplyProfileChange, skipReset)
 	end
 end
 

@@ -48,7 +48,7 @@ function SCMSwingTimerMixin:Init(swingType, typeText, barOptions)
 
 	SCM.RegisterCallback(self, "SkironCooldownManager.AnchorProxy.SizeChanged", function(_, proxyGroup, _, _, _, _, isActiveProxy)
 		if isActiveProxy and self.SCMActiveAnchorGroup == proxyGroup then
-			self:UpdateLayout()
+			SCM:RequestLayoutUpdate(self, self.UpdateLayout)
 		end
 	end)
 end
@@ -294,7 +294,7 @@ end
 function SCMSwingTimerMixin:UpdateFrameState()
 	SwingTimerMixin.UpdateFrameState(self)
 	self:UpdateSwingEventRegistration()
-	SCM:RefreshSwingTimerHeights()
+	SCM:RequestLayoutUpdate(SCM, SCM.RefreshSwingTimerHeights)
 end
 
 function SCMSwingTimerMixin:UpdateShownStateAndRegistration()
@@ -321,7 +321,7 @@ function SCMSwingTimerMixin:HookAnchorWidthRefresh(anchor)
 	anchor:HookScript("OnSizeChanged", function(changedAnchor)
 		for _, timer in pairs(SCM.SwingTimers) do
 			if timer.barOptions.matchAnchorWidth and timer.SCMActiveAnchorFrame == changedAnchor then
-				timer:UpdateLayout()
+				SCM:RequestLayoutUpdate(timer, timer.UpdateLayout)
 			end
 		end
 	end)
@@ -340,6 +340,10 @@ function SCMSwingTimerMixin:UpdateLayout()
 	local options = self.barOptions
 	Utils.RegisterAnchorVisibility(self, options.anchorFrame, self.UpdateLayout)
 	local anchor, _, anchorGroup = Utils.GetActiveAnchorFrame(options.anchorFrame)
+
+	self:ClearAllPoints()
+	self:SetPoint(options.point, anchor or UIParent, options.relativePoint, options.xOffset, options.yOffset)
+
 	self.SCMActiveAnchorFrame = anchor
 	self.SCMActiveAnchorGroup = anchorGroup
 
@@ -351,9 +355,6 @@ function SCMSwingTimerMixin:UpdateLayout()
 	width = math.max(options.minWidth, width)
 
 	self:SetWidth(width)
-
-	self:ClearAllPoints()
-	self:SetPoint(options.point, anchor or UIParent, options.relativePoint, options.xOffset, options.yOffset)
 
 	local duration = self.StatusBar.Duration
 	duration:ClearAllPoints()
@@ -468,10 +469,11 @@ function SCMSwingTimerMixin:ApplyConfig(options)
 	end
 
 	self:ApplyAppearance()
-	self:UpdateLayout()
 	self:ApplyVisibility()
 	self:UpdateFrameState()
 	self:ApplyRangePresentation()
+
+	SCM:RequestLayoutUpdate(self, self.UpdateLayout)
 end
 
 function SCM:RefreshSwingTimerHeights()
@@ -508,7 +510,14 @@ end
 
 function SCM:ResetSwingTimer()
 	if self.SwingTimers and not InCombatLockdown() then
-		for _, timer in pairs(self.SwingTimers) do
+		local options = self.db.profile.options.swingTimer
+		for swingType, timer in pairs(self.SwingTimers) do
+			Utils.UnregisterAnchorVisibility(timer)
+
+			timer.barOptions = options[swingType]
+			timer.SCMActiveAnchorFrame = nil
+			timer.SCMActiveAnchorGroup = nil
+
 			timer:ClearAllPoints()
 		end
 	end

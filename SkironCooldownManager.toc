@@ -49,6 +49,7 @@ Database\sharedmedia.lua
 Database\config.lua
 
 core.lua
+Modules\layoutqueue.lua
 events.lua
 hooks.lua
 

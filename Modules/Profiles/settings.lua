@@ -63,8 +63,6 @@ function SCM:ImportGlobalSettingsFromData(data)
 
 	self.db:RegisterDefaults(SCM.DefaultDB)
 	SCM.appliedOptions = nil
-	SCM:UpdateDB()
+	SCM:ResetCooldownViewer()
 	SCM:ApplyOptions()
-
-	SCM.RefreshCooldownViewerData(true)
 end

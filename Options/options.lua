@@ -73,23 +73,7 @@ function Options.ApplyModeConfigUpdate(anchorIndex, mode, refreshOptions, refres
 end
 
 function Options.IsCircularAnchor(anchorFrame, text)
-	local visited = {}
-	local function DependsOnAnchor(target)
-		if not target or visited[target] then
-			return false
-		end
-		if target == anchorFrame then
-			return true
-		end
-		visited[target] = true
-		for index = 1, target:GetNumPoints() do
-			if DependsOnAnchor(select(2, target:GetPoint(index))) then
-				return true
-			end
-		end
-		return DependsOnAnchor(target:GetParent())
-	end
-	return DependsOnAnchor(Utils.GetAnchorFrame(text))
+	return Utils.IsAnchorDependentOn(Utils.GetAnchorFrame(text), anchorFrame)
 end
 
 function Options.SetAnchorHighlight(anchorFrame, state, color)

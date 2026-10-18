@@ -579,6 +579,10 @@ function SCM:RefreshCastBarWidth(delay)
 	if not castBar or not options or not options.matchParentWidth then
 		return
 	end
+	if self.layoutUpdatesSuspended then
+		self:RequestLayoutUpdate(castBar, OnAnchorVisibilityChanged)
+		return
+	end
 
 	C_Timer.After(delay or 0.05, function()
 		local currentCastBar = SCM.CastBar
@@ -634,10 +638,11 @@ function SCM:InitializeCastBar()
 	end
 
 	local castBar = CreateFrame("Frame", "SCM_CastBar", UIParent, "BackdropTemplate")
-	castBar.OnAnchorVisibilityChanged = OnAnchorVisibilityChanged
-	castBar:SetFrameStrata("BACKGROUND")
+	castBar.OnAnchorVisibilityChanged = SCM:CreateLayoutCallback(OnAnchorVisibilityChanged)
 	castBar.StageBands = {}
 	castBar.TickLines = {}
+
+	castBar:SetFrameStrata("BACKGROUND")
 
 	castBar.Background = castBar:CreateTexture(nil, "BACKGROUND")
 	castBar.Background:SetTexelSnappingBias(0)

@@ -145,7 +145,7 @@ local function GetMatchedAnchorWidth(group, anchorConfig)
 				return
 			end
 
-			SCM:ApplyBuffBarCDManagerConfig()
+			SCM:RequestLayoutUpdate(SCM, SCM.ApplyBuffBarCDManagerConfig)
 		end)
 	end
 

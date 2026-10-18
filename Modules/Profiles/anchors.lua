@@ -100,6 +100,6 @@ function SCM:ImportGlobalAnchorsFromData(data, refreshData, excludeIcons)
 	end
 
 	if refreshData then
-		SCM.RefreshCooldownViewerData(true)
+		SCM:ResetCooldownViewer()
 	end
 end
