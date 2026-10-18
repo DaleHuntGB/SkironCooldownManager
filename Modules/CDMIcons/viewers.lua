@@ -106,7 +106,8 @@ function Icons.ExpandScopedAnchorGroups(viewer, viewerData, scopedAnchorGroups)
 
 	local children = Icons.GetOrCacheChildren(viewer)
 	local categoryIndex = SCM.Constants.CDM.COOLDOWN_VIEWER_NAME_TO_INDEX[viewer:GetName()]
-	local defaultCooldownIDs = SCM.defaultCooldownViewerConfig.cooldownIDs
+	local defaultConfig = SCM.defaultCooldownViewerConfig
+	local defaultCooldownIDs = defaultConfig and defaultConfig.cooldownIDs
 	if not defaultCooldownIDs then
 		return
 	end

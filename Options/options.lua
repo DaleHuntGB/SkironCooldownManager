@@ -409,7 +409,7 @@ function SCM.GetDisabledCooldowns()
 	local disabledCooldowns = {}
 	for _, config in pairs(SCM.spellConfig) do
 		local _, anchorGroup = next(config.source)
-		local data = cooldownInfoByID[config.cooldownID]
+		local data = cooldownInfoByID and cooldownInfoByID[config.cooldownID]
 		local cooldownInfo = C_CooldownViewer.GetCooldownViewerCooldownInfo(config.cooldownID)
 		if anchorGroup and data and cooldownInfo then
 			local categoryID = cooldownInfo.category
