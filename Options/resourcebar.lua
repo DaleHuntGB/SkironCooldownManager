@@ -271,38 +271,42 @@ local function AddPowerTypeColorSettings(parent, settings)
 	parent:AddChild(powerTypeColors)
 
 	for _, powerType in ipairs(RESOURCE_BAR_POWER_TYPES) do
-		local powerTypeOverride = settings.powerTypeColorOverrides[powerType.token]
-		local overrideColor = AceGUI:Create("ColorPicker")
-		overrideColor:SetRelativeWidth(0.33)
-		overrideColor:SetLabel(powerType.label)
-		overrideColor:SetHasAlpha(false)
-		overrideColor:SetColor(powerTypeOverride.color.r, powerTypeOverride.color.g, powerTypeOverride.color.b)
-		overrideColor:SetCallback("OnValueChanged", function(_, _, r, g, b)
-			powerTypeOverride.color = { r = r, g = g, b = b }
-			RefreshResourceBars()
-		end)
-		powerTypeColors:AddChild(overrideColor)
+		if not powerType.client or powerType.client == WOW_PROJECT_ID then
+			local powerTypeOverride = settings.powerTypeColorOverrides[powerType.token]
+			local overrideColor = AceGUI:Create("ColorPicker")
+			overrideColor:SetRelativeWidth(0.33)
+			overrideColor:SetLabel(powerType.label)
+			overrideColor:SetHasAlpha(false)
+			overrideColor:SetColor(powerTypeOverride.color.r, powerTypeOverride.color.g, powerTypeOverride.color.b)
+			overrideColor:SetCallback("OnValueChanged", function(_, _, r, g, b)
+				powerTypeOverride.color = { r = r, g = g, b = b }
+				RefreshResourceBars()
+			end)
+			powerTypeColors:AddChild(overrideColor)
+		end
 	end
 
-	local staggerColors = settings.staggerColors
-	for _, staggerColorInfo in ipairs({
-		{ "light", "Light Stagger" },
-		{ "moderate", "Moderate Stagger" },
-		{ "heavy", "Heavy Stagger" },
-	}) do
-		local key = staggerColorInfo[1]
-		local color = staggerColors[key]
+	if not SCM.isForever then
+		local staggerColors = settings.staggerColors
+		for _, staggerColorInfo in ipairs({
+			{ "light", "Light Stagger" },
+			{ "moderate", "Moderate Stagger" },
+			{ "heavy", "Heavy Stagger" },
+		}) do
+			local key = staggerColorInfo[1]
+			local color = staggerColors[key]
 
-		local colorPicker = AceGUI:Create("ColorPicker")
-		colorPicker:SetRelativeWidth(0.33)
-		colorPicker:SetLabel(staggerColorInfo[2])
-		colorPicker:SetHasAlpha(false)
-		colorPicker:SetColor(color.r, color.g, color.b)
-		colorPicker:SetCallback("OnValueChanged", function(_, _, r, g, b)
-			staggerColors[key] = { r = r, g = g, b = b }
-			RefreshResourceBars()
-		end)
-		powerTypeColors:AddChild(colorPicker)
+			local colorPicker = AceGUI:Create("ColorPicker")
+			colorPicker:SetRelativeWidth(0.33)
+			colorPicker:SetLabel(staggerColorInfo[2])
+			colorPicker:SetHasAlpha(false)
+			colorPicker:SetColor(color.r, color.g, color.b)
+			colorPicker:SetCallback("OnValueChanged", function(_, _, r, g, b)
+				staggerColors[key] = { r = r, g = g, b = b }
+				RefreshResourceBars()
+			end)
+			powerTypeColors:AddChild(colorPicker)
+		end
 	end
 end
 
@@ -475,16 +479,6 @@ local function AddBarSettings(parent, title, settings, includeManaRoleSettings, 
 				hideManaRoles:SetItemValue(key, hideManaRoleSettings[key])
 			end
 			generalSettings:AddChild(hideManaRoles)
-		else
-			local forceMana = AceGUI:Create("CheckBox")
-			forceMana:SetRelativeWidth(0.33)
-			forceMana:SetLabel("Show Mana")
-			forceMana:SetValue(settings.forceMana)
-			forceMana:SetCallback("OnValueChanged", function(_, _, value)
-				settings.forceMana = value
-				RefreshResourceBars()
-			end)
-			generalSettings:AddChild(forceMana)
 		end
 	else
 		if UnitClassBase("player") == "DRUID" then
@@ -517,7 +511,7 @@ local function AddBarSettings(parent, title, settings, includeManaRoleSettings, 
 			AddDruidFormDropdown(druidSettings, druidFormPowerTypes, 2, "Cat Form")
 			AddDruidFormDropdown(druidSettings, druidFormPowerTypes, 3, "Travel Form")
 			AddDruidFormDropdown(druidSettings, druidFormPowerTypes, 4, "Moonkin Form")
-		else
+		elseif not SCM.isForever then
 			local forceMana = AceGUI:Create("CheckBox")
 			forceMana:SetRelativeWidth(0.33)
 			forceMana:SetLabel("Show Mana")
@@ -897,7 +891,10 @@ local function SelectResourceBarTab(tabGroup, group, settings)
 		AddLayoutSettings(scrollFrame, settings)
 		AddPositionSettings(scrollFrame, settings)
 		AddPowerTypeColorSettings(scrollFrame, settings)
-		AddSpecialColorSettings(scrollFrame, settings)
+
+		if not SCM.isForever then
+			AddSpecialColorSettings(scrollFrame, settings)
+		end
 	elseif group == "Primary" then
 		AddBarSettings(scrollFrame, "Primary", settings.primaryBar, true, settings)
 	elseif group == "Secondary" then
