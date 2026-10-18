@@ -419,6 +419,7 @@ function SCMSwingTimerMixin:ApplyAppearance()
 	self.StatusBar.Duration:SetFont(fontPath, options.durationFontSize, outline)
 	self.StatusBar.Name:SetShown(options.showValues and options.showNameText)
 	self.StatusBar.Duration:SetShown(options.showValues and options.showDurationText)
+	self.StatusBar:SetReverseFill(options.reverseFill)
 
 	self:ApplySpark()
 
