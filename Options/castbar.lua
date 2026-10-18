@@ -191,68 +191,66 @@ local function CastBar(self)
 	statusGroup:SetLayout("flow")
 	scrollFrame:AddChild(statusGroup)
 
-	if not SCM.isForever then
-		local currentStatus = AceGUI:Create("Label")
-		currentStatus:SetRelativeWidth(0.33)
-		currentStatus:SetJustifyH("LEFT")
-		currentStatus:SetJustifyV("MIDDLE")
-		currentStatus:SetFontObject("Game15Font")
-		statusGroup:AddChild(currentStatus)
+	local currentStatus = AceGUI:Create("Label")
+	currentStatus:SetRelativeWidth(0.33)
+	currentStatus:SetJustifyH("LEFT")
+	currentStatus:SetJustifyV("MIDDLE")
+	currentStatus:SetFontObject("Game15Font")
+	statusGroup:AddChild(currentStatus)
 
-		if SCM.castBarOverride.active then
-			currentStatus:SetText(string.format("Status: |cffea00ffSpecialization|r (%s)", (select(2, SCM.Utils.GetSpec()))))
+	if SCM.castBarOverride.active then
+		currentStatus:SetText(string.format("Status: |cffea00ff%s|r (%s)", SCM.isForever and "Class" or "Specialization", SCM.isForever and UnitClass("player") or select(2, SCM.Utils.GetSpec())))
+	else
+		currentStatus:SetText("Status: |cfffcf803Profile|r")
+	end
+
+	local modifyCurrentOverride = AceGUI:Create("CheckBox")
+	modifyCurrentOverride:SetRelativeWidth(0.33)
+	modifyCurrentOverride:SetLabel(SCM.isForever and "Use Class Config" or "Use Specialization Config")
+	modifyCurrentOverride:SetValue(SCM.castBarOverride.active)
+	statusGroup:AddChild(modifyCurrentOverride)
+
+	local resetCurrentOverride = AceGUI:Create("Button")
+	resetCurrentOverride:SetText(SCM.isForever and "Clear Class Config" or "Clear Spec Config")
+	resetCurrentOverride:SetRelativeWidth(0.33)
+	resetCurrentOverride:SetDisabled(not SCM.castBarOverride.active)
+	resetCurrentOverride:SetCallback("OnEnter", function()
+		GameTooltip:SetOwner(self.frame, "ANCHOR_CURSOR")
+		GameTooltip:SetText(SCM.isForever and "Clear Class Config" or "Clear Spec Config", nil, nil, nil, nil, true)
+		GameTooltip:AddLine("This will clear the " .. (SCM.isForever and "class" or "spec") .. " config and fall back to the normal cast bar options.", 1, 1, 1, true)
+		GameTooltip:Show()
+	end)
+	resetCurrentOverride:SetCallback("OnLeave", function()
+		GameTooltip:Hide()
+	end)
+	statusGroup:AddChild(resetCurrentOverride)
+
+	resetCurrentOverride:SetCallback("OnClick", function()
+		local castBarOverride = SCM.castBarOverride
+		local isActive = castBarOverride.active
+
+		wipe(castBarOverride)
+		castBarOverride.active = isActive
+		SCM:UpdateCastAndResourceBarConfigs()
+
+		self:SelectTab("CastBar")
+		RefreshCastBar()
+	end)
+
+	modifyCurrentOverride:SetCallback("OnValueChanged", function(_, _, value)
+		SCM.castBarOverride.active = value
+		SCM:UpdateCastAndResourceBarConfigs()
+
+		if value then
+			currentStatus:SetText(string.format("Status: |cffea00ff%s|r (%s)", SCM.isForever and "Class" or "Specialization", SCM.isForever and UnitClass("player") or select(2, SCM.Utils.GetSpec())))
 		else
 			currentStatus:SetText("Status: |cfffcf803Profile|r")
 		end
 
-		local modifyCurrentSpecialization = AceGUI:Create("CheckBox")
-		modifyCurrentSpecialization:SetRelativeWidth(0.33)
-		modifyCurrentSpecialization:SetLabel("Use Specialization Config")
-		modifyCurrentSpecialization:SetValue(SCM.castBarOverride.active)
-		statusGroup:AddChild(modifyCurrentSpecialization)
-
-		local resetCurrentSpecialization = AceGUI:Create("Button")
-		resetCurrentSpecialization:SetText("Clear Spec Config")
-		resetCurrentSpecialization:SetRelativeWidth(0.33)
-		resetCurrentSpecialization:SetDisabled(not SCM.castBarOverride.active)
-		resetCurrentSpecialization:SetCallback("OnEnter", function()
-			GameTooltip:SetOwner(self.frame, "ANCHOR_CURSOR")
-			GameTooltip:SetText("Clear Spec Config", nil, nil, nil, nil, true)
-			GameTooltip:AddLine("This will clear the spec config and fall back to the normal resource bar options.", 1, 1, 1, true)
-			GameTooltip:Show()
-		end)
-		resetCurrentSpecialization:SetCallback("OnLeave", function()
-			GameTooltip:Hide()
-		end)
-		statusGroup:AddChild(resetCurrentSpecialization)
-
-		resetCurrentSpecialization:SetCallback("OnClick", function()
-			local castBarOverride = SCM.castBarOverride
-			local isActive = castBarOverride.active
-
-			wipe(castBarOverride)
-			castBarOverride.active = isActive
-			SCM:UpdateCastAndResourceBarConfigs()
-
-			self:SelectTab("CastBar")
-			RefreshCastBar()
-		end)
-
-		modifyCurrentSpecialization:SetCallback("OnValueChanged", function(_, _, value)
-			SCM.castBarOverride.active = value
-			SCM:UpdateCastAndResourceBarConfigs()
-
-			if value then
-				currentStatus:SetText(string.format("Status: |cffea00ffSpecialization|r (%s)", (select(2, SCM.Utils.GetSpec()))))
-			else
-				currentStatus:SetText("Status: |cfffcf803Profile|r")
-			end
-
-			resetCurrentSpecialization:SetDisabled(not value)
-			self:SelectTab("CastBar")
-			RefreshCastBar()
-		end)
-	end
+		resetCurrentOverride:SetDisabled(not value)
+		self:SelectTab("CastBar")
+		RefreshCastBar()
+	end)
 
 	local options = SCM.castBarConfig
 	local iconOptions = options.icon
