@@ -6,29 +6,45 @@ local CustomIcons = SCM.CustomIcons
 local CONSTANTS = SCM.Constants.CHARACTER
 
 local function GetDefaultLoadRaceNames()
-	local dualFactionRaces = {}
 	local loadedRaces = {}
+	local raceNames = {}
 	local raceIDs = {}
 
-	local sortedIDs = {}
-	for raceID in pairs(SCM.Constants.CHARACTER.RACES) do
-		sortedIDs[#sortedIDs + 1] = raceID
-	end
-	table.sort(sortedIDs)
-
-	for i = 1, #sortedIDs do
-		local raceID = sortedIDs[i]
+	for raceID, raceData in pairs(CONSTANTS.RACES) do
 		local raceInfo = C_CreatureInfo.GetRaceInfo(raceID)
 
-		if raceInfo and not dualFactionRaces[raceInfo.raceName] then
-			dualFactionRaces[raceInfo.raceName] = true
-			loadedRaces[raceID] = raceInfo.raceName
+		if raceInfo then
+			local raceName = raceInfo.clientFileString
+			if raceName == "Scourge" then
+				raceName = "Undead"
+			end
+
+			if type(raceData) == "table" then
+				raceName = raceName .. " (" .. raceData.faction .. ")"
+			end
+
+			raceNames[raceID] = raceName
+
+			local raceFile = string.lower(raceInfo.clientFileString)
+			local maleAtlas = SCM.Utils.GetRaceAtlas(raceFile, "male")
+			local femaleAtlas = SCM.Utils.GetRaceAtlas(raceFile, "female")
+			local raceIcons = ""
+
+			if C_Texture.GetAtlasInfo(maleAtlas) then
+				raceIcons = CreateAtlasMarkup(maleAtlas, 16, 16) .. " "
+			end
+
+			if C_Texture.GetAtlasInfo(femaleAtlas) then
+				raceIcons = raceIcons .. CreateAtlasMarkup(femaleAtlas, 16, 16) .. " "
+			end
+
+			loadedRaces[raceID] = raceIcons .. raceName
 			tinsert(raceIDs, raceID)
 		end
 	end
 
 	table.sort(raceIDs, function(raceIDA, raceIDB)
-		return loadedRaces[raceIDA] < loadedRaces[raceIDB]
+		return raceNames[raceIDA] < raceNames[raceIDB]
 	end)
 
 	return loadedRaces, raceIDs
@@ -36,41 +52,41 @@ end
 
 function CDMOptions.CreateLoadTabSettings(iconSettingsTabs, iconSettings, scrollFrame, buttonFrame, buttonData, buttonConfig, anchorIndex, mode, isGlobal, isBuffBar)
 	if buttonData.isCustom then
-		if isGlobal then
-			local useLoadClass = AceGUI:Create("CheckBox")
-			useLoadClass:SetLabel("Class")
-			useLoadClass:SetRelativeWidth(0.5)
-			useLoadClass:SetValue(buttonConfig.useLoadClass)
-			iconSettingsTabs:AddChild(useLoadClass)
+		local useLoadClass = AceGUI:Create("CheckBox")
+		useLoadClass:SetLabel("Class")
+		useLoadClass:SetRelativeWidth(0.5)
+		useLoadClass:SetValue(buttonConfig.useLoadClass)
+		iconSettingsTabs:AddChild(useLoadClass)
 
-			local loadClass = AceGUI:Create("Dropdown")
-			loadClass:SetRelativeWidth(0.5)
-			loadClass:SetLabel("Classes")
-			loadClass:SetList(SCM.Utils.GetClassList(false))
-			loadClass:SetMultiselect(true)
-			loadClass:SetDisabled(not buttonConfig.useLoadClass)
-			loadClass:SetCallback("OnValueChanged", function(_, _, key, value)
-				buttonConfig.loadClasses = buttonConfig.loadClasses or CustomIcons.GetDefaultLoadClasses()
-				buttonConfig.loadClasses[key] = value
-				CDMOptions.ApplyIconConfigUpdate(buttonFrame, buttonData, anchorIndex, mode, isGlobal, isBuffBar)
-			end)
+		local loadClass = AceGUI:Create("Dropdown")
+		loadClass:SetRelativeWidth(0.5)
+		loadClass:SetLabel("Classes")
+		loadClass:SetList(SCM.Utils.GetClassList(false))
+		loadClass:SetMultiselect(true)
+		loadClass:SetDisabled(not buttonConfig.useLoadClass)
+		loadClass:SetCallback("OnValueChanged", function(_, _, key, value)
+			buttonConfig.loadClasses = buttonConfig.loadClasses or CustomIcons.GetDefaultLoadClasses()
+			buttonConfig.loadClasses[key] = value
+			CDMOptions.ApplyIconConfigUpdate(buttonFrame, buttonData, anchorIndex, mode, isGlobal, isBuffBar)
+		end)
 
-			if not buttonConfig.loadClasses then
-				buttonConfig.loadClasses = CustomIcons.GetDefaultLoadClasses()
-			end
+		if not buttonConfig.loadClasses then
+			buttonConfig.loadClasses = CustomIcons.GetDefaultLoadClasses()
+		end
 
-			for key, value in pairs(buttonConfig.loadClasses) do
-				loadClass:SetItemValue(key, value)
-			end
+		for key, value in pairs(buttonConfig.loadClasses) do
+			loadClass:SetItemValue(key, value)
+		end
 
-			useLoadClass:SetCallback("OnValueChanged", function(self, event, value)
-				buttonConfig.useLoadClass = value or nil
-				loadClass:SetDisabled(not value)
-				CDMOptions.ApplyIconConfigUpdate(buttonFrame, buttonData, anchorIndex, mode, isGlobal, isBuffBar)
-			end)
+		useLoadClass:SetCallback("OnValueChanged", function(self, event, value)
+			buttonConfig.useLoadClass = value or nil
+			loadClass:SetDisabled(not value)
+			CDMOptions.ApplyIconConfigUpdate(buttonFrame, buttonData, anchorIndex, mode, isGlobal, isBuffBar)
+		end)
 
-			iconSettingsTabs:AddChild(loadClass)
+		iconSettingsTabs:AddChild(loadClass)
 
+		if not SCM.isForever then
 			local useLoadRole = AceGUI:Create("CheckBox")
 			useLoadRole:SetLabel("Role")
 			useLoadRole:SetRelativeWidth(0.5)
@@ -104,46 +120,42 @@ function CDMOptions.CreateLoadTabSettings(iconSettingsTabs, iconSettings, scroll
 			end)
 
 			iconSettingsTabs:AddChild(loadRole)
-
-			local useLoadRace = AceGUI:Create("CheckBox")
-			useLoadRace:SetLabel("Race")
-			useLoadRace:SetRelativeWidth(0.5)
-			useLoadRace:SetValue(buttonConfig.useLoadRace)
-			iconSettingsTabs:AddChild(useLoadRace)
-
-			local loadRaces = AceGUI:Create("Dropdown")
-			loadRaces:SetRelativeWidth(0.5)
-			loadRaces:SetLabel("Races")
-			loadRaces:SetList(GetDefaultLoadRaceNames())
-			loadRaces:SetMultiselect(true)
-			loadRaces:SetDisabled(not buttonConfig.useLoadRace)
-			loadRaces:SetCallback("OnValueChanged", function(_, _, key, value)
-				buttonConfig.loadRaces = buttonConfig.loadRaces or CustomIcons.GetDefaultLoadRaces()
-				buttonConfig.loadRaces[key] = value
-
-				if type(CONSTANTS.RACES[key]) == "number" then
-					buttonConfig.loadRaces[CONSTANTS.RACES[key]] = value
-				end
-
-				CDMOptions.ApplyIconConfigUpdate(buttonFrame, buttonData, anchorIndex, mode, isGlobal, isBuffBar)
-			end)
-
-			if not buttonConfig.loadRaces then
-				buttonConfig.loadRaces = CustomIcons.GetDefaultLoadRaces()
-			end
-
-			for key, value in pairs(buttonConfig.loadRaces) do
-				loadRaces:SetItemValue(key, value)
-			end
-
-			useLoadRace:SetCallback("OnValueChanged", function(self, event, value)
-				buttonConfig.useLoadRace = value or nil
-				loadRaces:SetDisabled(not value)
-				CDMOptions.ApplyIconConfigUpdate(buttonFrame, buttonData, anchorIndex, mode, isGlobal, isBuffBar)
-			end)
-
-			iconSettingsTabs:AddChild(loadRaces)
 		end
+
+		local useLoadRace = AceGUI:Create("CheckBox")
+		useLoadRace:SetLabel("Race")
+		useLoadRace:SetRelativeWidth(0.5)
+		useLoadRace:SetValue(buttonConfig.useLoadRace)
+		iconSettingsTabs:AddChild(useLoadRace)
+
+		local loadRaces = AceGUI:Create("Dropdown")
+		loadRaces:SetRelativeWidth(0.5)
+		loadRaces:SetLabel("Races")
+		loadRaces:SetList(GetDefaultLoadRaceNames())
+		loadRaces:SetMultiselect(true)
+		loadRaces:SetDisabled(not buttonConfig.useLoadRace)
+		loadRaces:SetCallback("OnValueChanged", function(_, _, key, value)
+			buttonConfig.loadRaces = buttonConfig.loadRaces or CustomIcons.GetDefaultLoadRaces()
+			buttonConfig.loadRaces[key] = value
+
+			CDMOptions.ApplyIconConfigUpdate(buttonFrame, buttonData, anchorIndex, mode, isGlobal, isBuffBar)
+		end)
+
+		if not buttonConfig.loadRaces then
+			buttonConfig.loadRaces = CustomIcons.GetDefaultLoadRaces()
+		end
+
+		for key, value in pairs(buttonConfig.loadRaces) do
+			loadRaces:SetItemValue(key, value)
+		end
+
+		useLoadRace:SetCallback("OnValueChanged", function(self, event, value)
+			buttonConfig.useLoadRace = value or nil
+			loadRaces:SetDisabled(not value)
+			CDMOptions.ApplyIconConfigUpdate(buttonFrame, buttonData, anchorIndex, mode, isGlobal, isBuffBar)
+		end)
+
+		iconSettingsTabs:AddChild(loadRaces)
 
 		local useSpellKnown = AceGUI:Create("CheckBox")
 		useSpellKnown:SetLabel(buttonConfig.useSpellKnown == nil and "|cFFFF0000Spell Not Known" or "Spell Known")

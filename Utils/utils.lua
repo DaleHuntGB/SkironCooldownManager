@@ -249,6 +249,21 @@ function Utils.GetClass()
 	return UnitClassBase("player")
 end
 
+local fixedRaceAtlasNames = {
+	highmountaintauren = "highmountain",
+	lightforgeddraenei = "lightforged",
+	zandalaritroll = "zandalari",
+	earthendwarf = "earthen",
+}
+
+function Utils.GetRaceAtlas(raceName, gender)
+	if fixedRaceAtlasNames[raceName] then
+		raceName = fixedRaceAtlasNames[raceName]
+	end
+
+	return ("raceicon128-%s-%s"):format(raceName, gender)
+end
+
 function Utils.GetSpec()
 	if GetSpecialization then
 		return GetSpecializationInfo(GetSpecialization())
