@@ -137,7 +137,7 @@ local function GetSubregionList(iconConfig, subregionType)
 	return subregions, subregionsSorted
 end
 
-local function AddRuleValueControl(effectTabGroup, effectKey, iconConfig, rule, applyConfigUpdate)
+local function AddRuleValueControl(effectTabGroup, effectKey, iconConfig, rule, applyConfigUpdate, iconSettingsTabs)
 	local option = effectOptions[effectKey]
 	SetDefaultRuleValues(rule, effectKey, iconConfig)
 
@@ -150,6 +150,7 @@ local function AddRuleValueControl(effectTabGroup, effectKey, iconConfig, rule, 
 		valueDropdown:SetCallback("OnValueChanged", function(_, _, value)
 			rule.value = value
 			applyConfigUpdate()
+			iconSettingsTabs:SelectByPath("state", effectKey)
 		end)
 		effectTabGroup:AddChild(valueDropdown)
 	elseif effectKey == "desaturate" then
@@ -266,7 +267,7 @@ local function AddEffectRule(iconSettingsTabs, stateType, container, rules, butt
 	end)
 	container:AddChild(stateDropdown)
 
-	AddRuleValueControl(container, stateType, iconConfig, rule, applyConfigUpdate)
+	AddRuleValueControl(container, stateType, iconConfig, rule, applyConfigUpdate, iconSettingsTabs)
 
 	local elseIf = AceGUI:Create("CheckBox")
 	elseIf:SetLabel("Else If")
@@ -314,6 +315,17 @@ local function AddEffectRule(iconSettingsTabs, stateType, container, rules, butt
 		iconSettingsTabs:SelectByPath("state", stateType)
 	end)
 	container:AddChild(remove)
+
+	if stateType == "visibility" and not buttonData.isCustom and (isBuffBar or buttonData.isBuffIcon) and rule.value == "show" and (rule.state == "always" or rule.state == "inactive") then
+		local optionKey = isBuffBar and "disableBuffBarHideWhenInactive" or "hideBuffsWhenInactive"
+		if not SCM.db.profile.options[optionKey] then
+			local category = isBuffBar and "Buff Bars" or "Buff Icons"
+			local warning = AceGUI:Create("Label")
+			warning:SetFullWidth(true)
+			warning:SetText(string.format("|cffffcc00This buff will still hide while inactive. Enable 'Disable \"Hide When Inactive\" (%s)' under Global Settings > Auras.|r", category))
+			container:AddChild(warning)
+		end
+	end
 end
 
 local function AddEffectOptions(iconSettingsTabs, stateType, container, buttonData, iconConfig, ApplyConfigUpdate, isBuffBar)
@@ -341,7 +353,7 @@ local function AddEffectOptions(iconSettingsTabs, stateType, container, buttonDa
 	local addRule = AceGUI:Create("Button")
 	addRule:SetText("Add Rule")
 	addRule:SetRelativeWidth(0.33)
-	addRule:SetDisabled(ruleState == nil)
+	addRule:SetDisabled(not ruleState)
 	addRule:SetCallback("OnClick", function()
 		if not ruleState then
 			return
