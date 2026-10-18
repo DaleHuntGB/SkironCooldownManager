@@ -293,6 +293,9 @@ local methods = {
 			button.Icon:SetAtlas("cdm-empty")
 			button.Icon:SetVertexColor(1, 1, 1, 1)
 			button:SetMovable(false)
+			button:RegisterForDrag()
+			button:SetScript("OnDragStart", nil)
+			button:SetScript("OnDragStop", nil)
 		else
 			if data.texture then
 				button.Icon:SetTexture(data.texture)
