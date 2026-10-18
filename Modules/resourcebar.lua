@@ -1390,7 +1390,7 @@ function SCMResourceBarControllerMixin:GetPrimaryPower(powerType, powerToken, cl
 		elseif powerType == Enum.PowerType.LunarPower then
 			powerToken = "LUNAR_POWER"
 		end
-	elseif (SCM.isForever or SCM.resourceBarOverride.active) and self.primaryBarOptions.forceMana then
+	elseif SCM.resourceBarOverride.active and self.primaryBarOptions.forceMana then
 		forceMana = true
 		powerType = Enum.PowerType.Mana
 		powerToken = "MANA"
@@ -1399,7 +1399,7 @@ function SCMResourceBarControllerMixin:GetPrimaryPower(powerType, powerToken, cl
 	if not powerType or not powerToken then
 		return
 	end
-	if powerType == Enum.PowerType.Mana and not forceMana and ShouldHideManaForCurrentRole(self.primaryBarOptions) then
+	if powerType == Enum.PowerType.Mana and not forceMana and (SCM.isForever or ShouldHideManaForCurrentRole(self.primaryBarOptions)) then
 		return
 	end
 	return powerType, powerToken
