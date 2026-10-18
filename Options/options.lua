@@ -260,6 +260,10 @@ local function OpenOptions()
 	SCM.isOptionsOpen = true
 	SCM.simulateBuffs = true
 
+	if SCM.isForever then
+		SCM:RefreshSwingTimerConfig()
+	end
+
 	local options = SCM.db.profile.options
 
 	SCM:StopAllGlows()

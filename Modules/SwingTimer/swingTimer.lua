@@ -89,7 +89,7 @@ function SCMSwingTimerMixin:UpdateWeaponState()
 end
 
 function SCMSwingTimerMixin:HasAppropriateWeapon()
-	return self.hasAppropriateWeapon
+	return SCM.isOptionsOpen or self.hasAppropriateWeapon
 end
 
 function SCMSwingTimerMixin:OnEvent(event, ...)
@@ -220,6 +220,10 @@ function SCMSwingTimerMixin:ShouldClearSwing()
 end
 
 function SCMSwingTimerMixin:ShouldBeShown()
+	if SCM.isOptionsOpen then
+		return self:IsLoaded()
+	end
+
 	if not self:ShouldHandleSwing() or self:GetAttribute("statehidden") then
 		return false
 	end
@@ -439,7 +443,7 @@ function SCMSwingTimerMixin:ApplyVisibility()
 		return
 	end
 
-	local condition = SCM:GetVisibilityConditions(options)
+	local condition = SCM.isOptionsOpen and "show" or SCM:GetVisibilityConditions(options)
 	RegisterAttributeDriver(self, "state-visibility", condition)
 	if condition == "show" then
 		UnregisterAttributeDriver(self, "state-visibility")
