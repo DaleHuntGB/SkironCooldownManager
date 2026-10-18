@@ -108,6 +108,7 @@ local presetButtonConfigs = {
 			text = "|T7548909:16:16|t Concentrated Silvermoon Health Potion",
 			configID = 271884,
 			iconType = "item",
+			hidden = SCM.isForever,
 			config = {
 				customItems = {
 					[1] = 271883,
@@ -117,11 +118,11 @@ local presetButtonConfigs = {
 			},
 		},
 		{
-			text = "|T538745:16:16|t Healthstone",
+			text = SCM.isForever and "|T135230:16:16|t Healthstone" or "|T538745:16:16|t Healthstone",
 			configID = 5512,
 			iconType = "item",
 			config = {
-				customItems = {
+				customItems = SCM.isForever and { 9421, 19012, 19013, 5510, 19010, 19011, 5509, 19008, 19009, 5511, 19006, 19007, 19004, 19005 } or {
 					[1] = 224464,
 				},
 			},
@@ -130,6 +131,7 @@ local presetButtonConfigs = {
 			text = "|T7548911:16:16|t Light's Potential",
 			configID = 245898,
 			iconType = "item",
+			hidden = SCM.isForever,
 			config = {
 				customItems = {
 					[1] = 245897,
@@ -142,6 +144,7 @@ local presetButtonConfigs = {
 			text = "|T7548916:16:16|t Potion of Recklessness",
 			configID = 245902,
 			iconType = "item",
+			hidden = SCM.isForever,
 			config = {
 				customItems = {
 					[1] = 245903,
@@ -163,7 +166,7 @@ local presetButtonConfigs = {
 		},
 		{
 			text = "|T132089:16:16|t Shadowmeld",
-			configID = 58984,
+			configID = SCM.isForever and 20580 or 58984,
 			iconType = "spell",
 			config = {
 				useLoadRace = true,
@@ -181,7 +184,7 @@ local presetButtonConfigs = {
 		},
 		{
 			text = "|T135727:16:16|t Berserking",
-			configID = 26297,
+			configID = SCM.isForever and 20554 or 26297,
 			iconType = "spell",
 			config = {
 				useLoadRace = true,
@@ -192,6 +195,7 @@ local presetButtonConfigs = {
 			text = "|T2021574:16:16|t Ancestral Call",
 			configID = 274738,
 			iconType = "spell",
+			hidden = SCM.isForever,
 			config = {
 				useLoadRace = true,
 				loadRaces = { [36] = true },
@@ -201,6 +205,7 @@ local presetButtonConfigs = {
 			text = "|T1724004:16:16|t Spatial Rift",
 			configID = 256948,
 			iconType = "spell",
+			hidden = SCM.isForever,
 			config = {
 				useLoadRace = true,
 				loadRaces = { [29] = true },
@@ -210,6 +215,7 @@ local presetButtonConfigs = {
 			text = "|T1786406:16:16|t Fireblood",
 			configID = 265221,
 			iconType = "spell",
+			hidden = SCM.isForever,
 			config = {
 				useLoadRace = true,
 				loadRaces = { [34] = true },
@@ -228,6 +234,7 @@ local presetButtonConfigs = {
 			text = "|T4622488:16:16|t Wing Buffet",
 			configID = 357214,
 			iconType = "spell",
+			hidden = SCM.isForever,
 			config = {
 				useLoadRace = true,
 				loadRaces = { [52] = true, [70] = true },
@@ -237,6 +244,7 @@ local presetButtonConfigs = {
 			text = "|T1723987:16:16|t Bull Rush",
 			configID = 255654,
 			iconType = "spell",
+			hidden = SCM.isForever,
 			config = {
 				useLoadRace = true,
 				loadRaces = { [28] = true },
@@ -249,6 +257,25 @@ local presetButtonConfigs = {
 			config = {
 				useLoadRace = true,
 				loadRaces = { [7] = true },
+			},
+		},
+		{
+			text = "|T136187:16:16|t Will of the Forsaken",
+			configID = 7744,
+			iconType = "spell",
+			config = {
+				useLoadRace = true,
+				loadRaces = { [5] = true },
+			},
+		},
+		{
+			text = "|T136090:16:16|t Perception",
+			configID = 20600,
+			iconType = "spell",
+			hidden = not SCM.isForever,
+			config = {
+				useLoadRace = true,
+				loadRaces = { [1] = true },
 			},
 		},
 	},
@@ -375,7 +402,7 @@ local function CreateCustomIconButton(rootDescription, scrollFrame, anchorIndex,
 			if buttonConfig.config then
 				local customConfig = SCM:GetConfigTableByID(uniqueID, buttonConfig.iconType, isGlobal)
 				for key, value in pairs(buttonConfig.config) do
-					customConfig[key] = value
+					customConfig[key] = type(value) == "table" and CopyTable(value) or value
 				end
 			end
 
@@ -400,7 +427,9 @@ local function CreateCustomIconButtons(rootDescription, scrollFrame, anchorIndex
 	local customButton = rootDescription:CreateButton(text)
 
 	for _, buttonConfig in ipairs(buttonConfigs) do
-		CreateCustomIconButton(customButton, scrollFrame, anchorIndex, isGlobal, buttonConfig)
+		if not buttonConfig.hidden then
+			CreateCustomIconButton(customButton, scrollFrame, anchorIndex, isGlobal, buttonConfig)
+		end
 	end
 
 	return customButton
@@ -476,7 +505,7 @@ local function ProcessAndCreateButtons(parentButton, items, isBuffIcon, scrollFr
 				trinketSlots[info.equipSlot] = (trinketSlots[info.equipSlot] or 0) + 1
 				buttonName, texture = CDMOptions.GetItemIconData(info, item.category, activeColor, trinketSlots[info.equipSlot])
 			elseif info.spellID then
-				
+
 				local spellTexture = C_Spell.GetSpellTexture(info.spellID)
 				if item.sortName and spellTexture then
 					buttonName = string.format("|T%d:0|t |cff%s%s (%d)|r", spellTexture, activeColor, item.sortName, info.spellID)
@@ -647,7 +676,9 @@ function CDMOptions.CreateAddSpellDropdown(owner, rootDescription, scrollFrame, 
 		CreateCustomIconButtons(rootDescription, scrollFrame, anchorIndex, true, customButtonConfigs, "Custom")
 
 		local presetButton = CreateCustomIconButtons(rootDescription, scrollFrame, anchorIndex, true, presetButtonConfigs, "Presets")
-		CreateCustomIconButtons(presetButton, scrollFrame, anchorIndex, true, presetButtonConfigs["TIMERS"], "|T237538:16:16|t Timers")
+		if not SCM.isForever then
+			CreateCustomIconButtons(presetButton, scrollFrame, anchorIndex, true, presetButtonConfigs["TIMERS"], "|T237538:16:16|t Timers")
+		end
 		CreateCustomIconButtons(presetButton, scrollFrame, anchorIndex, true, presetButtonConfigs["ITEMS"], "|T134856:16:16|t Items")
 		CreateCustomIconButtons(presetButton, scrollFrame, anchorIndex, true, presetButtonConfigs["RACIALS"], "|T135727:16:16|t Racials")
 		return
@@ -674,7 +705,9 @@ function CDMOptions.CreateAddSpellDropdown(owner, rootDescription, scrollFrame, 
 	CreateCustomIconButtons(rootDescription, scrollFrame, anchorIndex, false, customButtonConfigs, "Custom")
 
 	local presetButton = CreateCustomIconButtons(rootDescription, scrollFrame, anchorIndex, false, presetButtonConfigs, "Presets")
-	CreateCustomIconButtons(presetButton, scrollFrame, anchorIndex, false, presetButtonConfigs["TIMERS"], "|T237538:16:16|t Timers")
+	if not SCM.isForever then
+		CreateCustomIconButtons(presetButton, scrollFrame, anchorIndex, false, presetButtonConfigs["TIMERS"], "|T237538:16:16|t Timers")
+	end
 	CreateCustomIconButtons(presetButton, scrollFrame, anchorIndex, false, presetButtonConfigs["ITEMS"], "|T134856:16:16|t Items")
 
 	CreateCopyButtons(rootDescription, scrollFrame, anchorIndex, mode)
