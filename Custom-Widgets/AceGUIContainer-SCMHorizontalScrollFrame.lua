@@ -11,11 +11,8 @@ end
 
 local COOLDOWN_CONFIG_KEY_PREFIX = "cooldown:"
 
--- Lua APIs
 local pairs, ipairs = pairs, ipairs
 local abs, min, max = math.abs, math.min, math.max
-
--- WoW APIs
 local CreateFrame, UIParent = CreateFrame, UIParent
 
 --[[-----------------------------------------------------------------------------
@@ -57,9 +54,11 @@ local function GetDestinationIndex(sourceIndex, targetIndex, after)
 	if sourceIndex < targetIndex then
 		targetIndex = targetIndex - 1
 	end
+
 	if after then
 		targetIndex = targetIndex + 1
 	end
+
 	return targetIndex
 end
 

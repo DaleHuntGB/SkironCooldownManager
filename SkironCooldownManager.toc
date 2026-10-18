@@ -28,6 +28,7 @@ Custom-Widgets\AceGUIContainer-SCMFrame.lua
 Custom-Widgets\AceGUIContainer-SCMTabGroup.lua
 Custom-Widgets\AceGUIContainer-SCMScrollFrame.lua
 Custom-Widgets\AceGUIContainer-SCMHorizontalScrollFrame.lua
+Custom-Widgets\AceGUIContainer-SCMVerticalScrollFrame.lua
 
 Database\curves.lua
 Database\constants\constants.lua

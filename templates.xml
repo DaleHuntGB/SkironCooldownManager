@@ -132,6 +132,32 @@
 		</Scripts>
 	</Button>
 
+	<Button name="SCMVerticalScrollRowTemplate" virtual="true">
+		<Size>
+			<AbsDimension x="300" y="44" />
+		</Size>
+		<Layers>
+			<Layer level="ARTWORK">
+				<FontString parentKey="Text" inherits="GameFontHighlight" justifyH="LEFT" justifyV="MIDDLE">
+					<Anchors>
+						<Anchor point="TOPLEFT" x="4" y="0" />
+						<Anchor point="BOTTOMRIGHT" x="-88" y="0" />
+					</Anchors>
+				</FontString>
+			</Layer>
+		</Layers>
+		<Frames>
+			<Button parentKey="RemoveButton" inherits="UIPanelButtonTemplate">
+				<Size>
+					<AbsDimension x="76" y="24" />
+				</Size>
+				<Anchors>
+					<Anchor point="RIGHT" x="-4" y="0" />
+				</Anchors>
+			</Button>
+		</Frames>
+	</Button>
+
 	<StatusBar name="SCMResourceBarTemplate" mixin="SCMResourceBarMixin" inherits="BackdropTemplate" virtual="true">
 		<Size>
 			<AbsDimension x="240" y="14" />

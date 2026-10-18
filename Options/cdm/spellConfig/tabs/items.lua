@@ -7,21 +7,26 @@ local Utils = SCM.Utils
 function CDMOptions.CreateItemsTabSettings(iconSettingsTabs, iconSettings, scrollFrame, buttonFrame, buttonData, buttonConfig, anchorIndex, mode, isGlobal, isBuffBar)
 	buttonConfig.customItems = buttonConfig.customItems or {}
 
-	local listContainer = AceGUI:Create("SimpleGroup")
-	listContainer:SetLayout("flow")
+	local listContainer = AceGUI:Create("SCMVerticalScrollFrame")
 	listContainer:SetFullWidth(true)
+	listContainer:SetFullHeight(true)
 
 	local pendingItemLoads = {}
+	local entries = {}
 	local RefreshList
+
+	listContainer:SetUserData("pendingItemLoads", pendingItemLoads)
 
 	local function GetCustomItemDisplay(itemID)
 		local itemName = C_Item.GetItemNameByID(itemID)
 		local itemTexture = C_Item.GetItemIconByID(itemID)
-		local isLoaded = itemName ~= nil and itemTexture ~= nil
+		local isLoaded = itemName and itemTexture
 		local qualityAtlas = Utils.GetCustomItemCraftQualityAtlas(itemID)
 		local qualityIcon = qualityAtlas and ("|A:%s:45:45|a"):format(qualityAtlas) or ""
+		local offsetX = qualityAtlas and 5 or 0
 		itemTexture = itemTexture or 134400
-		return ("|T%s:30:30:5:0:30:30:3:27:3:27|t%s%s"):format(itemTexture, qualityIcon, itemName or ("Item ID " .. itemID)), isLoaded
+
+		return ("|T%s:30:30:%d:0:30:30:3:27:3:27|t%s%s"):format(itemTexture, offsetX, qualityIcon, itemName or ("Item ID " .. itemID)), isLoaded, itemTexture
 	end
 
 	local function RequestCustomItemLoad(itemID)
@@ -33,54 +38,52 @@ function CDMOptions.CreateItemsTabSettings(iconSettingsTabs, iconSettings, scrol
 		local item = Item:CreateFromItemID(itemID)
 		item:ContinueOnItemLoad(function()
 			pendingItemLoads[itemID] = nil
-			if listContainer.frame and listContainer.frame:IsShown() then
+			if listContainer:GetUserData("pendingItemLoads") == pendingItemLoads and listContainer:IsShown() then
 				RefreshList()
 			end
 		end)
 	end
 
 	RefreshList = function()
-		listContainer:ReleaseChildren()
+		wipe(entries)
 
 		for i, itemID in ipairs(buttonConfig.customItems) do
 			itemID = tonumber(itemID)
 			if itemID then
 				buttonConfig.customItems[i] = itemID
 
-				local row = AceGUI:Create("SimpleGroup")
-				row:SetLayout("flow")
-				row:SetFullWidth(true)
-				listContainer:AddChild(row)
-
-				local label = AceGUI:Create("Label")
-				local text, isLoaded = GetCustomItemDisplay(itemID)
-				label:SetText(text)
-				label:SetRelativeWidth(0.8)
-				label:SetFontObject(GameFontHighlight)
-				label:SetHeight(38)
-				label:SetJustifyV("MIDDLE")
-				row:AddChild(label)
+				local text, isLoaded, texture = GetCustomItemDisplay(itemID)
+				entries[#entries + 1] = {
+					itemID = itemID,
+					dataIndex = i,
+					text = text,
+					texture = texture,
+				}
 
 				if not isLoaded then
 					RequestCustomItemLoad(itemID)
 				end
-
-				local removeBtn = AceGUI:Create("Button")
-				removeBtn:SetText("Delete")
-				removeBtn:SetRelativeWidth(0.15)
-				removeBtn:SetCallback("OnClick", function()
-					table.remove(buttonConfig.customItems, i)
-					RefreshList()
-					CDMOptions.ApplyIconConfigUpdate(buttonFrame, buttonData, anchorIndex, mode, isGlobal, isBuffBar)
-				end)
-				row:AddChild(removeBtn)
 			end
 		end
 
-		listContainer:DoLayout()
+		listContainer:SetEntries(entries)
 		iconSettingsTabs:DoLayout()
 		scrollFrame:DoLayout()
 	end
+
+	listContainer:SetCallback("OnRemove", function(_, _, entry)
+		table.remove(buttonConfig.customItems, entry.dataIndex)
+		RefreshList()
+		CDMOptions.ApplyIconConfigUpdate(buttonFrame, buttonData, anchorIndex, mode, isGlobal, isBuffBar)
+	end)
+
+	listContainer:SetCallback("OnDragStop", function(_, _, collection)
+		wipe(buttonConfig.customItems)
+		for i, entry in ipairs(collection) do
+			buttonConfig.customItems[i] = entry.itemID
+		end
+		CDMOptions.ApplyIconConfigUpdate(buttonFrame, buttonData, anchorIndex, mode, isGlobal, isBuffBar)
+	end)
 
 	local addItemButton = AceGUI:Create("EditBox")
 	addItemButton:SetRelativeWidth(0.8)
