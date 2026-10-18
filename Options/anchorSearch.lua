@@ -168,6 +168,9 @@ function SCMAnchorSearchMixin:ShowSuggestions(token)
 			row.anchor = candidate.anchor
 
 			local text = candidate.text
+			if candidate.anchor == "SCM_Cursor" and not SCM.db.profile.options.enableCursor then
+				text = text .. " (Disabled, Global Settings)"
+			end
 
 			if startIndex then
 				row.text:SetText("|cFF4080FF" .. text:sub(1, startIndex - 1) .. "|cFFFFFFFF" .. text:sub(startIndex, endIndex) .. "|cFF4080FF" .. text:sub(endIndex + 1) .. "|r")

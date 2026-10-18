@@ -238,6 +238,8 @@ end
 function SCM:ApplyOptions()
 	self:ApplyPressOverlayOptions()
 
+	self:SetCursorEnabled(self.db.profile.options.enableCursor)
+
 	if InCombatLockdown() or self.appliedOptions or not LibEditModeOverride:IsReady() then
 		return
 	end

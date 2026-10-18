@@ -1,6 +1,12 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <Ui xmlns="http://www.blizzard.com/wow/ui/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
 	xsi:schemaLocation="http://www.blizzard.com/wow/ui/ ..\FrameXML\UI.xsd">
+	<Frame name="SCMCursorTemplate" mixin="SCMCursorMixin" virtual="true" hidden="true">
+		<Scripts>
+			<OnUpdate method="OnUpdate" />
+		</Scripts>
+	</Frame>
+
 	<Frame name="SCMItemIconTemplate" virtual="true">
 		<Size>
 			<AbsDimension x="35" y="35" />

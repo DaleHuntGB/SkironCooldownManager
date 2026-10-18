@@ -245,6 +245,8 @@ end
 function SCM:CVAR_UPDATE(cvarName)
 	if cvarName == "uiScale" then
 		RefreshPixelPerfectLayout()
+	elseif cvarName == "cursorSizePreferred" and SCM_Cursor then
+		SCM_Cursor:UpdateSize()
 	end
 end
 

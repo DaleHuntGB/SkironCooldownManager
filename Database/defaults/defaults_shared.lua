@@ -115,6 +115,8 @@ SCM.DefaultDB = {
 				hide = false,
 			},
 			showAnchorHighlight = true,
+			enableCursor = false,
+			cursorUpdateInterval = 0.01,
 			checkForDisabledIcons = true,
 			hideWhileMounted = false,
 			hideWhileDead = false,
