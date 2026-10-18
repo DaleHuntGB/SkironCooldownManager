@@ -6,17 +6,6 @@ local Options = SCM.Options
 
 SCM.MainTabs.CastBar = { value = "CastBar", text = "Cast Bar", order = 6, subgroups = {} }
 
-local FONT_OUTLINES = {
-	[""] = "None",
-	OUTLINE = "Outline",
-	THICKOUTLINE = "Thick Outline",
-	MONOCHROME = "Monochrome",
-	SLUG = "Slug",
-	["OUTLINE SLUG"] = "Outline Slug",
-	-- ["THICKOUTLINE SLUG"] = "Thick Outline Slug", -- Seems to be identical to Outline Slug?
-	-- ["MONOCHROME SLUG"] = "Monochrome Slug", -- Doesn't seem to do anything?
-}
-
 local ICON_POSITIONS = {
 	LEFT = "Left",
 	RIGHT = "Right",
