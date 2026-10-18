@@ -84,9 +84,9 @@ function CDMOptions.CreateSpellConfigTabs(parentScrollFrame, iconSettings, butto
 		if buttonData.iconType == "bloodlust" then
 			selectedIconText:SetText("Bloodlust")
 		elseif buttonData.spellID and buttonData.spellID > 0 then
-			selectedIconText:SetText(string.format("|T%d:0|t%s", buttonData.texture, C_Spell.GetSpellName(buttonData.spellID)))
+			selectedIconText:SetText(string.format("|T%d:0|t%s (%d)", buttonData.texture, C_Spell.GetSpellName(buttonData.spellID), buttonData.spellID))
 		elseif buttonData.itemID then
-			selectedIconText:SetText(string.format("|T%d:0|t%s", buttonData.texture, C_Item.GetItemNameByID(buttonData.itemID)))
+			selectedIconText:SetText(string.format("|T%d:0|t%s (%d)", buttonData.texture, C_Item.GetItemNameByID(buttonData.itemID), buttonData.itemID))
 		elseif buttonData.slotID then
 			selectedIconText:SetText("Slot ID " .. buttonData.slotID)
 		end
