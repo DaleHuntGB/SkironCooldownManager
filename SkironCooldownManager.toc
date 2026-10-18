@@ -31,9 +31,11 @@ Custom-Widgets\AceGUIContainer-SCMHorizontalScrollFrame.lua
 
 Database\curves.lua
 Database\constants\constants.lua
+Database\constants\character_shared.lua
+Database\constants\character_standard.lua [AllowLoadGameType standard][ExcludeLoadGameType camelot, classic]
+Database\constants\character_forever.lua [AllowLoadGameType camelot][ExcludeLoadGameType standard, classic]
 Database\constants\castbar.lua
 Database\constants\cdm.lua
-Database\constants\character.lua
 Database\constants\cooldown.lua
 Database\constants\profiles.lua
 Database\constants\resourcebar.lua
