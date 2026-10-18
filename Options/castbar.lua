@@ -699,18 +699,20 @@ local function CastBar(self)
 	end)
 	colorGroup:AddChild(interruptColor)
 
-	for i, color in ipairs(options.empoweredStageColors) do
-		local stageIndex = i
-		local stageColor = AceGUI:Create("ColorPicker")
-		stageColor:SetRelativeWidth(0.2)
-		stageColor:SetLabel("Empower " .. stageIndex)
-		stageColor:SetHasAlpha(true)
-		stageColor:SetColor(color.r, color.g, color.b, color.a)
-		stageColor:SetCallback("OnValueChanged", function(_, _, r, g, b, a)
-			options.empoweredStageColors[stageIndex] = { r = r, g = g, b = b, a = a }
-			RefreshCastBar()
-		end)
-		colorGroup:AddChild(stageColor)
+	if not SCM.isForever then
+		for i, color in ipairs(options.empoweredStageColors) do
+			local stageIndex = i
+			local stageColor = AceGUI:Create("ColorPicker")
+			stageColor:SetRelativeWidth(0.2)
+			stageColor:SetLabel("Empower " .. stageIndex)
+			stageColor:SetHasAlpha(true)
+			stageColor:SetColor(color.r, color.g, color.b, color.a)
+			stageColor:SetCallback("OnValueChanged", function(_, _, r, g, b, a)
+				options.empoweredStageColors[stageIndex] = { r = r, g = g, b = b, a = a }
+				RefreshCastBar()
+			end)
+			colorGroup:AddChild(stageColor)
+		end
 	end
 
 	local anchorsGroup = AceGUI:Create("InlineGroup")
