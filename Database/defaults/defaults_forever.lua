@@ -3,6 +3,22 @@ local SCM = select(2, ...)
 SCM.DefaultDB.profile.options.castBar.anchors = { "BOTTOM", "ANCHOR:1", "TOP", 0, 0 }
 SCM.DefaultDB.profile.options.resourceBar.anchorFrame = "SCM_CastBar"
 
+for _, barKey in ipairs({ "primaryBar", "secondaryBar" }) do
+	SCM.DefaultDB.profile.options.resourceBar[barKey].manaTickSpark = {
+		enable = true,
+		reverseFill = false,
+		style = "texture",
+		width = 4,
+		height = 20,
+		color = { r = 1, g = 1, b = 1, a = 1 },
+		texture = "Solid",
+		xOffset = 0,
+		yOffset = 0,
+		useCustomTexture = false,
+		blendMode = "ADD",
+	}
+end
+
 SCM.DefaultSwingTimerBreakpoints = {
 	{ threshold = 0, displayStyle = "decimalSeconds", precision = 1, step = 0.1, rounding = Enum.NumericRuleFormatRounding.Nearest, format = "%.1f" },
 }

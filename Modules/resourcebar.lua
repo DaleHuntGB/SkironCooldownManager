@@ -538,35 +538,72 @@ local function HideResourceBarSpark(bar)
 	end
 end
 
-local function ApplyResourceBarSparkOptions(bar)
-	if not bar.Spark then
+function SCM:UpdateResourceBarSparkTexture(sparkOptions)
+	local texture = "Interface\\Buttons\\WHITE8x8"
+	local fallbackTexture = texture
+	local textureReversed = false
+
+	if sparkOptions.useCustomTexture then
+		texture = sparkOptions.texture
+	elseif sparkOptions.style == "wowArrow" then
+		texture = sparkOptions.reverseFill and "common-icon-backarrow" or "common-icon-forwardarrow"
+		textureReversed = not not sparkOptions.reverseFill
+	elseif sparkOptions.style == "customArrow" then
+		texture = [[Interface\AddOns\SkironCooldownManager\Media\Textures\LucideChevron.tga]]
+		textureReversed = not not sparkOptions.reverseFill
+	end
+
+	local atlasInfo = texture ~= "" and C_Texture.GetAtlasInfo(texture)
+	local texturePath = fallbackTexture
+	if atlasInfo or texture:find("\\", 1, true) or texture:find("/", 1, true) then
+		texturePath = texture
+	elseif texture ~= "" then
+		texturePath = LSM:Fetch("statusbar", texture, true) or fallbackTexture
+	end
+
+	sparkOptions.resolvedTexture = texturePath
+	sparkOptions.textureIsAtlas = not not atlasInfo
+	sparkOptions.textureReversed = textureReversed and not atlasInfo
+end
+
+local function ApplySparkOptions(spark, sparkOptions)
+	if not spark then
 		return
 	end
 
-	local spark = bar.Spark
-	local sparkOptions = bar.barOptions and bar.barOptions.spark
 	local color = sparkOptions.color
-	local width = sparkOptions.width
-	local height = sparkOptions.height
-	local blendMode = sparkOptions.blendMode
+	spark:SetSize(sparkOptions.width, sparkOptions.height)
+	spark:SetBlendMode(sparkOptions.blendMode)
 
-	local texture = sparkOptions.texture
-	local texturePath = "Interface\\Buttons\\WHITE8x8"
-	if type(texture) == "string" and texture ~= "" then
-		if texture:find("\\", 1, true) then
-			texturePath = texture
-		end
-
-		local sharedMediaPath = LSM:Fetch("statusbar", texture)
-		if sharedMediaPath then
-			texturePath = sharedMediaPath
+	if sparkOptions.textureIsAtlas then
+		spark:SetAtlas(sparkOptions.resolvedTexture)
+	else
+		spark:SetTexture(sparkOptions.resolvedTexture)
+		if sparkOptions.textureReversed then
+			spark:SetTexCoord(1, 0, 0, 1)
+		else
+			spark:SetTexCoord(0, 1, 0, 1)
 		end
 	end
-	spark:SetSize(width, height)
-	spark:SetBlendMode(blendMode)
-	spark:SetTexture(texturePath)
-	spark:SetVertexColor(color.r, color.g, color.g, color.a)
+
+	spark:SetVertexColor(color.r, color.g, color.b, color.a)
 	spark:SetAlpha(1)
+end
+
+local function ApplyManaTickSparkOptions(bar)
+	local manaTickBar = bar.manaTickBar
+	local sparkOptions = bar.barOptions.manaTickSpark
+	local spark = manaTickBar.Spark
+
+	manaTickBar:SetFrameStrata(bar:GetFrameStrata())
+	manaTickBar:SetFrameLevel(bar:GetFrameLevel() + 4)
+	ApplySparkOptions(spark, sparkOptions)
+
+	manaTickBar:SetReverseFill(sparkOptions.reverseFill)
+	spark:ClearAllPoints()
+
+	local sparkPoint = sparkOptions.reverseFill and "LEFT" or "RIGHT"
+	PixelUtil.SetPoint(spark, sparkPoint, manaTickBar:GetStatusBarTexture(), sparkPoint, sparkOptions.xOffset, sparkOptions.yOffset)
 end
 
 local function StopManaTick(bar)
@@ -976,11 +1013,20 @@ local function UpdateSegments(bar, maxValue, currentValue, resourceSegmentValues
 end
 
 local function UpdateManaTick(bar)
-	if not bar.manaTickEndSignals or not bar.manaTickEndSignals:HasSignal(MANA_TICK_SIGNAL_KEY) then
+	if not SCM.isForever then
 		return
 	end
 
 	local manaTickBar = bar.manaTickBar
+	local barOptions = bar.barOptions
+	if not barOptions.manaTickSpark.enable or barOptions.textOnly or not bar.manaTickEndSignals or not bar.manaTickEndSignals:HasSignal(MANA_TICK_SIGNAL_KEY) then
+		if manaTickBar then
+			manaTickBar:Hide()
+		end
+
+		return
+	end
+
 	if not manaTickBar then
 		manaTickBar = CreateFrame("StatusBar", nil, bar)
 		manaTickBar:SetMinMaxValues(0, 5)
@@ -990,14 +1036,11 @@ local function UpdateManaTick(bar)
 		bar.manaTickBar = manaTickBar
 
 		local spark = manaTickBar:CreateTexture(nil, "OVERLAY")
-		spark:SetTexture([[Interface\Buttons\WHITE8X8]])
 		spark:SetSnapToPixelGrid(false)
 		spark:SetTexelSnappingBias(0)
-		spark:SetBlendMode("ADD")
-		spark:SetWidth(4)
-		spark:SetPoint("TOP", manaTickBar:GetStatusBarTexture(), "TOPRIGHT", 0, 0)
-		spark:SetPoint("BOTTOM", manaTickBar:GetStatusBarTexture(), "BOTTOMRIGHT", 0, 0)
+
 		manaTickBar.Spark = spark
+		ApplyManaTickSparkOptions(bar)
 	end
 
 	if bar.manaTickPending then
@@ -1051,7 +1094,13 @@ local function ApplyBarAppearance(bar, barOptions)
 			tick:SetColorTexture(tickColor.r, tickColor.g, tickColor.b, tickColor.a)
 		end
 	end
-	ApplyResourceBarSparkOptions(bar)
+
+	ApplySparkOptions(bar.Spark, barOptions.spark)
+
+	if bar.manaTickBar then
+		ApplyManaTickSparkOptions(bar)
+	end
+	UpdateManaTick(bar)
 
 	local text = bar.Text
 	local fontPath = LSM:Fetch("font", barOptions.font)

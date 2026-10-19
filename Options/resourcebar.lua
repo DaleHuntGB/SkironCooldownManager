@@ -18,6 +18,28 @@ local RESOURCE_BAR_TABS = {
 	{ value = "Secondary", text = "Secondary" },
 }
 
+local RESOURCE_BAR_SETTINGS_TABS = {
+	{ value = "Tick", text = "Tick" },
+	{ value = "Spark", text = "Spark" },
+	{ value = "Border", text = "Border" },
+	{ value = "Text", text = "Text" },
+}
+
+local SPARK_TEXTURE_SOURCES = {
+	custom = "Custom Texture/Atlas",
+	predefined = "Predefined Texture",
+}
+
+local SPARK_PREDEFINED_TEXTURES = {
+	texture = "Solid",
+}
+
+local MANA_TICK_SPARK_PREDEFINED_TEXTURES = {
+	texture = "Solid",
+	wowArrow = "WoW Arrow",
+	customArrow = "Custom Arrow",
+}
+
 local function RefreshResourceBars(refreshTicks)
 	SCM:RefreshResourceBarConfig(refreshTicks, true)
 end
@@ -352,6 +374,332 @@ local function AddSpecialColorSettings(parent, settings)
 	specialColors:AddChild(runeRechargeColor)
 end
 
+local function AddTickSettings(parent, settings)
+	local tickSettings = AceGUI:Create("InlineGroup")
+	tickSettings:SetLayout("flow")
+	tickSettings:SetTitle("Ticks")
+	tickSettings:SetFullWidth(true)
+	parent:AddChild(tickSettings)
+
+	local showTicks = AceGUI:Create("CheckBox")
+	showTicks:SetRelativeWidth(0.33)
+	showTicks:SetLabel("Show Ticks")
+	showTicks:SetValue(settings.showTicks)
+	showTicks:SetCallback("OnValueChanged", function(_, _, value)
+		settings.showTicks = value
+		RefreshResourceBars(true)
+	end)
+	tickSettings:AddChild(showTicks)
+
+	local tickColor = AceGUI:Create("ColorPicker")
+	tickColor:SetRelativeWidth(0.33)
+	tickColor:SetLabel("Tick Color")
+	tickColor:SetHasAlpha(true)
+	tickColor:SetColor(settings.tickColor.r, settings.tickColor.g, settings.tickColor.b, settings.tickColor.a)
+	tickColor:SetCallback("OnValueChanged", function(_, _, r, g, b, a)
+		settings.tickColor = { r = r, g = g, b = b, a = a }
+		RefreshResourceBars(true)
+	end)
+	tickSettings:AddChild(tickColor)
+
+	local tickWidth = AceGUI:Create("Slider")
+	tickWidth:SetRelativeWidth(0.33)
+	tickWidth:SetLabel("Tick Width")
+	tickWidth:SetSliderValues(1, 10, 0.1)
+	tickWidth:SetValue(settings.tickWidth)
+	tickWidth:SetCallback("OnValueChanged", function(_, _, value)
+		settings.tickWidth = value
+		RefreshResourceBars(true)
+	end)
+	tickSettings:AddChild(tickWidth)
+end
+
+local function AddSparkTextureInput(parent, sparkOptions, beforeWidget)
+	if sparkOptions.useCustomTexture then
+		local customTexture = AceGUI:Create("EditBox")
+		customTexture:SetRelativeWidth(0.66)
+		customTexture:SetLabel("Custom Texture/Atlas")
+		customTexture:SetText(sparkOptions.texture or "")
+		customTexture:SetCallback("OnEnterPressed", function(widget, _, text)
+			sparkOptions.texture = strtrim(text)
+			SCM:UpdateResourceBarSparkTexture(sparkOptions)
+			widget:SetText(sparkOptions.texture)
+			RefreshResourceBars()
+		end)
+		customTexture:SetCallback("OnEnter", function(widget)
+			GameTooltip:SetOwner(widget.frame, "ANCHOR_CURSOR")
+			GameTooltip:SetText("Custom Texture/Atlas", nil, nil, nil, nil, true)
+			GameTooltip:AddLine("Supports atlas names, LibSharedMedia names and interface paths.", 1, 1, 1, true)
+			GameTooltip:Show()
+		end)
+		customTexture:SetCallback("OnLeave", function()
+			GameTooltip:Hide()
+		end)
+
+		parent:AddChild(customTexture, beforeWidget)
+	else
+		local predefinedTexture = AceGUI:Create("Dropdown")
+		predefinedTexture:SetRelativeWidth(0.66)
+		predefinedTexture:SetLabel("Predefined Texture")
+
+		if sparkOptions.reverseFill ~= nil then
+			predefinedTexture:SetList(MANA_TICK_SPARK_PREDEFINED_TEXTURES, { "texture", "wowArrow", "customArrow" })
+		else
+			predefinedTexture:SetList(SPARK_PREDEFINED_TEXTURES)
+		end
+
+		predefinedTexture:SetValue(sparkOptions.style or "texture")
+		predefinedTexture:SetCallback("OnValueChanged", function(_, _, value)
+			sparkOptions.style = value
+			SCM:UpdateResourceBarSparkTexture(sparkOptions)
+			RefreshResourceBars()
+		end)
+		parent:AddChild(predefinedTexture, beforeWidget)
+	end
+end
+
+local function AddSparkSettings(parent, sparkOptions, title)
+	local sparkGroup = AceGUI:Create("InlineGroup")
+	sparkGroup:SetTitle(title)
+	sparkGroup:SetFullWidth(true)
+	sparkGroup:SetLayout("flow")
+	parent:AddChild(sparkGroup)
+
+	local sparkEnable = AceGUI:Create("CheckBox")
+	sparkEnable:SetRelativeWidth(0.33)
+	sparkEnable:SetLabel("Show Spark")
+	sparkEnable:SetValue(sparkOptions.enable)
+	sparkEnable:SetCallback("OnValueChanged", function(_, _, value)
+		sparkOptions.enable = value
+		RefreshResourceBars()
+	end)
+	sparkGroup:AddChild(sparkEnable)
+
+	local sparkColor = AceGUI:Create("ColorPicker")
+	sparkColor:SetRelativeWidth(0.33)
+	sparkColor:SetLabel("Spark Color")
+	sparkColor:SetHasAlpha(true)
+	sparkColor:SetColor(sparkOptions.color.r, sparkOptions.color.g, sparkOptions.color.b, sparkOptions.color.a)
+	sparkColor:SetCallback("OnValueChanged", function(_, _, r, g, b, a)
+		sparkOptions.color = { r = r, g = g, b = b, a = a }
+		RefreshResourceBars()
+	end)
+	sparkGroup:AddChild(sparkColor)
+
+	local blendMode = AceGUI:Create("Dropdown")
+	blendMode:SetRelativeWidth(0.33)
+	blendMode:SetList(SCM.Constants.GENERAL.BLEND_MODE, SCM.Constants.GENERAL.BLEND_MODE_SORTED)
+	blendMode:SetLabel("Blend Mode")
+	blendMode:SetValue(sparkOptions.blendMode)
+	blendMode:SetCallback("OnValueChanged", function(_, _, value)
+		sparkOptions.blendMode = value
+		RefreshResourceBars()
+	end)
+	sparkGroup:AddChild(blendMode)
+
+	local sparkWidth = AceGUI:Create("Slider")
+	sparkWidth:SetRelativeWidth(0.25)
+	sparkWidth:SetLabel("Spark Width")
+	sparkWidth:SetSliderValues(1, 50, 0.1)
+	sparkWidth:SetValue(sparkOptions.width)
+	sparkWidth:SetCallback("OnValueChanged", function(_, _, value)
+		sparkOptions.width = value
+		RefreshResourceBars()
+	end)
+	sparkGroup:AddChild(sparkWidth)
+
+	local sparkHeight = AceGUI:Create("Slider")
+	sparkHeight:SetRelativeWidth(0.25)
+	sparkHeight:SetLabel("Spark Height")
+	sparkHeight:SetSliderValues(1, 80, 0.1)
+	sparkHeight:SetValue(sparkOptions.height)
+	sparkHeight:SetCallback("OnValueChanged", function(_, _, value)
+		sparkOptions.height = value
+		RefreshResourceBars()
+	end)
+	sparkGroup:AddChild(sparkHeight)
+
+	local sparkXOffset = AceGUI:Create("Slider")
+	sparkXOffset:SetRelativeWidth(0.25)
+	sparkXOffset:SetLabel("Spark X-Offset")
+	sparkXOffset:SetSliderValues(-20, 20, 0.1)
+	sparkXOffset:SetValue(sparkOptions.xOffset)
+	sparkXOffset:SetCallback("OnValueChanged", function(_, _, value)
+		sparkOptions.xOffset = value
+		RefreshResourceBars()
+	end)
+	sparkGroup:AddChild(sparkXOffset)
+
+	local sparkYOffset = AceGUI:Create("Slider")
+	sparkYOffset:SetRelativeWidth(0.25)
+	sparkYOffset:SetLabel("Spark Y-Offset")
+	sparkYOffset:SetSliderValues(-20, 20, 0.1)
+	sparkYOffset:SetValue(sparkOptions.yOffset)
+	sparkYOffset:SetCallback("OnValueChanged", function(_, _, value)
+		sparkOptions.yOffset = value
+		RefreshResourceBars()
+	end)
+	sparkGroup:AddChild(sparkYOffset)
+
+	local textureSource = AceGUI:Create("Dropdown")
+	textureSource:SetRelativeWidth(0.33)
+	textureSource:SetLabel("Texture Source")
+	textureSource:SetList(SPARK_TEXTURE_SOURCES, { "custom", "predefined" })
+	textureSource:SetValue(sparkOptions.useCustomTexture and "custom" or "predefined")
+	sparkGroup:AddChild(textureSource)
+
+	local textureInputIndex = #sparkGroup.children + 1
+	AddSparkTextureInput(sparkGroup, sparkOptions)
+
+	textureSource:SetCallback("OnValueChanged", function(_, _, value)
+		sparkOptions.useCustomTexture = value == "custom"
+		SCM:UpdateResourceBarSparkTexture(sparkOptions)
+		local previousInput = table.remove(sparkGroup.children, textureInputIndex)
+		AceGUI:Release(previousInput)
+		AddSparkTextureInput(sparkGroup, sparkOptions, sparkGroup.children[textureInputIndex])
+		parent:DoLayout()
+		parent.parent:DoLayout()
+		RefreshResourceBars()
+	end)
+
+	if sparkOptions.reverseFill ~= nil then
+		local reverseDirection = AceGUI:Create("CheckBox")
+		reverseDirection:SetRelativeWidth(0.33)
+		reverseDirection:SetLabel("Reverse Direction")
+		reverseDirection:SetValue(sparkOptions.reverseFill)
+		reverseDirection:SetCallback("OnValueChanged", function(_, _, value)
+			sparkOptions.reverseFill = value
+			SCM:UpdateResourceBarSparkTexture(sparkOptions)
+			RefreshResourceBars()
+		end)
+		sparkGroup:AddChild(reverseDirection)
+	end
+end
+
+local function AddBorderSettings(parent, settings)
+	local backdropSettings = AceGUI:Create("InlineGroup")
+	backdropSettings:SetLayout("flow")
+	backdropSettings:SetTitle("Border")
+	backdropSettings:SetFullWidth(true)
+	parent:AddChild(backdropSettings)
+
+	local showBorder = AceGUI:Create("CheckBox")
+	showBorder:SetRelativeWidth(0.33)
+	showBorder:SetLabel("Show Border")
+	showBorder:SetValue(settings.showBorder)
+	showBorder:SetCallback("OnValueChanged", function(_, _, value)
+		settings.showBorder = value
+		RefreshResourceBars()
+	end)
+	backdropSettings:AddChild(showBorder)
+
+	local backdropColor = AceGUI:Create("ColorPicker")
+	backdropColor:SetRelativeWidth(0.33)
+	backdropColor:SetLabel("Border Color")
+	backdropColor:SetHasAlpha(true)
+	backdropColor:SetColor(settings.backdropColor.r, settings.backdropColor.g, settings.backdropColor.b, settings.backdropColor.a)
+	backdropColor:SetCallback("OnValueChanged", function(_, _, r, g, b, a)
+		settings.backdropColor = { r = r, g = g, b = b, a = a }
+		RefreshResourceBars()
+	end)
+	backdropSettings:AddChild(backdropColor)
+
+	local backdropSize = AceGUI:Create("Slider")
+	backdropSize:SetRelativeWidth(0.33)
+	backdropSize:SetLabel("Border Size")
+	backdropSize:SetSliderValues(0, 10, 0.01)
+	backdropSize:SetValue(settings.backdropSize)
+	backdropSize:SetCallback("OnValueChanged", function(_, _, value)
+		settings.backdropSize = value
+		RefreshResourceBars()
+	end)
+	backdropSettings:AddChild(backdropSize)
+end
+
+local function AddTextSettings(parent, settings)
+	local textSettings = AceGUI:Create("InlineGroup")
+	textSettings:SetLayout("flow")
+	textSettings:SetTitle("Text")
+	textSettings:SetFullWidth(true)
+	parent:AddChild(textSettings)
+
+	local showValues = AceGUI:Create("CheckBox")
+	showValues:SetRelativeWidth(0.25)
+	showValues:SetLabel("Show Text")
+	showValues:SetValue(settings.showValues)
+	showValues:SetCallback("OnValueChanged", function(_, _, value)
+		settings.showValues = value
+		RefreshResourceBars()
+	end)
+	textSettings:AddChild(showValues)
+
+	local showPercentageSign = AceGUI:Create("CheckBox")
+	showPercentageSign:SetRelativeWidth(0.25)
+	showPercentageSign:SetLabel("Show Percent Sign")
+	showPercentageSign:SetValue(settings.showPercentageSign)
+	showPercentageSign:SetCallback("OnValueChanged", function(_, _, value)
+		settings.showPercentageSign = value
+		RefreshResourceBars()
+	end)
+	textSettings:AddChild(showPercentageSign)
+
+	local font = AceGUI:Create("LSM30_Font")
+	font:SetLabel("Text Font")
+	font:SetRelativeWidth(0.25)
+	font:SetList(LSM:HashTable("font"))
+	font:SetValue(settings.font)
+	font:SetCallback("OnValueChanged", function(self, _, value)
+		settings.font = value
+		self:SetValue(value)
+		RefreshResourceBars()
+	end)
+	textSettings:AddChild(font)
+
+	local textOutline = AceGUI:Create("Dropdown")
+	textOutline:SetRelativeWidth(0.25)
+	textOutline:SetLabel("Outline")
+	textOutline:SetList(CONSTANTS.GENERAL.TEXT_OUTLINE, CONSTANTS.GENERAL.TEXT_OUTLINE_SORTED)
+	textOutline:SetValue(settings.textOutline)
+	textOutline:SetCallback("OnValueChanged", function(_, _, value)
+		settings.textOutline = value
+		RefreshResourceBars()
+	end)
+	textSettings:AddChild(textOutline)
+
+	local fontSize = AceGUI:Create("Slider")
+	fontSize:SetRelativeWidth(0.33)
+	fontSize:SetLabel("Font Size")
+	fontSize:SetSliderValues(6, 100, 1)
+	fontSize:SetValue(settings.fontSize)
+	fontSize:SetCallback("OnValueChanged", function(_, _, value)
+		settings.fontSize = value
+		RefreshResourceBars()
+	end)
+	textSettings:AddChild(fontSize)
+
+	local textXOffset = AceGUI:Create("Slider")
+	textXOffset:SetRelativeWidth(0.33)
+	textXOffset:SetLabel("Text X Offset")
+	textXOffset:SetSliderValues(-300, 300, 0.1)
+	textXOffset:SetValue(settings.textXOffset)
+	textXOffset:SetCallback("OnValueChanged", function(_, _, value)
+		settings.textXOffset = value
+		RefreshResourceBars()
+	end)
+	textSettings:AddChild(textXOffset)
+
+	local valueYOffset = AceGUI:Create("Slider")
+	valueYOffset:SetRelativeWidth(0.33)
+	valueYOffset:SetLabel("Text Y Offset")
+	valueYOffset:SetSliderValues(-100, 100, 0.1)
+	valueYOffset:SetValue(settings.textYOffset)
+	valueYOffset:SetCallback("OnValueChanged", function(_, _, value)
+		settings.textYOffset = value
+		RefreshResourceBars()
+	end)
+	textSettings:AddChild(valueYOffset)
+end
+
 local function AddBarSettings(parent, title, settings, includeManaRoleSettings, globalSettings)
 	local isOverrideActive = SCM.resourceBarOverride.active
 
@@ -575,279 +923,28 @@ local function AddBarSettings(parent, title, settings, includeManaRoleSettings, 
 	end)
 	barSettings:AddChild(backgroundColor)
 
-	local tickSettings = AceGUI:Create("InlineGroup")
-	tickSettings:SetLayout("flow")
-	tickSettings:SetTitle("Border")
-	tickSettings:SetFullWidth(true)
-	parent:AddChild(tickSettings)
-
-	local showTicks = AceGUI:Create("CheckBox")
-	showTicks:SetRelativeWidth(0.33)
-	showTicks:SetLabel("Show Ticks")
-	showTicks:SetValue(settings.showTicks)
-	showTicks:SetCallback("OnValueChanged", function(_, _, value)
-		settings.showTicks = value
-		RefreshResourceBars(true)
+	local settingsTabs = AceGUI:Create("TabGroup")
+	settingsTabs:SetTabs(RESOURCE_BAR_SETTINGS_TABS)
+	settingsTabs:SetFullWidth(true)
+	settingsTabs:SetLayout("flow")
+	settingsTabs:SetCallback("OnGroupSelected", function(widget, _, group)
+		widget:ReleaseChildren()
+		if group == "Tick" then
+			AddTickSettings(widget, settings)
+		elseif group == "Spark" then
+			AddSparkSettings(widget, settings.spark, "Spark")
+			if SCM.isForever then
+				AddSparkSettings(widget, settings.manaTickSpark, "Mana Tick Spark")
+			end
+		elseif group == "Border" then
+			AddBorderSettings(widget, settings)
+		elseif group == "Text" then
+			AddTextSettings(widget, settings)
+		end
+		parent:DoLayout()
 	end)
-	tickSettings:AddChild(showTicks)
-
-	local tickColor = AceGUI:Create("ColorPicker")
-	tickColor:SetRelativeWidth(0.33)
-	tickColor:SetLabel("Tick Color")
-	tickColor:SetHasAlpha(true)
-	tickColor:SetColor(settings.tickColor.r, settings.tickColor.g, settings.tickColor.b, settings.tickColor.a)
-	tickColor:SetCallback("OnValueChanged", function(_, _, r, g, b, a)
-		settings.tickColor = { r = r, g = g, b = b, a = a }
-		RefreshResourceBars(true)
-	end)
-	tickSettings:AddChild(tickColor)
-
-	local tickWidth = AceGUI:Create("Slider")
-	tickWidth:SetRelativeWidth(0.33)
-	tickWidth:SetLabel("Tick Width")
-	tickWidth:SetSliderValues(1, 10, 0.1)
-	tickWidth:SetValue(settings.tickWidth)
-	tickWidth:SetCallback("OnValueChanged", function(_, _, value)
-		settings.tickWidth = value
-		RefreshResourceBars(true)
-	end)
-	tickSettings:AddChild(tickWidth)
-
-	local sparkOptions = settings.spark
-	local sparkGroup = AceGUI:Create("InlineGroup")
-	sparkGroup:SetTitle("Spark")
-	sparkGroup:SetFullWidth(true)
-	sparkGroup:SetLayout("flow")
-	parent:AddChild(sparkGroup)
-
-	local sparkEnable = AceGUI:Create("CheckBox")
-	sparkEnable:SetRelativeWidth(0.33)
-	sparkEnable:SetLabel("Show Spark")
-	sparkEnable:SetValue(sparkOptions.enable)
-	sparkEnable:SetCallback("OnValueChanged", function(_, _, value)
-		sparkOptions.enable = value
-		RefreshResourceBars()
-	end)
-	sparkGroup:AddChild(sparkEnable)
-
-	local sparkColor = AceGUI:Create("ColorPicker")
-	sparkColor:SetRelativeWidth(0.33)
-	sparkColor:SetLabel("Spark Color")
-	sparkColor:SetHasAlpha(true)
-	sparkColor:SetColor(sparkOptions.color.r, sparkOptions.color.g, sparkOptions.color.b, sparkOptions.color.a)
-	sparkColor:SetCallback("OnValueChanged", function(_, _, r, g, b, a)
-		sparkOptions.color = { r = r, g = g, b = b, a = a }
-		RefreshResourceBars()
-	end)
-	sparkGroup:AddChild(sparkColor)
-
-	local blendMode = AceGUI:Create("Dropdown")
-	blendMode:SetRelativeWidth(0.33)
-	blendMode:SetList(SCM.Constants.GENERAL.BLEND_MODE, SCM.Constants.GENERAL.BLEND_MODE_SORTED)
-	blendMode:SetLabel("Blend Mode")
-	blendMode:SetValue(sparkOptions.blendMode)
-	blendMode:SetCallback("OnValueChanged", function(_, _, value)
-		sparkOptions.blendMode = value
-		RefreshResourceBars()
-	end)
-	sparkGroup:AddChild(blendMode)
-
-	local sparkWidth = AceGUI:Create("Slider")
-	sparkWidth:SetRelativeWidth(0.25)
-	sparkWidth:SetLabel("Spark Width")
-	sparkWidth:SetSliderValues(1, 50, 0.1)
-	sparkWidth:SetValue(sparkOptions.width)
-	sparkWidth:SetCallback("OnValueChanged", function(_, _, value)
-		sparkOptions.width = value
-		RefreshResourceBars()
-	end)
-	sparkGroup:AddChild(sparkWidth)
-
-	local sparkHeight = AceGUI:Create("Slider")
-	sparkHeight:SetRelativeWidth(0.25)
-	sparkHeight:SetLabel("Spark Height")
-	sparkHeight:SetSliderValues(1, 80, 0.1)
-	sparkHeight:SetValue(sparkOptions.height)
-	sparkHeight:SetCallback("OnValueChanged", function(_, _, value)
-		sparkOptions.height = value
-		RefreshResourceBars()
-	end)
-	sparkGroup:AddChild(sparkHeight)
-
-	local sparkXOffset = AceGUI:Create("Slider")
-	sparkXOffset:SetRelativeWidth(0.25)
-	sparkXOffset:SetLabel("Spark X-Offset")
-	sparkXOffset:SetSliderValues(-20, 20, 0.1)
-	sparkXOffset:SetValue(sparkOptions.xOffset)
-	sparkXOffset:SetCallback("OnValueChanged", function(_, _, value)
-		sparkOptions.xOffset = value
-		RefreshResourceBars()
-	end)
-	sparkGroup:AddChild(sparkXOffset)
-
-	local sparkYOffset = AceGUI:Create("Slider")
-	sparkYOffset:SetRelativeWidth(0.25)
-	sparkYOffset:SetLabel("Spark Y-Offset")
-	sparkYOffset:SetSliderValues(-20, 20, 0.1)
-	sparkYOffset:SetValue(sparkOptions.yOffset)
-	sparkYOffset:SetCallback("OnValueChanged", function(_, _, value)
-		sparkOptions.yOffset = value
-		RefreshResourceBars()
-	end)
-	sparkGroup:AddChild(sparkYOffset)
-
-	local useCustomTexture = AceGUI:Create("CheckBox")
-	useCustomTexture:SetRelativeWidth(0.33)
-	useCustomTexture:SetLabel("Use Custom Texture")
-	useCustomTexture:SetValue(sparkOptions.useCustomTexture)
-	sparkGroup:AddChild(useCustomTexture)
-
-	local customTexture = AceGUI:Create("EditBox")
-	customTexture:SetRelativeWidth(0.66)
-	customTexture:SetLabel("Custom Texture")
-	customTexture:SetText(sparkOptions.texture or "")
-	customTexture:SetDisabled(not sparkOptions.useCustomTexture)
-	customTexture:SetCallback("OnEnter", function(widget)
-		GameTooltip:SetOwner(widget.frame, "ANCHOR_CURSOR")
-		GameTooltip:SetText("Custom Texture", nil, nil, nil, nil, true)
-		GameTooltip:AddLine("Supports LibSharedMedia names and interface paths.", 1, 1, 1, true)
-		GameTooltip:Show()
-	end)
-	customTexture:SetCallback("OnLeave", function()
-		GameTooltip:Hide()
-	end)
-	customTexture:SetCallback("OnEnterPressed", function(widget, _, text)
-		sparkOptions.texture = text
-		widget:SetText(sparkOptions.texture)
-		RefreshResourceBars()
-	end)
-
-	useCustomTexture:SetCallback("OnValueChanged", function(_, _, value)
-		sparkOptions.useCustomTexture = value
-		customTexture:SetDisabled(not value)
-		RefreshResourceBars()
-	end)
-	sparkGroup:AddChild(customTexture)
-
-	local backdropSettings = AceGUI:Create("InlineGroup")
-	backdropSettings:SetLayout("flow")
-	backdropSettings:SetTitle("Border")
-	backdropSettings:SetFullWidth(true)
-	parent:AddChild(backdropSettings)
-
-	local showBorder = AceGUI:Create("CheckBox")
-	showBorder:SetRelativeWidth(0.33)
-	showBorder:SetLabel("Show Border")
-	showBorder:SetValue(settings.showBorder)
-	showBorder:SetCallback("OnValueChanged", function(_, _, value)
-		settings.showBorder = value
-		RefreshResourceBars()
-	end)
-	backdropSettings:AddChild(showBorder)
-
-	local backdropColor = AceGUI:Create("ColorPicker")
-	backdropColor:SetRelativeWidth(0.33)
-	backdropColor:SetLabel("Border Color")
-	backdropColor:SetHasAlpha(true)
-	backdropColor:SetColor(settings.backdropColor.r, settings.backdropColor.g, settings.backdropColor.b, settings.backdropColor.a)
-	backdropColor:SetCallback("OnValueChanged", function(_, _, r, g, b, a)
-		settings.backdropColor = { r = r, g = g, b = b, a = a }
-		RefreshResourceBars()
-	end)
-	backdropSettings:AddChild(backdropColor)
-
-	local backdropSize = AceGUI:Create("Slider")
-	backdropSize:SetRelativeWidth(0.33)
-	backdropSize:SetLabel("Border Size")
-	backdropSize:SetSliderValues(0, 10, 0.01)
-	backdropSize:SetValue(settings.backdropSize)
-	backdropSize:SetCallback("OnValueChanged", function(_, _, value)
-		settings.backdropSize = value
-		RefreshResourceBars()
-	end)
-	backdropSettings:AddChild(backdropSize)
-
-	local textSettings = AceGUI:Create("InlineGroup")
-	textSettings:SetLayout("flow")
-	textSettings:SetTitle("Text")
-	textSettings:SetFullWidth(true)
-	parent:AddChild(textSettings)
-
-	local showValues = AceGUI:Create("CheckBox")
-	showValues:SetRelativeWidth(0.25)
-	showValues:SetLabel("Show Text")
-	showValues:SetValue(settings.showValues)
-	showValues:SetCallback("OnValueChanged", function(_, _, value)
-		settings.showValues = value
-		RefreshResourceBars()
-	end)
-	textSettings:AddChild(showValues)
-
-	local showValues = AceGUI:Create("CheckBox")
-	showValues:SetRelativeWidth(0.25)
-	showValues:SetLabel("Show Percent Sign")
-	showValues:SetValue(settings.showPercentageSign)
-	showValues:SetCallback("OnValueChanged", function(_, _, value)
-		settings.showPercentageSign = value
-		RefreshResourceBars()
-	end)
-	textSettings:AddChild(showValues)
-
-	local font = AceGUI:Create("LSM30_Font")
-	font:SetLabel("Text Font")
-	font:SetRelativeWidth(0.25)
-	font:SetList(LSM:HashTable("font"))
-	font:SetValue(settings.font)
-	font:SetCallback("OnValueChanged", function(self, _, value)
-		settings.font = value
-		self:SetValue(value)
-		RefreshResourceBars()
-	end)
-	textSettings:AddChild(font)
-
-	local textOutline = AceGUI:Create("Dropdown")
-	textOutline:SetRelativeWidth(0.25)
-	textOutline:SetLabel("Outline")
-	textOutline:SetList(CONSTANTS.GENERAL.TEXT_OUTLINE, CONSTANTS.GENERAL.TEXT_OUTLINE_SORTED)
-	textOutline:SetValue(settings.textOutline)
-	textOutline:SetCallback("OnValueChanged", function(_, _, value)
-		settings.textOutline = value
-		RefreshResourceBars()
-	end)
-	textSettings:AddChild(textOutline)
-
-	local fontSize = AceGUI:Create("Slider")
-	fontSize:SetRelativeWidth(0.33)
-	fontSize:SetLabel("Font Size")
-	fontSize:SetSliderValues(6, 100, 1)
-	fontSize:SetValue(settings.fontSize)
-	fontSize:SetCallback("OnValueChanged", function(_, _, value)
-		settings.fontSize = value
-		RefreshResourceBars()
-	end)
-	textSettings:AddChild(fontSize)
-
-	local textXOffset = AceGUI:Create("Slider")
-	textXOffset:SetRelativeWidth(0.33)
-	textXOffset:SetLabel("Text X Offset")
-	textXOffset:SetSliderValues(-300, 300, 0.1)
-	textXOffset:SetValue(settings.textXOffset)
-	textXOffset:SetCallback("OnValueChanged", function(_, _, value)
-		settings.textXOffset = value
-		RefreshResourceBars()
-	end)
-	textSettings:AddChild(textXOffset)
-
-	local valueYOffset = AceGUI:Create("Slider")
-	valueYOffset:SetRelativeWidth(0.33)
-	valueYOffset:SetLabel("Text Y Offset")
-	valueYOffset:SetSliderValues(-100, 100, 0.1)
-	valueYOffset:SetValue(settings.textYOffset)
-	valueYOffset:SetCallback("OnValueChanged", function(_, _, value)
-		settings.textYOffset = value
-		RefreshResourceBars()
-	end)
-	textSettings:AddChild(valueYOffset)
+	parent:AddChild(settingsTabs)
+	settingsTabs:SelectTab("Tick")
 
 	if title == "Secondary" then
 		local miscSettings = AceGUI:Create("InlineGroup")

@@ -52,6 +52,14 @@ function SCM:UpdateCastAndResourceBarConfigs()
 		self.resourceBarConfig = options.resourceBar
 	end
 
+	local resourceBarConfig = self.resourceBarConfig
+	self:UpdateResourceBarSparkTexture(resourceBarConfig.primaryBar.spark)
+	self:UpdateResourceBarSparkTexture(resourceBarConfig.secondaryBar.spark)
+	if self.isForever then
+		self:UpdateResourceBarSparkTexture(resourceBarConfig.primaryBar.manaTickSpark)
+		self:UpdateResourceBarSparkTexture(resourceBarConfig.secondaryBar.manaTickSpark)
+	end
+
 	if self.castBarOverride.active then
 		self.castBarConfig = SetOverrideConfigMetatables(self.castBarOverride, options.castBar, defaultOptions.castBar)
 	else
