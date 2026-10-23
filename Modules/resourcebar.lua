@@ -1664,7 +1664,7 @@ function SCMResourceBarControllerMixin:UpdateBarDisplay(bar, currentValue, maxVa
 		else
 			textValue:SetText(floor(staggerPercent * 100 + 0.5))
 		end
-	elseif bar.powerType == Enum.PowerType.Mana then
+	elseif bar.powerType == Enum.PowerType.Mana and not barOptions.showRawMana then
 		local manaPercent = UnitPowerPercent("player", bar.powerType, false, CurveConstants.ScaleTo100)
 
 		if barOptions.showPercentageSign then

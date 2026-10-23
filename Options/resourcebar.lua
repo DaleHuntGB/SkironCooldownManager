@@ -643,6 +643,16 @@ local function AddTextSettings(parent, settings)
 	end)
 	textSettings:AddChild(showPercentageSign)
 
+	local showRawMana = AceGUI:Create("CheckBox")
+	showRawMana:SetRelativeWidth(0.25)
+	showRawMana:SetLabel("Show Raw Mana")
+	showRawMana:SetValue(settings.showRawMana)
+	showRawMana:SetCallback("OnValueChanged", function(_, _, value)
+		settings.showRawMana = value
+		RefreshResourceBars()
+	end)
+	textSettings:AddChild(showRawMana)
+
 	local font = AceGUI:Create("LSM30_Font")
 	font:SetLabel("Text Font")
 	font:SetRelativeWidth(0.25)
