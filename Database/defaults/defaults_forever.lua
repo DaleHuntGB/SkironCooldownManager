@@ -4,7 +4,12 @@ SCM.DefaultDB.profile.options.castBar.anchors = { "BOTTOM", "ANCHOR:1", "TOP", 0
 SCM.DefaultDB.profile.options.resourceBar.anchorFrame = "SCM_CastBar"
 
 for _, barKey in ipairs({ "primaryBar", "secondaryBar" }) do
-	SCM.DefaultDB.profile.options.resourceBar[barKey].manaTickSpark = {
+	local barOptions = SCM.DefaultDB.profile.options.resourceBar[barKey]
+	barOptions.druidFormPowerTypes = barOptions.druidFormPowerTypes[102]
+	if barKey == "primaryBar" then
+		barOptions.druidFormPowerTypes[4] = Enum.PowerType.Mana
+	end
+	barOptions.manaTickSpark = {
 		enable = true,
 		reverseFill = false,
 		style = "texture",

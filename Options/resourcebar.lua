@@ -831,7 +831,10 @@ local function AddBarSettings(parent, title, settings, includeManaRoleSettings, 
 	else
 		if UnitClassBase("player") == "DRUID" then
 			local powerTypeList = title == "Primary" and CONSTANTS.RESOURCE_BAR.DRUID_PRIMARY_POWER_TYPES or CONSTANTS.RESOURCE_BAR.DRUID_SECONDARY_POWER_TYPES
-			local druidFormPowerTypesBySpec = settings.druidFormPowerTypes
+			local druidFormPowerTypes = settings.druidFormPowerTypes
+			if not SCM.isForever then
+				druidFormPowerTypes = druidFormPowerTypes[SCM.currentSpecID] or druidFormPowerTypes
+			end
 
 			local druidSettings = AceGUI:Create("InlineGroup")
 			druidSettings:SetFullWidth(true)
@@ -839,8 +842,6 @@ local function AddBarSettings(parent, title, settings, includeManaRoleSettings, 
 			druidSettings:SetLayout("flow")
 			parent:AddChild(druidSettings)
 
-			local specID = SCM.currentSpecID
-			local druidFormPowerTypes = druidFormPowerTypesBySpec[specID]
 			local function AddDruidFormDropdown(parentGroup, druidFormPowerTypes, formID, label)
 				local formDropdown = AceGUI:Create("Dropdown")
 				formDropdown:SetRelativeWidth(0.33)

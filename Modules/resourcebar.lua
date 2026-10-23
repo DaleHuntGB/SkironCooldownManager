@@ -81,8 +81,8 @@ end
 
 local function GetDruidFormPowerTypes(barOptions)
 	local druidFormPowerTypes = barOptions.druidFormPowerTypes
-	if not druidFormPowerTypes then
-		return
+	if not druidFormPowerTypes or SCM.isForever then
+		return druidFormPowerTypes
 	end
 
 	local specID = Utils.GetSpec()
