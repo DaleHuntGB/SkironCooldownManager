@@ -13,7 +13,7 @@ local RESOURCE_BAR_GROW_DIRECTIONS = {
 }
 
 local RESOURCE_BAR_TABS = {
-	{ value = "Layout", text = "Layout" },
+	{ value = "General", text = "General" },
 	{ value = "Primary", text = "Primary" },
 	{ value = "Secondary", text = "Secondary" },
 }
@@ -944,9 +944,6 @@ local function AddBarSettings(parent, title, settings, includeManaRoleSettings, 
 			AddTickSettings(widget, settings)
 		elseif group == "Spark" then
 			AddSparkSettings(widget, settings.spark, "Spark")
-			if SCM.isForever then
-				AddSparkSettings(widget, settings.manaTickSpark, "Mana Tick Spark")
-			end
 		elseif group == "Border" then
 			AddBorderSettings(widget, settings)
 		elseif group == "Text" then
@@ -995,12 +992,14 @@ local function SelectResourceBarTab(tabGroup, group, settings)
 	scrollFrame:SetLayout("flow")
 	tabGroup:AddChild(scrollFrame)
 
-	if group == "Layout" then
+	if group == "General" then
 		AddLayoutSettings(scrollFrame, settings)
 		AddPositionSettings(scrollFrame, settings)
 		AddPowerTypeColorSettings(scrollFrame, settings)
 
-		if not SCM.isForever then
+		if SCM.isForever then
+			AddSparkSettings(scrollFrame, settings.manaTickSpark, "Mana Tick Spark")
+		else
 			AddSpecialColorSettings(scrollFrame, settings)
 		end
 	elseif group == "Primary" then
@@ -1069,7 +1068,7 @@ local function ResourceBar(self)
 	end)
 	statusGroup:AddChild(resetCurrentOverride)
 
-	local currentTab = "Layout"
+	local currentTab = "General"
 	local resourceBarTabs = AceGUI:Create("TabGroup")
 	resourceBarTabs:SetTabs(RESOURCE_BAR_TABS)
 	resourceBarTabs:SetFullWidth(true)
@@ -1079,7 +1078,7 @@ local function ResourceBar(self)
 		currentTab = group
 		SelectResourceBarTab(widget, group, SCM.resourceBarConfig)
 	end)
-	resourceBarTabs:SelectTab("Layout")
+	resourceBarTabs:SelectTab("General")
 	resourceBarFrame:AddChild(resourceBarTabs)
 
 	resetCurrentOverride:SetCallback("OnClick", function()

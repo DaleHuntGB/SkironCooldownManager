@@ -56,8 +56,7 @@ function SCM:UpdateCastAndResourceBarConfigs()
 	self:UpdateResourceBarSparkTexture(resourceBarConfig.primaryBar.spark)
 	self:UpdateResourceBarSparkTexture(resourceBarConfig.secondaryBar.spark)
 	if self.isForever then
-		self:UpdateResourceBarSparkTexture(resourceBarConfig.primaryBar.manaTickSpark)
-		self:UpdateResourceBarSparkTexture(resourceBarConfig.secondaryBar.manaTickSpark)
+		self:UpdateResourceBarSparkTexture(resourceBarConfig.manaTickSpark)
 	end
 
 	if self.castBarOverride.active then
